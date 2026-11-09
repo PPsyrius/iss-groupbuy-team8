@@ -43,14 +43,14 @@ classDiagram
         +insert(row: OutboxInsert): int
     }
     class TeamExpiredV1 {
-        <<record>>
+        <<integration event, record>>
         +dealId: UUID
         +productId: UUID
         +expiredAt: Instant
         +recipientUserIds: List~UUID~
     }
     class TeamSucceededV1 {
-        <<record>>
+        <<integration event, record>>
         +dealId: UUID
         +productId: UUID
         +size: int

@@ -39,7 +39,7 @@ classDiagram
     }
     class CatalogPurchaseSupport {
         <<interface, Dist>>
-        +requirePurchasable(productId: UUID): PurchasableProduct
+        +requirePurchasable(productId: UUID): CatalogPurchaseSupport.PurchasableProduct
         +consumeOneUnit(productId: UUID): boolean
     }
     class PaidGroupDealService {

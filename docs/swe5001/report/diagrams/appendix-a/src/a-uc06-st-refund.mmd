@@ -6,7 +6,7 @@ stateDiagram-v2
     state "failed" as failed
     state "review" as review
     state answer <<choice>>
-    [*] --> pending : TeamExpired / requireRefundsForExpiredTeam
+    [*] --> pending : TeamExpired / requireRefundsForExpiredTeam, or settlement refused / requireRefund
     pending --> answer : processNext() [due]
     processing --> answer : processNext() [due]
     review --> answer : reconcile()

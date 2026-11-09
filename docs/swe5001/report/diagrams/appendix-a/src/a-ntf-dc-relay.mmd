@@ -5,7 +5,7 @@ classDiagram
         +run(): void
     }
     class LeasedJobRunner {
-        <<Sched, Conc>>
+        <<utility, Sched, Conc>>
         +run(job: String, lease: Duration, work: LeasedJobRunner.LeaseAwareWork): void
     }
     class OutboxRelayService {

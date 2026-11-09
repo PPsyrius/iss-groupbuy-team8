@@ -13,7 +13,7 @@ classDiagram
         +accepted(): boolean
     }
     class OrderFulfilmentAdapter {
-        <<adapter, Dist, Conc>>
+        <<adapter, application service, Dist, Conc>>
         +lockForSettlement(quote: CheckoutQuote): void
         +fulfil(event: PaymentSucceeded): PaymentBusinessPort.Outcome
     }

@@ -23,6 +23,15 @@
   set figure(numbering: n => "A." + str(n))
   show figure.caption: set text(9pt)
   show figure.caption: set par(justify: false)
+  // A diagram and its caption stay on one page (lib.typ makes figures breakable for long tables);
+  // afig sizes every drawing to fit a page under its caption, so this never overflows.
+  show figure.where(kind: image): set block(breakable: false)
+  // Code in tables: the report sets table text at 8.8 pt and code at 0.88 em, which would print
+  // code at 7.7 pt. The appendix keeps every code name in a table at 8 pt (legibility minimum).
+  show table: it => {
+    show raw: set text(size: 8pt)
+    it
+  }
   counter(heading).update(0)
   counter(figure.where(kind: image)).update(0)
   counter(figure.where(kind: table)).update(0)
@@ -86,7 +95,19 @@
       // A float placed on a page that opens with the appendix heading would print above it.
       let opens = query(heading.where(level: 1)).any(h => h.location().page() == here().page())
       let place-at = if not float { none } else if opens { bottom } else { auto }
-      [#figure(drawing(host: host + (probe: false)), caption: caption, kind: image, gap: cap-gap, placement: place-at)#lab]
+      // Fill the page instead of leaving it half empty: when the drawing does not fit in the space
+      // left on this page, offer it that space if it still prints its labels at 8 pt or more there
+      // (scale 0.945 of 8.5 pt). The scale for a room R is (R - frame) / (natural - frame), where
+      // natural is the drawing's height at scale 1 and frame the heading and padding of the UML
+      // frame (about 28 pt). Otherwise the drawing keeps the full page and moves to the next one.
+      // Only sequence diagrams: they fill the text width, so their scale depends on height alone.
+      let left = a-text.height + 2.3cm - here().position().y - cap-height(caption, a-text.width) - cap-gap.to-absolute() - 2.2em.to-absolute()
+      let room = if kind != "sequence" or float or left >= portrait-room - 1pt or left < 4cm { portrait-room } else {
+        let frame = 28pt
+        let natural = measure(block(width: a-text.width, drawing(host: (probe: false, rotated: false, width: a-text.width, height: 200cm, land: (width: 1cm, height: 1cm))))).height
+        if left - frame >= 0.945 * (natural - frame) { left } else { portrait-room }
+      }
+      [#figure(drawing(host: host + (probe: false, height: room)), caption: caption, kind: image, gap: cap-gap, placement: place-at)#lab]
       note
     }
   }
@@ -101,7 +122,9 @@
 // A long code name in a cell (`PaymentBrowserService.createIntent(user: UUID, …)`) may break
 // after "_", ".", "/", "(" or "," and between the words of a camelCase name, so it wraps inside
 // its column instead of running into the next one (as report-table in the SWE5006 template).
+// Code in the cells prints at 8 pt (appendix-a above sets it for every table in the appendix).
 #let atable(caption, lbl, columns: auto, header: (), align: left + top, ..cells) = [
+  #show raw: set text(size: 8pt)
   #show raw.where(block: false): it => {
     show regex("[_./(,]"): m => m.text + sym.zws
     show regex("[a-z][A-Z]"): m => m.text.at(0) + sym.zws + m.text.at(1)

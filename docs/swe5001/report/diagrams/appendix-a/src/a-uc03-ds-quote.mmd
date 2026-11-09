@@ -15,7 +15,7 @@ sequenceDiagram
     Buyer->>Ctl: issue(request {productId})
     Ctl->>App: issueQuote(productId, ownerId)
     critical quote transaction, REQUIRED, READ COMMITTED, 10 s
-        Note over App,Prods: B2: product row lock, the lock UC9 takes to change a price
+        Note over App,Prods: B2: lock 6, the product row, which UC9 takes to change a price
         App->>Prods: lockById(productId)
         Prods-->>App: Optional(Product)
         App->>Users: requireActive(ownerId)

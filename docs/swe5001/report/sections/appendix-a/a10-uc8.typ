@@ -1,11 +1,5 @@
 #import "lib-a.typ": *
 
-// Code in this part's tables prints at 8 pt (calibration rule 28).
-#show table: it => {
-  show raw: set text(size: 8pt)
-  it
-}
-
 == UC8 View My Orders and Teams <sec-a-uc08>
 
 UC8 is the buyer's account page, "My blocs". A signed-in buyer sees every team they lead or joined, with its stored state, and one page of their orders, each with its status. The use case only reads. Its design questions are ownership (a buyer must never see another buyer's rows), a consistent snapshot (a page and its total must agree), and a read that crosses from the group-buy module into the catalog module without a dependency cycle. Every class, method and error code named here exists in the code on this branch. UC8 is designed and built; the evidence for each flow is listed in section 2.2.
@@ -55,14 +49,14 @@ UC8 has two major flows, one per list. They read different entities and page on 
 
 The strategies of @sec-a-strategies turn the model into the design. Six of the nine change UC8:
 
-- *S1 Language and framework (AD-18; NFR-05):* impacted both controls → resultant Spring services `GroupDealAppServiceImpl`, `OrderAppServiceImpl` with read-only transactions, and a record for every row (`TeamMembership`, `MyTeamView`, `ListingDisplayGateway.ListingDisplay`, `ProductDisplay`, `OrderSummaryView`); dynamics @fig-a-uc08-ds-teams, @fig-a-uc08-ds-orders.
-- *S2 Presentation (AD-09; NFR-07, 12):* impacted `MyBlocsUI` → resultant route `/_authenticated/account` (`AccountPage`, `MyBlocs`, `OrderHistory`), which computes chips and labels itself; B5, A2, A4, A5 and E1 live here. Not drawn.
-- *S3 Distribution (AD-02, AD-06; NFR-05, 07):* impacted `MyBlocsUI`, `Product`, `Account` → resultant `GET /api/v1/group-deals/me`, `GET /api/v1/orders/me` and `GET /api/v1/orders/{orderId}` in the `Result` envelope, and the port `ListingDisplayGateway`, owned by group-buy and implemented by catalog. All of it runs in commerce-svc; the buyer comes from the shared session, so UC8 never calls identity-svc (AD-05), unlike the one remote call of AD-06.
-- *S4 Persistence (AD-03; NFR-13):* impacted `Membership`, `Team`, `Product`, `Order` → resultant projections `TeamMembership` (`biz_group_member` joined to `biz_group_deal`) and `ProductDisplay` (`biz_product`), and the `Order` aggregate with its frozen product snapshot (`biz_order`). Offset pages, newest first; at most three queries per teams page, two when it is empty (NFR-34).
+- *S1 Language and framework (AD-01, AD-18; NFR-05, 06, 26):* impacted both controls → resultant Spring services `GroupDealAppServiceImpl`, `OrderAppServiceImpl` with read-only transactions, and a record for every row (`TeamMembership`, `MyTeamView`, `ListingDisplayGateway.ListingDisplay`, `ProductDisplay`, `OrderSummaryView`); dynamics @fig-a-uc08-ds-teams, @fig-a-uc08-ds-orders.
+- *S2 Presentation (AD-09; NFR-07, 12, 16, 25):* impacted `MyBlocsUI` → resultant route `/_authenticated/account` (`AccountPage`, `MyBlocs`, `OrderHistory`), which computes chips and labels itself; B5, A2, A4, A5 and E1 live here. Not drawn.
+- *S3 Distribution (AD-02, AD-06, AD-09; NFR-05, 07, 64, 66):* impacted `MyBlocsUI`, `Product`, `Account` → resultant `GET /api/v1/group-deals/me`, `GET /api/v1/orders/me` and `GET /api/v1/orders/{orderId}` in the `Result` envelope, and the port `ListingDisplayGateway`, owned by group-buy and implemented by catalog. All of it runs in commerce-svc; the buyer comes from the shared session, so UC8 never calls identity-svc (AD-05), unlike the one remote call of AD-06.
+- *S4 Persistence (AD-03, AD-11; NFR-05, 13):* impacted `Membership`, `Team`, `Product`, `Order` → resultant projections `TeamMembership` (`biz_group_member` joined to `biz_group_deal`) and `ProductDisplay` (`biz_product`), and the `Order` aggregate with its frozen product snapshot (`biz_order`). Offset pages, newest first; at most three queries per teams page, two when it is empty (NFR-34).
 - *S5 External interface:* not applied; no external system takes part.
-- *S6 Security (AD-05; NFR-58, 68):* impacted `Account` and both controls → resultant `StpUtil.checkLogin` and the session's login id in each controller (never a user id from the request), the owner filter in the SQL, 404 rather than 403 for another buyer's order, and `Cache-Control: no-store` on every response (NFR-21, NFR-34).
+- *S6 Security (AD-05, AD-09; NFR-01, 46, 47, 58, 68):* impacted `Account` and both controls → resultant `StpUtil.checkLogin` and the session's login id in each controller (never a user id from the request), the owner filter in the SQL, 404 rather than 403 for another buyer's order, and `Cache-Control: no-store` on every response (NFR-21, NFR-34).
 - *S7 Scheduling:* not applied. A4 shows the lag of UC5's expiry sweep (@sec-a-uc05), because state is read as stored, never computed from the clock.
-- *S8 Concurrency (AD-03; NFR-13):* impacted `ViewMyTeamsControl` → resultant one read-only `REPEATABLE_READ` transaction of 5 s: rows, count and product read share one snapshot, so the total matches the rows. No locks. The orders list runs at the default `READ COMMITTED`, so its count is a separate snapshot (accepted: a buyer's orders change only through their own payments and team resolution).
+- *S8 Concurrency (AD-02, AD-03; NFR-13, 21, 27, 30):* impacted `ViewMyTeamsControl` → resultant one read-only `REPEATABLE_READ` transaction of 5 s: rows, count and product read share one snapshot, so the total matches the rows. No locks. The orders list runs at the default `READ COMMITTED`, so its count is a separate snapshot (accepted: a buyer's orders change only through their own payments and team resolution).
 - *S9 Domain and integration events:* not applied. Orders are confirmed or cancelled before commit in the team's own transaction (@sec-a-uc05), so the rows UC8 reads always agree.
 
 #atable(

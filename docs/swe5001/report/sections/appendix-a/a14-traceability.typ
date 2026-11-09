@@ -1,3 +1,156 @@
 #import "lib-a.typ": *
 
+// Number-only references ("A.37", "A.5") for dense trace tables.
+#let rr(..ls) = ls.pos().map(l => ref(l, supplement: none)).join[, ]
+#let yes = sym.checkmark
+#let no(why) = [– #text(fill: muted, why)]
+#let via(p) = [#sym.checkmark#text(fill: muted)[ via #p]]
+// Code in these dense tables prints at 8 pt (the report default, 0.88 em of the cell text, would fall below it).
+#show table: it => { show raw: set text(size: 8pt); it }
+
+#page(flipped: true)[
+
 == Cross-Use-Case Traceability <sec-a-trace>
+
+The tables below prove two things. First, every use case is realised by named design elements in one of BlocBuy's three services: each analysis control lands on an entry point (controller, job or event subscriber), application services, aggregates and tables, under named strategies. Second, a class shared by several parts is the same class everywhere, with one stereotype and one responsibility. Use @tbl-a-trace-uc to go from a use case to its code; @tbl-a-trace-strategy to see which strategies shaped it; @tbl-a-trace-shared to find every figure that draws a shared class; @tbl-a-trace-life to find who owns a lifecycle and who moves it; and @tbl-a-trace-ad to go from an architecture decision (§3.1.1) to the parts that realise it. Each row points to the part that holds the detail, whose mapping table (for example @tbl-a-uc04-map) names every class.
+
+#[
+#show table: set text(8pt)
+#atable(
+  [Use case realisation matrix (traceability matrix, analysis → design). Read a row left to right: the analysis control, the design element that receives the trigger, the application services, aggregates and tables it uses, the events it raises (→ their subscribers), the strategies applied, the owning service and the part with the detail. "Settled" means after the Stripe webhook of A.12.],
+  <tbl-a-trace-uc>,
+  columns: (auto, 1fr, 1.9fr, 1.55fr, 1.3fr, 1.55fr, 1.55fr, 0.6fr, 0.75fr),
+  header: ([UC], [Analysis control], [Entry point and route], [Application services], [Aggregates and records], [Tables], [Events raised → consumed], [Strate\-gies], [Service, part]),
+  [UC1], [`BrowseListingsControl`], [`ProductController`: `GET /api/v1/products` (also search), `GET …/products/{id}`], [`ProductAppService`, `GroupDealQueryService`], [`Product`; `GroupDeal` read only], [`biz_product`, `biz_group_deal`; Valkey cache], [Consumes `MemberJoined`, `TeamSucceeded`, `TeamExpired` (cache eviction)], [S1–S6, S9], [commerce, #rr(<sec-a-uc01>)],
+  [UC2], [`SignInWithGoogleControl`], [`AuthController`: `GET /api/v1/auth/oauth2/google` and `…/callback`, `GET …/me`, `POST …/logout`; `SaInterceptor` everywhere], [`OAuthLoginAppService`, `OAuthUserTxService`, `LoginSessionPublisher`], [`User`, entity `OAuthIdentity`; session, role snapshot], [`sys_user`, `sys_user_oauth`, `rel_user_role`; Valkey], [None], [S1–S6, S8], [identity, #rr(<sec-a-uc02>)],
+  [UC3], [`StartTeamControl`], [`TeamPriceController`: `POST /api/v1/team-price-quotes`; `StripeCheckoutController`: `POST /api/v1/payments/intents`; settled: `OrderFulfilmentAdapter.fulfil`], [`TeamPriceAppService`, `PaymentBrowserService`, `PurchaseIntentAppService`, `PaidGroupDealService`], [`Product`, `TeamPricePolicy`, `TeamPriceQuote`, `PurchaseIntent`, `GroupDeal`, `Order`], [`biz_team_price_policy`, `biz_team_price_quote`, `biz_purchase_intent`, `biz_group_deal`, `biz_group_member`, `biz_order`, `biz_product`], [None from group-buy; settlement raises `PaymentSucceeded`], [S1–S6, S8], [commerce, #rr(<sec-a-uc03>)],
+  [UC4], [`JoinTeamControl`], [`StripeCheckoutController`: `POST /api/v1/payments/intents`; settled: `OrderFulfilmentAdapter.fulfil`], [`PaymentBrowserService`, `PurchaseIntentAppService`, `PaidGroupDealService`], [`GroupDeal`, `PurchaseIntent`, `Order`; `ShareInvite` read], [`biz_group_deal`, `biz_group_member`, `biz_purchase_intent`, `biz_order`, `biz_refund`, `sys_outbox`], [`MemberJoined`, `TeamSucceeded` → four subscribers (#rr(<fig-a-uc04-dc-events>))], [S1–S6, S8, S9], [commerce, #rr(<sec-a-uc04>)],
+  [UC5], [`ResolveTeamControl`], [`TeamExpirySweepJob.run` (every minute); success in `PaidGroupDealService.joinConfirmed`], [`GroupDealExpirySweeper`, `GroupDealExpiryService`, `PaidGroupDealService`], [`GroupDeal`, `Order`], [`biz_group_deal`, `biz_order`, `sys_outbox`, `sys_scheduler_lock`], [`TeamSucceeded`, `TeamExpired` → orders, refunds, outbox, cache], [S1, S4, S7–S9], [commerce, #rr(<sec-a-uc05>)],
+  [UC6], [`RefundMembersControl`], [`TeamExpiryRefundSubscriber.onTeamExpired`; `RefundWorkerJob`; `RefundService.reconcile` (no caller)], [`TeamExpiryRefundService`, `RefundService`], [`CheckoutPayment`; `GroupDeal` locked; `RefundWork`], [`biz_refund`, `log_refund_attempt`, `biz_payment`], [Consumes `TeamExpired`], [S1–S9], [commerce, #rr(<sec-a-uc06>)],
+  [UC7], [`ShareInvitationControl`, `ReferralCreditControl`], [`GroupDealController`: `POST /api/v1/group-deals/{dealId}/invites`; `InviteController`: `GET /api/v1/invites/{ref}`; `ShareCreditSubscriber`], [`ShareInviteAppService`; attribution in `GroupDealPurchaseSupport`], [`ShareInvite`, `ShareCredit`], [`biz_share_invite`, `biz_share_credit`, `biz_group_member`, `biz_purchase_intent`], [Consumes `MemberJoined`], [S1–S4, S6, S8, S9], [commerce, #rr(<sec-a-uc07>)],
+  [UC8], [`ViewMyTeamsControl`, `ViewMyOrdersControl`], [`GroupDealController`: `GET /api/v1/group-deals/me`; `OrderController`: `GET /api/v1/orders/me`, `GET …/orders/{orderId}`], [`GroupDealAppService`, `OrderAppService`], [`Order`; `TeamMembership`, `ProductDisplay`], [`biz_group_member`, `biz_group_deal`, `biz_product`, `biz_order`], [None], [S1–S4, S6, S8], [commerce, #rr(<sec-a-uc08>)],
+  [UC9], [`AdministerListingControl`], [`AdminListingController`: `POST`, `PUT`, `DELETE` on `/api/v1/admin/products` and its `/status`, `/team-terms`], [`AdminListingAppService`, `TeamTermsAppService`, `TeamPriceAppService`], [`Product`, `TeamPricePolicy`; `TeamTermsChange`], [`biz_product`, `log_product_team_terms`, `biz_team_price_policy`], [None], [S1–S4, S6, S8], [commerce, #rr(<sec-a-uc09>)],
+  [Pay], [`PayUpfrontControl`, `BaseUseCaseControl`], [`StripeCheckoutController`: `POST /api/v1/payments/checkout-sessions`, `GET …/payments/{id}`; `StripeWebhookController`: `POST /api/v1/webhooks/stripe`], [`PaymentBrowserService`, `StripeCheckoutService`; port `PaymentBusinessPort`], [`CheckoutPayment`; `CheckoutQuote`], [`biz_payment`, `log_payment_webhook_event`, `biz_payment_review_case`, `biz_refund`], [`PaymentSucceeded` → `IntegrationOutboxWriter`], [S1–S6, S8, S9], [commerce, #rr(<sec-a-pay-upfront>)],
+  [Notif.], [`RelayEventsControl`, `ReceiveNotificationsControl`], [`IntegrationOutboxWriter`; `OutboxRelayJob.run` (every 2 s); `SqsNotificationEventConsumer`; `NotificationController`: `GET /api/v1/notifications`], [`OutboxRelayService`, `NotificationEventAppService`, `NotificationAppService`], [`Notification`; `OutboxEvent`], [commerce `sys_outbox`; notification `sys_consumed_message`, `biz_notification`], [Consumes the three integration-bound events; sends their `V1` contracts over SNS → SQS], [S1–S9], [commerce and notification, #rr(<sec-a-notifications>)],
+)
+]
+]
+
+=== Strategies Across Use Cases <sec-a-trace-strategy>
+
+@tbl-a-trace-strategy crosses the nine strategies of @sec-a-strategies with the eleven use cases. It is the use-case view of the coverage matrix (@tbl-a-coverage), which crosses the strategies with analysis object types. S1 and S4 change every use case; S7 changes only the three that run on a timer.
+
+#atable(
+  [Strategy × use case matrix. #sym.checkmark: the strategy changes the use case's design (its line in the part's transition section); "via A.n": applied, but designed in the included part; –: not applied, with the reason.],
+  <tbl-a-trace-strategy>,
+  columns: (auto, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr, 1fr),
+  align: (left + top, center + top, center + top, center + top, center + top, center + top, center + top, center + top, center + top, center + top),
+  header: ([Use case], [S1 Lang], [S2 Pres], [S3 Dist], [S4 Pers], [S5 Ext], [S6 Sec], [S7 Sched], [S8 Conc], [S9 Evt]),
+  [UC1 Browse], yes, yes, yes, yes, yes, yes, no[no timer], no[read only], yes,
+  [UC2 Sign in], yes, yes, yes, yes, yes, yes, no[expiry by TTL], yes, no[no event],
+  [UC3 Start team], yes, yes, yes, yes, via[A.12], yes, no[no timed step], yes, no[no group event],
+  [UC4 Join team], yes, yes, yes, yes, via[A.12], yes, no[no timer], yes, yes,
+  [UC5 Resolve team], yes, no[no screen], no[no remote call], yes, no[no provider], no[no request], yes, yes, yes,
+  [UC6 Refund], yes, via[A.12], yes, yes, yes, yes, yes, yes, yes,
+  [UC7 Share], yes, yes, yes, yes, no[no provider], yes, no[manual query], yes, yes,
+  [UC8 View mine], yes, yes, yes, yes, no[no provider], yes, no[no timer], yes, no[no event],
+  [UC9 Administer], yes, yes, yes, yes, no[no provider], yes, no[no timer], yes, no[no event],
+  [Pay upfront], yes, yes, yes, yes, yes, yes, no[no timed step], yes, yes,
+  [Notifications], yes, yes, yes, yes, yes, yes, yes, yes, yes,
+  [*Applied*], [*11*], [*10*], [*10*], [*11*], [*7*], [*10*], [*3*], [*10*], [*7*],
+)
+
+=== Shared Design Elements <sec-a-trace-shared>
+
+A class drawn in more than one part is one class: the same name, stereotype, member signatures and responsibility wherever it appears. A slice shows only the members it uses (template rule 17), so a class may show fewer members in one part than in another, never different ones. @tbl-a-trace-shared lists each shared class with the figures that draw it; its stereotype is the one that A.1 (@tbl-a-stereotypes) gives its role.
+
+#[
+#show table: set text(8pt)
+#atable(
+  [Shared design element index. Figures are numbered A.n; the first figure listed is in the part that uses the class most. All classes are in commerce-svc unless stated.],
+  <tbl-a-trace-shared>,
+  columns: (1.3fr, 1fr, 1.45fr, 2fr),
+  header: ([Class], [Stereotype], [Drawn in figures], [One responsibility]),
+  [`PaymentBusinessPort`], [«interface»], [#rr(<fig-a-pay-dc-settle>, <fig-a-pay-dc-prepare>, <fig-a-uc03-dc-fulfil>, <fig-a-uc04-dc-fulfil>, <fig-a-uc06-dc-record>)], [The payment module's port to the business side: lock the quote, lock for settlement, fulfil a paid event, lock an expired team.],
+  [`PaymentBusinessPort.Outcome`], [«value object, record»], [#rr(<fig-a-pay-dc-settle>, <fig-a-uc03-dc-fulfil>, <fig-a-uc04-dc-fulfil>)], [The result of `fulfil`: the team and order, or a rejection reason.],
+  [`OrderFulfilmentAdapter`], [«adapter, application service»], [#rr(<fig-a-uc04-dc-fulfil>, <fig-a-uc03-dc-fulfil>, <fig-a-pay-dc-settle>, <fig-a-uc05-dc-resolve>, <fig-a-uc06-dc-record>, <fig-a-uc07-dc-credit>)], [Implements `PaymentBusinessPort` in the order module: takes the locks in the fixed order, starts or joins the team and creates the order.],
+  [`PaymentIntentPort`], [«interface»], [#rr(<fig-a-uc04-dc-intent>, <fig-a-uc03-dc-intent>, <fig-a-pay-dc-receipt>, <fig-a-str-s3-after>)], [The payment module's port to create a purchase intent and to read the product it bought.],
+  [`PurchaseIntentAppService`], [«adapter, application service»], [#rr(<fig-a-uc04-dc-intent>, <fig-a-uc03-dc-intent>, <fig-a-str-s3-after>)], [Implements `PaymentIntentPort`: creates a START or JOIN intent at a server-fixed price.],
+  [`PaymentBrowserService`], [«application service»], [#rr(<fig-a-pay-dc-prepare>, <fig-a-pay-dc-receipt>, <fig-a-uc03-dc-intent>, <fig-a-uc04-dc-intent>, <fig-a-str-s3-after>)], [The buyer's payment requests: create an intent, prepare a checkout, read a receipt.],
+  [`StripeCheckoutController`], [«controller»], [#rr(<fig-a-pay-dc-prepare>, <fig-a-pay-dc-receipt>, <fig-a-uc03-dc-intent>, <fig-a-uc04-dc-intent>, <fig-a-str-s3-after>)], [REST adapter for `/api/v1/payments`, with the request-marker check.],
+  [`PaidGroupDealService`], [«application service»], [#rr(<fig-a-uc04-dc-admit>, <fig-a-uc04-dc-fulfil>, <fig-a-uc04-dc-events>, <fig-a-uc03-dc-create>, <fig-a-uc03-dc-fulfil>, <fig-a-uc05-dc-resolve>, <fig-a-uc07-dc-credit>)], [Admits one paid participation (start or join) under the team lock and publishes `MemberJoined` and `TeamSucceeded`.],
+  [`GroupDeal`], [«aggregate root»], [#rr(<fig-a-uc04-dc-admit>, <fig-a-uc03-dc-create>, <fig-a-uc05-dc-resolve>, <fig-a-uc06-dc-record>); lifecycle #rr(<fig-a-uc05-st-deal>)], [The team: seats, price, deadline and `DealStatus`, with the admission and expiry rules.],
+  [`PaidGroupDealRepository`], [«repository»], [#rr(<fig-a-uc04-dc-admit>, <fig-a-uc04-dc-intent>, <fig-a-uc03-dc-create>, <fig-a-uc05-dc-resolve>, <fig-a-uc05-dc-sweep>, <fig-a-uc06-dc-record>, <fig-a-uc07-dc-invite>, <fig-a-uc07-dc-credit>)], [Locks and writes a team, its members and its participation receipts (the representative chain, with `PaidGroupDealRepositoryImpl` and `PaidGroupDealMapper`).],
+  [`GroupDealSettlementSupport`], [«interface, facade»], [#rr(<fig-a-uc04-dc-fulfil>, <fig-a-uc03-dc-fulfil>, <fig-a-uc06-dc-record>)], [Group-buy's published interface to settlement: lock a team, link an order, lock an expired team.],
+  [`CatalogPurchaseSupport`], [«interface, facade»], [#rr(<fig-a-uc04-dc-intent>, <fig-a-uc04-dc-fulfil>, <fig-a-uc03-dc-intent>, <fig-a-uc03-dc-fulfil>)], [Catalog's published interface to purchase: a purchasable product, a locked start quote, one unit of stock.],
+  [`GroupDealQueryService`], [«interface, facade»], [#rr(<fig-a-uc01-dc-read>, <fig-a-uc01-dc-price>, <fig-a-uc09-dc-listing>)], [Group-buy's read-only queries for catalog: best open offer per product, open-team count, product references.],
+  [`UserAppService`], [«interface»], [#rr(<fig-a-uc02-dc-access>, <fig-a-uc03-dc-quote>, <fig-a-uc04-dc-intent>, <fig-a-uc07-dc-invite>, <fig-a-uc09-dc-listing>, <fig-a-str-s3-after>) and the fulfil and terms slices], [The identity port: current user, active-account check, public nickname. identity-svc implements it locally.],
+  [`RemoteUserAppService`], [«adapter»], [#rr(<fig-a-str-s3-after>, <fig-a-uc04-dc-intent>, <fig-a-uc07-dc-invite>, <fig-a-uc09-dc-listing>)], [commerce-svc's HTTP client for `UserAppService`: one call to identity-svc that fails closed (AD-06).],
+  [`ApplicationEventPublisher`], [«interface»], [#rr(<fig-a-uc04-dc-events>, <fig-a-uc05-dc-resolve>, <fig-a-uc05-dc-events>, <fig-a-uc06-dc-record>, <fig-a-uc07-dc-credit>, <fig-a-pay-dc-settle>)], [Spring's in-process publisher: raises a domain event inside the producing transaction.],
+  [`MemberJoined`, `TeamSucceeded`, `TeamExpired`, `PaymentSucceeded`], [«domain event, record»], [#rr(<fig-a-uc04-dc-events>, <fig-a-uc05-dc-events>, <fig-a-uc05-dc-resolve>, <fig-a-uc06-dc-record>, <fig-a-uc07-dc-credit>, <fig-a-pay-dc-settle>)], [In-process facts: a member joined, a team filled, a team expired, a payment settled.],
+  [`TeamSucceededV1`, `TeamExpiredV1`], [«integration event, record»], [#rr(<fig-a-ntf-dc-produce>, <fig-a-uc05-dc-events>)], [Versioned cross-service contracts in `blocbuy-client`, carried in `IntegrationEventEnvelope`.],
+  [`IntegrationOutboxWriter`], [«subscriber»], [#rr(<fig-a-ntf-dc-produce>, <fig-a-uc04-dc-events>, <fig-a-uc05-dc-events>)], [Before commit, at lowest precedence, writes one `sys_outbox` row for `TeamSucceeded`, `TeamExpired` or `PaymentSucceeded`.],
+  [`OrderLifecycleSubscriber`], [«subscriber»], [#rr(<fig-a-uc05-dc-events>, <fig-a-uc04-dc-events>)], [Before commit (`@Order(10)`), confirms or cancels a team's pending orders.],
+  [`TeamExpiryRefundSubscriber`], [«subscriber»], [#rr(<fig-a-uc06-dc-record>, <fig-a-uc05-dc-events>)], [Before commit (`@Order(20)`), records a refund obligation per paid member of an expired team.],
+  [`ShareCreditSubscriber`], [«subscriber»], [#rr(<fig-a-uc07-dc-credit>, <fig-a-uc04-dc-events>)], [After commit, in its own transaction, credits the sharer of an attributed join.],
+  [`OpenDealOfferCacheSubscriber`], [«subscriber»], [#rr(<fig-a-uc04-dc-events>, <fig-a-uc05-dc-events>)], [After commit, evicts the product's cached open offer.],
+  [`GroupDealExpiryService`], [«application service»], [#rr(<fig-a-uc05-dc-resolve>, <fig-a-uc05-dc-sweep>, <fig-a-uc06-dc-record>)], [Expires one due team in one transaction and publishes `TeamExpired`.],
+  [`LeasedJobRunner`], [«scheduled job»], [#rr(<fig-a-uc05-dc-sweep>, <fig-a-uc06-dc-worker>, <fig-a-ntf-dc-relay>)], [Runs a job's work only while this task holds the job's database lease, and renews it.],
+  [`SchedulerLeaseRepository`], [«repository»], [#rr(<fig-a-uc05-dc-sweep>, <fig-a-uc06-dc-worker>)], [Acquires, renews and releases a lease row in `sys_scheduler_lock`.],
+  [`CheckoutPaymentRepository`], [«repository»], [#rr(<fig-a-pay-dc-settle>, <fig-a-pay-dc-prepare>, <fig-a-pay-dc-receipt>, <fig-a-uc06-dc-record>)], [Locks and writes payments and their webhook records, review cases and refund obligations.],
+  [`RefundRepository`], [«repository»], [#rr(<fig-a-uc06-dc-worker>, <fig-a-uc06-dc-provider>, <fig-a-pay-dc-receipt>)], [Claims, finishes and reports `biz_refund` rows.],
+  [`OrderRepository`], [«repository»], [#rr(<fig-a-uc04-dc-fulfil>, <fig-a-uc03-dc-fulfil>, <fig-a-uc04-dc-events>, <fig-a-uc05-dc-events>, <fig-a-uc08-dc-orders>)], [Saves an order, confirms or cancels a team's orders in bulk, pages a buyer's orders.],
+  [`PurchaseIntentRepository`], [«repository»], [#rr(<fig-a-uc03-dc-intent>, <fig-a-uc03-dc-fulfil>, <fig-a-uc04-dc-intent>, <fig-a-uc04-dc-fulfil>)], [Saves, locks and marks fulfilled a purchase intent.],
+  [`ProductRepository`], [«repository»], [#rr(<fig-a-uc09-dc-product>, <fig-a-uc09-dc-listing>, <fig-a-uc09-dc-terms>, <fig-a-uc01-dc-read>, <fig-a-uc03-dc-quote>, <fig-a-uc08-dc-teams>)], [Reads, locks and version-checks listings; the representative catalog chain.],
+  [`GroupDealRepository`], [«repository»], [#rr(<fig-a-uc01-dc-price>, <fig-a-uc07-dc-invite>, <fig-a-uc08-dc-teams>)], [Read-side team queries: by id, best open teams, a buyer's memberships.],
+  [`PricingStrategy`, `DualPricingStrategy`], [«interface, domain service», «domain service»], [#rr(<fig-a-uc01-dc-price>, <fig-a-uc03-dc-quote>)], [Computes the listing price and the team price from product and policy.],
+  [`TeamPriceAppService`], [«interface, application service»], [#rr(<fig-a-uc03-dc-quote>, <fig-a-uc09-dc-terms>)], [Issues team-price quotes and configures the price policy.],
+  [`TeamPricePolicy`], [«aggregate root, record»], [#rr(<fig-a-uc09-dc-terms>, <fig-a-uc03-dc-quote>)], [A product's versioned team-price policy.],
+  [`ShareInvite`], [«aggregate root, record»], [#rr(<fig-a-uc07-dc-invite>, <fig-a-uc04-dc-intent>)], [One sharer's invitation reference for one team.],
+  [`RateLimitGateway`], [«interface, gateway»], [#rr(<fig-a-uc04-dc-intent>, <fig-a-uc07-dc-invite>, <fig-a-pay-dc-prepare>)], [A per-subject request budget in Valkey.],
+  [`StpInterface`, `SessionStpInterface`, `LoginSnapshotGateway`], [«interface», «adapter», «interface, gateway»], [#rr(<fig-a-uc02-dc-access>, <fig-a-uc02-dc-session>, <fig-a-str-s6-rbac>)], [The session's roles: written at sign-in, read from Valkey by commerce-svc and notification-svc, from its database by identity-svc.],
+)
+]
+
+=== Lifecycle Owners <sec-a-trace-life>
+
+Each lifecycle is drawn once, in the part that owns the entity (template rule 23). @tbl-a-trace-life names the parts whose steps move it. A part that only reads a state draws no statechart and names the owner.
+
+#atable(
+  [Lifecycle owners. Each statechart, the part that owns it, and the parts that cause or only read its transitions.],
+  <tbl-a-trace-life>,
+  columns: (1fr, 1.05fr, 2.4fr, 1fr),
+  header: ([Lifecycle (state type)], [Statechart, owner], [Parts that cause transitions (transition)], [Parts that only read it]),
+  [Purchase intent], [#rr(<fig-a-uc03-st-intent>), UC3 (#rr(<sec-a-uc03>))], [UC3, UC4: issue; Pay upfront through `OrderFulfilmentAdapter`: mark fulfilled, or refund a payment on a lapsed or expired intent; the intent sweep (A.2 S7): expire], [Pay upfront (the frozen `CheckoutQuote`)],
+  [Team (`DealStatus`)], [#rr(<fig-a-uc05-st-deal>), UC5 (#rr(<sec-a-uc05>))], [UC3: start (→ OPEN); UC4: join, and fill (→ SUCCEEDED); a late payment on a closed team (refund owed); UC5: expiry tick (→ EXPIRED)], [UC1 (open offers), UC7, UC8, UC9, Notifications],
+  [Order (`OrderStatus`)], [#rr(<fig-a-uc05-st-order>), UC5 (#rr(<sec-a-uc05>))], [UC3, UC4: create PENDING in `OrderFulfilmentAdapter`; UC5: confirm or cancel in `OrderLifecycleSubscriber`], [UC8],
+  [Checkout payment (`CheckoutPayment.Status`)], [#rr(<fig-a-pay-st-payment>), Pay upfront (#rr(<sec-a-pay-upfront>))], [Pay upfront: prepare, bind, settle, fail, cancel, recover (the buyer acts from UC3 or UC4; Stripe reports through the webhook)], [UC6 (a team's succeeded payments)],
+  [Refund obligation (`biz_refund.status`)], [#rr(<fig-a-uc06-st-refund>), UC6 (#rr(<sec-a-uc06>))], [UC5 expiry through `TeamExpiryRefundSubscriber`: create pending; Pay upfront: create for a rejected or late payment (`requireRefund`); UC6: process, finish, reconcile], [Pay upfront (receipt)],
+  [Listing (`ProductStatus`)], [#rr(<fig-a-uc09-st-listing>), UC9 (#rr(<sec-a-uc09>))], [UC9: create, publish, delist, revise, configure team terms, delete], [UC1 (ON_SALE only); UC3, UC4 (stock, not status)],
+  [Outbox event (`sys_outbox` row)], [#rr(<fig-a-ntf-st-outbox>), Notifications (#rr(<sec-a-notifications>))], [UC4, UC5, Pay upfront: record, through their domain events; Notifications: relay, retry, fail, replay, retention], [—],
+)
+
+=== Decisions in the Appendix <sec-a-trace-ad>
+
+@tbl-a-trace-ad starts from the architecture decision register (§3.1.1, §3.2.1, §3.3) and shows where the appendix realises each decision. Ten of the nineteen decisions shape the design model. The other nine govern deployment and delivery and have no design class.
+
+#[
+#show table: set text(8pt)
+#atable(
+  [AD → appendix index. Each architecture decision, the strategy that carries it (@tbl-a-strategies), the design elements and parts that realise it, and the NFRs it serves through that strategy.],
+  <tbl-a-trace-ad>,
+  columns: (1.7cm, 1.3fr, auto, 2.5fr, 0.85fr),
+  header: ([AD], [Decision (short)], [Strategy], [Realised in (design elements, parts)], [NFRs]),
+  [AD-01], [Strangler migration; monolith kept as fallback], [S1], [One codebase whose classes run in either topology; wiring in `PaymentIntegrationConfiguration`. The S1 line of A.3–A.8 and A.11–A.13.], [05, 06, 26],
+  [AD-02], [Split where no transaction crosses], [S3, S8], [Payment and order stay in commerce-svc, so settlement is one local transaction behind `PaymentBusinessPort` → `OrderFulfilmentAdapter` (A.5, A.6, A.8, A.12); notification-svc shares no transaction (A.13).], [05, 07, 13, 27, 64, 66],
+  [AD-03], [One database per service], [S4, S8], [Each table has one owning service: identity (A.4), commerce (A.3, A.5–A.12), notification (A.13). Several aggregates share one local transaction under the S8 justification (A.5–A.8, A.11, A.12).], [05, 13, 21, 30],
+  [AD-04], [Outbox → SNS → SQS, idempotent consumers], [S9], [`IntegrationOutboxWriter`, `OutboxRelayService`, `SqsNotificationEventConsumer`, `ConsumedMessageRepository` (A.13); producers in A.6, A.7, A.12.], [30, 39, 59–61, 63],
+  [AD-05], [Shared session in Valkey, roles inside], [S6], [`LoginSessionPublisher`, `RedisLoginSnapshotGateway`, `SessionStpInterface` (A.4, #rr(<fig-a-str-s6-rbac>)); the buyer's id from the session in A.5, A.6 and A.9–A.13.], [01, 46, 47, 58, 68],
+  [AD-06], [One synchronous call, commerce → identity, fail closed], [S3, S5], [`UserAppService` → `RemoteUserAppService` (A.5, A.6, A.9, A.11, A.12). External gateways: `OAuthIdentityGateway` (A.4), `ListingSearchReranker` (A.3), `CheckoutGateway` (A.12), `RefundGateway` (A.8).], [21–23, 31, 50, 66],
+  [AD-09], [CloudFront → restricted ALB], [S2, S3, S6], [Same-origin `/api/v1` routes of every controller in @tbl-a-trace-uc; ALB path routing of `/api/v1/notifications` to notification-svc (A.13).], [07, 12, 16, 25],
+  [AD-11], [One RDS server, three databases], [S4], [The identity, commerce and notification databases of A.4, A.5–A.12 and A.13.], [05, 13],
+  [AD-16], [Jobs stay with their data, under a lease], [S7], [`LeasedJobRunner`, `SchedulerLeaseRepository`; `TeamExpirySweepJob` (A.7), `RefundWorkerJob` (A.8), `OutboxRelayJob` (A.13).], [15, 32, 61],
+  [AD-18], [COLA layers enforced by ArchUnit], [S1], [The layer of every design class (controller, application service, domain, infrastructure) under the mapping rule (#rr(<sec-a-mapping-rule>)); every mapping table.], [05, 06, 26],
+  [AD-07, 08, 10, 12–15, 17, 19], [Compute, network, account, pipeline and release], [—], [No design class; see §3.2.1 and §3.3.], [—],
+)
+]

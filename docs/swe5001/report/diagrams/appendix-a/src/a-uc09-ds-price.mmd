@@ -10,7 +10,7 @@ sequenceDiagram
     Note over App,PRepo: B7: joins the caller's transaction (10 s)
     App->>Prices: configure(productId, actorId, command)
     Prices->>Prices: lockProduct(productId)
-    Prices->>Repo: lockById(productId): lock 1 again, already held
+    Prices->>Repo: lockById(productId): lock 6 again, already held
     Prices->>Users: requireActive(actorId)
     Prices->>PRepo: findLatestPolicy(productId)
     PRepo-->>Prices: Optional(TeamPricePolicy)

@@ -31,7 +31,7 @@ sequenceDiagram
     end
     GPS-->>App: JoinTerms
     App->>Cat: requirePurchasable(productId)
-    Cat-->>App: PurchasableProduct
+    Cat-->>App: CatalogPurchaseSupport.PurchasableProduct
     Note over App,Cat: B4: valid 40 minutes, never past the team's deadline
     App->>Intent: «create» issue(terms, quoteValidUntil, businessDeadline, now)
     App->>Intent: attributedTo(sharerUserId)

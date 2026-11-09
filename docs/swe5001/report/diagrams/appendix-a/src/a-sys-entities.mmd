@@ -1,81 +1,57 @@
 %% frame: BlocBuy system-level analysis model: all entities
 classDiagram
+    class SignInState {
+        <<entity>>
+        -value: Text
+        -expireTime: Date‑time
+    }
     class Role {
         <<entity>>
         -code: Text
-        -permissions: Text
+    }
+    class Session {
+        <<entity>>
+        -roleSnapshot: Text
+        -expireTime: Date‑time
+    }
+    class Notification {
+        <<entity>>
+        -type: NotificationType
+        -createTime: Date‑time
+    }
+    class ConsumptionRecord {
+        <<entity>>
+        -consumer: Text
+        -consumedAt: Date‑time
     }
     class OAuthBinding {
         <<entity>>
         -provider: Text
         -subject: Text
     }
-    class TeamTermsChange {
-        <<entity>>
-        -previousTerms: Text
-        -currentTerms: Text
-        -changeTime: Date‑time
-    }
-    class TeamPricePolicy {
-        <<entity>>
-        -price: Money
-        -validFrom: Date‑time
-        -validUntil: Date‑time
-    }
-    class Notification {
-        <<entity>>
-        -type: NotificationType
-        -title: Text
-        -createTime: Date‑time
-    }
     class Account {
         <<entity>>
         -nickname: Text
         -status: AccountStatus
     }
+    class ReviewCase {
+        <<entity>>
+        -reason: Text
+        -status: ReviewStatus
+    }
+    class EventRecord {
+        <<entity>>
+        -eventType: Text
+        -status: DeliveryStatus
+    }
     class Invitation {
         <<entity>>
         -reference: Text
-    }
-    class Product {
-        <<entity>>
-        -title: Text
-        -stock: Count
-        -status: ProductStatus
-    }
-    class PriceQuote {
-        <<entity>>
-        -price: Money
-        -expiresAt: Date‑time
-    }
-    class ShareCredit {
-        <<entity>>
-        -creditTime: Date‑time
     }
     class Membership {
         <<entity>>
         -role: MemberRole
         -joinTime: Date‑time
-    }
-    class Team {
-        <<entity>>
-        -price: Money
-        -targetSize: Count
-        -currentSize: Count
-        -deadline: Date‑time
-        -status: TeamStatus
-    }
-    class PurchaseIntent {
-        <<entity>>
-        -operation: PurchaseOperation
-        -price: Money
-        -payableUntil: Date‑time
-        -fulfilled: Boolean
-    }
-    class ReviewCase {
-        <<entity>>
-        -reason: Text
-        -status: ReviewStatus
     }
     class Order {
         <<entity>>
@@ -88,44 +64,92 @@ classDiagram
         -status: PaymentStatus
         -outcome: PaymentOutcome
     }
+    class ShareCredit {
+        <<entity>>
+        -creditTime: Date‑time
+    }
+    class Team {
+        <<entity>>
+        -price: Money
+        -targetSize: Count
+        -deadline: Date‑time
+        -status: TeamStatus
+    }
+    class PurchaseIntent {
+        <<entity>>
+        -operation: PurchaseOperation
+        -price: Money
+        -payableUntil: Date‑time
+    }
     class Refund {
         <<entity>>
         -amount: Money
         -reason: Text
         -status: RefundStatus
     }
+    class TeamTermsChange {
+        <<entity>>
+        -previousTerms: Text
+        -currentTerms: Text
+        -changeTime: Date‑time
+    }
+    class Product {
+        <<entity>>
+        -title: Text
+        -stock: Count
+        -status: ProductStatus
+    }
+    class PriceQuote {
+        <<entity>>
+        -price: Money
+        -expiresAt: Date‑time
+    }
     class RefundAttempt {
         <<entity>>
         -attemptTime: Date‑time
         -result: Text
     }
-%% at Role 0,0
-%% at OAuthBinding 1,0
-%% at TeamTermsChange 2,0
-%% at TeamPricePolicy 3,0
-%% at Notification 0,1
-%% at Account 1,1
-%% at Invitation 2,1
-%% at Product 3,1
-%% at PriceQuote 4,1
-%% at ShareCredit 0,2
-%% at Membership 1,2
+    class TeamPricePolicy {
+        <<entity>>
+        -price: Money
+        -validFrom: Date‑time
+        -validUntil: Date‑time
+    }
+%% at TeamTermsChange 0,0
+%% at RefundAttempt 1,0
+%% at TeamPricePolicy 2,0
+%% at PriceQuote 3,0
+%% at Refund 0,1
+%% at Product 1,1
+%% at PurchaseIntent 2,1
+%% at Invitation 3,1
+%% at SignInState 4,1
+%% at ReviewCase 0,2
+%% at Payment 1,2
 %% at Team 2,2
-%% at PurchaseIntent 3,2
-%% at ReviewCase 4,2
+%% at Membership 3,2
+%% at Session 4,2
+%% at ConsumptionRecord 0,3
+%% at EventRecord 1,3
 %% at Order 2,3
-%% at Payment 3,3
-%% at Refund 4,4
-%% at RefundAttempt 3,4
+%% at Account 3,3
+%% at ShareCredit 4,3
+%% at Notification 2,4
+%% at Role 3,4
+%% at OAuthBinding 4,4
     Account "*" -- "1..*" Role
     Account "1" -- "*" OAuthBinding : signs in with
-    Account "1" -- "*" Notification
+    Account "1" -- "*" Session : for
+    Account "1" -- "*" Notification : recipient
     Account "1" -- "*" Membership
-    Account "1" -- "*" Invitation : shares
-    Membership "*" -- "0..1" Invitation : joined through
+    Account "1" -- "*" Invitation
+    Account "1" -- "*" Order : buyer
+    Membership "*" -- "0..1" Invitation : joined via
     Membership "1" -- "0..1" ShareCredit : rewards
+    Membership "1" -- "0..1" Order : backed by
     Team "1" *-- "1..*" Membership
-    Team "1" -- "*" Invitation
+    Team "1" -- "*" Invitation : invites to
+    Team "1" -- "*" Order
     Product "1" -- "*" Team : offers
     Product "1" -- "*" TeamPricePolicy
     Product "1" -- "*" TeamTermsChange
@@ -133,9 +157,13 @@ classDiagram
     PurchaseIntent "*" -- "0..1" PriceQuote : freezes
     PurchaseIntent "*" -- "1" Product
     PurchaseIntent "*" -- "0..1" Team
+    PurchaseIntent "*" -- "0..1" Invitation : via
     Payment "*" -- "1" PurchaseIntent : pays
-    Order "*" -- "1" Team
     Order "0..1" -- "1" Payment : paid by
     Refund "0..1" --* "1" Payment
     Refund "1" *-- "*" RefundAttempt
     Payment "1" -- "*" ReviewCase
+    EventRecord "*" -- "0..1" Team : about
+    EventRecord "*" -- "0..1" Payment : about
+    ConsumptionRecord "0..1" -- "1" EventRecord : handles
+    Notification "*" -- "1" EventRecord : caused by

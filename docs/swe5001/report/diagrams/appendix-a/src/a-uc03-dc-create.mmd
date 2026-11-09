@@ -6,7 +6,7 @@ classDiagram
     }
     class PaidGroupDealCreator {
         <<abstract, domain service>>
-        +initiate(terms: NewDealTerms, payment: PaidParticipation, now: Instant): GroupDeal «leaf»
+        +initiate(terms: NewDealTerms, payment: PaidParticipation, now: Instant): GroupDeal «final»
         #createGroupDeal(terms: NewDealTerms, payment: PaidParticipation, now: Instant): GroupDeal «abstract»
     }
     class PaidParticipation {

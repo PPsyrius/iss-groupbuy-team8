@@ -32,20 +32,20 @@ classDiagram
         +at: Instant
     }
     class OrderLifecycleSubscriber {
-        <<application service, Evt>>
+        <<subscriber, Evt>>
         +onTeamSucceeded(event: TeamSucceeded): void
     }
     class IntegrationOutboxWriter {
-        <<adapter, Evt, Dist>>
+        <<subscriber, Evt, Dist>>
         +onTeamSucceeded(event: TeamSucceeded): void
         +onPaymentSucceeded(event: PaymentSucceeded): void
     }
     class ShareCreditSubscriber {
-        <<application service, Evt>>
+        <<subscriber, Evt>>
         +onMemberJoined(event: MemberJoined): void
     }
     class OpenDealOfferCacheSubscriber {
-        <<application service, Evt>>
+        <<subscriber, Evt>>
         +onMemberJoined(event: MemberJoined): void
         +onTeamSucceeded(event: TeamSucceeded): void
     }

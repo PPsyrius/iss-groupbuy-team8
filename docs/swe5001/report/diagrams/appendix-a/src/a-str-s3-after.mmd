@@ -13,7 +13,7 @@ classDiagram
         +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
     }
     class PurchaseIntentAppService {
-        <<application service, Dist>>
+        <<adapter, application service, Dist>>
         +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
     }
     class UserAppService {

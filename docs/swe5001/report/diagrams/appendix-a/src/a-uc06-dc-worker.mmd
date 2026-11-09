@@ -8,8 +8,8 @@ classDiagram
         -attemptOne(leaseValid: BooleanSupplier): void
     }
     class LeasedJobRunner {
-        <<scheduled job, Sched, Conc>>
-        +run(job: String, lease: Duration, work: LeaseAwareWork): void
+        <<utility, Sched, Conc>>
+        +run(job: String, lease: Duration, work: LeasedJobRunner.LeaseAwareWork): void
     }
     class SchedulerLeaseRepository {
         <<interface, repository, Sched, Conc>>

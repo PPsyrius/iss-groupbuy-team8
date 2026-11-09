@@ -27,7 +27,7 @@ sequenceDiagram
         end
         Note over Svc,Map: B3 and B4: eventId = "team-expired-" + dealId
         Svc->>Repo: requireRefundsForExpiredTeam(dealId, "TEAM_EXPIRED", eventId)
-        Repo->>Map: lockRefundableMemberIds(dealId): lock 3, payments by id
+        Repo->>Map: lockRefundableMemberIds(dealId): lock 4, payments by id
         Map-->>Repo: List(UUID) locked
         Repo->>Map: refundExpiredTeam(dealId, reason, eventId)
         Map-->>Repo: int written

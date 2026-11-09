@@ -10,7 +10,7 @@ classDiagram
         +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
     }
     class RateLimitGateway {
-        <<interface, Sec>>
+        <<interface, gateway, Sec>>
         +tryAcquire(limit: RateLimitGateway.RateLimit, subject: String): boolean
     }
     class PaymentIntentPort {
@@ -31,7 +31,7 @@ classDiagram
         +requireActive(userId: UUID): void
     }
     class PurchaseIntentAppService {
-        <<application service, Dist>>
+        <<adapter, application service, Dist>>
         +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
         -join(user: UUID, dealId: UUID, inviteRef: String, now: Instant): PurchaseIntent
     }
@@ -67,7 +67,7 @@ classDiagram
         +hasActiveMember(dealId: UUID, userId: UUID): boolean
     }
     class ShareInvite {
-        <<record>>
+        <<aggregate root, record>>
         +attributes(joiningDealId: UUID, buyerId: UUID): boolean
     }
 %% at StripeCheckoutController 0,0

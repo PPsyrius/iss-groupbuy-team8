@@ -5,9 +5,6 @@ sequenceDiagram
     participant Ord as :OrderRepository
     participant Ref as :TeamExpiryRefundSubscriber
     participant Out as :IntegrationOutboxWriter
-    participant Rcp as :IntegrationRecipientRepository
-    create participant V1 as :TeamExpiredV1
-    participant Box as :OutboxMapper
     participant CS as :OpenDealOfferCacheSubscriber
 
     critical expireOne transaction (continued), BEFORE_COMMIT phase, in @Order
@@ -18,18 +15,13 @@ sequenceDiagram
         OLS-->>Pub: return
         Note over Pub,Ref: B9: «extend» UC6 (@sec-a-uc06)
         Pub->>Ref: onTeamExpired(event), @Order(20)
-        Note over Ref,Rcp: UC6: recordExpiredTeam(dealId) records one refund obligation per paid member
+        Note over Ref,Out: UC6: recordExpiredTeam(dealId) records one refund obligation per paid member
         Ref-->>Pub: return
-        Note over Pub,Box: B10: only when blocbuy.events.enabled; relay in @sec-a-notifications
+        Note over Pub,Out: B10: only when blocbuy.events.enabled
         Pub->>Out: onTeamExpired(event), lowest precedence
-        Out->>Rcp: findActiveMemberIdsByDealId(dealId)
-        Rcp-->>Out: List of UUID
-        Out->>V1: «create»
-        Note over Out,Box: TeamExpiredV1(dealId, productId, expiredAt, recipientUserIds) serialised to JSON
-        Out->>Box: insert(row: OutboxInsert)
-        Box-->>Out: 1
+        Note over Out: writes the TeamExpiredV1 outbox row for the active members, @fig-a-ntf-ds-produce
         Out-->>Pub: return
     end
     Note over Pub,CS: COMMIT, then AFTER_COMMIT, outside the transaction
     Pub->>CS: onTeamExpired(event)
-    Note over Box,CS: evicts the product's cached open-deal offer
+    Note over Out,CS: evicts the product's cached open-deal offer

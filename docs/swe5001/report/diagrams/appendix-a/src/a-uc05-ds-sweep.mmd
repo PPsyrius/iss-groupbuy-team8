@@ -4,7 +4,7 @@ sequenceDiagram
     participant Job as :TeamExpirySweepJob
     participant Run as :LeasedJobRunner
     participant Lease as :SchedulerLeaseRepository
-    participant Work as work : LeaseAwareWork
+    participant Work as work : LeasedJobRunner.LeaseAwareWork
     participant Sw as :GroupDealExpirySweeper
     participant Deals as :PaidGroupDealRepository
     participant Exp as :GroupDealExpiryService

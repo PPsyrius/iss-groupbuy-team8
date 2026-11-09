@@ -14,7 +14,7 @@ sequenceDiagram
     Admin->>Ctl: configureTeamTerms(productId, request)
     Ctl->>App: configure(productId, command, actorId)
     critical REQUIRED, READ COMMITTED, 10 s
-        App->>Repo: lockById(productId): lock 1, product row
+        App->>Repo: lockById(productId): lock 6, product row
         App->>Users: requireActive(actorId)
         App->>Prod: requireVersion(expectedVersion)
         App->>Prod: configureTeamTerms(targetSize, lifetimeSeconds)

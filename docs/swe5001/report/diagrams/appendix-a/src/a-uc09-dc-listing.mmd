@@ -32,7 +32,7 @@ classDiagram
         -lockForChange(id: UUID, expectedVersion: int, actorId: UUID): Product
     }
     class GroupDealQueryService {
-        <<interface, application service>>
+        <<interface>>
         +countOpenDeals(): long
         +hasProductReferences(productId: UUID): boolean
     }

@@ -60,7 +60,7 @@ classDiagram
         +quoteTeamPrice(product: Product, policy: TeamPricePolicy, now: Instant): BigDecimal
     }
     class TeamPricePolicy {
-        <<entity, record>>
+        <<aggregate root, record>>
         +productId: UUID
         +amount: BigDecimal
         +currency: String

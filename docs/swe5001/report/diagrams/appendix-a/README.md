@@ -88,6 +88,8 @@ Anything else fails loudly, because the translator itself silently drops lines i
 
 - `afig(id, caption, lbl: auto, orient: auto, float: false)` puts the drawing in a numbered figure (Figure A.n) labelled `<fig-ID>`. It scales the drawing to the text width and the page height left under the caption. A class or state diagram that would print below 8 pt turns landscape on a flipped page of its own, caption included, when that helps. `orient: "landscape"` forces it (the kit only turns when landscape is at least 0.03 larger); `"portrait"` forbids it. Sequence diagrams never turn: split them.
 - Call `afig` at the top level of the part file, never inside a list, block or table: a landscape figure needs a page break.
+- A drawing never splits from its caption. When a sequence diagram does not fit in the space left on the page, `afig` offers it that space if its labels still print at 8 pt or more there (scale 0.945); otherwise it moves to the next page at full size. To avoid half-empty pages, put a section's paragraphs before its run of figures rather than one paragraph before each full-page figure.
+- Code in any appendix table prints at 8 pt (set centrally in `lib-a.typ`); do not add part-local size rules.
 - `atable(caption, lbl, columns:, header:, ..cells)` is the report's table style with a repeating header; long inline code in a cell wraps at `_ . / ( ,` and camelCase boundaries.
 - Caption: notation + viewpoint + what to notice, two sentences at most.
 

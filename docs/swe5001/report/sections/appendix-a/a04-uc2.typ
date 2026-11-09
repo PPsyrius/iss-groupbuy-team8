@@ -58,7 +58,7 @@ The basic flow is drawn in two parts: before the account is known (@fig-a-uc02-a
 
 === Transition: Strategies and Mapping <sec-a-uc02-transition>
 
-Eight of the nine strategies of @sec-a-strategies change UC2:
+Seven of the nine strategies of @sec-a-strategies change UC2; S7 and S9 do not:
 
 - *S1 Language and framework (AD-01, AD-18; NFR-05, 06, 26):* impacted `Account`, `OAuthBinding` → resultant the aggregate root `User` with the entity `OAuthIdentity`, the enumerations `UserStatus`, `RegisterSource`, `OAuthProvider`, and nested records such as `OAuthIdentityGateway.OAuthProfile`; dynamics @fig-a-uc02-ds-register.
 - *S2 Presentation (AD-09; NFR-07, 12, 16, 25):* impacted `SignInUI`, `MemberAreaUI` → resultant the routes `/login` and `/auth/callback`, the `_authenticated` guard, `GoogleSignInButton` and `GatedActionSheet`; not drawn.

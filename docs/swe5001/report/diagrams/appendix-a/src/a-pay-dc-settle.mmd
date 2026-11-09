@@ -43,7 +43,7 @@ classDiagram
         <<adapter, application service, Dist>>
     }
     class Outcome["PaymentBusinessPort.Outcome"] {
-        <<record>>
+        <<value object, record>>
         +dealId: UUID
         +orderId: UUID
         +rejection: String

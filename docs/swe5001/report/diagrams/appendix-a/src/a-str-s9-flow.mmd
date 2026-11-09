@@ -21,7 +21,9 @@ sequenceDiagram
     end
     Note over Svc,Out: COMMIT; AFTER_COMMIT subscribers then run (share credit, cache eviction: @fig-a-uc04-ds-events)
     Note over Relay,Topic: every 2 s under the job lease (S7): relayBatch reads up to 100 due outbox rows
-    Relay-)Topic: PublishBatch via OutboxEventTransport.publish(events, leaseValid)
+    Relay->>Topic: PublishBatch(topicArn, entries), via OutboxEventTransport.publish(events, leaseValid)
+    Topic-->>Relay: successful and failed ids; relayBatch records the results
+    Note over Topic,Con: SNS delivers a copy to the notification SQS queue, asynchronously; the consumer long-polls it
     Topic-)Con: copy on the notification SQS queue
     Note over Con,Hdl: IntegrationEventDecoder.decode(body) yields a NotificationEvent
     Con->>Hdl: handle(consumer, event)

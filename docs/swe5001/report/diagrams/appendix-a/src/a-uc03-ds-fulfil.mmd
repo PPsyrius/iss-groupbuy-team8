@@ -15,7 +15,7 @@ sequenceDiagram
     OFA->>Set: lockTeam(dealId): lock 1, no row
     OFA->>Intents: lockById(intentId): lock 2
     OFA-->>Svc: void
-    Note over Svc,Groups: lock 3 is the payment; a quote past its deadline is refused there (A5)
+    Note over Svc,Groups: lock 4 is the payment; a quote past its deadline is refused there (A5)
     Svc->>OFA: fulfil(event)
     OFA->>Set: lockTeam(dealId): no row
     OFA->>Intents: lockById(intentId): already held

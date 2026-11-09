@@ -15,7 +15,7 @@ sequenceDiagram
     Ctl->>App: delete(id, expectedVersion, actorId)
     critical REQUIRED, READ COMMITTED, 10 s
         App->>App: lockForChange(id, expectedVersion, actorId)
-        App->>Repo: lockById(id): lock 1
+        App->>Repo: lockById(id): lock 6, product row
         App->>Users: requireActive(actorId)
         App->>Prod: requireVersion(expectedVersion)
         App->>Prod: requireDeletable()

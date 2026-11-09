@@ -16,7 +16,7 @@ sequenceDiagram
         Run-->>Job: skipped
     end
     par this run's work
-        Run->>Job: attemptOne(leaseValid), through LeaseAwareWork
+        Run->>Job: attemptOne(leaseValid), through LeasedJobRunner.LeaseAwareWork
         Job->>Svc: processNext()
         critical claim transaction, REQUIRED (new), READ COMMITTED, 5 s
             Svc->>Impl: claimNext()

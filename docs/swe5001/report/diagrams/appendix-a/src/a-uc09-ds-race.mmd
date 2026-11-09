@@ -15,7 +15,7 @@ sequenceDiagram
     A2->>Ctl: revise(productId, request)
     Ctl->>TB: revise(id, detailsB, 3, admin2)
     TA->>Repo: lockById(id)
-    Repo->>Map: selectActiveByIdForUpdate(id): lock 1
+    Repo->>Map: selectActiveByIdForUpdate(id): lock 6, product row
     Repo-->>TA: Product version 3, row locked
     TB->>Repo: lockById(id)
     Repo->>Map: selectActiveByIdForUpdate(id)

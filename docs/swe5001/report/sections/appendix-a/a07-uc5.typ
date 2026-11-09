@@ -46,7 +46,7 @@ An open team ends in exactly one of two ways. It *succeeds* when a paid join fil
 
 The entity names are those of A.6: `Team`, `Membership` and `Order` keep their meaning. Two objects are new: the boundary `SchedulerTrigger` and the control `ResolveTeamControl`. Two attributes are new because the flows need them: `Team.successTime` (B2) and `Order.cancelTime` (B8). The refund obligation of B9 belongs to UC6 and is drawn in @sec-a-uc06; UC5 reaches it only through the «extend» relationship, so it is not repeated here.
 
-#afig("a-uc05-ac", float: true, [UC5 analysis class diagram (UML class notation, BCE stereotypes). The Scheduler uses `SchedulerTrigger`; the success enters from UC4's `JoinTeamControl`. `ResolveTeamControl` settles the orders, and `Team` alone decides whether it may move.])
+#afig("a-uc05-ac", [UC5 analysis class diagram (UML class notation, BCE stereotypes). The Scheduler uses `SchedulerTrigger`; the success enters from UC4's `JoinTeamControl`. `ResolveTeamControl` settles the orders, and `Team` alone decides whether it may move.])
 
 === Analysis Sequence Diagrams <sec-a-uc05-as>
 
@@ -94,7 +94,7 @@ The design model has 28 classes and interfaces, drawn in three slices along the 
 
 The representative persistence chain is `PaidGroupDealRepository` → `PaidGroupDealRepositoryImpl` → `PaidGroupDealMapper` (@fig-a-uc05-dc-resolve). Every other repository here follows the same port → adapter → mapper shape: `SchedulerLeaseRepository` is implemented by `SchedulerLeaseRepositoryImpl` over `SysSchedulerLockMapper`, and `OrderRepository` by `OrderRepositoryImpl` over `BizOrderMapper` (not drawn). The mapper's `selectDueForExpiry` and `deferExpiryRetry` back the port operations `dueForExpiry` and `deferExpiryRetry` of slice 1.
 
-#afig("a-uc05-dc-sweep", [UC5 design class diagram, slice 1: the expiry sweep (UML, commerce-svc). The job hands its work to `LeasedJobRunner` as a `LeaseAwareWork` callback; the sweeper has no transaction and calls `expireOne` once per team.])
+#afig("a-uc05-dc-sweep", [UC5 design class diagram, slice 1: the expiry sweep (UML, commerce-svc). The job hands its work to `LeasedJobRunner` as a `LeasedJobRunner.LeaseAwareWork` callback; the sweeper has no transaction and calls `expireOne` once per team.])
 
 #afig("a-uc05-dc-resolve", [UC5 design class diagram, slice 2: resolving one team in the group-buy module (UML, commerce-svc). Both entry points reach one aggregate, `GroupDeal`, whose `DealStatus` decides every move; each service only publishes the outcome as an event.])
 
@@ -106,17 +106,17 @@ Each design sequence retells part of @tbl-a-uc05-flows; the step tags in the not
 
 *Success.* @fig-a-uc05-ds-success shows what UC5 adds to UC4's settlement transaction. `joinPaid` returns `teamCompleted: true`, and `PaidGroupDealService` publishes `TeamSucceeded` after `MemberJoined`. `OrderLifecycleSubscriber` runs at `BEFORE_COMMIT` and not at once, because the joiner's own order is saved by UC4 B8 after the admission: confirming earlier would leave that order pending for ever.
 
-#afig("a-uc05-ds-success", float: true, [UC5 design sequence diagram, B1–B4 inside UC4's settlement transaction (commerce-svc). The success is decided by `GroupDeal.joinPaid`; the orders are confirmed and the outbox row is written before the same transaction commits.])
-
 *Expiry.* @fig-a-uc05-ds-sweep is the run. The lease makes the run single-flight across servers (A1); its renewal runs in parallel and, if it fails, the loop stops taking teams (A3). The sweeper is deliberately not transactional: one outer transaction would join every `expireOne` and let one failing team mark the whole batch for rollback. @fig-a-uc05-ds-expire resolves one team under lock 1, with the clock read after the lock. Two failures are kept apart: a team already resolved (`DEAL_CLOSED` (`GROUPBUY_409_002`)) is an ordinary replay and returns `false`; a team not yet due (`IllegalStateException`) is a bug in the due-list query and fails loudly (E1). @fig-a-uc05-ds-expire-events shows the subscribers that run inside that transaction before it commits.
+
+*The race.* @fig-a-uc05-ds-race shows A2 for one team with two writers: a paid join for the last seat and the expiry. Both take the team row lock first, so the database orders them. Whichever commits first decides the team; the other meets a terminal status. The join's clock is read after its lock, so a join that locks first but after the deadline is refused by `requireJoinWindow` exactly as if it had locked second.
+
+#afig("a-uc05-ds-success", [UC5 design sequence diagram, B1–B4 inside UC4's settlement transaction (commerce-svc). The success is decided by `GroupDeal.joinPaid`; the orders are confirmed and the outbox row is written before the same transaction commits.])
 
 #afig("a-uc05-ds-sweep", [UC5 design sequence diagram, B5–B7 with A1, A2, A3 and E1: the expiry run under its lease (commerce-svc). No transaction spans the batch; a failed team is deferred for 5 minutes and the loop goes on.])
 
 #afig("a-uc05-ds-expire", [UC5 design sequence diagram, B7 with A2 and E1: `GroupDealExpiryService.expireOne` resolves one team (commerce-svc). The aggregate refuses a terminal team, and the status-guarded `expireDeal` settles a race that slipped past it; both mean "already resolved".])
 
-#afig("a-uc05-ds-expire-events", [UC5 design sequence diagram, B8–B10: the subscribers of `TeamExpired` (commerce-svc). Order cancellation, refund obligations and the outbox row commit with the expiry, in `@Order`; the cache is evicted only after commit.])
-
-*The race.* @fig-a-uc05-ds-race shows A2 for one team with two writers: a paid join for the last seat and the expiry. Both take the team row lock first, so the database orders them. Whichever commits first decides the team; the other meets a terminal status. The join's clock is read after its lock, so a join that locks first but after the deadline is refused by `requireJoinWindow` exactly as if it had locked second.
+#afig("a-uc05-ds-expire-events", [UC5 design sequence diagram, B8–B10: the subscribers of `TeamExpired` (commerce-svc). Order cancellation, refund obligations and the outbox row commit with the expiry, in `@Order`; the cache is evicted only after commit. The outbox writer's own messages are drawn once, in @fig-a-ntf-ds-produce.])
 
 #afig("a-uc05-ds-race", [UC5 design sequence diagram, A2: a last-seat join and the expiry race for one team (commerce-svc). txJ and txE are two concurrent transactions (threads) on singleton beans; lock 1 serialises them, and the loser sees `DEAL_CLOSED`.])
 
@@ -187,12 +187,12 @@ Four patterns are in the UC5 code; @tbl-a-uc05-patterns maps their roles to clas
   [B2], [`Team.canMoveTo(SUCCEEDED)`], [`GroupDeal.requireJoinWindow` → `DealStatus.canTransitionTo`; new snapshot `SUCCEEDED` with `successTime`; persisted by `insertJoinedMember` (A.6)], [@fig-a-uc05-ds-success, @fig-a-uc04-ds-admit],
   [B3], [`teamFilled`, `Order.confirm` (loop)], [«create» `TeamSucceeded`; `ApplicationEventPublisher.publishEvent`; at `BEFORE_COMMIT` `OrderLifecycleSubscriber.onTeamSucceeded` → `OrderRepository.confirmByDealId`], [@fig-a-uc05-ds-success],
   [B4], [— (design only)], [`IntegrationOutboxWriter.onTeamSucceeded` → `OutboxMapper.insert`; at `AFTER_COMMIT` `OpenDealOfferCacheSubscriber.onTeamSucceeded` (evicts the cached offer)], [@fig-a-uc05-ds-success],
-  [B5], [`tick`, `expireDue`], [`TeamExpirySweepJob.run` → `LeasedJobRunner.run` → `SchedulerLeaseRepository.tryAcquire`; `LeaseAwareWork.run`], [@fig-a-uc05-ds-sweep],
+  [B5], [`tick`, `expireDue`], [`TeamExpirySweepJob.run` → `LeasedJobRunner.run` → `SchedulerLeaseRepository.tryAcquire`; `LeasedJobRunner.LeaseAwareWork.run`], [@fig-a-uc05-ds-sweep],
   [B6], [`selectDue`], [`GroupDealExpirySweeper.sweep` → `PaidGroupDealRepository.currentTime`, `dueForExpiry`], [@fig-a-uc05-ds-sweep],
   [B7], [`Team.expire`, `canMoveTo(EXPIRED)`], [`GroupDealExpiryService.expireOne` → `lockDeal`, `currentTime`; `GroupDeal.expire` → `DealStatus.canTransitionTo`; `PaidGroupDealRepository.expire` → `PaidGroupDealMapper.expireDeal`], [@fig-a-uc05-ds-expire],
   [B8], [`Order.cancel` (loop)], [«create» `TeamExpired`; `publishEvent`; `OrderLifecycleSubscriber.onTeamExpired` → `OrderRepository.cancelByDealId`], [@fig-a-uc05-ds-expire, @fig-a-uc05-ds-expire-events],
-  [B9], [«extend» UC6], [`TeamExpiryRefundSubscriber.onTeamExpired` (`@Order(20)`) → `TeamExpiryRefundService.recordExpiredTeam` (@sec-a-uc06)], [@fig-a-uc05-ds-expire-events],
-  [B10], [— (design only)], [`IntegrationOutboxWriter.onTeamExpired` → `IntegrationRecipientRepository.findActiveMemberIdsByDealId`, «create» `TeamExpiredV1`, `OutboxMapper.insert`; at `AFTER_COMMIT` `OpenDealOfferCacheSubscriber.onTeamExpired` (evicts the cached offer)], [@fig-a-uc05-ds-expire-events],
+  [B9], [«extend» UC6], [`TeamExpiryRefundSubscriber.onTeamExpired` (`@Order(20)`) → `TeamExpiryRefundService.recordExpiredTeam` (@sec-a-uc06)], [@fig-a-uc05-ds-expire-events, @fig-a-ntf-ds-produce],
+  [B10], [— (design only)], [`IntegrationOutboxWriter.onTeamExpired` → `IntegrationRecipientRepository.findActiveMemberIdsByDealId`, «create» `TeamExpiredV1`, `OutboxMapper.insert`; at `AFTER_COMMIT` `OpenDealOfferCacheSubscriber.onTeamExpired` (evicts the cached offer)], [@fig-a-uc05-ds-expire-events, @fig-a-ntf-ds-produce],
   [A1], [— (design only)], [`SchedulerLeaseRepository.tryAcquire` returns false; the run is counted `skipped`], [@fig-a-uc05-ds-sweep],
   [A2], [`expire` refused], [`GroupDeal.expire` throws `DEAL_CLOSED`, or `expireDeal` returns 0 and the repository throws `DEAL_CLOSED`; `expireOne` returns false; the sweeper counts `alreadyResolved`], [@fig-a-uc05-ds-expire, @fig-a-uc05-ds-race],
   [A3], [— (design only)], [`SchedulerLeaseRepository.renew` returns false; `leaseValid` false ends the loop; the run is counted `failed`], [@fig-a-uc05-ds-sweep],

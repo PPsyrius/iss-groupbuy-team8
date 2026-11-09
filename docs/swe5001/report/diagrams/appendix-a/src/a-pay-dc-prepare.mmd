@@ -10,7 +10,7 @@ classDiagram
     }
     class RateLimitGateway {
         <<interface, gateway, Sec>>
-        +tryAcquire(limit: RateLimit, subject: String): boolean
+        +tryAcquire(limit: RateLimitGateway.RateLimit, subject: String): boolean
     }
     class CheckoutResult["StripeCheckoutService.CheckoutResult"] {
         <<record>>

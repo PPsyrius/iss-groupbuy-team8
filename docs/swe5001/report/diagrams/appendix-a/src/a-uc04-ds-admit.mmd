@@ -9,7 +9,7 @@ sequenceDiagram
     create participant Res as result : ParticipationResult
     participant Pub as :ApplicationEventPublisher
 
-    Note over OFA,Repo: B7: inside the settlement transaction; lock 4, the receipt
+    Note over OFA,Repo: B7: inside the settlement transaction; lock 5, the receipt
     OFA->>Svc: joinConfirmed(dealId, paid, sharerUserId)
     Svc->>Repo: reserveAndLock(paymentId, fingerprint, userId)
     Repo-->>Svc: ParticipationReceipt

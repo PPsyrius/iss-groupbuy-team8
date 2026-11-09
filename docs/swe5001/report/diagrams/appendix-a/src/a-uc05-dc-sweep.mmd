@@ -1,7 +1,7 @@
 %% frame: UC5 design, slice 1: the expiry sweep (commerce-svc)
 classDiagram
     class TeamExpirySweepJob {
-        <<adapter, Sched>>
+        <<scheduled job, Sched>>
         ~JOB: String = "team-expiry-sweep"
         +run(): void
     }
@@ -12,7 +12,7 @@ classDiagram
         +batchSize: int
     }
     class LeasedJobRunner {
-        <<adapter, Sched, Conc>>
+        <<utility, Sched, Conc>>
         -owner: String
         +run(job: String, lease: Duration, work: LeasedJobRunner.LeaseAwareWork): void
     }
