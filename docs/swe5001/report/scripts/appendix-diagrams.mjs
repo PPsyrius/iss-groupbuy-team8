@@ -251,7 +251,8 @@ function generate(id) {
   const src = readFileSync(file, 'utf8');
   const info = validate(src);
   checkRefs(src);
-  const call = linkRefs(mermaid(src));
+  // Activation bars run unbroken through the fragments that close and reopen them (UML).
+  const call = linkRefs(mermaid(src, '', { continuousActivations: true }));
   const m = call.match(/^#((?:class|state|sequence)-diagram\(.*)\)$/s);
   if (!m) throw new DiagramError('translator returned an unexpected call');
   const fn = { class: 'class-diagram', sequence: 'sequence-diagram', state: 'state-diagram' }[info.kind];

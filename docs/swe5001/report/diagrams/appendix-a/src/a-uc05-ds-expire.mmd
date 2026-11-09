@@ -36,7 +36,7 @@ sequenceDiagram
         Exp->>Repo: expire(before, after, now)
         Repo->>Map: expireDeal(deal: BizGroupDealDO): WHERE status = 'open'
         Map-->>Repo: int rows
-        alt 0 rows: another writer resolved the team first (A2)
+        break 0 rows: another writer resolved the team first (A2)
             Repo-->>Exp: BizException DEAL_CLOSED, caught: return false
         end
         Repo-->>Exp: return

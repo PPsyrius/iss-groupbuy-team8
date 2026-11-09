@@ -25,6 +25,7 @@ node docs/swe5001/report/scripts/appendix-diagrams.mjs --check      # fail if ge
 docs/swe5001/report/scripts/preview-part.sh a06                     # one part alone, about 35 s
 FULL=1 docs/swe5001/report/scripts/preview-part.sh a06              # inside the whole report
 typst compile --root . docs/swe5001/report/main.typ docs/swe5001/report/build/report.pdf
+npm --prefix docs/swe5006/report run render:compare             # after changing the shared kit: SWE5006 pages unchanged
 ```
 
 The generator prints one line per diagram (`wrote`, `same` or `FAIL` with the line and the reason) and exits 1 if any source fails.
@@ -62,6 +63,7 @@ classDiagram
 - `%% at Id col,row` pins a class or state to a grid cell (integers, column first, row down). Pin every box of a class diagram; the automatic layout is a fallback. Two pins may not share a cell. Pins do nothing in sequence diagrams (lifelines keep declaration order).
 - `%% mside A B <side at A> <side at B>` (each `left` or `right`, walking from the relation's source) moves the multiplicities of the A–B relation to the other side of the line. A multiplicity sits on the right by default; at the end of a diagonal edge that reaches a box near its corner, that side can touch the box, so move that end to the left. Pinning boxes at fractional cells to straighten the edge makes the layout close up its gaps instead (UC4 Fig A.1 shows the hint in use).
 - A «create» label wraps inside the gap before the created head. If the wrap makes a figure print below 8 pt, shorten the label (`«create» EXPIRED`, not `«create» status EXPIRED`). A one-word name wider than its head box (a created head is one column wide) takes a soft hyphen (U+00AD) at a syllable break: `Member­ship`.
+- A one-branch `alt` whose branch ends the call (a reply such as `return false`, after which nothing else runs) is a `break`: draw it as one, or the bar of the call it ends stops inside the fragment.
 - A message to a «static» operation goes to a lifeline for the class itself (`participant Cls as TeamPricePolicy (entity)`), never to a lifeline that a later «create» brings into being.
 - Cross-references: `@fig-…`, `@tbl-…` or `@sec-…` inside a message, note or edge label becomes a real reference that follows renumbering (`Note over A,B: B7: @fig-a-uc04-ds-admit`). Never type "Figure A.12" by hand. Not allowed in fragment guards or names.
 
@@ -70,7 +72,7 @@ classDiagram
 Anything else fails loudly, because the translator itself silently drops lines it does not understand.
 
 - `classDiagram`: `class X { … }` with members one per line (a line with `(` is an operation, otherwise an attribute or enumeration literal), `<<stereo>>` inside the body or as `<<stereo>> X`, `X : member`, `class X~T~` generics, `direction`. Relations `<|--` `..|>` `*--` `o--` `-->` `..>` `--` `..` in either direction, with `"mult"` on either end and `: label`. Every class must be declared with `class X` (a typo would otherwise create a box).
-- `sequenceDiagram`: `actor X`, `participant X as Name`, `create participant X as Name` (the next message to it draws «create»), `destroy X`; messages `->>` sync, `-)` async, `-->>` return, each with a `: label`; `activate`/`deactivate` or none (activations are inferred); `alt`/`else`, `opt`, `loop`, `par`/`and`, `critical`/`option`, `break`, plain `rect`; `Note over A,B: text`. Every participant must be declared before use.
+- `sequenceDiagram`: `actor X`, `participant X as Name`, `create participant X as Name` (the next message to it draws «create»), `destroy X`; messages `->>` sync, `-)` async, `-->>` return, each with a `: label`; `activate`/`deactivate` or none (activations are inferred, and the generator passes `continuousActivations`: an activation that an `alt` branch or a `break` ends and the flow after it resumes is one unbroken bar, as in UML); `alt`/`else`, `opt`, `loop`, `par`/`and`, `critical`/`option`, `break`, plain `rect`; `Note over A,B: text`. Every participant must be declared before use.
 - `stateDiagram-v2`: `[*]`, `state "Name" as X`, `state X <<choice>>` (or fork, join), `A --> B : trigger [guard] / effect`, `X : entry / …` (body lines), a self-transition (drawn inside the state), `direction`.
 - Not supported: namespaces and packages, notes in class or state diagrams, composite or concurrent states, `ref` fragments, self-associations, coloured `rect`, static (underlined) members, `box`, flowcharts. Say these things in the caption or text instead.
 
