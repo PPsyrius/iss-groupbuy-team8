@@ -129,18 +129,20 @@ Every use case keeps its SWE5006 behaviour in the monolith and has one owning se
     [UC4], [Join an existing team by paying], [commerce], [Remote active-user check; publishes `PaymentSucceeded`],
     [UC5], [Resolve a team to succeeded or expired], [commerce], [Publishes `TeamSucceeded` and `TeamExpired`],
     [UC6], [Refund members of an expired team], [commerce], [Same transaction; refund notice through events],
-    [UC7], [Share an invitation and attribute referrals], [commerce], [Unchanged],
+    [UC7], [Share an invitation], [commerce], [Unchanged],
     [UC8], [View my orders and my teams], [commerce], [Unchanged],
     [UC9], [Administer product listings], [commerce], [Remote active-user check],
-    [New], [Receive notifications for team and payment events], [notification], [New event consumer with idempotent processing],
+    [UC10], [Pay for a membership upfront (included by UC3 and UC4)], [commerce], [Unchanged],
+    [UC11], [Receive notifications of team and payment events], [notification], [New event consumer with idempotent processing],
+    [UC12], [Credit the sharer of a referred join (extends UC4)], [commerce], [Unchanged; stays an in-process subscriber after the join commits],
   ),
   kind: table,
-  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6].],
+  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], where notification was unnumbered and UC7 also covered referral credit; this report numbers every use case in @fig-d2-use-cases and splits the credit into UC12.],
 ) <tbl-scope-uc>
 
 #figure(
   image("../diagrams/d2-use-cases.svg", width: 100%),
-  caption: [Use case view (UML use case diagram). Use cases are grouped by the service that owns them; UC3–UC6 form the group-buy core that the detailed design in §3.2.4 follows.],
+  caption: [Use case view: a platform-independent UML use case diagram of what BlocBuy does for its actors, with no services or technology. @tbl-scope-uc allocates each use case to its owning service. UC3–UC6 form the group-buy core that the detailed design in §3.2.4 follows.],
 ) <fig-d2-use-cases>
 
 Besides the use cases, the scope covered the platform itself:
