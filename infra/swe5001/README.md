@@ -281,6 +281,8 @@ ECS runs only from the `prod` branch, which moves only by a `dev` → `prod` pro
 
 Runs that write Terraform state share the concurrency group `swe5001-tfstate` with `cancel-in-progress: false` and `queue: max`. Pending runs are retained up to the queue limit, so a later dispatch does not supersede a queued `down`, which can destroy runtime when it eventually executes. Check for and cancel stale queued `down` runs before starting a new manual session, and wait until no promotion is running.
 
+9 November 2026 publication identity decision (NFR-54): image tags use `prod-<full-sha>-run-<run-id>-attempt-<run-attempt>`. The full SHA preserves source traceability, `run_id` distinguishes independent workflow runs and `run_attempt` distinguishes retries within a run. A SHA/attempt-only tag collided when manual run [42642746273](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/42642746273) retried the source already published by run 42587537517: both started at attempt 1. Keep ECR repositories immutable; never delete existing tags or relax publication gates to work around this collision. Digest lookup and evidence record the exact pushed tag. The source fix and regression/lint checks do not establish a successful new release; the normal reviewed promotion must verify publication, startup, smoke, release and cleanup separately. See the [daily evidence](../../docs/agile/sprint-04/log/2026-11-09.md).
+
 ### Create `prod` (one time, operator)
 
 After the PR that adds these workflows is merged, with repository admin rights:

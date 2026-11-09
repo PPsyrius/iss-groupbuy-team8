@@ -227,3 +227,37 @@ test('deployment image handoff keeps default uploads and two-day retry retention
   assert.doesNotMatch(deploy, /upload-images: false/);
   assert.match(deploy, /pattern: swe5001-image-\*/);
 });
+
+test('immutable SWE5001 image tags distinguish new runs and retry attempts at the same SHA', () => {
+  const deploy = readFileSync(`${__dirname}/../workflows/swe5001-deploy.yml`, 'utf8');
+  const publish = deploy.split('\n  publish:')[1].split('\n  up:')[0];
+  const template = publish.match(/^\s*IMAGE_TAG:\s*(.+)$/m)[1].trim();
+  const render = (sha, run_id, run_attempt) => {
+    const context = { sha, run_id, run_attempt };
+    return template.replace(/\$\{\{\s*github\.(sha|run_id|run_attempt)\s*\}\}/g,
+      (_, key) => String(context[key]));
+  };
+  const sha = 'e177a3fbb21bccaa9bd232f30ea7dbed6775d48c';
+  const original = render(sha, 42587537517, 1);
+  const fresh = render(sha, 42642746273, 1);
+  const retry = render(sha, 42642746273, 2);
+  assert.notEqual(original, fresh, 'new workflow runs reset run_attempt to 1');
+  assert.notEqual(fresh, retry, 'job retries keep run_id but increment run_attempt');
+  assert.notEqual(fresh, render('a'.repeat(40), 42642746273, 1));
+  assert.equal(fresh, render(sha, 42642746273, 1));
+  for (const tag of [original, fresh, retry]) {
+    assert.match(tag, /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$/);
+    assert.equal(tag.includes('${{'), false);
+    assert.ok(tag.includes(sha), 'retain the full source identity');
+  }
+});
+
+test('SWE5001 publication retains immutable ECR tags and resolves the exact pushed tag', () => {
+  const deploy = readFileSync(`${__dirname}/../workflows/swe5001-deploy.yml`, 'utf8');
+  const ecr = readFileSync(`${__dirname}/../../infra/swe5001/foundation/ecr.tf`, 'utf8');
+  assert.match(ecr, /image_tag_mutability\s*=\s*"IMMUTABLE"/);
+  assert.ok(deploy.includes('image="${REGISTRY}/${repository}:${IMAGE_TAG}"'));
+  assert.ok(deploy.includes('--image-ids "imageTag=${IMAGE_TAG}"'));
+  assert.ok(deploy.includes('echo "${service} ${digest} ${IMAGE_TAG}"'));
+  assert.doesNotMatch(deploy, /batch-delete-image|put-image-tag-mutability/);
+});
