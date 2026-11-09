@@ -1,0 +1,66 @@
+%% frame: UC2 design: checking the session on later requests (every service)
+classDiagram
+    class SaTokenConfig {
+        <<configuration, Sec>>
+        +addInterceptors(registry: InterceptorRegistry): void
+    }
+    class SaInterceptor {
+        <<Sec>>
+        +preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Object): boolean
+    }
+    class AuthController {
+        <<controller, Dist, Sec>>
+        +me(): Result~MeResponse~
+        +logout(): Result~Void~
+    }
+    class AdminListingController {
+        <<controller, Dist, Sec>>
+        +counts(): Result~ListingCountsResponse~
+        -administrator(): UUID «static»
+    }
+    class StpUtil {
+        <<utility, Sec>>
+        +checkLogin(): void «static»
+        +checkRole(role: String): void «static»
+        +getLoginIdAsString(): String «static»
+        +getRoleList(): List~String~ «static»
+        +logout(): void «static»
+    }
+    class UserAppService {
+        <<interface, Dist>>
+        +currentUser(userId: UUID): UserAppService.CurrentUser
+    }
+    class StpInterface {
+        <<interface, Sec>>
+        +getRoleList(loginId: Object, loginType: String): List~String~
+    }
+    class StpInterfaceImpl {
+        <<adapter, Sec>>
+    }
+    class SessionStpInterface {
+        <<adapter, Sec, Dist>>
+        +getRoleList(loginId: Object, loginType: String): List~String~
+    }
+    class SaTokenDao {
+        <<interface, Sec>>
+        +getSession(sessionId: String): SaSession
+    }
+%% at SaTokenConfig 0,0
+%% at SaInterceptor 1,0
+%% at AuthController 2,0
+%% at AdminListingController 0,1
+%% at StpUtil 1,1
+%% at UserAppService 2,1
+%% at StpInterfaceImpl 0,2
+%% at StpInterface 1,2
+%% at SessionStpInterface 2,2
+%% at SaTokenDao 2,3
+    SaTokenConfig ..> SaInterceptor : «create»
+    SaInterceptor ..> StpUtil
+    AdminListingController ..> StpUtil
+    AuthController ..> StpUtil
+    AuthController "1" --> "1" UserAppService
+    StpUtil ..> StpInterface
+    StpInterfaceImpl ..|> StpInterface
+    SessionStpInterface ..|> StpInterface
+    SessionStpInterface "1" --> "1" SaTokenDao

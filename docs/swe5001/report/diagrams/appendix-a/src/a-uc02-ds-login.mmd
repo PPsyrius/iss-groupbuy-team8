@@ -1,0 +1,39 @@
+%% frame: UC2 B7 with E5: a returning account signs in (design, identity-svc)
+sequenceDiagram
+    participant AC as :AuthController
+    participant App as :OAuthLoginAppServiceImpl
+    participant UO as :UserOAuthRepositoryImpl
+    participant M as :SysUserOAuthMapper
+    participant Tx as :OAuthUserTxService
+    participant Users as :UserRepository
+    participant U as :User
+    participant I as :OAuthIdentity
+
+    Note over AC,App: B7, inside loginWithGoogle after @fig-a-uc02-ds-signin
+    AC->>App: loginWithGoogle(code, state, stateBinding)
+    App->>UO: findActiveByProviderAndSubject(provider, subject)
+    UO->>M: selectActiveByProviderAndSubject(provider, providerUserId)
+    M-->>UO: SysUserOAuthDO, or null
+    UO-->>App: Optional(OAuthIdentity)
+    alt binding found
+        critical recordLogin: REQUIRED, default isolation, no timeout
+            App->>Tx: recordLogin(identity, profile)
+            Tx->>Users: findById(userId)
+            Users-->>Tx: Optional(User)
+            Tx->>U: ensureActive()
+            break status DISABLED (E5)
+                U-->>Tx: BizException ACCOUNT_DISABLED (IDENTITY_403_001)
+                Tx-->>App: exception; transaction rolled back
+                App-->>AC: BizException; 302 /login?error=IDENTITY_403_001
+            end
+            Tx->>U: touchLogin(now)
+            Tx->>Users: updateLastLogin(user)
+            Tx->>I: touchLogin(now, email, displayName, avatarUrl, rawProfile)
+            Tx->>UO: updateLoginSnapshot(identity)
+            Tx-->>App: OAuthLoginResult
+        end
+    else no binding
+        Note over App,I: A1: @fig-a-uc02-ds-register
+    end
+    App-->>AC: OAuthLoginResult
+    Note over AC,App: B8: @fig-a-uc02-ds-session

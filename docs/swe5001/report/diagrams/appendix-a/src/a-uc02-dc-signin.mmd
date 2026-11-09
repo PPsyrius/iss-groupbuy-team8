@@ -1,0 +1,66 @@
+%% frame: UC2 design: sign-in in identity-svc
+classDiagram
+    class AuthController {
+        <<controller, Dist, Sec>>
+        +googleAuthorize(request: HttpServletRequest): ResponseEntity~Void~
+        +googleCallback(code: String, state: String, error: String, stateBinding: String): ResponseEntity~Void~
+    }
+    class OAuthLoginAppService {
+        <<interface, Dist>>
+        +createGoogleAuthorizeUrl(): OAuthLoginAppService.GoogleAuthorizeUrl
+        +loginWithGoogle(code: String, state: String, stateBinding: String): OAuthLoginAppService.OAuthLoginResult
+    }
+    class OAuthStateStore {
+        <<interface, gateway, Sec>>
+        +issueState(): OAuthStateStore.IssuedState
+        +consume(state: String, binding: String): boolean
+    }
+    class RedisOAuthStateStore {
+        <<adapter, Sec>>
+    }
+    class OAuthLoginAppServiceImpl {
+        <<application service, Ext>>
+        -resolveRegisterRace(profile: OAuthProfile, race: DuplicateKeyException): OAuthLoginResult
+    }
+    class OAuthIdentityGateway {
+        <<interface, gateway, Ext>>
+        +buildAuthorizeUrl(state: String): String
+        +exchangeCodeForProfile(code: String): OAuthIdentityGateway.OAuthProfile
+    }
+    class GoogleOAuthGateway {
+        <<adapter, Ext>>
+        -exchangeCode(code: String): String
+        -verify(idToken: String): GoogleIdToken.Payload
+    }
+    class UserRepository {
+        <<interface, repository, Pers>>
+        +findActiveByEmail(email: String): Optional~User~
+    }
+    class OAuthUserTxService {
+        <<application service, Pers, Conc>>
+        +registerNewUser(profile: OAuthProfile): OAuthLoginResult
+        +recordLogin(identity: OAuthIdentity, profile: OAuthProfile): OAuthLoginResult
+    }
+    class UserOAuthRepository {
+        <<interface, repository, Pers>>
+        +findActiveByProviderAndSubject(provider: OAuthProvider, subject: String): Optional~OAuthIdentity~
+    }
+%% at AuthController 0,0
+%% at OAuthLoginAppService 1,0
+%% at OAuthStateStore 2,0
+%% at UserRepository 0,1
+%% at OAuthLoginAppServiceImpl 1,1
+%% at RedisOAuthStateStore 2,1
+%% at UserOAuthRepository 0,2
+%% at OAuthUserTxService 1,2
+%% at OAuthIdentityGateway 2,2
+%% at GoogleOAuthGateway 2,3
+    AuthController "1" --> "1" OAuthLoginAppService
+    OAuthLoginAppServiceImpl ..|> OAuthLoginAppService
+    OAuthLoginAppServiceImpl "1" --> "1" OAuthStateStore
+    RedisOAuthStateStore ..|> OAuthStateStore
+    OAuthLoginAppServiceImpl "1" --> "1" OAuthIdentityGateway
+    GoogleOAuthGateway ..|> OAuthIdentityGateway
+    OAuthLoginAppServiceImpl "1" --> "1" OAuthUserTxService
+    OAuthLoginAppServiceImpl "1" --> "1" UserOAuthRepository
+    OAuthLoginAppServiceImpl "1" --> "1" UserRepository

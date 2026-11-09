@@ -1,0 +1,58 @@
+%% frame: UC2 design: account and binding in identity-svc
+classDiagram
+    class OAuthUserTxService {
+        <<application service, Pers, Conc>>
+        +registerNewUser(profile: OAuthProfile): OAuthLoginResult
+        +recordLogin(identity: OAuthIdentity, profile: OAuthProfile): OAuthLoginResult
+    }
+    class UserRepository {
+        <<interface, repository, Pers>>
+        +findById(id: UUID): Optional~User~
+        +saveNew(user: User): void
+        +updateLastLogin(user: User): void
+    }
+    class UserOAuthRepository {
+        <<interface, repository, Pers>>
+        +saveNew(identity: OAuthIdentity): void
+        +updateLoginSnapshot(identity: OAuthIdentity): void
+    }
+    class RoleRepository {
+        <<interface, repository, Pers>>
+        +findActiveRoleIdByCode(roleCode: String): Optional~UUID~
+        +assignRole(userId: UUID, roleId: UUID): void
+    }
+    class User {
+        <<aggregate root>>
+        -status: UserStatus
+        +registerViaOAuth(source: RegisterSource, email: String, displayName: String, avatarUrl: String): User «static»
+        +ensureActive(): void
+        +touchLogin(at: Instant): void
+    }
+    class OAuthIdentity {
+        <<entity>>
+        +bind(userId: UUID, provider: OAuthProvider, providerUserId: String, email: String, displayName: String, avatarUrl: String, rawProfile: String): OAuthIdentity «static»
+        +touchLogin(at: Instant, email: String, displayName: String, avatarUrl: String, rawProfile: String): void
+    }
+    class UserOAuthRepositoryImpl {
+        <<adapter, Pers>>
+    }
+    class SysUserOAuthMapper {
+        <<interface, mapper, Pers>>
+        +selectActiveByProviderAndSubject(provider: String, providerUserId: String): SysUserOAuthDO
+    }
+%% at UserRepository 0,0
+%% at OAuthUserTxService 1,0
+%% at RoleRepository 2,0
+%% at User 0,1
+%% at UserOAuthRepository 1,1
+%% at UserOAuthRepositoryImpl 2,1
+%% at OAuthIdentity 1,2
+%% at SysUserOAuthMapper 2,2
+    OAuthUserTxService "1" --> "1" UserRepository
+    OAuthUserTxService "1" --> "1" UserOAuthRepository
+    OAuthUserTxService "1" --> "1" RoleRepository
+    OAuthUserTxService ..> User : «create»
+    UserRepository ..> User
+    UserOAuthRepositoryImpl ..|> UserOAuthRepository
+    UserOAuthRepositoryImpl "1" --> "1" SysUserOAuthMapper
+    UserOAuthRepository ..> OAuthIdentity

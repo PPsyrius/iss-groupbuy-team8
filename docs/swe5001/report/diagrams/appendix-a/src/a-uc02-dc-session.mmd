@@ -1,0 +1,48 @@
+%% frame: UC2 design: opening the shared session (identity-svc, Valkey)
+classDiagram
+    class AuthController {
+        <<controller, Dist, Sec>>
+        +googleCallback(code: String, state: String, error: String, stateBinding: String): ResponseEntity~Void~
+    }
+    class LoginSessionPublisher {
+        <<adapter, Sec>>
+        +login(userId: UUID): void
+    }
+    class LoginAuthorizationService {
+        <<application service, Sec>>
+        +snapshot(userId: UUID): LoginAuthorizationService.Snapshot
+    }
+    class StpLogic {
+        <<Sec>>
+        +createTokenValue(loginId: Object, deviceType: String, timeout: long, extraData: Map): String
+        +createLoginSession(id: Object, parameter: SaLoginParameter): String
+        +getSessionTimeoutByLoginId(loginId: Object): long
+        +setTokenValue(tokenValue: String, parameter: SaLoginParameter): void
+        +logoutByTokenValue(tokenValue: String): void
+    }
+    class LoginSnapshotGateway {
+        <<interface, gateway, Sec>>
+        +beginRefresh(userId: UUID): String
+        +publish(userId: UUID, refresh: String, roles: List~String~, permissions: List~String~, timeoutSeconds: long): boolean
+    }
+    class RoleRepository {
+        <<interface, repository, Pers>>
+        +findRoleCodesByUserId(userId: UUID): List~String~
+        +findPermissionCodesByUserId(userId: UUID): List~String~
+    }
+    class RedisLoginSnapshotGateway {
+        <<adapter, Sec>>
+    }
+%% at AuthController 1,0
+%% at LoginAuthorizationService 0,1
+%% at LoginSessionPublisher 1,1
+%% at StpLogic 2,1
+%% at RoleRepository 0,2
+%% at LoginSnapshotGateway 1,2
+%% at RedisLoginSnapshotGateway 2,2
+    AuthController "1" --> "1" LoginSessionPublisher
+    LoginSessionPublisher ..> StpLogic
+    LoginSessionPublisher "1" --> "1" LoginAuthorizationService
+    LoginSessionPublisher "1" --> "1" LoginSnapshotGateway
+    LoginAuthorizationService "1" --> "1" RoleRepository
+    RedisLoginSnapshotGateway ..|> LoginSnapshotGateway
