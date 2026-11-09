@@ -72,13 +72,13 @@ jobs:
       - id: login-ecr
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
 
-      # ECR tags are immutable; the run attempt keeps re-runs from colliding.
+      # Immutable tags must distinguish both new runs of the same SHA and job re-runs.
       - name: Push images and record candidate digests
         env:
           SERVICES: ${{ needs.images.outputs.services }}
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY_PREFIX: ${{ vars.SWE5001_ECR_REPOSITORY_PREFIX }}
-          IMAGE_TAG: prod-${{ github.sha }}-run-${{ github.run_attempt }}
+          IMAGE_TAG: prod-${{ github.sha }}-run-${{ github.run_id }}-attempt-${{ github.run_attempt }}
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/evidence"
