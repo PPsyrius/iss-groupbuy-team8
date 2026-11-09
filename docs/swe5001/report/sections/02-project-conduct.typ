@@ -34,7 +34,7 @@ The plan was 50 person-days in seven work packages, the briefing's guideline of 
 
 Three choices kept the plan inside the guideline. The split stopped at three services, because the five- or six-service alternative alone was estimated at 50–55 person-days (AD-02, §3.1.1). Business code was not moved into new source trees; the services are assembled from the existing modules (AD-01, AD-18). And on 11 October the team cut work that would not change the result: the broken-image drill, a forced-failure promotion, the internal-call token, WAF and tracing (#src("docs/swe5001/HANDOFF.md")[handoff record], #src("docs/swe5001/architecture-options-study/README.md")[study README]\; see also @tbl-not-built).
 
-*Scheduling.* SWE5001 ran inside the team's two-week SWE5006 sprints on the same repository and board: Phase A in Sprint 3 (to 11 October) and Phases B and C in Sprint 4 (12–23 October). Sprint 4 planned 142 hours of SWE5001 tasks. #src("docs/agile/sprint-04/plan.md")[Sprint 4 plan] · #iss(465).
+*Scheduling.* SWE5001 ran inside the team's two-week SWE5006 sprints on the same repository and board: Phase A in Sprint 3 (to 11 October) and Phases B and C in Sprint 4 (12–23 October). #src("docs/agile/sprint-04/plan.md")[Sprint 4 plan] · #iss(465).
 
 == Project Status
 
@@ -46,11 +46,11 @@ Every use case and platform capability in scope is built, and building, routing,
     table.header([Capability], [Status], [Evidence and section]),
     [Permanent stacks: `foundation` (ECR, OIDC roles) and `edge` (CloudFront, S3)], [Verified on AWS], [Applied 5–6 October; present on 8 November (#dev-src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[8 November record])],
     [Unchanged monolith on ECS Fargate (strangler step 0)], [Verified on AWS], [First green promotion, 6 October, #run("37470479078")[run 37470479078]],
-    [Promotion pipeline: build, scan, create, smoke, release, destroy], [Verified on AWS], [Green on 6, 17, 19 and 20 October (AD-19, §5.3). The eleventh promotion, 9 November (#pr(757)), failed at the `edge` step and still destroyed the runtime (#dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record], §6.4)],
+    [Promotion pipeline: build, scan, create, smoke, release, destroy], [Verified on AWS], [Green on 6, 17, 19 and 20 October (AD-19, §5.3). The eleventh promotion, 9 November (#pr(757)), failed at the `edge` step and still destroyed the runtime (#dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record], §6.4). The smoke suite is nine read-only, unauthenticated checks over five GET requests through CloudFront: health is UP, the product list is not empty, `auth/me` and the notification list answer 401 without a session, an internal path is not served by a service, and each of the four API answers carries an `X-Trace-Id` header (#src("perf/smoke/smoke.sh")[`smoke.sh`]\; all nine passed in #run("39435280952")[run 39435280952])],
     [Three services running on ECS (`distributed` topology)], [Verified on AWS], [#run("39008208244")[Run 39008208244], 17 October; repeated in #run("39259845179")[run 39259845179] (19 October) and #run("39435280952")[run 39435280952] (20 October)],
     [HTTP target-tracking auto-scaling and the CloudWatch dashboard], [Scale-out verified on AWS; invalid as acceptance evidence], [One to three tasks on 19 October; the load generator dropped iterations, so the run proves neither the throughput target nor linear scaling (§4.1, AISS-12)],
     [Outbox, SNS/SQS fan-out and the idempotent consumer], [Built; routing verified on AWS], [Messaging readiness check passed in the promotions; no end-to-end notification on AWS is recorded],
-    [Stripe test-mode Checkout in `commerce-svc`], [Built; deployed 20 October], [#pr(565), #pr(574)],
+    [Stripe test-mode Checkout in `commerce-svc`], [Built; deployed 20 October], [#pr(565), #pr(574)\; no payment on AWS recorded],
     [Identity outage and poison message to the dead-letter queue], [Verified locally only], [15 October rehearsal (§4.2, AISS-13)],
     [Self-healing after a stopped task (V5)], [Not run], [Drill pending (#iss(459))],
     [Safe deployment rollback with a broken image (V6)], [Not run], [Drill cut on 11 October; the circuit breaker is configured (§4.2)],

@@ -118,24 +118,24 @@ SWE5001 changed how BlocBuy is built and run, not what it does. The business fun
 
 === Functionality in scope
 
-Every use case keeps its SWE5006 behaviour in the monolith and has one owning service in the distributed topology (@tbl-scope-uc, @fig-d2-use-cases).
+Every use case keeps its SWE5006 behaviour in the monolith and has one owning service in the distributed topology (@tbl-scope-uc, @fig-d2-use-cases). Each use case's flows of events (preconditions, normal and exceptional flows) are specified in the SWE5006 report's use case model, §3.3, which the last column of @tbl-scope-uc links.
 
 #figure(
   table(
-    columns: (0.45fr, 2.1fr, 0.9fr, 2.2fr),
-    table.header([ID], [Use case], [Owning service], [SWE5001 change]),
-    [UC1], [Browse and search team-priced products], [commerce], [Primary target for HTTP auto-scaling],
-    [UC2], [Sign in with Google], [identity], [Separate service; one session shared by all services],
-    [UC3], [Initiate a team by paying for the first membership], [commerce], [Remote active-user check],
-    [UC4], [Join an existing team by paying], [commerce], [Remote active-user check; publishes `PaymentSucceeded`],
-    [UC5], [Resolve a team to succeeded or expired], [commerce], [Publishes `TeamSucceeded` and `TeamExpired`],
-    [UC6], [Refund members of an expired team], [commerce], [Same transaction; refund notice through events],
-    [UC7], [Share an invitation], [commerce], [Unchanged],
-    [UC8], [View my orders and my teams], [commerce], [Unchanged],
-    [UC9], [Administer product listings (platform administrator)], [commerce], [Remote active-user check],
-    [UC10], [Pay for a membership upfront (included by UC3 and UC4)], [commerce], [Unchanged],
-    [UC11], [Receive notifications of team and payment events], [notification], [New event consumer with idempotent processing],
-    [UC12], [Credit the sharer of a referred join (extends UC4)], [commerce], [Unchanged; stays an in-process subscriber after the join commits],
+    columns: (0.45fr, 2fr, 0.85fr, 2fr, 0.75fr),
+    table.header([ID], [Use case], [Owning service], [SWE5001 change], [Flows of events]),
+    [UC1], [Browse and search team-priced products], [commerce], [Primary target for HTTP auto-scaling], [#src("docs/swe5006/report/sections/03-3-02-uc1-pan.md")[§3.3.2]],
+    [UC2], [Sign in with Google], [identity], [Separate service; one session shared by all services], [#src("docs/swe5006/report/sections/03-3-03-uc2-pan.md")[§3.3.3]],
+    [UC3], [Initiate a team by paying for the first membership], [commerce], [Remote active-user check], [#src("docs/swe5006/report/sections/03-3-04-uc3-eric.md")[§3.3.4]],
+    [UC4], [Join an existing team by paying], [commerce], [Remote active-user check], [#src("docs/swe5006/report/sections/03-3-05-uc4-eric.md")[§3.3.5]],
+    [UC5], [Resolve a team to succeeded or expired], [commerce], [Publishes `TeamSucceeded` and `TeamExpired`], [#src("docs/swe5006/report/sections/03-3-06-uc5-liu-jin.md")[§3.3.6]],
+    [UC6], [Refund members of an expired team], [commerce], [Same transaction; refund notice through events], [#src("docs/swe5006/report/sections/03-3-07-uc6-yorik.md")[§3.3.7]],
+    [UC7], [Share an invitation], [commerce], [Unchanged], [#src("docs/swe5006/report/sections/03-3-08-uc7-lim.md")[§3.3.8]],
+    [UC8], [View my orders and my teams], [commerce], [Unchanged], [#src("docs/swe5006/report/sections/03-3-09-uc8-lim.md")[§3.3.9]],
+    [UC9], [Administer product listings (platform administrator)], [commerce], [Remote active-user check], [#src("docs/swe5006/report/sections/03-3-10-uc9-liu-jin.md")[§3.3.10]],
+    [UC10], [Pay for a membership upfront (included by UC3 and UC4)], [commerce], [Publishes `PaymentSucceeded` through the outbox when a payment settles, for a start (UC3) and a join (UC4) alike], [#src("docs/swe5006/report/sections/03-3-11-pay-upfront-eric.md")[§3.3.11]],
+    [UC11], [Receive notifications of team and payment events], [notification], [New event consumer with idempotent processing], [#src("docs/swe5006/report/sections/03-3-12-notifications-pan.md")[§3.3.12]],
+    [UC12], [Credit the sharer of a referred join (extends UC4)], [commerce], [Unchanged; stays an in-process subscriber after the join commits], [#src("docs/swe5006/report/sections/03-3-08-uc7-lim.md")[§3.3.8]],
   ),
   kind: table,
   caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], where notification was unnumbered and UC7 also covered referral credit; this report numbers every use case in @fig-d2-use-cases and splits the credit into UC12.],
