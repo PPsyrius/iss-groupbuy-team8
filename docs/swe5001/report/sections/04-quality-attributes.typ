@@ -68,12 +68,12 @@ The platform is extended at three seams: a new event consumer, a new service and
 #let lim-at(line) = "backend/blocbuy-bootstrap/src/test/java/com/blocbuy/architecture/ArchitectureTest.java#L" + str(line)
 #figure(
   table(
-    columns: (0.8fr, 2.4fr, 1.6fr),
+    columns: (0.75fr, 2.1fr, 1.95fr),
     table.header([Seam], [Principle or pattern], [Enforcing artefact]),
     [New event consumer], [Open-Closed Principle at architecture level: new subscribers extend the bus, and the producer `commerce-svc` stays closed for modification. Publish–subscribe across services (SNS fan-out to SQS); Observer in process: the publisher does not know its `@TransactionalEventListener` subscribers, such as #lim-src("backend/blocbuy-infrastructure/src/main/java/com/blocbuy/integration/outbox/IntegrationOutboxWriter.java")[`IntegrationOutboxWriter`]], [`SnsOutboxEventTransport` holds only the topic ARN; `terraform test` asserts each subscription filter],
     [Layers in every service], [Dependency Inversion Principle: domain and application depend on port interfaces declared in the domain, which infrastructure implements (`OutboxEventTransport` by `SnsOutboxEventTransport`)], [ArchUnit rules #lim-src(lim-at(67))[`domain_is_framework_free`], #lim-src(lim-at(91))[`application_uses_ports_not_tech`] and #lim-src(lim-at(132))[`domain_has_no_outward_dependencies`] (all rules: AD-18)],
     [Coupling between services], [One synchronous call, `commerce-svc` → `identity-svc`, through the `UserAppService` port, implemented remotely by `RemoteUserAppService` (AD-06); everything else is events], [#lim-src(lim-at(247))[`commerce_reaches_identity_only_through_user_port`]],
-    [Cohesion of each service], [Each service's persistence code uses only its own mappers. An assembly holds only service-specific code: one main class in `identity-svc` and in `notification-svc`, four in `commerce-svc`], [#lim-src(lim-at(293))[`*_persistence_is_owned`] (three rules); per-service database grants],
+    [Cohesion of each service], [Each service's persistence code uses only its own mappers. An assembly holds only service-specific code: only its main class in `identity-svc` and `notification-svc`\; in `commerce-svc` also the three classes of the remote identity client], [#lim-src(lim-at(293))[`*_persistence_is_owned`] (three rules); per-service database grants],
   ),
   kind: table,
   caption: [Seam, principle or pattern, and enforcing artefact (code at b80debcd, 8 November 2026).],

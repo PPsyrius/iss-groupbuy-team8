@@ -74,4 +74,4 @@ Why it failed:
 - **Placement not read back.** Which subnets RDS and Valkey were placed in, the route tables of the data subnets and the security group rules were not read from AWS during the 37 minutes. AISS-07 (report §3.4) and #589 stay open.
 - **Edge state after the failure not read.** Whether the distribution's `/api/*` origin changed before the error is not visible in the log.
 - **Cost.** The session is not in the Cost Explorer read of 8 November ([cost record](../20261108-cost-explorer/README.md)).
-- **Permission fix.** On 9 November no pull request grants `cloudfront:UpdateResponseHeadersPolicy` or applies the #700 change to `edge` by an operator; the next promotion fails the same way until one of the two happens.
+- **Permission fix.** On 9 November no pull request grants `cloudfront:UpdateResponseHeadersPolicy` or applies the #700 change to `edge` by an operator; the next promotion would fail the same way until one of the two happened. Update: the next promotion, the same evening, passed the `edge` step without a change to the apply role ([record](../20261109-promotion-770/README.md)).
