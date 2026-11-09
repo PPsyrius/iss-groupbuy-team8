@@ -1,0 +1,28 @@
+%% frame: UC6 reconcile a parked refund (analysis)
+sequenceDiagram
+    actor Op as Operator
+    participant RUI as ReviewUI (boundary)
+    participant Ctl as RefundMembersControl (control)
+    participant Ref as Refund (entity)
+    participant Pay as Payment (entity)
+    participant PG as PaymentGateway (boundary)
+    create participant Att as RefundAttempt (entity)
+
+    Op->>RUI: A11: reconcile(payment, providerReference)
+    RUI->>Ctl: A11: reconcile(payment, providerReference)
+    Ctl->>Ref: A11: claimForReview()
+    break refund is not parked for review or failed
+        Ref-->>Ctl: none
+        Ctl-->>RUI: nothing reconciled
+    end
+    Ctl->>Pay: A11: agreesWith(refund)
+    Ctl->>PG: A11: lookUpRefund(providerReference)
+    alt provider refund matches the refund
+        PG-->>Ctl: providerReference, status
+        Ctl->>Ref: A11: record(providerReference, status)
+    else no match, refusal or provider error
+        Ctl->>Ref: A11: parkForReview(reason)
+    end
+    Ref->>Att: A11: «create» (result)
+    Ctl-->>RUI: outcome
+    RUI-->>Op: A11: showOutcome(result)

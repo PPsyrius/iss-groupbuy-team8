@@ -1,0 +1,94 @@
+%% frame: UC6 Refund members of an expired team (analysis)
+classDiagram
+    class SchedulerTrigger {
+        <<boundary>>
+        +tick(now)
+    }
+    class ReviewUI {
+        <<boundary>>
+        +reconcile(payment, providerReference)
+        +showOutcome(result)
+    }
+    class ReceiptUI {
+        <<boundary>>
+        +showRefundStatus(status)
+    }
+    class ResolveTeamControl {
+        <<control>>
+        +expireDue(now)
+    }
+    class RefundMembersControl {
+        <<control>>
+        +recordRefundsOwed(team)
+        +payNextRefund()
+        +reconcile(payment, providerReference)
+        +refundStatus(payment)
+    }
+    class PaymentGateway {
+        <<boundary>>
+        +refund(payment, amount, requestId)
+        +lookUpRefund(providerReference)
+        +findRefund(payment, requestId)
+    }
+    class Team {
+        <<entity>>
+        -deadline: Date-time
+        -status: TeamStatus
+        +isExpired()
+        +paidPayments()
+    }
+    class Payment {
+        <<entity>>
+        -amount: Money
+        -status: PaymentStatus
+        -providerReference: Identifier
+        +requireRefund(reason)
+        +agreesWith(refund)
+    }
+    class Refund {
+        <<entity>>
+        -amount: Money
+        -reason: Text
+        -status: RefundStatus
+        -providerReference: Identifier
+        -firstAttempt: Date-time
+        -nextAttempt: Date-time
+        +claimNextDue()
+        +claimForReview()
+        +record(providerReference, status)
+        +retryLater()
+        +parkForReview(reason)
+    }
+    class PurchaseIntent {
+        <<entity>>
+        -price: Money
+    }
+    class RefundAttempt {
+        <<entity>>
+        -result: Text
+        -attemptTime: Date-time
+    }
+%% at SchedulerTrigger 0,0
+%% at ReviewUI 1,0
+%% at ReceiptUI 2,0
+%% at ResolveTeamControl 0,1
+%% at RefundMembersControl 1,1
+%% at PaymentGateway 2,1
+%% at Team 0,2
+%% at Payment 1,2
+%% at Refund 2,2
+%% at RefundAttempt 2,3
+%% at PurchaseIntent 0,3
+    SchedulerTrigger "1" -- "1" ResolveTeamControl
+    SchedulerTrigger "1" -- "1" RefundMembersControl
+    ReviewUI "1" -- "1" RefundMembersControl
+    ReceiptUI "1" -- "1" RefundMembersControl
+    RefundMembersControl "1" -- "1" PaymentGateway
+    ResolveTeamControl "1" --> "1" RefundMembersControl
+    RefundMembersControl "1" --> "*" Team
+    RefundMembersControl "1" --> "*" Payment
+    RefundMembersControl "1" --> "*" Refund
+    Payment "*" -- "1" PurchaseIntent : pays
+    PurchaseIntent "*" -- "0..1" Team
+    Payment "1" *-- "0..1" Refund : owes
+    Refund "1" *-- "*" RefundAttempt

@@ -1,0 +1,75 @@
+%% frame: UC6 design, slice 2: the refund worker and its claim (commerce-svc)
+classDiagram
+    class RefundWorkerJob {
+        <<scheduled job, Sched>>
+        -runner: LeasedJobRunner
+        -refundService: RefundService
+        +run(): void
+        -attemptOne(leaseValid: BooleanSupplier): void
+    }
+    class LeasedJobRunner {
+        <<scheduled job, Sched, Conc>>
+        +run(job: String, lease: Duration, work: LeaseAwareWork): void
+    }
+    class SchedulerLeaseRepository {
+        <<interface, repository, Sched, Conc>>
+        +tryAcquire(lockKey: String, owner: String, lease: Duration): boolean
+        +renew(lockKey: String, owner: String, lease: Duration): boolean
+        +release(lockKey: String, owner: String): boolean
+    }
+    class RefundService {
+        <<application service, Ext, Conc>>
+        -REVIEW: String = "review" «static»
+        -FAILED: String = "failed" «static»
+        -SUCCEEDED: String = "succeeded" «static»
+        -CANCELED: String = "canceled" «static»
+        -PENDING: String = "pending" «static»
+        -PROCESSING: String = "processing" «static»
+        -tx: TransactionTemplate
+        +processNext(): boolean
+        +reconcile(paymentId: UUID, providerId: String): boolean
+        -claim(claim: Supplier~RefundWork~): Optional~RefundWork~
+        -finish(work: RefundWork, providerId: String, state: String, result: String): void
+    }
+    class RefundWork {
+        <<value object, record>>
+        +id: UUID
+        +providerRefundId: String
+        +firstAttemptAt: Instant
+        +version: int
+        +valid(): boolean
+    }
+    class RefundRepository {
+        <<interface, repository, Pers, Conc>>
+        +claimNext(): RefundWork
+        +claimReview(paymentId: UUID): RefundWork
+        +now(): Instant
+        +finish(work: RefundWork, providerId: String, status: String, result: String): void
+    }
+    class RefundRepositoryImpl {
+        <<adapter, Pers>>
+        +claimNext(): RefundWork
+        +finish(work: RefundWork, providerId: String, status: String, result: String): void
+    }
+    class RefundMapper {
+        <<interface, mapper, Pers, Conc>>
+        +claimNext(): RefundWork
+        +finish(work: RefundWork, providerId: String, status: String, result: String): int
+        +audit(work: RefundWork, result: String): int
+    }
+%% at RefundWorkerJob 1,0
+%% at LeasedJobRunner 0,0
+%% at SchedulerLeaseRepository 0,1
+%% at RefundService 1,1
+%% at RefundWork 1,2
+%% at RefundRepository 2,1
+%% at RefundRepositoryImpl 2,2
+%% at RefundMapper 2,3
+    RefundWorkerJob "1" --> "1" LeasedJobRunner
+    RefundWorkerJob "1" --> "1" RefundService
+    LeasedJobRunner "1" --> "1" SchedulerLeaseRepository
+    RefundService "1" --> "1" RefundRepository
+    RefundService ..> RefundWork
+    RefundRepository ..> RefundWork
+    RefundRepositoryImpl ..|> RefundRepository
+    RefundRepositoryImpl "1" --> "1" RefundMapper

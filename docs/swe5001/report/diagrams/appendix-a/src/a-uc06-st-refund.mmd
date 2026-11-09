@@ -1,0 +1,26 @@
+%% frame: refund obligation (biz_refund.status)
+stateDiagram-v2
+    state "pending" as pending
+    state "processing" as processing
+    state "succeeded" as succeeded
+    state "failed" as failed
+    state "review" as review
+    state answer <<choice>>
+    [*] --> pending : TeamExpired / requireRefundsForExpiredTeam
+    pending --> answer : processNext() [due]
+    processing --> answer : processNext() [due]
+    review --> answer : reconcile()
+    failed --> answer : reconcile()
+    answer --> succeeded : [succeeded] / finish
+    answer --> processing : [pending or retryable] / finish
+    answer --> failed : [failed or canceled] / finish
+    answer --> review : [unsafe] / finish
+    succeeded --> [*]
+%% at __start0 0,1
+%% at pending 0,2
+%% at processing 2,0
+%% at answer 2,2
+%% at succeeded 2,3
+%% at __end0 0,3
+%% at review 4,1
+%% at failed 4,3

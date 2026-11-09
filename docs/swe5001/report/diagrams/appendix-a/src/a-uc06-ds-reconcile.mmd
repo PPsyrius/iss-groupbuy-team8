@@ -1,0 +1,35 @@
+%% frame: UC6 A11: an operator reconciles a parked refund (design)
+sequenceDiagram
+    actor Op as Operator
+    participant Svc as :RefundService
+    participant Repo as :RefundRepository
+    participant W as :RefundWork
+    participant GW as :RefundGateway
+
+    Note over Op,Svc: A11: no controller, command or job calls reconcile (ReviewUI not built)
+    Op->>Svc: reconcile(paymentId, providerId)
+    break providerId is not a Stripe refund id (re_...)
+        Svc-->>Op: IllegalArgumentException
+    end
+    critical claim transaction, REQUIRED (new), READ COMMITTED, 5 s
+        Svc->>Repo: claimReview(paymentId)
+        Note over Repo,GW: review or failed row, row lease free; lease 2 min, version + 1; audit OPERATOR_RECONCILE
+        Repo-->>Svc: RefundWork
+    end
+    break no review or failed row
+        Svc-->>Op: false
+    end
+    Svc->>W: valid()
+    W-->>Svc: boolean
+    break not valid
+        Svc->>Svc: finish(work, providerRefundId, REVIEW, "PAYMENT_MISMATCH")
+        Svc-->>Op: true
+    end
+    Svc->>GW: retrieveRefund(providerId)
+    alt BizException from the gateway
+        Svc->>Svc: finish(work, providerRefundId, REVIEW, "OPERATOR_PROVIDER_...")
+    else Snapshot returned
+        GW-->>Svc: Snapshot
+        Svc->>Svc: apply(work, snapshot): same checks as @fig-a-uc06-ds-provider
+    end
+    Svc-->>Op: true

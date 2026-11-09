@@ -1,0 +1,67 @@
+%% frame: UC6 design, slice 3: the provider call outside any transaction (commerce-svc)
+classDiagram
+    class RefundService {
+        <<application service, Ext, Conc>>
+        +processNext(): boolean
+        +reconcile(paymentId: UUID, providerId: String): boolean
+        -databaseNow(): Instant
+        -permanent(refused: BizException): boolean «static»
+        -apply(work: RefundWork, snapshot: Snapshot): void
+        -matches(work: RefundWork, snapshot: Snapshot): boolean «static»
+        -finish(work: RefundWork, providerId: String, state: String, result: String): void
+    }
+    class RefundWork {
+        <<value object, record>>
+        +id: UUID
+        +paymentId: UUID
+        +amount: BigDecimal
+        +currency: String
+        +providerIntentId: String
+        +paymentStatus: String
+        +paidAmount: BigDecimal
+        +paidCurrency: String
+        +providerRefundId: String
+        +firstAttemptAt: Instant
+        +now: Instant
+        +version: int
+        +providerKey(): String
+        +valid(): boolean
+    }
+    class RefundGateway {
+        <<interface, gateway, Ext>>
+        +createRefund(work: RefundWork): Snapshot
+        +retrieveRefund(providerId: String): Snapshot
+        +findRefund(work: RefundWork): Snapshot
+    }
+    class Snapshot["RefundGateway.Snapshot"] {
+        <<value object, record>>
+        +id: String
+        +paymentIntentId: String
+        +obligationId: String
+        +amountMinor: long
+        +currency: String
+        +status: String
+    }
+    class StripeRefundGateway {
+        <<adapter, Ext>>
+        +createRefund(work: RefundWork): Snapshot
+        +retrieveRefund(providerId: String): Snapshot
+        +findRefund(work: RefundWork): Snapshot
+    }
+    class RefundRepository {
+        <<interface, repository, Pers, Conc>>
+        +now(): Instant
+        +finish(work: RefundWork, providerId: String, status: String, result: String): void
+    }
+%% at RefundRepository 0,0
+%% at RefundService 1,0
+%% at RefundWork 0,1
+%% at RefundGateway 1,1
+%% at Snapshot 2,1
+%% at StripeRefundGateway 1,2
+    RefundService "1" --> "1" RefundRepository
+    RefundService "1" --> "1" RefundGateway
+    RefundService ..> RefundWork
+    RefundGateway ..> Snapshot
+    RefundGateway ..> RefundWork
+    StripeRefundGateway ..|> RefundGateway

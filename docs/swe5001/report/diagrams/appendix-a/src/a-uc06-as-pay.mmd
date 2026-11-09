@@ -1,0 +1,43 @@
+%% frame: UC6 pay one refund (analysis)
+sequenceDiagram
+    actor Clock as Scheduler
+    participant Trig as SchedulerTrigger (boundary)
+    participant Ctl as RefundMembersControl (control)
+    participant Ref as Refund (entity)
+    participant Pay as Payment (entity)
+    participant PG as PaymentGateway (boundary)
+    actor Stripe
+    create participant Att as RefundAttempt (entity)
+
+    Clock->>Trig: B5: tick(now)
+    Trig->>Ctl: B5: payNextRefund()
+    Ctl->>Ref: B5: claimNextDue()
+    break nothing due (A2)
+        Ref-->>Ctl: none
+    end
+    Ref-->>Ctl: refund, reserved for a short time
+    Ctl->>Pay: B6: agreesWith(refund)
+    break payment and refund disagree (A3)
+        Ctl->>Ref: A3: parkForReview(reason)
+    end
+    alt Stripe refund reference already known (A4)
+        Ctl->>PG: A4: lookUpRefund(providerReference)
+    else first attempt was 23 hours ago or more (A5)
+        Ctl->>PG: A5: findRefund(payment, requestId)
+    else otherwise
+        Ctl->>PG: B7: refund(payment, amount, requestId)
+        PG->>Stripe: B7: refund the original payment
+        Stripe-->>PG: refund reference, status
+    end
+    alt answer matches the payment and the refund (B8, A9)
+        PG-->>Ctl: providerReference, status
+        Ctl->>Ref: B8: record(providerReference, status)
+    else temporary provider failure (A6)
+        PG-->>Ctl: retryable failure
+        Ctl->>Ref: A6: retryLater()
+    else refusal, mismatch, or nothing found (A5, A7, A8)
+        PG-->>Ctl: refusal or mismatching answer
+        Ctl->>Ref: A7: parkForReview(reason)
+    end
+    Ref->>Att: B8: «create» (result)
+    Note over Ctl,Ref: A10: if the system stops before B8, the reservation lapses and a later tick repeats B7 with the same requestId
