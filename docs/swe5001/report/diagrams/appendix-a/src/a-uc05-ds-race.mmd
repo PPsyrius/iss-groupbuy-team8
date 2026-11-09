@@ -1,0 +1,30 @@
+%% frame: UC5 A2: the last-seat join and the expiry race for one team (design)
+sequenceDiagram
+    participant Join as txJ : PaidGroupDealService
+    participant Exp as txE : GroupDealExpiryService
+    participant Repo as :PaidGroupDealRepository
+    participant GD as :GroupDeal
+
+    Note over Join,GD: A2, at B7: a paid join for the last seat (UC4, @fig-a-uc04-ds-admit) and expireOne (@fig-a-uc05-ds-expire) reach the same team
+    par txJ, UC4 settlement transaction
+        Join->>Repo: lockDeal(dealId)
+    and txE, expireOne transaction
+        Exp->>Repo: lockDeal(dealId)
+    end
+    Note over Repo: the team row lock (lock 1) admits one transaction at a time; the other waits for its commit
+    alt txJ locks first, and its clock is still before expireTime
+        Repo-->>Join: Optional of GroupDeal (OPEN)
+        Join->>GD: joinPaid(paid, alreadyMember, now)
+        GD-->>Join: PaidAdmission, teamCompleted: true
+        Note over Join: B1-B4, then COMMIT releases lock 1
+        Repo-->>Exp: Optional of GroupDeal (SUCCEEDED)
+        Exp->>GD: expire(now)
+        GD-->>Exp: BizException DEAL_CLOSED, so expireOne returns false
+    else txE locks first
+        Repo-->>Exp: Optional of GroupDeal (OPEN)
+        Note over Exp: B7-B10, then COMMIT releases lock 1
+        Repo-->>Join: Optional of GroupDeal (EXPIRED)
+        Join->>GD: joinPaid(paid, alreadyMember, now)
+        GD->>GD: requireJoinWindow(now)
+        GD-->>Join: BizException DEAL_CLOSED, so compensation_required and a refund owed (UC4 A6)
+    end

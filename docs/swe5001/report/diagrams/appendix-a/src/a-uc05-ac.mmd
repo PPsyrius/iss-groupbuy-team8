@@ -1,0 +1,54 @@
+%% frame: UC5 Resolve a team (analysis)
+classDiagram
+    class SchedulerTrigger {
+        <<boundary>>
+        +tick(now)
+    }
+    class JoinTeamControl {
+        <<control>>
+        +paymentConfirmed(paymentRef)
+    }
+    class ResolveTeamControl {
+        <<control>>
+        +teamFilled(team)
+        +expireDue(now)
+        +selectDue(now)
+    }
+    class Team {
+        <<entity>>
+        -targetSize: Count
+        -currentSize: Count
+        -deadline: Date-time
+        -successTime: Date-time
+        -status: TeamStatus
+        +admit(buyer, payment)
+        +expire(now)
+        +canMoveTo(status)
+    }
+    class Membership {
+        <<entity>>
+        -role: MemberRole
+        -joinTime: Date-time
+    }
+    class Order {
+        <<entity>>
+        -amount: Money
+        -status: OrderStatus
+        -cancelTime: Date-time
+        +confirm()
+        +cancel(at)
+    }
+%% at JoinTeamControl 0,0
+%% at SchedulerTrigger 2,0
+%% at ResolveTeamControl 1,1
+%% at Team 0,2
+%% at Order 2,2
+%% at Membership 0,3
+    SchedulerTrigger "1" -- "1" ResolveTeamControl
+    JoinTeamControl "1" --> "1" ResolveTeamControl : last seat
+    JoinTeamControl "1" --> "1" Team : admits into
+    ResolveTeamControl "1" --> "*" Team : resolves
+    ResolveTeamControl "1" --> "*" Order : settles
+    Team "1" *-- "1..*" Membership
+    Order "*" -- "1" Team : placed in
+    Order "0..1" -- "1" Membership : backs

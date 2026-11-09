@@ -1,0 +1,95 @@
+%% frame: UC5 design, slice 2: resolving one team, group-buy module (commerce-svc)
+classDiagram
+    class GroupDealExpiryService {
+        <<application service, Conc, Evt>>
+        +expireOne(dealId: UUID): boolean
+    }
+    class OrderFulfilmentAdapter {
+        <<adapter, application service>>
+    }
+    class PaidGroupDealService {
+        <<application service, Conc, Evt>>
+        +joinConfirmed(dealId: UUID, paid: PaidParticipation, sharerUserId: UUID): ParticipationResult
+    }
+    class ApplicationEventPublisher {
+        <<interface, Evt>>
+        +publishEvent(event: Object): void
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers, Conc>>
+        +lockDeal(dealId: UUID): Optional~GroupDeal~
+        +currentTime(): Instant
+        +expire(before: GroupDeal, after: GroupDeal, now: Instant): void
+    }
+    class PaidGroupDealRepositoryImpl {
+        <<adapter, Pers>>
+    }
+    class PaidGroupDealMapper {
+        <<interface, mapper, Pers, Conc>>
+        +lockDeal(dealId: UUID): BizGroupDealDO
+        +currentTime(): Instant
+        +expireDeal(deal: BizGroupDealDO): int
+    }
+    class GroupDeal {
+        <<aggregate root>>
+        -targetSize: int
+        -currentSize: int
+        -expireTime: Instant
+        -successTime: Instant
+        +joinPaid(payment: PaidParticipation, alreadyMember: boolean, now: Instant): PaidAdmission
+        +requireJoinWindow(now: Instant): void
+        +expire(now: Instant): GroupDeal
+    }
+    class DealStatus {
+        <<enumeration>>
+        OPEN
+        SUCCEEDED
+        FAILED
+        EXPIRED
+        CANCELED
+        +canTransitionTo(target: DealStatus): boolean
+    }
+    class PaidAdmission {
+        <<value object, record>>
+        +deal: GroupDeal
+        +teamCompleted: boolean
+    }
+    class TeamSucceeded {
+        <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +size: int
+        +at: Instant
+    }
+    class TeamExpired {
+        <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +at: Instant
+    }
+%% at OrderFulfilmentAdapter 1,0
+%% at GroupDealExpiryService 3,0
+%% at TeamExpired 2,0
+%% at TeamSucceeded 0,1
+%% at PaidGroupDealService 1,1
+%% at ApplicationEventPublisher 2,1
+%% at PaidAdmission 0,2
+%% at GroupDeal 1,2
+%% at PaidGroupDealRepository 3,2
+%% at DealStatus 1,3
+%% at PaidGroupDealMapper 2,3
+%% at PaidGroupDealRepositoryImpl 3,3
+    OrderFulfilmentAdapter "1" --> "1" PaidGroupDealService : groups
+    PaidGroupDealService "1" --> "1" ApplicationEventPublisher
+    GroupDealExpiryService "1" --> "1" ApplicationEventPublisher
+    PaidGroupDealService "1" --> "1" PaidGroupDealRepository
+    GroupDealExpiryService "1" --> "1" PaidGroupDealRepository
+    PaidGroupDealService ..> TeamSucceeded : «create»
+    GroupDealExpiryService ..> TeamExpired : «create»
+    PaidGroupDealService ..> GroupDeal
+    GroupDealExpiryService ..> GroupDeal
+    PaidGroupDealRepository ..> GroupDeal
+    GroupDeal ..> PaidAdmission : «create»
+    GroupDeal "*" --> "1" DealStatus : status
+    PaidGroupDealRepositoryImpl ..|> PaidGroupDealRepository
+    PaidGroupDealRepositoryImpl "1" --> "1" PaidGroupDealMapper

@@ -1,0 +1,23 @@
+%% frame: GroupDeal (team) lifecycle, DealStatus
+stateDiagram-v2
+    state "OPEN" as OPEN
+    state "SUCCEEDED" as SUCCEEDED
+    state "EXPIRED" as EXPIRED
+    state "FAILED" as FAILED
+    state "CANCELED" as CANCELED
+    [*] --> OPEN : paidStartConfirmed / currentSize := 1 (UC3)
+    OPEN --> OPEN : paidJoinConfirmed [admissible, currentSize + 1 < targetSize] / currentSize += 1 (UC4)
+    OPEN --> SUCCEEDED : paidJoinConfirmed [admissible, currentSize + 1 = targetSize] / successTime := now; publish TeamSucceeded (UC5 B1-B2)
+    OPEN --> EXPIRED : tick [now >= expireTime] / publish TeamExpired (UC5 B7)
+    OPEN --> FAILED : no trigger in the code
+    OPEN --> CANCELED : no trigger in the code
+    SUCCEEDED --> SUCCEEDED : paidJoinConfirmed / refund owed (UC4 A6)
+    EXPIRED --> EXPIRED : paidJoinConfirmed / refund owed (UC4 A6)
+    SUCCEEDED : entry / confirm pending orders
+    EXPIRED : entry / cancel pending orders; refunds owed (UC6)
+%% at __start0 0,0
+%% at FAILED 1,0
+%% at OPEN 0,1
+%% at CANCELED 1,1
+%% at SUCCEEDED 0,2
+%% at EXPIRED 1,2

@@ -1,0 +1,49 @@
+%% frame: UC5 B7-B10: expireOne resolves one team (design)
+sequenceDiagram
+    participant Exp as :GroupDealExpiryService
+    participant Repo as :PaidGroupDealRepositoryImpl
+    participant Map as :PaidGroupDealMapper
+    participant Bef as before : GroupDeal
+    participant St as OPEN : DealStatus
+    create participant Aft as after : GroupDeal
+    create participant Ev as :TeamExpired
+    participant Pub as :ApplicationEventPublisher
+
+    critical expireOne transaction, REQUIRED, READ COMMITTED, 10 s
+        Note over Exp,Map: B7: lock 1 (team), the only business lock this transaction takes itself
+        Exp->>Repo: lockDeal(dealId)
+        Repo->>Map: lockDeal(dealId): SELECT ... FOR UPDATE
+        Map-->>Repo: BizGroupDealDO or null
+        Repo-->>Exp: Optional of GroupDeal
+        alt empty: the team is gone
+            Note over Exp: return false
+        end
+        Exp->>Repo: currentTime()
+        Repo->>Map: currentTime(): clock_timestamp()
+        Map-->>Repo: Instant now
+        Repo-->>Exp: Instant now
+        Exp->>Bef: expire(now)
+        Bef->>St: canTransitionTo(EXPIRED)
+        St-->>Bef: boolean
+        alt false: already SUCCEEDED or EXPIRED (A2)
+            Bef-->>Exp: BizException DEAL_CLOSED, caught: return false
+        else now before expireTime
+            Bef-->>Exp: IllegalStateException, propagates (E1)
+        else OPEN and due
+            Bef->>Aft: «create» status EXPIRED
+            Bef-->>Exp: after
+        end
+        Exp->>Repo: expire(before, after, now)
+        Repo->>Map: expireDeal(deal: BizGroupDealDO): WHERE status = 'open'
+        Map-->>Repo: int rows
+        alt 0 rows: another writer resolved the team first (A2)
+            Repo-->>Exp: BizException DEAL_CLOSED, caught: return false
+        end
+        Repo-->>Exp: return
+        Note over Exp,Pub: B8-B10: the consequences are subscribers (@fig-a-uc05-ds-expire-events)
+        Exp->>Ev: «create» TeamExpired(dealId, productId, at: now)
+        Exp->>Pub: publishEvent(event)
+        Pub-->>Exp: held until commit
+        Note over Exp,Pub: commit begins: BEFORE_COMMIT subscribers run here, inside this transaction
+    end
+    Note over Exp,Pub: expireOne returns true after COMMIT; any exception above rolls everything back (E1)

@@ -1,0 +1,16 @@
+%% frame: Order lifecycle, OrderStatus
+stateDiagram-v2
+    state "PENDING" as PENDING
+    state "CONFIRMED" as CONFIRMED
+    state "CANCELLED" as CANCELLED
+    [*] --> PENDING : fulfil accepted / Order.create (UC3, UC4 B8)
+    PENDING --> CONFIRMED : TeamSucceeded [pending] / confirmByDealId (UC5 B3)
+    PENDING --> CANCELLED : TeamExpired [pending] / cancelByDealId; cancelTime := at (UC5 B8)
+    CONFIRMED --> [*]
+    CANCELLED --> [*]
+%% at __start0 1,0
+%% at PENDING 1,1
+%% at CONFIRMED 0,2
+%% at CANCELLED 2,2
+%% at __end0 0,3
+%% at __end1 2,3
