@@ -37,7 +37,7 @@ classDiagram
         -teamTerms: ProductTeamTerms
     }
     class PricingStrategyResolver {
-        <<application service>>
+        <<utility, Lang>>
         +strategyFor(mode: PricingMode): PricingStrategy
     }
     class TeamPriceQuote {

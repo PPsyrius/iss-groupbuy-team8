@@ -2,16 +2,16 @@
 sequenceDiagram
     participant PU as PayUpfrontControl (control)
     participant Ctl as JoinTeamControl (control)
-    participant Pay as Payment (entity)
     participant Intent as PurchaseIntent (entity)
     participant Acc as Account (entity)
     participant Prod as Product (entity)
     participant Team as Team (entity)
     create participant Ord as Order (entity)
+    participant Res as ResolveTeamControl (control)
     participant UI as JoinTeamUI (boundary)
     create participant Mem as Membership (entity)
 
-    Note over PU,Ctl: B5: Pay upfront verified the payment (@sec-a-pay-upfront)
+    Note over PU,Prod: B5: Pay upfront verified the payment (@sec-a-pay-upfront)
     PU->>Ctl: B5: paymentConfirmed(payment)
     Ctl->>Intent: B6: isPayable()
     Intent-->>Ctl: payable
@@ -23,12 +23,11 @@ sequenceDiagram
     Team->>Mem: B7: «create» (buyer, sharer)
     Team-->>Ctl: admitted, team complete or not
     Ctl->>Ord: B8: «create» (buyer, team price)
-    Ctl->>Intent: B8: markFulfilled(payment)
+    Ctl->>Intent: B8: fulfilBy(payment)
     Ctl->>Prod: B8: takeOneUnit()
-    Ctl->>Pay: B9: recordOutcome(fulfilled)
+    Ctl-->>PU: B9: outcome (fulfilled), recorded by Pay upfront
     opt team now complete (B10)
-        loop each order of the team
-            Ctl->>Ord: B10: confirm()
-        end
+        Ctl->>Res: B10: teamFilled(team)
+        Note over Team,UI: UC5 B2–B4 confirm the orders (@fig-a-uc05-as-success)
     end
     Ctl->>UI: B11: showJoined(teamStatus)

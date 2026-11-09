@@ -43,7 +43,7 @@ UC8 has two major flows, one per list. They read different entities and page on 
 
 #afig("a-uc08-as-teams", [UC8 analysis sequence diagram, view my teams (B1–B4, A3). The control reads one page of memberships, then all listing titles of that page in one batch.])
 
-#afig("a-uc08-as-orders", [UC8 analysis sequence diagram, view my orders (B3–B4, A6). Each row shows the product as it was when the order was created; one order is shown only to its buyer.])
+#afig("a-uc08-as-orders", [UC8 analysis sequence diagram, view my orders (B3–B4, A6). Each row shows the product as it was when the order was created; one order is shown only to its buyer.], float: true)
 
 === Transition: Strategies and Mapping <sec-a-uc08-transition>
 
@@ -80,7 +80,7 @@ The strategies of @sec-a-strategies turn the model into the design. Six of the n
 
 Two slices in commerce-svc (the response records are nested in their controllers): orders (@fig-a-uc08-dc-orders) and teams across group-buy and catalog (@fig-a-uc08-dc-teams). The second shows the representative persistence chain `GroupDealRepository` → `GroupDealRepositoryImpl` → `BizGroupDealMapper`; `OrderRepository` and `ProductRepository` follow it, so only their ports are drawn.
 
-#afig("a-uc08-dc-orders", orient: "portrait", [UC8 design class diagram, slice 1: my orders (UML, commerce-svc). `OrderAppServiceImpl` turns each `Order` into an `OrderSummaryView` without the payment reference before it leaves the application layer.])
+#afig("a-uc08-dc-orders", orient: "portrait", float: true, [UC8 design class diagram, slice 1: my orders (UML, commerce-svc). `OrderAppServiceImpl` turns each `Order` into an `OrderSummaryView` without the payment reference before it leaves the application layer.])
 
 #afig("a-uc08-dc-teams", float: true, [UC8 design class diagram, slice 2: my teams (UML, commerce-svc). Group-buy declares `ListingDisplayGateway` and catalog implements it, so only a title and a cover image cross the module boundary and the dependency still points from catalog to group-buy.])
 

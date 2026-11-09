@@ -32,7 +32,7 @@ sequenceDiagram
         Svc->>Res: «create» applied(after)
         Svc->>Repo: complete(paymentId, result, userId, now)
         Svc->>Pub: publishEvent(MemberJoined)
-        opt teamCompleted (B10)
+        opt teamCompleted (B10: teamFilled, UC5 B3)
             Svc->>Pub: publishEvent(TeamSucceeded)
         end
         Svc-->>OFA: result: applied

@@ -1,4 +1,4 @@
-%% frame: UC9 B7, A3, A5: team terms with an optional team price, or the price alone (design)
+%% frame: UC9 B7, A3: team terms with an optional team price (design)
 sequenceDiagram
     participant Ctl as :AdminListingController
     participant App as :TeamTermsAppServiceImpl
@@ -22,8 +22,8 @@ sequenceDiagram
             Prod-->>App: TEAM_TERMS_INVALID (CATALOG_400_003)
         end
         App->>Repo: updateTeamTerms(revised, expectedVersion, actorId)
-        opt team price sent (B7), joining this transaction; A5: TeamPriceController.configure runs this part alone, in its own REQUIRED 10 s transaction
-            App->>Prices: configure(productId, actorId, policy)
+        opt team price sent (B7), joining this transaction
+            App->>Prices: configure(productId, actorId, price)
             Prices->>Repo: lockById(productId) in lockProduct: lock 6 (held in B7)
             Prices->>Users: requireActive(actorId)
             Prices->>PRepo: findLatestPolicy(productId)

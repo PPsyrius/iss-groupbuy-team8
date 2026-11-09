@@ -9,7 +9,7 @@ sequenceDiagram
     create participant Ev as :TeamExpired
     participant Pub as :ApplicationEventPublisher
 
-    critical expireOne transaction, REQUIRED, READ COMMITTED (database default), 10 s
+    critical expireOne transaction, REQUIRED, default isolation, 10 s
         Note over Exp,Map: B7: lock 1 (team), the only business lock this transaction takes itself
         Exp->>Repo: lockDeal(dealId)
         Repo->>Map: lockDeal(dealId): SELECT ... FOR UPDATE

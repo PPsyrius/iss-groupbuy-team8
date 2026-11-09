@@ -3,7 +3,7 @@ stateDiagram-v2
     state "DRAFT" as Draft
     state "ON_SALE" as OnSale
     state "OFF_SALE" as OffSale
-    [*] --> Draft : create / version 0
+    [*] --> Draft : «create» / version 0
     Draft --> OnSale : publish [stock > 0 and price > 0] / version + 1
     OnSale --> OffSale : delist / version + 1
     OffSale --> OnSale : publish [stock > 0 and price > 0] / version + 1

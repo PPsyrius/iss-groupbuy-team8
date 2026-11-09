@@ -102,18 +102,18 @@ classDiagram
 %% at Account 4,3
 %% at Role 5,3
 %% at RefundAttempt 0,4
-%% at ReviewCase 1,4
-%% at Notification 2,4
+%% at ReviewCase 1,4.4
+%% at Notification 2.5,4.6
 %% at OAuthBinding 5,4
     Account "*" -- "1..*" Role : holds
     Account "1" -- "*" OAuthBinding : signs in with
-    Account "1" -- "*" Notification : recipient
+    Notification "*" -- "1" Account : recipient
     Account "1" -- "*" Membership : holds
     Account "1" -- "*" Order : buyer
     Membership "1" -- "0..1" Invitation : shares
     Membership "*" -- "0..1" Invitation : joined via
     Membership "1" -- "*" ShareCredit : credits
-    Membership "1" -- "0..1" Order : backed by
+    Order "0..1" -- "1" Membership : backed by
     Team "1" *-- "1..*" Membership : member
     Team "1" -- "*" Invitation : invites to
     Team "1" -- "*" Order : placed in
@@ -125,7 +125,7 @@ classDiagram
     PurchaseIntent "*" -- "0..1" PriceQuote : freezes
     PurchaseIntent "*" -- "1" Product : buys
     PurchaseIntent "*" -- "0..1" Team : for
-    PurchaseIntent "*" -- "0..1" Invitation : via
+    Invitation "0..1" -- "*" PurchaseIntent : via
     Payment "*" -- "1" PurchaseIntent : pays
     Order "0..1" -- "1" Payment : paid by
     Payment "1" -- "0..1" Refund : owes

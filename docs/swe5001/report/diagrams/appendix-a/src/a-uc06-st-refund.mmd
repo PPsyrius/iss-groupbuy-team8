@@ -18,7 +18,7 @@ stateDiagram-v2
     failed --> recon : reconcile(paymentId, providerId)
     recon --> processing : [provider pending]
     recon --> failed : [provider failed or canceled]
-    recon --> review : [mismatch, refusal or provider error]
+    recon --> review : [mismatch, refusal, provider error or unknown status]
     recon --> succeeded : [provider succeeded]
     succeeded --> [*]
 %% at __start0 0,0

@@ -18,7 +18,7 @@ sequenceDiagram
     Repo-->>Sw: List of UUID
     loop each intent id, while leaseValid.getAsBoolean()
         Sw->>Exp: expireOne(id)
-        critical REQUIRED, READ COMMITTED, 10 s
+        critical REQUIRED, default isolation, 10 s
             Exp->>Repo: findById(id)
             Exp->>Teams: lockTeam(dealId): lock 1 (no row yet for a START)
             Exp->>Repo: tryLockForExpiry(id): lock 2, SKIP LOCKED

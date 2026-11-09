@@ -4,9 +4,6 @@ sequenceDiagram
     participant Ctl as JoinTeamControl (control)
     participant Intent as PurchaseIntent (entity)
     participant Team as Team (entity)
-    participant Pay as Payment (entity)
-    create participant Ref as Refund (entity)
-    participant UI as JoinTeamUI (boundary)
 
     Note over PU,Team: B5: Pay upfront verified the payment (@sec-a-pay-upfront). A7: payments for the last seat are handled one at a time
     PU->>Ctl: B5: paymentConfirmed(payment)
@@ -17,8 +14,6 @@ sequenceDiagram
         Team-->>Ctl: admitted (B8 to B11 as in @fig-a-uc04-as-basic-2), or refused(reason)
     end
     opt a B6 check failed (A5), or the team refused (A6, A7)
-        Ctl->>Pay: A5, A6: requireRefund(reason)
-        Pay->>Ref: «create» (amount, reason)
-        Ctl->>Pay: A5, A6: recordOutcome(refund required)
-        Ctl->>UI: A5, A6: showRefundPending()
+        Ctl-->>PU: A5, A6: refused(reason)
+        Note over PU,Team: A5, A6: refund owed, recorded by Pay upfront (A15, @sec-a-pay-upfront); no membership or order
     end

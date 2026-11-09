@@ -14,7 +14,7 @@ classDiagram
         +complete(paymentId: UUID, result: ParticipationResult, actorId: UUID, now: Instant): void
     }
     class GroupDeal {
-        <<aggregate root>>
+        <<aggregate root, Pers>>
         -leaderUserId: UUID
         -dealPrice: BigDecimal
         -targetSize: int

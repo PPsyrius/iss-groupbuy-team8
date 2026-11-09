@@ -2,25 +2,25 @@
 
 == UC7 Share an Invitation <sec-a-uc07>
 
-UC7 lets a member of an open team share an invite link. When another buyer joins the team through that link, BlocBuy records who shared it and, once the join is final, records one share credit for the sharer. UC7 extends UC4 (@sec-a-uc04) at the extension point _admission_, under the condition {joined through an invite link}. A join without a link is unchanged, and attribution can never block or undo a paid join. The design questions are an unguessable reference that grants nothing, an anonymous lookup that cannot be abused, and a credit that must not share the fate of the money. Every class, method and error code named here exists in the code on this branch. UC7 is designed and built; the evidence for each flow is listed in section 2.2.
+UC7 lets a member of an open team share an invite link. When another buyer joins the team through that link, BlocBuy records who shared it and, once the join is final, records one share credit for the sharer. UC7 extends UC4 (@sec-a-uc04) at the extension point _admission_, under the condition {joined through an invite link}. A join without a link is unchanged, and attribution can never block or undo a paid join. The design questions are an unguessable reference that grants nothing, an anonymous lookup that cannot be abused, and a credit that must not share the fate of the money. UC7 is designed and built; section 2.2 lists the evidence per flow.
 
 === Use Case and Flows of Events <sec-a-uc07-flows>
 
-- *Actors.* Buyer as sharer (primary; the leader or any paid member of the team). Buyer as invited joiner (primary from B5; may be signed out when the link is opened).
-- *Trigger.* The sharer chooses to share the team, from the listing page or from the team's row on My blocs (UC8, @sec-a-uc08).
-- *Services.* commerce-svc owns every step (its group-buy and order modules). identity-svc supplies one thing: the sharer's public nickname.
-- *Preconditions.* The sharer is signed in (UC2, @sec-a-uc02) and is a paid member of a team that is open and inside its deadline.
-- *Postconditions.* Every attributed join has its sharer on the membership, and each accepted participation has at most one share credit. A refused or unattributed join has no credit. Credits are recorded but shown to nobody (a view of them was dropped).
+- *Actors.* Buyer as sharer (primary; any paid member) and as invited joiner (primary from B5).
+- *Trigger.* The sharer shares the team from the listing page or My blocs (UC8, @sec-a-uc08).
+- *Services.* commerce-svc owns every step; identity-svc supplies only the sharer's public nickname.
+- *Preconditions.* The sharer is signed in (UC2, @sec-a-uc02) and a paid member of an open team.
+- *Postconditions.* Every attributed join has its sharer on the membership; each accepted participation has at most one share credit, a refused or unattributed join none. Credits are shown to nobody.
 
 #atable(
-  [UC7 flows of events. B = basic flow, A = alternate flow, E = exception flow; "At" is the step where the flow branches off.],
+  [UC7 flows of events (B basic, A alternate, E exception; "At": the step where the flow branches off).],
   <tbl-a-uc07-flows>,
   columns: (auto, auto, 1fr),
   header: ([Step], [At], [What happens]),
   [*B1*], [], [The sharer asks to share a team.],
-  [*B2*], [], [The system checks that the team exists, that the sharer is a member of it, and that it is open and inside its deadline.],
+  [*B2*], [], [The system checks that the team exists, is open inside its deadline and has the sharer as a member.],
   [*B3*], [], [The system returns the sharer's invitation for this team. On first use it creates one with a reference that cannot be guessed; every later request returns the same invitation.],
-  [*B4*], [], [The page builds the invite link (the listing's address with the team and the reference). The sharer copies it or sends it through the device's share sheet.],
+  [*B4*], [], [The page builds the invite link (listing address, team, reference); the sharer copies or shares it.],
   [*B5*], [], [The invited buyer opens the link. The page keeps the team and reference for this visit and clears them from the address bar, so a copied address passes no reference on.],
   [*B6*], [], [The system resolves the reference to the sharer's public nickname, without sign-in. The listing page shows a banner that names the sharer and offers "Join this bloc".],
   [*B7*], [], [The invited buyer joins the team (UC4), signing in first if needed. The join carries the reference. Before any lock or payment, the system checks that the invitation names this team and a sharer other than the buyer, and freezes that sharer on the purchase intent.],
@@ -34,7 +34,7 @@ UC7 lets a member of an open team share an invite link. When another buyer joins
   [*A6*], [B7], [The reference is unknown or names another team or the buyer, or the buyer starts a team (UC3): the join goes ahead unattributed.],
   [*A7*], [B8], [The admission is refused (UC4 A6) or the payment reported again (UC4 A8): no member is announced, no credit recorded.],
   [*A8*], [B9], [A late listener and the reconciliation query both record this join's credit: the sharer still gets one.],
-  [*E1*], [B9], [Recording the credit fails: it is logged, the join stands, and the membership's sharer lets the credit be reconciled.],
+  [*E1*], [B9], [Recording the credit fails: it is logged and the join stands; the membership's sharer lets it be reconciled.],
 )
 
 === Analysis Class Diagram <sec-a-uc07-ac>

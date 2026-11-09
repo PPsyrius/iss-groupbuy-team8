@@ -13,7 +13,7 @@ sequenceDiagram
     Note over Svc,Orders: settle ran B6 to B9; each publishEvent was held for its listener's phase
     rect
         Note over Tx,Cache: BEFORE_COMMIT: synchronous calls on the committing thread, inside the settlement transaction
-        opt TeamSucceeded was published (B10)
+        opt TeamSucceeded was published (B10: UC5 B3)
             Tx->>OLS: onTeamSucceeded(event), @Order(10)
             OLS->>Orders: confirmByDealId(dealId)
             Orders-->>OLS: int confirmed

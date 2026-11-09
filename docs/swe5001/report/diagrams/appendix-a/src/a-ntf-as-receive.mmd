@@ -1,4 +1,4 @@
-%% frame: Receive notifications, basic flow with A1-A4 (analysis)
+%% frame: Receive notifications, basic flow with A3, A4 (analysis)
 sequenceDiagram
     actor Buyer
     participant UI as NotificationListUI (boundary)
@@ -19,15 +19,9 @@ sequenceDiagram
         Pay-->>Ctl: payer account
     end
     Ctl-->>Prod: noted with the business change
-    Note over Ctl,N: B2: soon after, the kind and content of the fact are checked
-    alt kind known and content valid
-        loop each new recipient (A3: none)
-            Ctl->>N: B3: «create» (recipient, type, fixed text)
-        end
-    else kind not known (A1)
-        Note over Ctl,N: A1: logged and ignored
-    else malformed (A2)
-        Note over Ctl,N: A2: no notification; set aside for an operator
+    Note over Ctl,N: B2: the fact is checked (A1, A2 design only, S5, S9)
+    loop each new recipient (A3: none)
+        Ctl->>N: B3: «create» (recipient, type, fixed text)
     end
     Note over Buyer,UI: B4: later, the buyer opens the notification list
     Buyer->>UI: B4: listMine(page)

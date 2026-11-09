@@ -30,7 +30,7 @@ classDiagram
         +snapshot(userId: UUID): LoginAuthorizationService.Snapshot
     }
     class LoginSessionPublisher {
-        <<adapter, Sec>>
+        <<utility, Sec>>
         +login(userId: UUID): void
     }
     class LoginSnapshotGateway {

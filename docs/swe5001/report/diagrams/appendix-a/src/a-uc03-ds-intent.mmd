@@ -9,7 +9,7 @@ sequenceDiagram
     create participant Intent as :PurchaseIntent
 
     Note over Svc,App: B5: request, CSRF check and controller as in @fig-a-uc04-ds-intent; no rate limit for START
-    critical intent transaction, REQUIRED, READ COMMITTED, 10 s
+    critical intent transaction, REQUIRED, default isolation, 10 s
         Svc->>App: createIntent(user, "START", productId, null, quoteId)
         App->>Users: requireActive(user)
         break identity-svc unreachable (E2)

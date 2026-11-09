@@ -22,13 +22,13 @@ sequenceDiagram
             Svc-->>Ful: applied (B1-B4)
             Ful-->>Pay: Outcome(dealId, orderId, null); COMMIT releases lock 1
         end
-        critical txE: expireOne, REQUIRED, 10 s
+        critical txE: REQUIRED, default isolation, 10 s
             Exp->>Repo: lockDeal(dealId): lock 1 after txJ's commit, SUCCEEDED
             Exp->>GD: expire(now)
             GD-->>Exp: DEAL_CLOSED, so expireOne returns false
         end
     else txE takes lock 1 first
-        critical txE: expireOne, REQUIRED, 10 s
+        critical txE: REQUIRED, default isolation, 10 s
             Exp->>Repo: lockDeal(dealId): lock 1, OPEN; then B7-B10 and COMMIT
         end
         critical txJ: settlement, REQUIRED, READ COMMITTED, 10 s

@@ -2,7 +2,7 @@
 classDiagram
     class ProductController {
         <<controller, Dist, Sec>>
-        +pageListings(page: Integer, size: Integer, category: String, keyword: String, ai: boolean): Result~PageResult~
+        +pageListings(page: Integer, size: Integer, category: String, keyword: String, ai: boolean): Result<​PageResult<​ProductSummaryResponse>>
         +getListing(id: UUID): Result~ProductDetailResponse~
     }
     class ProductAppService {

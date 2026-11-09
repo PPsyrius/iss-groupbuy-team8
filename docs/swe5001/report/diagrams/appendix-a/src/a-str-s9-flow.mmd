@@ -1,35 +1,40 @@
 %% frame: S9 Domain and integration events: one fact, in process and across services (design)
 sequenceDiagram
+    participant Tx as :TransactionTemplate
     participant Svc as :PaidGroupDealService
     participant Pub as :ApplicationEventPublisher
-    participant OLS as :OrderLifecycleSubscriber
     participant Out as :IntegrationOutboxWriter
     participant Relay as :OutboxRelayService
+    participant Port as :OutboxEventTransport
     participant Topic as domain-events «topic»
     participant Con as :SqsNotificationEventConsumer
     participant Hdl as :NotificationEventHandler
 
     critical settlement transaction, REQUIRED, READ COMMITTED, 10 s (commerce-svc)
+        Tx->>Svc: joinConfirmed(dealId, paid, sharerUserId)
         Svc->>Pub: publishEvent(event: TeamSucceeded)
         Pub-->>Svc: registered, no subscriber runs yet
-        Note over Svc,Out: BEFORE_COMMIT, same transaction, in @Order
-        Pub->>OLS: onTeamSucceeded(event), @Order(10)
-        OLS-->>Pub: orders confirmed
-        Pub->>Out: onTeamSucceeded(event), lowest precedence
-        Out-->>Pub: outbox row recorded (A.13: @sec-a-notifications)
+        Svc-->>Tx: ParticipationResult
+        rect
+            Note over Tx,Out: BEFORE_COMMIT: same transaction, in @Order; OrderLifecycleSubscriber runs first (@fig-a-uc04-ds-events)
+            Tx->>Out: onTeamSucceeded(event), lowest precedence
+            Out-->>Tx: void (outbox row recorded)
+        end
     end
-    Note over Svc,Out: COMMIT; AFTER_COMMIT subscribers then run (share credit, cache eviction: @fig-a-uc04-ds-events)
-    Note over Relay,Topic: every 2 s under the job lease (S7): relayBatch reads up to 100 due outbox rows
-    Relay->>Topic: PublishBatch(topicArn, entries), via OutboxEventTransport.publish(events, leaseValid)
-    Topic-->>Relay: successful and failed ids; relayBatch records the results
-    Note over Topic,Con: SNS delivers a copy to the notification SQS queue, asynchronously; the consumer long-polls it
+    Note over Tx,Out: COMMIT; AFTER_COMMIT subscribers then run
+    Note over Relay,Topic: every 2 s under the job lease (S7): up to 100 due rows
+    Relay->>Port: publish(events, leaseValid)
+    Port->>Topic: PublishBatch(topicArn, entries)
+    Topic-->>Port: successful and failed ids
+    Port-->>Relay: List<OutboxPublishResult>
+    Note over Topic,Con: SNS delivers a copy to the SQS queue, asynchronously
     Topic-)Con: copy on the notification SQS queue
-    Note over Con,Hdl: IntegrationEventDecoder.decode(body) yields a NotificationEvent
+    Note over Con,Hdl: decoded to a NotificationEvent
     Con->>Hdl: handle(consumer, event)
-    Note over Con,Hdl: one transaction: markConsumed, then recordBatch (@sec-a-notifications)
+    Note over Con,Hdl: one transaction: markConsumed, then recordBatch
     alt first delivery
         Hdl-->>Con: APPLIED
     else duplicate eventId
         Hdl-->>Con: DUPLICATE
     end
-    Note over Con,Hdl: message deleted; a failure leaves it for redelivery, then the DLQ after 5 receives
+    Note over Con,Hdl: message deleted; a failure means redelivery, then the DLQ after 5 receives

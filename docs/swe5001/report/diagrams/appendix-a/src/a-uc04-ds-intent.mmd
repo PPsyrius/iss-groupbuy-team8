@@ -18,7 +18,7 @@ sequenceDiagram
         Svc-->>Ctl: BizException RATE_LIMITED
         Ctl-->>Buyer: HTTP 429 (COMMON_429_001)
     end
-    critical intent transaction, REQUIRED, 10 s
+    critical intent transaction, REQUIRED, default isolation, 10 s
         Svc->>App: createIntent(user, op, dealId, ref, quoteId)
         Note over App,Repo: B2: a remote call to identity-svc
         App->>Users: requireActive(user)

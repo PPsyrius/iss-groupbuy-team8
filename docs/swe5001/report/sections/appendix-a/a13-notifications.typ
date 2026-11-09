@@ -15,16 +15,16 @@ The use case is designed and built, but it runs only in the distributed topology
 - *Postconditions.* Each recipient has at most one notification per fact. A malformed fact leaves no partial notifications. A fact is passed on if and only if its business change was kept.
 
 #atable(
-  [Receive notifications: flows of events. B = basic flow, A = alternate flow, E = exception flow; "At" is the step where the flow branches off. A6–A8 exist only because the design splits the use case across two services (S3, S7, S9) and are drawn only in the design sequences.],
+  [Receive notifications: flows of events. B = basic flow, A = alternate flow, E = exception flow; "At" is the step where the flow branches off. A1, A2 and A6–A8 exist only because the design splits the use case across two services and serialises the fact into a versioned contract (S3, S5, S7, S9); they are drawn only in the design sequences.],
   <tbl-a-ntf-flows>,
   columns: (0.35fr, 0.5fr, 5fr),
   header: ([Step], [At], [What happens]),
   [*B1*], [], [A team succeeds or expires, or a payment succeeds. Together with that change, the system notes the fact and who must be told: the team's active members, or the payer.],
-  [*B2*], [], [Soon after, the system checks the kind and the content of the fact.],
+  [*B2*], [], [The system checks the fact.],
   [*B3*], [], [The system creates one notification per recipient, with a fixed plain-text title and text that hold no names or amounts. A recipient never gets two notifications for one fact.],
   [*B4*], [], [The buyer asks for their notifications. The system returns only this buyer's notifications, newest first, one page at a time.],
-  [*A1*], [B2], [The kind of fact is not one the system knows: it is logged and ignored, so new kinds of fact never hold back the others.],
-  [*A2*], [B2], [The fact is malformed: no notification is created. After repeated attempts it is set aside for an operator, who can send it again after a fix.],
+  [*A1*], [B2], [Design only (S5, S9). The kind of fact is not one the system knows: it is logged and ignored, so new kinds of fact never hold back the others.],
+  [*A2*], [B2], [Design only (S5, S9). The fact is malformed: no notification is created. After repeated attempts it is set aside for an operator, who can send it again after a fix.],
   [*A3*], [B3], [The fact names no recipient: it counts as handled, no notification is created and a warning is logged.],
   [*A4*], [B4], [The buyer is not signed in: the request is refused.],
   [*A5*], [B4], [The page number or page size is out of range: the request is refused.],
@@ -45,9 +45,9 @@ The use case is designed and built, but it runs only in the distributed topology
 
 === Analysis Sequence Diagrams <sec-a-notifications-as>
 
-@fig-a-ntf-as-receive draws the basic flow with A1 to A4 in one sequence: the producing control tells `ReceiveNotificationsControl` the fact, which finds the recipients and creates a notification for each one not yet told; later the buyer lists them. A5 (request validation) and E1, E2 (transactions) need design concepts, and A6 to A8 exist only in the design (S3, S7, S9); they appear in the design sequences.
+@fig-a-ntf-as-receive draws the basic flow with A3 and A4 in one sequence: the producing control tells `ReceiveNotificationsControl` the fact, which finds the recipients and creates a notification for each one not yet told; later the buyer lists them. A5 (request validation) and E1, E2 (transactions) need design concepts. A1 and A2 exist only in the design: inside one system the producing control passes a typed fact, which can be neither of an unknown kind nor malformed; only the versioned contract of S5 and S9 and its dead-letter queue make them possible. They and A6 to A8 (S3, S7, S9) appear in the design sequences.
 
-#afig("a-ntf-as-receive", [Receive notifications analysis sequence diagram, B1–B4 with A1–A4. The recipients are found when the fact is noted; a recipient already told of the fact gets no second notification.])
+#afig("a-ntf-as-receive", [Receive notifications analysis sequence diagram, B1–B4 with A3 and A4. The recipients are found when the fact is noted; a recipient already told of the fact gets no second notification.])
 
 === Transition: Strategies and Mapping <sec-a-notifications-transition>
 
@@ -78,7 +78,7 @@ All nine strategies of @sec-a-strategies change this use case; S3 and S9 reshape
   [`Team`, `Membership`], [entity], [Read only: `IntegrationRecipientRepository.findActiveMemberIdsByDealId` (`biz_group_member`; implementation not drawn).], [S4], [@fig-a-ntf-dc-produce],
   [`Payment`], [entity], [Read only: the payer is `CheckoutQuote.userId` on the domain event `PaymentSucceeded` (not drawn).], [S9], [@fig-a-ntf-dc-produce],
   [`Account`], [entity], [Only a user id (`recipientUserIds`, `Notification.userId`); notification-svc never calls identity-svc.], [S3], [@fig-a-ntf-dc-produce, @fig-a-ntf-dc-record],
-  [`Notification`], [entity], [Aggregate root `Notification` (immutable record), `NotificationRepository` → `NotificationRepositoryImpl` → `BizNotificationMapper`, table `biz_notification`.], [S1, S4], [@fig-a-ntf-dc-record],
+  [`Notification`], [entity], [Aggregate root `Notification` (immutable record); its `eventId` realises the rule "one per fact" on the `recipient` association (S8, S9; second guard `insertIfAbsent` on `(event_id, user_id)`). `NotificationRepository` → `NotificationRepositoryImpl` → `BizNotificationMapper`, table `biz_notification`.], [S1, S4, S8, S9], [@fig-a-ntf-dc-record],
   [(none): the fact], [—], [S9: domain events `TeamSucceeded`, `TeamExpired`, `PaymentSucceeded` (with `CheckoutQuote`), published by the producing use cases (not drawn). Outbox row: `OutboxInsert` via `OutboxMapper` into `sys_outbox`, read as `OutboxEvent`, updated with `OutboxPublishResult` via `OutboxRelayRepository`; sent as `IntegrationEventEnvelope` with the `*V1` contracts.], [S1, S4, S9], [@fig-a-ntf-dc-produce, @fig-a-ntf-dc-relay],
   [(none): the event feed], [—], [S3, S5: port `OutboxEventTransport`, abstract `BatchingOutboxEventTransport`, adapters `SnsOutboxEventTransport`, `SqsOutboxEventTransport`, `OutboxMessageFactory`; topic `domain-events`, queues `notification`, `notification-dlq` (Terraform). Inbound: `SqsNotificationEventConsumer`, `IntegrationEventDecoder` (`IntegrationEventDecoder.Decoded`, `MalformedIntegrationEventException`), the sealed `NotificationEvent` and its records.], [S3, S5, S9], [@fig-a-ntf-dc-relay, @fig-a-ntf-dc-consume],
   [(none): the consumption marker], [—], [S8, S9: `ConsumedMessageRepository` (`sys_consumed_message`, key `(event_id, consumer)`; implementation not drawn).], [S8, S9], [@fig-a-ntf-dc-record],
@@ -170,11 +170,11 @@ Five patterns are in this code; @tbl-a-ntf-patterns maps their roles to classes.
   columns: (0.35fr, 1fr, 2fr, 0.8fr),
   header: ([Step], [Analysis message], [Design operations], [Figures]),
   [B1], [`factHappened`, `activeMembers`, `payer`], [`publishEvent`; `IntegrationOutboxWriter.onTeamExpired` (or `onTeamSucceeded`, `onPaymentSucceeded`) → `IntegrationRecipientRepository.findActiveMemberIdsByDealId` (or `CheckoutQuote.userId`); «create» `TeamExpiredV1`, `OutboxInsert`; `OutboxMapper.insert`], [@fig-a-ntf-ds-produce],
-  [B2], [guard: kind known, content valid], [`OutboxRelayJob.run` → `LeasedJobRunner.run` → `OutboxRelayService.relayBatch` → `findDue`, `BatchingOutboxEventTransport.publish` (`entry`, `OutboxMessageFactory.body`, `attributes`, `send`: `PublishBatch`), `recordResults`; SNS delivery; `SqsNotificationEventConsumer.pollOnce` (`ReceiveMessage`), `process` → `IntegrationEventDecoder.decode`], [@fig-a-ntf-ds-relay, @fig-a-ntf-ds-consume],
+  [B2], [(the fact is checked)], [`OutboxRelayJob.run` → `LeasedJobRunner.run` → `OutboxRelayService.relayBatch` → `findDue`, `BatchingOutboxEventTransport.publish` (`entry`, `OutboxMessageFactory.body`, `attributes`, `send`: `PublishBatch`), `recordResults`; SNS delivery; `SqsNotificationEventConsumer.pollOnce` (`ReceiveMessage`), `process` → `IntegrationEventDecoder.decode`], [@fig-a-ntf-ds-relay, @fig-a-ntf-ds-consume],
   [B3], [«create» `Notification`], [`NotificationEventHandler.handle` → `NotificationEventAssembler.toNotifications` («create» `Notification`), `ConsumedMessageRepository.markConsumed` true, `NotificationAppService.recordBatch` → `NotificationRepository.insertIfAbsent`; then `DeleteMessage`], [@fig-a-ntf-ds-record, @fig-a-ntf-ds-consume],
   [B4], [`listMine`, `listNotifications`, `forRecipient`, `showNotifications`], [`NotificationController.list` → `NotificationAppService.pageMine` → `NotificationRepositoryImpl.pageByUserId` → `BizNotificationMapper.selectPageByUserId`, `countByUserId`], [@fig-a-ntf-ds-read],
-  [A1], [guard: kind not known], [`decode` returns `Decoded` with `supported()` false → `DeleteMessage`], [@fig-a-ntf-ds-consume],
-  [A2], [guard: malformed], [`decode` throws `MalformedIntegrationEventException`; no delete; SQS redrive to `notification-dlq` on the fifth receive], [@fig-a-ntf-ds-consume],
+  [A1], [— (S5, S9)], [`decode` returns `Decoded` with `supported()` false → `DeleteMessage`], [@fig-a-ntf-ds-consume],
+  [A2], [— (S5, S9)], [`decode` throws `MalformedIntegrationEventException`; no delete; SQS redrive to `notification-dlq` on the fifth receive], [@fig-a-ntf-ds-consume],
   [A3], [loop with no recipient], [`toNotifications` returns an empty list; `markConsumed` true → `APPLIED` with a WARN, no `recordBatch`], [@fig-a-ntf-ds-record],
   [A4], [`showSignInRequired`], [`StpUtil.checkLogin` throws `NotLoginException` → `UNAUTHENTICATED` (401)], [@fig-a-ntf-ds-read],
   [A5], [—], [`@Min` and `@Max` on `page` and `size` → `VALIDATION_FAILED` (400)], [@fig-a-ntf-ds-read],

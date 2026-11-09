@@ -91,7 +91,7 @@ Seven of the nine strategies of @sec-a-strategies change UC2; S7 and S9 do not:
   [(none)], [—], [Introduced by a strategy: `UserAppService` (S3, the current user for `me`). Not drawn: the nested records `OAuthLoginAppService.GoogleAuthorizeUrl`, `OAuthLoginAppService.OAuthLoginResult`, `OAuthStateStore.IssuedState`, `OAuthIdentityGateway.OAuthProfile`, `LoginAuthorizationService.Snapshot`, `UserAppService.CurrentUser`; `RbacAutoConfiguration` (in @fig-a-str-s6-rbac); `GlobalExceptionHandler`.], [S1, S3, S6], [@fig-a-uc02-dc-access],
 )
 
-`SignInWithGoogleControl` is realised in two phases: `OAuthLoginAppService` (B5–B7, application layer) and `LoginSessionPublisher` (B8, web adapter layer, because issuing the cookie through `StpLogic.setTokenValue` needs the HTTP response). `AuthController.googleCallback` orders the two phases and owns the redirect contract; it is the one piece of flow logic in the boundary, accepted so that no application class depends on the servlet API (S2, S6). `LoginSessionPublisher` implements no port, so it is drawn as a «utility», a web-layer helper.
+`SignInWithGoogleControl` is realised in two phases: `OAuthLoginAppService` (B5–B7, application layer) and `LoginSessionPublisher` (B8, a «utility» in the web layer of `blocbuy-adapter`, because issuing the cookie through `StpLogic.setTokenValue` needs the HTTP response). `AuthController.googleCallback` orders the two phases and owns the redirect contract; it is the one piece of flow logic in the boundary, accepted so that no application class depends on the servlet API (S2, S6). `LoginSessionPublisher` implements no port, so it is drawn as a «utility», a web-layer helper.
 
 === Design Class Diagrams <sec-a-uc02-dc>
 

@@ -29,7 +29,7 @@ classDiagram
     class JoinTeamControl {
         <<control>>
         +requestJoin(buyer, team, invitation)
-        +paymentConfirmed(paymentRef)
+        +paymentConfirmed(payment)
     }
     class Account {
         <<entity>>
@@ -75,11 +75,11 @@ classDiagram
 %% at JoinTeamUI 3,0
 %% at ShareInvitationControl 1,1
 %% at PurchaseIntent 2,1
-%% at JoinTeamControl 3,1
+%% at JoinTeamControl 3,1.3
 %% at Account 0,3
 %% at Invitation 1,2
 %% at Team 2,2
-%% at ReferralCreditControl 3,2
+%% at ReferralCreditControl 3,2.45
 %% at Membership 1,3
 %% at ShareCredit 3,3
     ShareInviteUI "1" -- "1" ShareInvitationControl
