@@ -30,7 +30,7 @@ sequenceDiagram
         else now before expireTime
             Bef-->>Exp: IllegalStateException, propagates (E1)
         else OPEN and due
-            Bef->>Aft: «create» status EXPIRED
+            Bef->>Aft: «create» EXPIRED
             Bef-->>Exp: after
         end
         Exp->>Repo: expire(before, after, now)

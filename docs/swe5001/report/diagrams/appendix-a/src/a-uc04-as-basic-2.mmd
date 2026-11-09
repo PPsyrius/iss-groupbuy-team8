@@ -9,7 +9,7 @@ sequenceDiagram
     create participant Ord as Order (entity)
     participant Res as ResolveTeamControl (control)
     participant UI as JoinTeamUI (boundary)
-    create participant Mem as Membership (entity)
+    create participant Mem as Member­ship (entity)
 
     Note over PU,Prod: B5: Pay upfront verified the payment (@sec-a-pay-upfront)
     PU->>Ctl: B5: paymentConfirmed(payment)

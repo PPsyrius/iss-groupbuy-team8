@@ -60,6 +60,9 @@ classDiagram
 
 - The first line is `%% frame: <name>`, the heading in the frame's tab (`class …`, `sd …`, `stm …`). Required.
 - `%% at Id col,row` pins a class or state to a grid cell (integers, column first, row down). Pin every box of a class diagram; the automatic layout is a fallback. Two pins may not share a cell. Pins do nothing in sequence diagrams (lifelines keep declaration order).
+- `%% mside A B <side at A> <side at B>` (each `left` or `right`, walking from the relation's source) moves the multiplicities of the A–B relation to the other side of the line. A multiplicity sits on the right by default; at the end of a diagonal edge that reaches a box near its corner, that side can touch the box, so move that end to the left. Pinning boxes at fractional cells to straighten the edge makes the layout close up its gaps instead (UC4 Fig A.1 shows the hint in use).
+- A «create» label wraps inside the gap before the created head. If the wrap makes a figure print below 8 pt, shorten the label (`«create» EXPIRED`, not `«create» status EXPIRED`). A one-word name wider than its head box (a created head is one column wide) takes a soft hyphen (U+00AD) at a syllable break: `Member­ship`.
+- A message to a «static» operation goes to a lifeline for the class itself (`participant Cls as TeamPricePolicy (entity)`), never to a lifeline that a later «create» brings into being.
 - Cross-references: `@fig-…`, `@tbl-…` or `@sec-…` inside a message, note or edge label becomes a real reference that follows renumbering (`Note over A,B: B7: @fig-a-uc04-ds-admit`). Never type "Figure A.12" by hand. Not allowed in fragment guards or names.
 
 ### Supported Mermaid
@@ -111,5 +114,5 @@ Anything else fails loudly, because the translator itself silently drops lines i
 - Compile time is about 1 s per diagram (each class diagram is laid out once to decide its orientation and once to draw). The whole report will take minutes once every part is in: use the default preview (part alone) while writing.
 - Typst text: escape `#` as `\#`; `@word` is a reference and `<word>` a label, so put code such as `@Order(10)` or `Optional<UUID>` in backticks; `*` and `_` start strong and emphasis.
 - `typst query` is deprecated in Typst 0.15; the preview uses `typst eval`.
-- Floats are off by default: a floating figure escaped before the appendix heading and was lost at the end of the document in tests.
+- Floats are off by default: a floating figure escaped before the appendix heading and was lost at the end of the document in tests. A float never passes the next part or subsection heading: `07-appendix-a.typ` flushes pending floats before every level-2 and level-3 heading, so a figure always prints inside its own subsection.
 - `ApplicationEventPublisher` is Spring's interface; it is the one framework type the UC4 diagrams draw, as the Observer's subject. Keep other framework and `java.util` types out of the boxes.

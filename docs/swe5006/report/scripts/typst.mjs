@@ -254,10 +254,18 @@ function classDiagram(lines, frame) {
     (c) => `(id: ${str(c.id)}, name: ${str(c.name)}, stereo: ${c.stereo ? str(c.stereo) : 'none'}, attrs: ${typstArray(c.attrs.map(str))}, ops: ${typstArray(c.ops.map(str))}, abstract: ${c.abstract}, pos: (${pos[c.id][0]}, ${pos[c.id][1]}))`,
   );
   const bends = routes(rels, pos);
-  const rs = rels.map(
-    (r, i) =>
-      `(from: ${str(r.a)}, to: ${str(r.b)}, kind: ${str(r.kind)}, label: ${r.label ? str(r.label) : 'none'}, mfrom: ${r.ma ? str(r.ma) : 'none'}, mto: ${r.mb ? str(r.mb) : 'none'}, bend: ${bends[i]}deg, vert: ${pos[r.a][0] === pos[r.b][0] && bends[i] === 0})`,
-  );
+  // `%% mside A B <side at A> <side at B>` (left or right, walking from the relation's source)
+  // moves a multiplicity off a box corner that a diagonal edge reaches; unhinted edges keep right.
+  const msides = new Map();
+  for (const l of lines) {
+    const m = l.trim().match(/^%%\s*mside\s+([\w.]+)\s+([\w.]+)\s+(left|right)\s+(left|right)\s*$/);
+    if (m) msides.set(`${m[1]}\u0000${m[2]}`, [m[3], m[4]]).set(`${m[2]}\u0000${m[1]}`, [m[4], m[3]]);
+  }
+  const rs = rels.map((r, i) => {
+    const side = msides.get(`${r.a}\u0000${r.b}`);
+    const sides = side ? `, sfrom: ${side[0]}, sto: ${side[1]}` : '';
+    return `(from: ${str(r.a)}, to: ${str(r.b)}, kind: ${str(r.kind)}, label: ${r.label ? str(r.label) : 'none'}, mfrom: ${r.ma ? str(r.ma) : 'none'}, mto: ${r.mb ? str(r.mb) : 'none'}, bend: ${bends[i]}deg, vert: ${pos[r.a][0] === pos[r.b][0] && bends[i] === 0}${sides})`;
+  });
   // The least gap between columns (rows) that leaves room for the labels and multiplicities of
   // the edges joining neighbours in one row (column): about 4.3 pt per character at 8.5 pt,
   // a label wrapping at 40 mm, the end marks, and air on both sides.

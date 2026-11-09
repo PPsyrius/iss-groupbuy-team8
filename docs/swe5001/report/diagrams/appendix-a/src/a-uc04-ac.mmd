@@ -91,6 +91,10 @@ classDiagram
 %% at PurchaseIntent 3,2
 %% at Membership 1.3,3.75
 %% at Invitation 3,3.75
+%% mside JoinTeamUI JoinTeamControl right left
+%% mside JoinTeamControl Order left right
+%% mside JoinTeamControl PurchaseIntent right left
+%% mside Payment PurchaseIntent left right
     JoinTeamUI "1" -- "1" JoinTeamControl
     PayUpfrontControl "1" --> "1" JoinTeamControl : base use case
     JoinTeamControl "1" --> "1" Account
