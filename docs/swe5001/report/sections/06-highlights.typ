@@ -141,7 +141,9 @@ The runtime is destroyed between sessions (AD-12), so the system is shown throug
   table(
     columns: (1.6fr, 2.4fr, 1.2fr),
     table.header([What], [Where], [Kind]),
-    [Two buyers forming one team: leader starts and pays, member joins and pays], [Walkthrough recorded on 24 October 2026 on the deployed `dev` environment (#iss(590)); its design is in §3.2.4], [Recorded on `dev`],
+    [Two buyers forming one team: leader starts and pays, member joins and pays], [Walkthrough recorded on 24 October 2026 on the SWE5006 `dev` deployment (#iss(590), recording #iss(657)); its design is in §3.2.4. That day the only `swe5001-env` runs were the scheduled nightly `down`s, so no three-service runtime existed. No paid buyer journey on the three-service runtime is recorded (§2.2)], [Recorded on the SWE5006 monolith (EC2), same codebase, `monolith` topology\; not the three-service runtime],
+    [Storefront served by the three services through CloudFront, in a browser], [#src("docs/swe5001/evidence/20261019-ecs-demo-images/README.md")[19 October record] of the session created by #run("39198123242")[run 39198123242]: the storefront loaded signed out, but all ten product images were broken by the demo seed (#iss(557))], [Verified on AWS (screenshot, signed out, no purchase)],
+    [Live session for the 21 October presentation], [Runtime created by #run("39525458726")[run 39525458726] (21 October, 01:07 UTC, succeeded) and destroyed by the nightly `down` #run("39658040903")[run 39658040903] (21 October, 19:01 UTC)], [Session runs verified on AWS\; what was shown live is not recorded],
     [Three services built from zero, smoke-tested through CloudFront, released and destroyed], [#run("39008208244")[Promotion run 39008208244] (17 October); repeated in #run("39259845179")[run 39259845179] (19 October) and #run("39435280952")[run 39435280952] (20 October)], [Verified on AWS],
     [Auto-scaling from one to three tasks under load], [#src("docs/swe5001/evidence/20261019-v3-autoscaling/README.md")[19 October record] (§4.1)], [Scale-out verified on AWS; invalid as acceptance evidence],
     [Pull-request checks: build, architecture rules, contract check, image scan, Terraform plan], [Every pull request into `dev` and `prod` (§5.2)], [Running in CI],
@@ -150,5 +152,7 @@ The runtime is destroyed between sessions (AD-12), so the system is shown throug
   kind: table,
   caption: [Where the system can be seen working.],
 ) <tbl-demo>
+
+After the final `terraform destroy` of 16 November (@tbl-milestones) removes every stack, the GitHub Actions runs, the evidence records under `docs/swe5001/evidence/` and the source remain, and a rebuild needs an operator to re-apply `foundation` (the GitHub OIDC roles the pipeline assumes and the ECR repositories) and `edge` before any promotion can run (#src("docs/swe5001/impl-aws-infrastructure.md")[infrastructure design], sections 4 and 5).
 
 #pending[Team to decide: if the proposed AWS session of 13 November (phase R0, §3.4) runs, add its run link here as a live rebuild of the current release.]
