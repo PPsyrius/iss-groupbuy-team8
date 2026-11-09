@@ -33,6 +33,7 @@ docs/swe5006/report/
   scripts/check.mjs         structure, marker, figure, Mermaid and language checks
   scripts/build.mjs         compiles all sections to dist/swe5006-report.pdf
   scripts/figure.mjs        renders one section to PNG pages to check figures by eye
+  scripts/render-compare.mjs  proves a kit or template change leaves every page of the report unchanged
   scripts/renumber.mjs      renumbers figures and tables per chapter and rewrites their references
 ```
 
@@ -97,8 +98,11 @@ From the repository root (Node 20+, Typst 0.15 with the `fletcher` 0.5.8 package
 npm --prefix docs/swe5006/report run check                         # structure, figures, Mermaid; lists open markers
 npm --prefix docs/swe5006/report run check:strict                  # freeze gate: markers are errors
 npm --prefix docs/swe5006/report run figure -- sections/03-4-1-eric.md   # PNG pages in dist/preview/
+npm --prefix docs/swe5006/report run render:compare                # after a kit or template change: every page as before
 REPORT_TEMPLATE="/path/to/SWE5006 - Project Report Template for Practice Module.docx" \
   npm --prefix docs/swe5006/report run build -- --out "/path/to/shared/folder"
 ```
+
+`render:compare` builds the report from the merge base with `origin/dev` (or `-- --base <ref>`) and from the working tree, renders every page, and compares them byte for byte. Run it after any change to `scripts/typst.mjs`, `typst/uml.typ` or `typst/template.typ`; the SWE5001 appendix shares the diagram kit, so its options must stay opt-in. It exits 1 and keeps both page sets when a page differs (about 4 minutes).
 
 `REPORT_TEMPLATE` is optional: it supplies the NUS-ISS logo for the header, which stays out of the repository with the template; the page setup clips the blank margins of the template's logo image. `REPORT_LOGO=<png>` (optional) replaces it with a logo already cropped to its artwork. The footer carries a running head at left, the current chapter or appendix as "2 | Project Conduct", beside the page number; both are 9 pt. Open markers render as red boxes in the PDF so reviewers see every gap. The front matter in `00-front-matter.md` is a YAML block (`title`, `kind`, `subtitle`, `team`, a `members` list, `repository`, `environment`) that becomes the title page; every key reaches the template as `meta`.

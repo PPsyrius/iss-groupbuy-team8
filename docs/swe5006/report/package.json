@@ -8,6 +8,7 @@
     "check": "node scripts/check.mjs",
     "check:strict": "node scripts/check.mjs --strict",
     "figure": "node scripts/figure.mjs",
+    "render:compare": "node scripts/render-compare.mjs",
     "build": "node scripts/check.mjs && node scripts/build.mjs"
   },
   "license": "ISC"
