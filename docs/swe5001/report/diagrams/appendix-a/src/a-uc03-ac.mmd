@@ -116,7 +116,7 @@ classDiagram
     Product "1" -- "*" TeamPricePolicy : priced by
     TeamPricePolicy "1" -- "*" PriceQuote : issues
     Product "1" -- "*" Team : offers
-    Team "0..1" -- "1" PurchaseIntent : opened by
+    PurchaseIntent "*" -- "0..1" Team : for
     Team "1" *-- "1..*" Membership : has
     Membership "*" -- "1" Account : member
     Team "*" -- "1" Account : leader
