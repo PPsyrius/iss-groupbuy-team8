@@ -48,7 +48,7 @@
     <!-- HTTP stub for the commerce-svc identity client tests; the standalone artifact shades its Jetty and Jackson -->
     <wiremock.version>3.13.2</wiremock.version>
     <stripe-java.version>34.0.0</stripe-java.version>
-    <aws-sdk.version>2.57.3</aws-sdk.version>
+    <aws-sdk.version>2.57.8</aws-sdk.version>
     <!-- Google OIDC client (id_token verification); verified against Maven Central 2026-09-07 -->
     <google-api-client.version>2.9.2</google-api-client.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
