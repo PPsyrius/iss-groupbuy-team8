@@ -7,7 +7,6 @@ sequenceDiagram
     participant Team as Team (entity)
     participant Inv as Invitation (entity)
     create participant Intent as PurchaseIntent (entity)
-    participant PG as PaymentGateway (boundary)
 
     Buyer->>UI: B1: join(team, invitation)
     UI->>Ctl: B1: requestJoin(buyer, team, invitation)
@@ -26,5 +25,5 @@ sequenceDiagram
         UI-->>Buyer: refused, nothing paid
     end
     Ctl->>Intent: B4: «create» (team price, deadline, sharer)
-    Ctl->>PG: B5: requestPayment(intent)
-    Note over Ctl,PG: B5: «include» Pay upfront (@sec-a-pay-upfront)
+    Ctl-->>UI: intent
+    Note over Buyer,Intent: B5: «include» Pay upfront (@sec-a-pay-upfront): the buyer pays the intent on Stripe's page

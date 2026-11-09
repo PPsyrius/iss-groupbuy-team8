@@ -28,7 +28,7 @@ classDiagram
         +insertQuote(quote: TeamPriceQuote): void
     }
     class Product {
-        <<aggregate root>>
+        <<aggregate root, Pers>>
         -originalPrice: BigDecimal
         -currency: String
         -stock: int
@@ -41,7 +41,7 @@ classDiagram
         +strategyFor(mode: PricingMode): PricingStrategy
     }
     class TeamPriceQuote {
-        <<entity, record>>
+        <<aggregate root, record, Pers>>
         +id: UUID
         +productId: UUID
         +ownerId: UUID
@@ -60,7 +60,7 @@ classDiagram
         +quoteTeamPrice(product: Product, policy: TeamPricePolicy, now: Instant): BigDecimal
     }
     class TeamPricePolicy {
-        <<aggregate root, record>>
+        <<aggregate root, record, Pers>>
         +productId: UUID
         +amount: BigDecimal
         +currency: String

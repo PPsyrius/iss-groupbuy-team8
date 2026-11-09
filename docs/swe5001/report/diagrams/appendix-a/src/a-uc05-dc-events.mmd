@@ -34,28 +34,6 @@ classDiagram
         +confirmByDealId(dealId: UUID): int
         +cancelByDealId(dealId: UUID, canceledAt: Instant): int
     }
-    class IntegrationRecipientRepository {
-        <<interface, repository, Pers>>
-        +findActiveMemberIdsByDealId(dealId: UUID): List~UUID~
-    }
-    class OutboxMapper {
-        <<interface, mapper, Pers>>
-        +insert(row: OutboxInsert): int
-    }
-    class TeamExpiredV1 {
-        <<integration event, record>>
-        +dealId: UUID
-        +productId: UUID
-        +expiredAt: Instant
-        +recipientUserIds: List~UUID~
-    }
-    class TeamSucceededV1 {
-        <<integration event, record>>
-        +dealId: UUID
-        +productId: UUID
-        +size: int
-        +recipientUserIds: List~UUID~
-    }
 %% at OrderRepository 0,0
 %% at OrderLifecycleSubscriber 1,0
 %% at TeamExpiryRefundSubscriber 2,0
@@ -64,10 +42,6 @@ classDiagram
 %% at TeamExpired 2,1
 %% at OpenDealOfferCacheSubscriber 0,2
 %% at IntegrationOutboxWriter 1,2
-%% at IntegrationRecipientRepository 2,2
-%% at TeamSucceededV1 0,3
-%% at OutboxMapper 1,3
-%% at TeamExpiredV1 2,3
     ApplicationEventPublisher ..> TeamSucceeded
     ApplicationEventPublisher ..> TeamExpired
     OrderLifecycleSubscriber ..> TeamSucceeded
@@ -78,7 +52,3 @@ classDiagram
     OpenDealOfferCacheSubscriber ..> TeamExpired
     TeamExpiryRefundSubscriber ..> TeamExpired
     OrderLifecycleSubscriber "1" --> "1" OrderRepository
-    IntegrationOutboxWriter "1" --> "1" OutboxMapper
-    IntegrationOutboxWriter "1" --> "1" IntegrationRecipientRepository
-    IntegrationOutboxWriter ..> TeamSucceededV1 : «create»
-    IntegrationOutboxWriter ..> TeamExpiredV1 : «create»

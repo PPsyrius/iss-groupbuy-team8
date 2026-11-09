@@ -12,5 +12,6 @@ stateDiagram-v2
     Draft : configureTeamTerms / version + 1
     OnSale : revise [price, currency, stock unchanged] / version + 1
     OnSale : configureTeamTerms / version + 1
+    OnSale : consumeOneUnit [stock > 0] / stock - 1, soldCount + 1, version + 1 (UC3, UC4)
     OffSale : revise [price, currency, stock unchanged] / version + 1
     OffSale : configureTeamTerms / version + 1

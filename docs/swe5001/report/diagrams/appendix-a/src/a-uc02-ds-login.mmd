@@ -16,7 +16,7 @@ sequenceDiagram
     M-->>UO: SysUserOAuthDO, or null
     UO-->>App: Optional(OAuthIdentity)
     alt binding found
-        critical recordLogin: REQUIRED, default isolation, no timeout
+        critical recordLogin: REQUIRED, READ COMMITTED (default), no timeout
             App->>Tx: recordLogin(identity, profile)
             Tx->>Users: findById(userId)
             Users-->>Tx: Optional(User)

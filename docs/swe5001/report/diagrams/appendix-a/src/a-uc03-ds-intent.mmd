@@ -19,7 +19,7 @@ sequenceDiagram
         App->>Repo: currentTime()
         Repo-->>App: now
         App->>App: start(user, productId, quoteId, now)
-        Note over App,Cat: B6: catalog locks the product row and checks the listing and the quote (@tbl-a-uc03-ops)
+        Note over App,Cat: B6: catalog takes lock 6, the product row, and checks the listing and the quote (@tbl-a-uc03-ops)
         alt quoteId given (B6)
             App->>Cat: lockQuotedStart(productId, quoteId, user)
         else no quote, API callers only (A1)

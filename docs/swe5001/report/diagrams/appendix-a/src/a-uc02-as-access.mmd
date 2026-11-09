@@ -4,22 +4,21 @@ sequenceDiagram
     participant M as MemberAreaUI (boundary)
     participant UI as SignInUI (boundary)
     participant Ctl as SignInWithGoogleControl (control)
-    participant Ses as Session (entity)
+    participant Role as Role (entity)
 
     Buyer->>UI: A3: signOut()
-    UI->>Ctl: A3: signOut(session)
-    Ctl->>Ses: A3: end()
-    UI-->>Buyer: signed-out header; other devices stay signed in
+    UI->>Ctl: A3: signOut()
+    UI-->>Buyer: signed out here; other devices stay signed in
     Buyer->>M: A4, A5: requestMemberAction(action)
     M->>Ctl: A4, A5: checkAccess(request, role)
-    Ctl->>Ses: A5: hasRole(role)
-    Ses-->>Ctl: yes, no, or no session
-    alt no session (A4)
+    break not signed in (A4)
         Ctl->>M: A4: offerSignIn(returnTo)
         M-->>Buyer: sign-in page, back to returnTo afterwards
-    else role or permission missing (A5)
+    end
+    Ctl->>Role: A5: grantedTo(account)
+    Role-->>Ctl: roles and permissions
+    break role or permission missing (A5)
         Ctl->>M: A5: showAccessDenied()
         M-->>Buyer: access denied
-    else allowed
-        Ctl-->>M: allowed; the member action runs
     end
+    Ctl-->>M: allowed; the member action runs

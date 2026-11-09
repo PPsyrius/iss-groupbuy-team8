@@ -13,7 +13,7 @@ sequenceDiagram
     Note over Svc,GW: outsideTransaction(): no transaction, no row lock during provider I/O
     Svc->>GW: verifyCheckoutWebhook(rawBody, signature)
     GW-->>Svc: Optional of CheckoutGateway.Event, or PAYMENT_WEBHOOK_SIGNATURE_INVALID (A9)
-    opt not a Checkout event (A9)
+    break not a Checkout event (A9)
         Svc-->>App: void: acknowledged and ignored
     end
     break StripeSandbox.isSandboxMode false, or a connected account (A9)
@@ -24,18 +24,9 @@ sequenceDiagram
     break session id differs from the event's
         Svc-->>App: PAYMENT_STATE_INVALID
     end
-    Note over Svc,GW: B6 to B9: @fig-a-pay-ds-settle; a non-UUID payment reference is claimed and finished UNKNOWN_PAYMENT (A10)
-    Svc->>Svc: settle(session, eventId, type, operator, id)
-    alt BizException (A9, E2): HTTP 400, 409 or 502
-        Svc-->>App: BizException
-        App-->>WH: BizException
-        WH-->>Stripe: HTTP 4xx or 5xx: Stripe redelivers
-    else other exception, settlement rolled back (E1)
-        Svc-->>App: exception
-        App-->>WH: exception
-        WH-->>Stripe: HTTP 500: Stripe redelivers
-    else settled, duplicate, unknown or ignored
-        Svc-->>App: void
-        App-->>WH: void
-        WH-->>Stripe: HTTP 200 Result.ok()
-    end
+    Svc->>Svc: apply(session, event.id, event.type, "webhook")
+    Note over Svc,GW: B6 to B9: apply runs settle(session, eventId, type, operator, id) in one transaction, @fig-a-pay-ds-settle; a non-UUID payment reference is claimed and finished UNKNOWN_PAYMENT (A10)
+    Svc-->>App: void, or an exception
+    App-->>WH: void, or the exception
+    WH-->>Stripe: HTTP status
+    Note over Stripe,Svc: status for the outcome of handleWebhook at any point above: 200 Result.ok() when it returns (settled, duplicate, unknown or ignored); 400, 409 or 502 for a BizException (A9, E2); 500 for any other exception, settlement rolled back (E1). Every non-200 makes Stripe redeliver.

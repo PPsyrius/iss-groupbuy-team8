@@ -1,19 +1,17 @@
 %% frame: UC3 start refused after payment (analysis)
 sequenceDiagram
-    actor Stripe
-    participant PG as PaymentGateway (boundary)
+    participant PU as PayUpfrontControl (control)
     participant Ctl as StartTeamControl (control)
     participant Intent as PurchaseIntent (entity)
-    participant Pay as Payment (entity)
-    participant UI as StartTeamUI (boundary)
-    create participant Ref as Refund (entity)
+    participant Acc as Account (entity)
+    participant Prod as Product (entity)
 
-    Stripe->>PG: B8: paid(paymentRef)
-    PG->>Ctl: B8: paymentConfirmed(paymentRef)
-    Note over Ctl,Intent: A5 at B9: isPayable, isActive or isPurchasable answers no. A6 at B10: acceptsPayment answers no (@fig-a-uc03-as-basic-2)
+    PU->>Ctl: B8: paymentConfirmed(payment)
+    Ctl->>Intent: B9: isPayable()
+    Ctl->>Acc: B9: isActive()
+    Ctl->>Prod: B9: isPurchasable()
+    Note over Ctl,Prod: A5 at B9: any of the three answers no
     Ctl->>Intent: B10: acceptsPayment(amount)
-    Intent-->>Ctl: refused(reason)
-    Ctl->>Pay: A5, A6: requireRefund(reason)
-    Pay->>Ref: A5, A6: «create»
-    Ctl->>Pay: A5, A6: recordOutcome(refund required)
-    Ctl->>UI: A5, A6: showRefundPending()
+    Note over Ctl,Intent: A6 at B10: the team refuses to open
+    Ctl-->>PU: A5, A6: refused(reason)
+    Note over PU,Ctl: A5, A6: refund owed, recorded by Pay upfront (A15, @sec-a-pay-upfront); no team, membership or order

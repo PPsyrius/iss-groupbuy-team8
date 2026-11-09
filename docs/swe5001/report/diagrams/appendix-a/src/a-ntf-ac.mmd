@@ -1,4 +1,4 @@
-%% frame: Receive notifications for team and payment events (analysis)
+%% frame: Receive notifications for team and payment facts (analysis)
 classDiagram
     class NotificationListUI {
         <<boundary>>
@@ -6,26 +6,14 @@ classDiagram
         +showNotifications(page)
         +showSignInRequired()
     }
-    class EventFeed {
-        <<boundary>>
-        +passOn(event)
-        +acknowledge(event)
-        +setAside(event)
-    }
-    class RelayEventsControl {
-        <<control>>
-        +recordEvent(fact)
-        +relayPending()
-    }
     class ReceiveNotificationsControl {
         <<control>>
-        +eventArrived(event)
+        +factHappened(fact)
         +listNotifications(buyer, page)
     }
     class Team {
         <<entity>>
         -targetSize: Count
-        -currentSize: Count
         -status: TeamStatus
         +activeMembers()
     }
@@ -44,56 +32,28 @@ classDiagram
         <<entity>>
         -status: AccountStatus
     }
-    class EventRecord {
-        <<entity>>
-        -eventType: Text
-        -version: Count
-        -occurredAt: Date-time
-        -attempts: Count
-        -status: DeliveryStatus
-        +isDue()
-        +markPassedOn()
-        +recordFailure()
-    }
-    class ConsumptionRecord {
-        <<entity>>
-        -consumer: Text
-        -consumedAt: Date-time
-        +wasHandled(event, consumer)
-    }
     class Notification {
         <<entity>>
         -type: NotificationType
         -title: Text
         -content: Text
-        -createdAt: Date-time
-        +forRecipient(buyer, page)
+        -createTime: Date-time
+        +forRecipient(buyer, page) «static»
     }
-%% at Team 1,0
-%% at RelayEventsControl 2,0
-%% at EventFeed 3,0
-%% at Membership 0,1
-%% at Payment 1,1
-%% at EventRecord 2,1
-%% at ReceiveNotificationsControl 3,1
-%% at NotificationListUI 4,1
+%% at ReceiveNotificationsControl 1,0
+%% at NotificationListUI 2,0
+%% at Team 0,1
+%% at Notification 1,1
+%% at Payment 2,1
+%% at Membership 0,2
 %% at Account 1,2
-%% at Notification 2,2
-%% at ConsumptionRecord 3,2
-    RelayEventsControl "1" --> "*" Team
-    RelayEventsControl "1" --> "*" Payment
-    RelayEventsControl "1" --> "*" EventRecord
-    RelayEventsControl "1" -- "1" EventFeed
-    EventFeed "1" -- "1" ReceiveNotificationsControl
-    ReceiveNotificationsControl "1" --> "*" ConsumptionRecord
+    ReceiveNotificationsControl "1" -- "1" NotificationListUI
+    Team "*" -- "1" ReceiveNotificationsControl
+    ReceiveNotificationsControl "1" --> "*" Payment
     ReceiveNotificationsControl "1" --> "*" Notification
-    NotificationListUI "1" -- "1" ReceiveNotificationsControl
-    Team "1" *-- "1..*" Membership
-    Membership "*" -- "1" Account : member
-    Payment "*" -- "1" Account : payer
-    EventRecord "*" -- "0..1" Team : about
-    EventRecord "*" -- "0..1" Payment : about
-    EventRecord "*" -- "*" Account : recipients
-    ConsumptionRecord "0..1" -- "1" EventRecord : handles
-    Notification "*" -- "1" EventRecord : caused by
-    Notification "*" -- "1" Account : recipient
+    Team "1" *-- "1..*" Membership : member
+    Account "1" -- "*" Membership : holds
+    Account "1" -- "*" Payment : payer
+    Account "1" -- "*" Notification : recipient {one per fact}
+    Team "0..1" -- "*" Notification : about
+    Notification "*" -- "0..1" Payment : about

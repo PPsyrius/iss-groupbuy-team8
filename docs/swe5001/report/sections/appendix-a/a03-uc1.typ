@@ -58,8 +58,8 @@ The strategies of @sec-a-strategies turn the analysis model into the design mode
 - *S2 Presentation (AD-09; NFR-07, 12, 16, 25):* impacted `CatalogUI` → resultant the routes `/` and `/products/$productId`, which call the generated API client and never compute a price; not drawn.
 - *S3 Distribution (AD-02, AD-06, AD-09; NFR-05, 07, 64, 66):* impacted `BrowseListingsControl`, `Team` → resultant `ProductController` (REST, `Result` envelope) over `ProductAppService`; the catalog reaches teams only through the group-buy query port `GroupDealQueryService`, in the same process. UC1 makes no call to identity-svc, so browsing stays up while identity-svc is down; dynamics @fig-a-uc01-ds-browse.
 - *S4 Persistence (AD-03, AD-11; NFR-05, 13):* impacted `Product`, `Team` → resultant `ProductRepository` → `ProductRepositoryImpl` → `BizProductMapper` (table `biz_product`), `GroupDealRepository` (table `biz_group_deal`) and the cache port `OpenDealOfferCache` → `RedisOpenDealOfferCache` (Valkey, entries live at most 25 s, NFR-41). A page costs one page query, one count and at most one batch team query, never one query per product, which keeps browse inside NFR-15. The read-only transaction commits before the cache is touched, so a slow cache never holds a database connection; dynamics @fig-a-uc01-ds-browse, @fig-a-uc01-ds-detail.
-- *S5 External interface (AD-06; NFR-21, 22, 23, 31, 50, 66):* impacted `SemanticRanker` → resultant the port `ListingSearchReranker` and the adapter `TypeSafeJevListingSearchReranker`, off unless configured, time-boxed (1 s connect, 2 s read), limited to 20 candidates and failing open to the database order, so it can never break the browse latency target NFR-15; dynamics @fig-a-uc01-ds-search.
-- *S6 Security (AD-05, AD-09; NFR-01, 46, 47, 58, 68):* impacted `CatalogUI` → resultant the interceptor in `SaTokenConfig`, which lets anonymous `GET` through on `/api/v1/products/**` only; Bean Validation bounds on page, size and keyword; `LIKE` wildcards escaped by `ProductRepositoryImpl.toLikePattern` and bound as parameters; one 404 for missing and hidden products; anonymous browse is the one exception to NFR-68's rule; dynamics @fig-a-uc01-ds-search, @fig-a-uc01-ds-detail.
+- *S5 External interface (backend ADRs 0001, 0004, 0005; NFR-21, NFR-22, NFR-23, NFR-31, NFR-50, NFR-66):* impacted `SemanticRanker` → resultant the port `ListingSearchReranker` and the adapter `TypeSafeJevListingSearchReranker`, off unless configured, time-boxed (1 s connect, 2 s read), limited to 20 candidates and failing open to the database order, so it can never break the browse latency target NFR-15; dynamics @fig-a-uc01-ds-search.
+- *S6 Security (AD-05, AD-09; NFR-01, 46, 47, 58, 68):* impacted `CatalogUI` → resultant the interceptor in `SaTokenConfig`, which lets anonymous `GET` through on `/api/v1/products/**` (and on `/api/v1/invites/*` for UC7); Bean Validation bounds on page, size and keyword; `LIKE` wildcards escaped by `ProductRepositoryImpl.toLikePattern` and bound as parameters; one 404 for missing and hidden products; anonymous browse is the one exception to NFR-68's rule; dynamics @fig-a-uc01-ds-search, @fig-a-uc01-ds-detail.
 - *S7 Scheduling (AD-16; NFR-15, 32, 61):* not applied; nothing in UC1 runs on a timer.
 - *S8 Concurrency (AD-02, AD-03; NFR-13, 21, 27, 30):* not applied; UC1 takes no lock and writes nothing. Each statement reads its own `READ COMMITTED` snapshot. A team shown can fill a moment later; UC4 re-checks it under its lock.
 - *S9 Domain and integration events (AD-04; NFR-30, 39, 59, 60, 61, 63):* UC1 publishes nothing. It relies on `OpenDealOfferCacheSubscriber`, which evicts a product's cached team after `MemberJoined`, `TeamSucceeded` or `TeamExpired` commits (@fig-a-uc04-ds-events, @sec-a-uc05). The expiry and seat check on every cache hit covers a missed eviction.
@@ -102,7 +102,7 @@ Each design sequence retells part of @tbl-a-uc01-flows; the notes carry the step
 #atable(
   [UC1 operation specifications (commerce-svc). Errors are `BizException` error codes unless named as another exception. The entry `ProductController.pageListings` adds only Bean Validation: `VALIDATION_FAILED` (`COMMON_400_002`) for page < 1, size outside 1–100 or a keyword over 64 characters (E1).],
   <tbl-a-uc01-ops>,
-  columns: (1.45fr, 0.8fr, 0.8fr, 1.3fr, 1fr),
+  columns: (1.9fr, 0.6fr, 0.75fr, 1.2fr, 0.95fr),
   header: ([Operation; transaction], [Purpose], [Preconditions], [Postconditions and effects], [Errors]),
   [`ProductAppServiceImpl.pageListings(page: Integer, size: Integer, category: String): PageResult<ListingView>`. Read-only transaction around the product reads only.], [Browse, B2–B4.], [—], [Transaction committed before the one batch team lookup; nothing stored.], [`PRICING_MODE_UNSUPPORTED` (`CATALOG_500_001`).],
   [`ProductAppServiceImpl.search(query: ListingQuery): PageResult<ListingView>`. No transaction: two statements.], [Search, A1–A2.], [Keyword non-blank.], [Same items as without re-ranking, possibly in another order.], [As `pageListings`; re-ranking errors are swallowed.],
@@ -123,7 +123,7 @@ Two patterns carry UC1's design problems. The ports `ProductRepository`, `OpenDe
 #atable(
   [Patterns in the UC1 design: the problem first, then the roles mapped to real classes, then the consequences.],
   <tbl-a-uc01-patterns>,
-  columns: (0.8fr, 1fr, 1.2fr, 1fr),
+  columns: (0.6fr, 0.95fr, 1.3fr, 1.15fr),
   header: ([Pattern (kind)], [Problem in UC1], [Roles → classes], [Consequences]),
   [Strategy (GoF, behavioural)], [How a product's two prices are worked out depends on its pricing mode. An `if` on the mode inside the browse service would grow with every new mode and be repeated by the team-price quote of UC3.], [Context: `ProductAppServiceImpl`, which gets its strategy from `PricingStrategyResolver` by `PricingMode`. Strategy: `PricingStrategy`. Concrete strategy: `DualPricingStrategy`, registered as a bean by `PricingConfig`. Collaboration: @fig-a-uc01-dc-price, @fig-a-uc01-ds-browse.], [A new mode is a new strategy bean and an enumeration value; the services do not change (open–closed). Liability: with one strategy the indirection costs more than it saves today, and a mode without a strategy fails only at run time (E2).],
   [Cache-aside (architectural)], [Every card needs its best open team, and the browse page must stay fast at 100 users (NFR-15) without a query per card.], [Application: `GroupDealQueryServiceImpl`. Cache port: `OpenDealOfferCache`; adapter `RedisOpenDealOfferCache`. Source of truth: `GroupDealRepository`. Invalidation: `OpenDealOfferCacheSubscriber` after commit (UC4, UC5). Collaboration: @fig-a-uc01-dc-price, @fig-a-uc01-ds-detail.], [Hits avoid SQL; an outage degrades to one query. Liability: a card can be up to 25 s stale, so UC4 re-checks the team under its lock.],
@@ -134,13 +134,13 @@ Two patterns carry UC1's design problems. The ports `ProductRepository`, `OpenDe
 #atable(
   [UC1 flow-to-design trace: each flow step, its analysis message and the design operations that realise it.],
   <tbl-a-uc01-trace>,
-  columns: (0.45fr, 1fr, 2.4fr, 0.8fr),
+  columns: (0.38fr, 1.15fr, 2.6fr, 0.62fr),
   header: ([Step], [Analysis message], [Design operations], [Figures]),
   [B1], [`browse`], [`ProductController.pageListings` → `ProductAppServiceImpl.pageListings`], [@fig-a-uc01-ds-browse],
   [B2], [`Product.selectOnSale`], [`ProductRepository.pageOnSale` (read-only transaction)], [@fig-a-uc01-ds-browse],
-  [B3], [`Team.bestOpenFor`], [`GroupDealQueryService.findBestOpenDealsByProductIds` → `OpenDealOfferCache.findByProductIds`, `GroupDealRepository.findBestOpenDealsByProductIds`, `putAll`], [@fig-a-uc01-ds-detail],
-  [B4], [`Product.priceFor` (loop)], [`resolvePrice`, `toOffer`; `PricingStrategyResolver.strategyFor`; `PricingStrategy.resolve`], [@fig-a-uc01-ds-browse],
-  [B5], [`showListings`], [`toPageResult`; `Result<PageResult<ProductSummaryResponse>>`], [@fig-a-uc01-ds-browse],
+  [B3], [`Team.bestOpenFor`], [`GroupDealQueryService.findBestOpenDealsByProductIds` → `OpenDealOfferCache.findByProductIds`, `GroupDealRepository.findBestOpenDealsByProductIds`, `putAll`], [@fig-a-uc01-ds-browse, @fig-a-uc01-ds-detail],
+  [B4], [`Product.priceFor` (loop)], [`ProductAppServiceImpl.resolvePrice` → `PricingStrategyResolver.strategyFor`, `ProductAppServiceImpl.toOffer`, `PricingStrategy.resolve`], [@fig-a-uc01-ds-browse],
+  [B5], [`showListings`], [`ProductAppServiceImpl.toPageResult`; `ProductController.toPageResult`; `Result<PageResult<ProductSummaryResponse>>`], [@fig-a-uc01-ds-browse],
   [B6], [`open`, `viewListing`], [`ProductController.getListing` → `ProductAppServiceImpl.getListingDetail`], [@fig-a-uc01-ds-detail],
   [B7], [`Product.isOnSale`], [`ProductRepository.findById`; `Product.isOnSale`], [@fig-a-uc01-ds-detail],
   [B8], [`bestOpenFor`, `priceFor`], [As B3 and B4, for one product], [@fig-a-uc01-ds-detail],
@@ -150,7 +150,5 @@ Two patterns carry UC1's design problems. The ports `ProductRepository`, `OpenDe
   [A3], [`showListings` (empty)], [`PageResult` with no items, HTTP 200], [@fig-a-uc01-ds-browse],
   [A4], [`priceFor` without a team], [`DualPricingStrategy.resolve` returns `groupPrice` null], [@fig-a-uc01-ds-browse],
   [A5], [`showNotFound`], [`isOnSale` false or empty `Optional` → `PRODUCT_NOT_FOUND` → 404], [@fig-a-uc01-ds-detail],
-  [E1], [—], [Bean Validation on `pageListings` → `VALIDATION_FAILED`], [@fig-a-uc01-ds-browse, @fig-a-uc01-ds-search],
-  [E2], [—], [`strategyFor` → `PRICING_MODE_UNSUPPORTED`], [@fig-a-uc01-ds-browse],
-  [E3], [—], [`Lookup.available` false → repository read, no `putAll`], [@fig-a-uc01-ds-detail],
+  [E1–E3], [—], [E1: Bean Validation on `pageListings` → `VALIDATION_FAILED`. E2: `strategyFor` → `PRICING_MODE_UNSUPPORTED`. E3: `Lookup.available` false → repository read, no `putAll`], [@fig-a-uc01-ds-browse, @fig-a-uc01-ds-search, @fig-a-uc01-ds-detail],
 )

@@ -1,4 +1,4 @@
-%% frame: Notifications B2-B3 with A1, A2: relay one batch to SNS (design, commerce-svc)
+%% frame: Notifications B2 with A6, A7: relay one batch to SNS (design, commerce-svc)
 sequenceDiagram
     participant Job as :OutboxRelayJob
     participant Run as :LeasedJobRunner
@@ -11,10 +11,10 @@ sequenceDiagram
 
     Note over Job,Run: B2: every 2 s; no transaction spans provider I/O
     Job->>Run: run(job, lease, work)
-    alt another instance holds the lease outbox-relay (A2)
+    alt another instance holds the lease outbox-relay (A7)
         Run-->>Job: skipped
     else lease taken for 2 min, renewed every 40 s
-        Note over Run,Job: the job's work runs with leaseValid, the live lease signal
+        Run->>Job: run(leaseValid): the job's lambda, a LeasedJobRunner.LeaseAwareWork
         Job->>Svc: relayBatch(leaseValid)
         Svc->>Repo: findDue(100)
         Repo-->>Svc: List<OutboxEvent>, oldest due first
@@ -28,17 +28,17 @@ sequenceDiagram
                 T->>F: attributes(event)
                 F-->>T: eventType, version, traceId
             end
-            opt lease still valid (else the slice stays unattempted, A2)
+            opt lease still valid (else the slice stays unattempted, A7)
                 T->>T: send(events, entries)
                 T->>Topic: PublishBatch(topicArn, entries)
                 Topic-->>T: successful ids, failed ids
+                Note over T,Q: SNS hop designed and unit-tested, not yet run on AWS (AISS-13); local and CI path SqsOutboxEventTransport to ElasticMQ, same consumer input (raw delivery)
+                Topic-)Q: deliver(message), filter on eventType
             end
         end
         T-->>Svc: List<OutboxPublishResult>: published, failed or skipped
-        Note over Svc,Repo: A1: a failed row gets attempts + 1 and a retry delay; the tenth failure marks it failed
+        Note over Svc,Repo: A6: a failed row gets attempts + 1 and a retry delay; the tenth failure marks it failed
         Svc->>Repo: recordResults(attempted, 10)
         Repo-->>Svc: int updated
         Svc-->>Job: int
     end
-    Note over Topic,Q: B3: raw delivery; filter eventType in TeamSucceeded, TeamExpired, PaymentSucceeded
-    Topic-)Q: deliver(message)

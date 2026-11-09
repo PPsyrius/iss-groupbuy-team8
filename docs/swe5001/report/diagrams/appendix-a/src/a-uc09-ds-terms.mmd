@@ -1,40 +1,44 @@
-%% frame: UC9 B7, A3: team terms in one transaction with an optional price (design)
+%% frame: UC9 B7, A3, A5: team terms with an optional team price, or the price alone (design)
 sequenceDiagram
-    actor Admin
     participant Ctl as :AdminListingController
     participant App as :TeamTermsAppServiceImpl
+    participant Prices as :TeamPriceAppServiceImpl
     participant Repo as :ProductRepository
     participant Users as :UserAppService
     participant Prod as :Product
     participant Spec as TeamTermsSpecification
-    participant Prices as :TeamPriceAppService
+    participant PRepo as :TeamPriceRepository
+    create participant Pol as :TeamPricePolicy
     create participant Chg as :TeamTermsChange
 
-    Note over Admin,Ctl: B7: after administrator()
-    Admin->>Ctl: configureTeamTerms(productId, request)
-    Ctl->>App: configure(productId, command, actorId)
+    Ctl->>App: B7: configure(productId, command, actorId)
     critical REQUIRED, READ COMMITTED, 10 s
-        App->>Repo: lockById(productId): lock 6, product row
+        App->>Repo: lockById(productId): lock 6
         App->>Users: requireActive(actorId)
         App->>Prod: requireVersion(expectedVersion)
         App->>Prod: configureTeamTerms(targetSize, lifetimeSeconds)
         Prod->>Spec: violations(targetSize, lifetimeSeconds)
-        Spec-->>Prod: violated fields, or empty
-        break size below 2 or lifetime outside 2400-86400 s (E8)
-            Prod-->>App: E8: TEAM_TERMS_INVALID (CATALOG_400_003), field errors
+        break size below 2, or lifetime outside 2400-86400 s (E8)
+            Prod-->>App: TEAM_TERMS_INVALID (CATALOG_400_003)
         end
-        Prod-->>App: next revision, version + 1
         App->>Repo: updateTeamTerms(revised, expectedVersion, actorId)
-        opt team price sent (B7)
+        opt team price sent (B7), joining this transaction; A5: TeamPriceController.configure runs this part alone, in its own REQUIRED 10 s transaction
             App->>Prices: configure(productId, actorId, policy)
-            Note over App,Prices: B7: @fig-a-uc09-ds-price
-            break price refused (E8)
-                Prices-->>App: E8: BizException, rethrown with "teamPrice." prefix; terms roll back
+            Prices->>Repo: lockById(productId) in lockProduct: lock 6 (held in B7)
+            Prices->>Users: requireActive(actorId)
+            Prices->>PRepo: findLatestPolicy(productId)
+            break expectedVersion is not the latest policy version (E8)
+                Prices-->>App: TEAM_PRICE_VERSION_CONFLICT (CATALOG_412_001)
             end
-            Prices-->>App: TeamPricePolicy
+            Prices->>Pol: «create» (command fields, version + 1)
+            Prices->>Pol: requireCompatible(product)
+            Prices->>Pol: requireStartableWindow(now)
+            break not on sale, price not below the listing price, window past or too short (E8)
+                Pol-->>App: TEAM_PRICE_UNAVAILABLE (CATALOG_409_001), TEAM_PRICE_INVALID (CATALOG_400_001); terms roll back
+            end
+            Prices->>PRepo: appendPolicy(policy, actorId, now)
         end
-        App->>Chg: «create» (productId, version, previous, current, policyVersion, actorId)
+        App->>Chg: «create» (previous, current, versions, actorId)
         App->>Repo: appendTeamTermsLog(change)
     end
     App-->>Ctl: TeamTermsResult
-    Ctl-->>Admin: TeamTermsResponse, new version

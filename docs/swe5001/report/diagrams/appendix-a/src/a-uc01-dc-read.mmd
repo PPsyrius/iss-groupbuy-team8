@@ -31,7 +31,7 @@ classDiagram
     }
     class ListingSearchReranker {
         <<interface, gateway, Ext>>
-        +rerank(keyword: String, candidates: List~Candidate~): List~UUID~
+        +rerank(keyword: String, candidates: List~ListingSearchReranker.Candidate~): List~UUID~
     }
     class ProductRepository {
         <<interface, repository, Pers>>
@@ -47,7 +47,7 @@ classDiagram
     }
     class TypeSafeJevListingSearchReranker {
         <<adapter, Ext>>
-        +rerank(keyword: String, candidates: List~Candidate~): List~UUID~
+        +rerank(keyword: String, candidates: List~ListingSearchReranker.Candidate~): List~UUID~
     }
     class ProductRepositoryImpl {
         <<adapter, Pers>>

@@ -1,4 +1,4 @@
-%% frame: UC9 B5, B6, A1, A2: revise or change the state under both locks (design)
+%% frame: UC9 B5, B6, A1, A2: revise or change the state under the row lock and the version check (design)
 sequenceDiagram
     actor Admin
     participant Ctl as :AdminListingController
@@ -24,22 +24,21 @@ sequenceDiagram
         break another admin saved first (E5)
             Prod-->>App: E5: PRODUCT_VERSION_CONFLICT (CATALOG_412_002), currentVersion
         end
-        alt revise (B5, A1)
+        alt revise (B5, A1): same status, next revision (nextVersion)
             App->>Prod: revise(details)
             Prod->>State: requireCommercialEdit(this, details)
         else target ON_SALE (B6)
             App->>Prod: publish()
             Prod->>State: publish()
+            Prod->>Prod: transition(next)
         else target OFF_SALE (A2)
             App->>Prod: delist()
             Prod->>State: delist()
+            Prod->>Prod: transition(next)
         end
-        break commercial edit after publication (E6), or move not allowed, no stock or no price (E7)
-            State-->>Prod: PRODUCT_STATE_CONFLICT (CATALOG_409_002)
-            Prod-->>App: E6, E7: PRODUCT_STATE_CONFLICT
+        break the state refuses: commercial edit after publication (E6), move not allowed, no stock or no price (E7)
+            Prod-->>App: E6, E7: PRODUCT_STATE_CONFLICT (CATALOG_409_002)
         end
-        State-->>Prod: next status
-        Prod->>Prod: transition(next)
         Prod-->>App: next revision, version + 1
         App->>Repo: updateListing(changed, expectedVersion, actorId)
     end

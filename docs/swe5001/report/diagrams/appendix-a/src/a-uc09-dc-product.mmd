@@ -44,7 +44,7 @@ classDiagram
         -transition(next: ProductStatus): Product
     }
     class TeamTermsSpecification {
-        <<utility>>
+        <<domain service>>
         ~violations(targetSize: int, lifetimeSeconds: int): Map<String, Object> «static»
     }
     class ProductRepositoryImpl {

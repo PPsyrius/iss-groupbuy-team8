@@ -5,7 +5,7 @@ classDiagram
         +googleCallback(code: String, state: String, error: String, stateBinding: String): ResponseEntity~Void~
     }
     class LoginSessionPublisher {
-        <<adapter, Sec>>
+        <<utility, Sec>>
         +login(userId: UUID): void
     }
     class LoginAuthorizationService {

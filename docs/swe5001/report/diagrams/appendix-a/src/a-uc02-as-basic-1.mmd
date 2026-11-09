@@ -3,20 +3,19 @@ sequenceDiagram
     actor Buyer
     participant UI as SignInUI (boundary)
     participant Ctl as SignInWithGoogleControl (control)
-    create participant St as SignInState (entity)
     participant IdP as IdentityProvider (boundary)
 
     Buyer->>UI: B1: signIn(returnTo)
     UI->>Ctl: B1: startSignIn()
-    Ctl->>St: B2: «create» (binding, expiry)
+    Ctl->>Ctl: B2: issueState()
     Ctl->>IdP: B2: authorize(state)
-    Note over Buyer,IdP: B3: the buyer signs in and consents at Google
-    IdP->>Ctl: B4: returned(code, state, binding)
+    Note over Buyer,IdP: B3: the buyer signs in and consents at Google, which sends the browser back
+    Buyer->>UI: B4: returned(code, state)
+    UI->>Ctl: B4: completeSignIn(code, state, binding)
     break consent denied (E1)
         Ctl->>UI: E1: showFailure(reason)
     end
-    Ctl->>St: B5: consume(binding)
-    St-->>Ctl: valid, or not
+    Ctl->>Ctl: B5: checkState(state, binding)
     break state missing, used, expired or from another browser (E2)
         Ctl->>UI: E2: showFailure(reason)
     end

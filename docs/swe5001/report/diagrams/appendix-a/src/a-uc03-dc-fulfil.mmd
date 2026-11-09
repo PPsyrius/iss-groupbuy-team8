@@ -31,6 +31,7 @@ classDiagram
         <<adapter, application service, Dist, Conc>>
         +lockForSettlement(quote: CheckoutQuote): void
         +fulfil(event: PaymentSucceeded): PaymentBusinessPort.Outcome
+        -requireQuoteMatchesIntent(quote: CheckoutQuote, intent: PurchaseIntent): void «static»
         -admit(event: PaymentSucceeded, intent: PurchaseIntent): ParticipationResult
     }
     class OrderRepository {

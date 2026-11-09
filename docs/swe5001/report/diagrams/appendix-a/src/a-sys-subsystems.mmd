@@ -15,7 +15,7 @@ classDiagram
     }
     class IdDom["identity-svc domain"] {
         <<component>>
-        aggregate: User
+        aggregates: User, OAuthIdentity
         ports: UserRepository, OAuthIdentityGateway, LoginSnapshotGateway
     }
     class IdInf["identity-svc infrastructure"] {

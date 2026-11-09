@@ -16,12 +16,13 @@ sequenceDiagram
     break not signed in, not an admin or no permission (E1)
         Ctl-->>Admin: E1: UNAUTHENTICATED (COMMON_401_001) or FORBIDDEN (COMMON_403_001)
     end
-    Note over Ctl,Deals: B2: read-only transaction, REPEATABLE READ
-    Ctl->>App: counts(actorId)
-    App->>Users: requireActive(actorId)
-    App->>Repo: countListingStatuses()
-    App->>Deals: countOpenDeals()
-    App->>Prices: countListingsWithActivePolicy()
+    Ctl->>App: B2: counts(actorId)
+    critical B2: REQUIRED, read-only, REPEATABLE READ, one snapshot
+        App->>Users: requireActive(actorId)
+        App->>Repo: countListingStatuses()
+        App->>Deals: countOpenDeals()
+        App->>Prices: countListingsWithActivePolicy()
+    end
     App-->>Ctl: ListingCounts
     Ctl-->>Admin: ListingCountsResponse
     Note over Admin,Prod: B3-B4: create a draft (after administrator() as above)

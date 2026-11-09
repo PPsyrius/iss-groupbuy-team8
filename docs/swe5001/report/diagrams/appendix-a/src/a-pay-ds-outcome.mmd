@@ -17,18 +17,18 @@ sequenceDiagram
         end
         Svc->>Repo: now()
         Repo-->>Svc: Instant
-        Svc->>Evt: new(paymentId, quote, now)
+        Svc->>Evt: «create» new(paymentId, quote, now)
         Svc->>Pub: publishEvent(succeeded)
-        Note over Pub,Port: BEFORE_COMMIT: the outbox writes PaymentSucceededV1, @sec-a-notifications
         Svc->>Q: expiredAt(now)
         Q-->>Svc: boolean
         alt terms lapsed (A14)
-            Svc->>Out: new(null, null, "BUSINESS_EXPIRED")
+            Svc->>Out: «create» new(null, null, "BUSINESS_EXPIRED")
         else terms valid (B8)
             Note over Svc,Port: commerce side: @sec-a-uc03; UC4 in @fig-a-uc04-ds-fulfil
             Svc->>Port: fulfil(succeeded)
             Port-->>Svc: PaymentBusinessPort.Outcome
         end
+        Note over Svc,Out: value = the A14 Outcome above, or the port's answer
         Svc->>Out: accepted()
         Out-->>Svc: boolean
         alt rejected (A14, A15)
@@ -37,4 +37,5 @@ sequenceDiagram
         else accepted (B9)
             Svc->>Repo: recordOutcome(paymentId, dealId, orderId, "FULFILLED")
         end
+        Note over Svc,Out: at commit, BEFORE_COMMIT: IntegrationOutboxWriter.onPaymentSucceeded (sync) writes PaymentSucceededV1, @sec-a-notifications
     end

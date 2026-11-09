@@ -9,7 +9,7 @@ sequenceDiagram
     create participant Ev as :TeamExpired
     participant Pub as :ApplicationEventPublisher
 
-    critical expireOne transaction, REQUIRED, READ COMMITTED, 10 s
+    critical expireOne transaction, REQUIRED, READ COMMITTED (database default), 10 s
         Note over Exp,Map: B7: lock 1 (team), the only business lock this transaction takes itself
         Exp->>Repo: lockDeal(dealId)
         Repo->>Map: lockDeal(dealId): SELECT ... FOR UPDATE
@@ -44,6 +44,6 @@ sequenceDiagram
         Exp->>Ev: «create» TeamExpired(dealId, productId, at: now)
         Exp->>Pub: publishEvent(event)
         Pub-->>Exp: held until commit
-        Note over Exp,Pub: commit begins: BEFORE_COMMIT subscribers run here, inside this transaction
+        Note over Exp,Pub: at commit the BEFORE_COMMIT subscribers run inside this transaction (@fig-a-uc05-ds-expire-events)
     end
     Note over Exp,Pub: expireOne returns true after COMMIT; any exception above rolls everything back (E1)

@@ -10,8 +10,8 @@ classDiagram
     }
     class OutboxRelayService {
         <<application service, Evt>>
-        ~BATCH_SIZE: int = 100
-        ~MAX_ATTEMPTS: int = 10
+        ~BATCH_SIZE: int = 100 «static»
+        ~MAX_ATTEMPTS: int = 10 «static»
         +relayBatch(leaseValid: BooleanSupplier): int
     }
     class OutboxRelayRepository {
@@ -44,8 +44,8 @@ classDiagram
     class BatchingOutboxEventTransport~E~ {
         <<abstract>>
         +publish(events: List~OutboxEvent~, leaseValid: BooleanSupplier): List~OutboxPublishResult~ «final»
-        #entry(event: OutboxEvent): E
-        #send(events: List~OutboxEvent~, entries: List~E~): List~OutboxPublishResult~
+        #entry(event: OutboxEvent): E «abstract»
+        #send(events: List~OutboxEvent~, entries: List~E~): List~OutboxPublishResult~ «abstract»
     }
     class SnsOutboxEventTransport {
         <<adapter, Ext, Dist>>
@@ -91,7 +91,7 @@ classDiagram
 %% at IntegrationEventEnvelope 4,2
     OutboxRelayJob "1" --> "1" LeasedJobRunner : runner
     OutboxRelayJob "1" --> "1" OutboxRelayService : relay
-    OutboxRelayService "1" --> "1" OutboxRelayRepository : repository
+    OutboxRelayService "1" --> "1" OutboxRelayRepository
     OutboxRelayService "1" --> "1" OutboxEventTransport : transport
     OutboxRelayRepository ..> OutboxEvent
     OutboxEventTransport ..> OutboxPublishResult

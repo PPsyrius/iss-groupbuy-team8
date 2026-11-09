@@ -53,8 +53,8 @@ classDiagram
         -providerReference: Identifier
         -firstAttempt: Date-time
         -nextAttempt: Date-time
-        +claimNextDue()
-        +claimForReview()
+        +claimNextDue() «static»
+        +claimForReview(payment) «static»
         +record(providerReference, status)
         +retryLater()
         +parkForReview(reason)
@@ -82,13 +82,13 @@ classDiagram
     SchedulerTrigger "1" -- "1" ResolveTeamControl
     SchedulerTrigger "1" -- "1" RefundMembersControl
     ReviewUI "1" -- "1" RefundMembersControl
-    ReceiptUI "1" -- "1" RefundMembersControl
+    RefundMembersControl "1" -- "1" ReceiptUI
     RefundMembersControl "1" -- "1" PaymentGateway
     ResolveTeamControl "1" --> "1" RefundMembersControl
-    RefundMembersControl "1" --> "*" Team
+    Team "*" -- "1" RefundMembersControl
     RefundMembersControl "1" --> "*" Payment
     RefundMembersControl "1" --> "*" Refund
-    Payment "*" -- "1" PurchaseIntent : pays
-    PurchaseIntent "*" -- "0..1" Team
-    Payment "1" *-- "0..1" Refund : owes
+    PurchaseIntent "1" -- "*" Payment : pays
+    PurchaseIntent "*" -- "0..1" Team : for
+    Payment "1" -- "0..1" Refund : owes
     Refund "1" *-- "*" RefundAttempt

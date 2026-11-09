@@ -5,13 +5,13 @@ sequenceDiagram
     participant R as :PaidGroupDealRepository
     participant P as :ApplicationEventPublisher
     participant Sub as :ShareCreditSubscriber
-    create participant SC as ShareCredit
     participant CR as :ShareCreditRepository
+    create participant SC as ShareCredit
 
     critical tx REQUIRED (settlement), READ COMMITTED, 10 s
         Note over F,R: B8: inside UC4's settlement transaction
         F->>S: joinConfirmed(dealId, paid, sharerUserId)
-        alt admission refused, or the payment replayed (A8)
+        alt admission refused, or the payment replayed (A7)
             S-->>F: refused or frozen ParticipationResult; no MemberJoined
         else admitted
             S->>R: insertJoinedMember(before, after, paid, sharer, now)
@@ -25,8 +25,8 @@ sequenceDiagram
         critical tx REQUIRES_NEW, READ COMMITTED, 10 s
             Sub->>SC: «create» of(event)
             Sub->>CR: recordIfAbsent(credit)
-            CR-->>Sub: true, or false for a duplicate (A9)
+            CR-->>Sub: true, or false: already credited (A8)
         end
-        Note over Sub,CR: E2: any failure is caught and logged; ADR 0003 reconciles
+        Note over Sub,CR: E1: any failure is caught and logged; ADR 0003 reconciles
     end
     Sub-->>P: void, never throws

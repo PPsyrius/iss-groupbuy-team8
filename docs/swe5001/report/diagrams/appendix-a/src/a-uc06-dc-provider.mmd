@@ -11,7 +11,7 @@ classDiagram
         -finish(work: RefundWork, providerId: String, state: String, result: String): void
     }
     class RefundWork {
-        <<value object, record>>
+        <<record, data object>>
         +id: UUID
         +paymentId: UUID
         +amount: BigDecimal

@@ -1,4 +1,4 @@
-%% frame: Pay upfront design, slice 1: checkout preparation (commerce-svc)
+%% frame: Pay upfront design, slice 2: checkout preparation (commerce-svc)
 classDiagram
     class StripeCheckoutController {
         <<controller, Pres, Sec>>
@@ -54,7 +54,10 @@ classDiagram
         <<value object, record>>
         +intentId: UUID
         +userId: UUID
+        +operation: String
+        +businessId: UUID
         +amount: BigDecimal
+        +currency: String
         +quoteValidUntil: Instant
         +businessDeadline: Instant
         +expiredAt(now: Instant): boolean

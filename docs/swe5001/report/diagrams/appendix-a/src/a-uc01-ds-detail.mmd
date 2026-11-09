@@ -13,7 +13,7 @@ sequenceDiagram
     Visitor->>Ctl: getListing(id)
     Ctl->>App: getListingDetail(productId)
     Note over App,P: B7
-    critical read-only, REQUIRED, default isolation (READ COMMITTED)
+    critical read-only, REQUIRED, READ COMMITTED (default), no timeout
         App->>Repo: findById(productId)
         Repo-->>App: Optional(Product)
     end

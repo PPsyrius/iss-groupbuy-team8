@@ -8,6 +8,7 @@ classDiagram
         +changeStatus(listing, target, version)
         +deleteDraft(listing, version)
         +setTeamTerms(listing, terms, price, version)
+        +setTeamPrice(listing, price, revision)
         +showListing(listing)
         +showConflict(currentVersion)
         +showRefusal(reason)
@@ -20,6 +21,7 @@ classDiagram
         +changeStatus(admin, listing, target, version)
         +delete(admin, listing, version)
         +setTeamTerms(admin, listing, terms, price, version)
+        +setTeamPrice(admin, listing, price, revision)
     }
     class Account {
         <<entity>>
@@ -37,7 +39,6 @@ classDiagram
     class Product {
         <<entity>>
         -number: Text
-        -title: Text
         -price: Money
         -stock: Count
         -soldCount: Count
@@ -59,7 +60,7 @@ classDiagram
         -validFrom: Date-time
         -validUntil: Date-time
         -revision: Count
-        +latestFor(product)
+        +latestFor(product) «static»
     }
     class TeamTermsChange {
         <<entity>>
@@ -78,13 +79,13 @@ classDiagram
         -deadline: Date-time
         -status: TeamStatus
     }
-%% at ListingConsoleUI 1,0
-%% at Account 2,0
-%% at Role 3,0
+%% at PriceQuote 0,2
+%% at Account 1,0
+%% at Role 2,0
 %% at TeamPricePolicy 0,1
 %% at AdministerListingControl 1,1
-%% at TeamTermsChange 2,1
-%% at PriceQuote 0,2
+%% at ListingConsoleUI 2,1
+%% at TeamTermsChange 0,0
 %% at Product 1,2
 %% at Team 2,2
     ListingConsoleUI "1" -- "1" AdministerListingControl

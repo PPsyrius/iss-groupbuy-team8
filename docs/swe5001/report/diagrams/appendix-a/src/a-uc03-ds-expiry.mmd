@@ -1,19 +1,20 @@
 %% frame: PurchaseIntent sweep: a lapsed intent is expired (design, commerce-svc)
 sequenceDiagram
-    actor Sch as Scheduler
     participant Job as :PurchaseIntentExpiryJob
     participant Run as :LeasedJobRunner
     participant Sw as :PurchaseIntentExpirySweeper
     participant Exp as :PurchaseIntentExpiryService
     participant Teams as :GroupDealSettlementSupport
     participant Repo as :PurchaseIntentRepository
+    participant Before as before : PurchaseIntent
     participant Pay as :PaymentIntentExpirySupport
 
-    Note over Sch,Run: every minute; lease, renewal and leaseValid as in @fig-a-uc05-ds-sweep
-    Sch->>Job: run()
-    Job->>Run: run(job, lease, work: this::sweepOnce)
-    Run->>Sw: sweep(batchSize, leaseValid)
-    Sw->>Repo: dueForExpiry(now, limit), now from currentTime()
+    Note over Job,Run: run() every minute (Spring scheduler); lease, renewal and leaseValid as in @fig-a-uc05-ds-sweep
+    Job->>Run: run(JOB, lease, this::sweepOnce)
+    Run->>Job: sweepOnce(leaseValid)
+    Job->>Sw: sweep(batchSize, leaseValid)
+    Sw->>Repo: currentTime()
+    Sw->>Repo: dueForExpiry(now, limit)
     Repo-->>Sw: List of UUID
     loop each intent id, while leaseValid.getAsBoolean()
         Sw->>Exp: expireOne(id)
@@ -21,16 +22,21 @@ sequenceDiagram
             Exp->>Repo: findById(id)
             Exp->>Teams: lockTeam(dealId): lock 1 (no row yet for a START)
             Exp->>Repo: tryLockForExpiry(id): lock 2, SKIP LOCKED
-            alt held by a settlement, or no deadline passed yet
+            break row gone, or held by a settlement
                 Exp-->>Sw: SKIPPED
-            else lapsed: after := before.expireAt(currentTime())
-                Exp->>Pay: hasSucceededIntent(id)
-                alt paid
-                    Exp-->>Sw: PAID
-                else unpaid
-                    Exp->>Repo: markExpired(before, after)
-                    Exp-->>Sw: EXPIRED
-                end
+            end
+            Exp->>Repo: currentTime()
+            Exp->>Before: expireAt(now)
+            Before-->>Exp: after : PurchaseIntent
+            break after == before: no deadline passed, or already fulfilled or expired
+                Exp-->>Sw: SKIPPED
+            end
+            Exp->>Pay: hasSucceededIntent(id)
+            alt paid
+                Exp-->>Sw: PAID
+            else unpaid
+                Exp->>Repo: markExpired(before, after)
+                Exp-->>Sw: EXPIRED
             end
         end
         alt PAID
@@ -39,4 +45,4 @@ sequenceDiagram
             Sw->>Repo: deferExpiryRetry(id, RETRY_DELAY)
         end
     end
-    Sw-->>Run: PurchaseIntentExpirySweeper.Result
+    Sw-->>Job: PurchaseIntentExpirySweeper.Result

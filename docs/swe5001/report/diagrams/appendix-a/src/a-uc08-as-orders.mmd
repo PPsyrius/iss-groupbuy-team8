@@ -6,6 +6,7 @@ sequenceDiagram
     participant Acc as Account (entity)
     participant O as Order (entity)
 
+    Buyer->>UI: B1: openMyBlocs(page)
     UI->>Ctl: B3: listMyOrders(buyer, page)
     Ctl->>Acc: B3: orders(page)
     Acc-->>Ctl: orders, newest first, and total

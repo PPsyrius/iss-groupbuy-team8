@@ -1,28 +1,13 @@
 %% frame: BlocBuy system-level analysis model: all entities
 classDiagram
-    class SignInState {
-        <<entity>>
-        -value: Text
-        -expireTime: Date‑time
-    }
     class Role {
         <<entity>>
         -code: Text
-    }
-    class Session {
-        <<entity>>
-        -roleSnapshot: Text
-        -expireTime: Date‑time
     }
     class Notification {
         <<entity>>
         -type: NotificationType
         -createTime: Date‑time
-    }
-    class ConsumptionRecord {
-        <<entity>>
-        -consumer: Text
-        -consumedAt: Date‑time
     }
     class OAuthBinding {
         <<entity>>
@@ -36,13 +21,7 @@ classDiagram
     }
     class ReviewCase {
         <<entity>>
-        -reason: Text
         -status: ReviewStatus
-    }
-    class EventRecord {
-        <<entity>>
-        -eventType: Text
-        -status: DeliveryStatus
     }
     class Invitation {
         <<entity>>
@@ -61,8 +40,6 @@ classDiagram
     class Payment {
         <<entity>>
         -amount: Money
-        -status: PaymentStatus
-        -outcome: PaymentOutcome
     }
     class ShareCredit {
         <<entity>>
@@ -78,13 +55,9 @@ classDiagram
     class PurchaseIntent {
         <<entity>>
         -operation: PurchaseOperation
-        -price: Money
-        -payableUntil: Date‑time
     }
     class Refund {
         <<entity>>
-        -amount: Money
-        -reason: Text
         -status: RefundStatus
     }
     class TeamTermsChange {
@@ -106,7 +79,6 @@ classDiagram
     }
     class RefundAttempt {
         <<entity>>
-        -attemptTime: Date‑time
         -result: Text
     }
     class TeamPricePolicy {
@@ -116,54 +88,48 @@ classDiagram
         -validUntil: Date‑time
     }
 %% at TeamTermsChange 0,0
-%% at RefundAttempt 1,0
-%% at TeamPricePolicy 2,0
-%% at PriceQuote 3,0
-%% at Refund 0,1
+%% at Invitation 3,0
+%% at TeamPricePolicy 0,1
 %% at Product 1,1
-%% at PurchaseIntent 2,1
-%% at Invitation 3,1
-%% at SignInState 4,1
-%% at ReviewCase 0,2
-%% at Payment 1,2
+%% at PriceQuote 0,2
+%% at PurchaseIntent 1,2
 %% at Team 2,2
-%% at Membership 3,2
-%% at Session 4,2
-%% at ConsumptionRecord 0,3
-%% at EventRecord 1,3
-%% at Order 2,3
-%% at Account 3,3
-%% at ShareCredit 4,3
+%% at Membership 4,2
+%% at ShareCredit 5,2
+%% at Refund 0,3
+%% at Payment 1,3
+%% at Order 3,3
+%% at Account 4,3
+%% at Role 5,3
+%% at RefundAttempt 0,4
+%% at ReviewCase 1,4
 %% at Notification 2,4
-%% at Role 3,4
-%% at OAuthBinding 4,4
-    Account "*" -- "1..*" Role
+%% at OAuthBinding 5,4
+    Account "*" -- "1..*" Role : holds
     Account "1" -- "*" OAuthBinding : signs in with
-    Account "1" -- "*" Session : for
     Account "1" -- "*" Notification : recipient
-    Account "1" -- "*" Membership
-    Account "1" -- "*" Invitation
+    Account "1" -- "*" Membership : holds
     Account "1" -- "*" Order : buyer
+    Membership "1" -- "0..1" Invitation : shares
     Membership "*" -- "0..1" Invitation : joined via
-    Membership "1" -- "0..1" ShareCredit : rewards
+    Membership "1" -- "*" ShareCredit : credits
     Membership "1" -- "0..1" Order : backed by
-    Team "1" *-- "1..*" Membership
+    Team "1" *-- "1..*" Membership : member
     Team "1" -- "*" Invitation : invites to
-    Team "1" -- "*" Order
+    Team "1" -- "*" Order : placed in
     Product "1" -- "*" Team : offers
-    Product "1" -- "*" TeamPricePolicy
-    Product "1" -- "*" TeamTermsChange
+    Product "1" -- "*" TeamPricePolicy : priced by
+    TeamTermsChange "*" -- "1" Product : history
     TeamPricePolicy "1" -- "*" PriceQuote : issues
+    PriceQuote "*" -- "1" Product : prices
     PurchaseIntent "*" -- "0..1" PriceQuote : freezes
-    PurchaseIntent "*" -- "1" Product
-    PurchaseIntent "*" -- "0..1" Team
+    PurchaseIntent "*" -- "1" Product : buys
+    PurchaseIntent "*" -- "0..1" Team : for
     PurchaseIntent "*" -- "0..1" Invitation : via
     Payment "*" -- "1" PurchaseIntent : pays
     Order "0..1" -- "1" Payment : paid by
-    Refund "0..1" --* "1" Payment
-    Refund "1" *-- "*" RefundAttempt
-    Payment "1" -- "*" ReviewCase
-    EventRecord "*" -- "0..1" Team : about
-    EventRecord "*" -- "0..1" Payment : about
-    ConsumptionRecord "0..1" -- "1" EventRecord : handles
-    Notification "*" -- "1" EventRecord : caused by
+    Payment "1" -- "0..1" Refund : owes
+    Refund *-- "*" RefundAttempt : attempts
+    ReviewCase "0..1" -- "1" Payment : held by
+    Team "0..1" -- "*" Notification : about
+    Notification "*" -- "0..1" Payment : about

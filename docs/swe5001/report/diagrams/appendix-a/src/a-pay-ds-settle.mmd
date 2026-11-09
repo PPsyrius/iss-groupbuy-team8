@@ -13,7 +13,6 @@ sequenceDiagram
             Repo-->>Svc: false: return, nothing changes
         end
         Svc->>Repo: findById(id)
-        Repo-->>Svc: Optional of CheckoutPayment
         break payment unknown here (A10)
             Svc->>Repo: finishEvent(eventId, null, "UNKNOWN_PAYMENT")
         end
@@ -25,23 +24,25 @@ sequenceDiagram
             Svc->>Repo: finishEvent(eventId, id, "REVIEW")
         end
         Svc->>Pay: bind(session.id, null, session.paymentIntentId)
+        Pay-->>Svc: CheckoutPayment
         Svc->>S: paid()
-        S-->>Svc: boolean
         break paid, but the payment is FAILED or CANCELED (A13)
             Svc->>Repo: review(id, "LATE_PAID_REQUIRES_RECOVERY", operator)
             Svc->>Repo: finishEvent(eventId, id, "REVIEW")
         end
         alt paid (B7)
-            Svc->>Pay: succeed(): SUCCEEDED
+            Svc->>Pay: succeed()
+            Pay-->>Svc: CheckoutPayment (SUCCEEDED)
             Svc->>Repo: save(payment)
-            Note over Svc,Repo: B8 and B9: @fig-a-pay-ds-outcome
-            Svc->>Svc: fulfilOrCompensate(payment, eventId)
+            Svc->>Svc: fulfilOrCompensate(payment, eventId): B8, B9 in @fig-a-pay-ds-outcome
         else closed unpaid (A7)
             Svc->>S: terminalUnpaidFailure()
             alt PaymentIntent canceled by Stripe
-                Svc->>Pay: failTerminalUnpaid(): FAILED
+                Svc->>Pay: failTerminalUnpaid()
+                Pay-->>Svc: CheckoutPayment (FAILED)
             else expired with no PaymentIntent
-                Svc->>Pay: cancelUnpaid(): CANCELED
+                Svc->>Pay: cancelUnpaid()
+                Pay-->>Svc: CheckoutPayment (CANCELED)
             end
             Svc->>Repo: save(payment)
         end

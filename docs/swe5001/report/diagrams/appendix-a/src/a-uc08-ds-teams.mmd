@@ -1,21 +1,27 @@
 %% frame: UC8 B1, B2 and B4: my teams (design, commerce-svc)
 sequenceDiagram
     actor Buyer
+    participant SI as :SaInterceptor
     participant Ctl as :GroupDealController
+    participant SU as :StpUtil
     participant App as :GroupDealAppServiceImpl
     participant Repo as :GroupDealRepositoryImpl
     participant Map as :BizGroupDealMapper
     participant Ad as :GroupbuyListingDisplayAdapter
     participant PR as :ProductRepository
 
-    Buyer->>Ctl: myTeams(page, size, response)
-    Note over Buyer,Repo: B1: GET /api/v1/group-deals/me; StpUtil.checkLogin(); buyer = session login id; Cache-Control: no-store
+    Buyer->>SI: B1: preHandle(request, response, handler)
+    SI->>SU: checkLogin()
     break no session (A1)
-        Ctl-->>Buyer: UNAUTHENTICATED (COMMON_401_001)
+        SU-->>SI: NotLoginException
+        SI-->>Buyer: 401 UNAUTHENTICATED (COMMON_401_001)
     end
+    Buyer->>Ctl: B1: myTeams(page, size, response)
+    Ctl->>SU: checkLogin()
+    Ctl->>SU: getLoginIdAsString()
+    SU-->>Ctl: buyer; Cache-Control: no-store is set
     Ctl->>App: pageMyTeams(query, buyer)
-    critical tx REQUIRED, read-only, REPEATABLE_READ, 5 s
-        Note over App,Map: B2: rows and count from one snapshot
+    critical B2: REQUIRED, read-only, REPEATABLE_READ, 5 s (one snapshot)
         App->>Repo: pageMembershipsByUserId(query, buyer)
         Repo->>Map: selectMembershipPageByUserId(buyer, size, offset)
         Map-->>Repo: List(TeamMembershipDO)
@@ -24,8 +30,7 @@ sequenceDiagram
         Repo-->>App: PageResult(TeamMembership)
         alt the page is empty (A2)
             App-->>Ctl: empty PageResult(MyTeamView) with total
-        else
-            Note over App,PR: B2: one batch read for the page's distinct products (joins the transaction)
+        else B2: one batch read of the page's products, joining the transaction
             App->>Ad: findByProductIds(productIds)
             Ad->>PR: findDisplaysByIds(productIds)
             PR-->>Ad: List(ProductDisplay), inactive products absent (A3)

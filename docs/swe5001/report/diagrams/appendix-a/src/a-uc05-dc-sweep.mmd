@@ -4,6 +4,7 @@ classDiagram
         <<scheduled job, Sched>>
         ~JOB: String = "team-expiry-sweep"
         +run(): void
+        -sweepOnce(leaseValid: BooleanSupplier): void
     }
     class ExpirySweep["SchedulingProperties.ExpirySweep"] {
         <<record>>
@@ -12,7 +13,7 @@ classDiagram
         +batchSize: int
     }
     class LeasedJobRunner {
-        <<utility, Sched, Conc>>
+        <<adapter, Sched, Conc>>
         -owner: String
         +run(job: String, lease: Duration, work: LeasedJobRunner.LeaseAwareWork): void
     }

@@ -1,4 +1,4 @@
-%% frame: Notifications B7 with A7, A8: list my notifications (design, notification-svc)
+%% frame: Notifications B4 with A4, A5: list my notifications (design, notification-svc)
 sequenceDiagram
     actor Buyer
     participant Ctl as :NotificationController
@@ -6,11 +6,11 @@ sequenceDiagram
     participant Impl as :NotificationRepositoryImpl
     participant M as :BizNotificationMapper
 
-    Note over Buyer,Ctl: B7: GET /api/v1/notifications?page,size
+    Note over Buyer,Ctl: B4: GET /api/v1/notifications?page,size
     Buyer->>Ctl: list(page, size, response)
-    alt page below 1 or size outside 1 to 100 (A8)
+    alt page below 1 or size outside 1 to 100 (A5)
         Ctl-->>Buyer: 400 VALIDATION_FAILED
-    else no valid session (A7)
+    else no valid session (A4)
         Ctl-->>Buyer: 401 UNAUTHENTICATED
     else signed in: userId from the session
         Ctl->>NA: pageMine(query, userId)

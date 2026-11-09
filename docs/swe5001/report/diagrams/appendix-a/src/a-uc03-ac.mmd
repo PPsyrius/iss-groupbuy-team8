@@ -12,12 +12,9 @@ classDiagram
         +showQuote(teamPrice, validUntil)
         +showStarted(teamStatus)
         +showRejected(reason)
-        +showRefundPending()
     }
-    class PaymentGateway {
-        <<boundary>>
-        +requestPayment(intent)
-        +paid(paymentRef)
+    class PayUpfrontControl {
+        <<control>>
     }
     class PriceQuote {
         <<entity>>
@@ -32,7 +29,7 @@ classDiagram
         -soloPrice: Money
         -stock: Count
         -targetSize: Count
-        -teamLifetime: Duration
+        -teamLifetime: Count
         -status: ProductStatus
         +issueTeamQuote(buyer, time)
         +startTerms(buyer, quote)
@@ -43,15 +40,13 @@ classDiagram
         <<control>>
         +requestQuote(buyer, product)
         +requestStart(buyer, product, quote)
-        +paymentConfirmed(paymentRef)
+        +paymentConfirmed(payment)
     }
     class Payment {
         <<entity>>
         -amount: Money
         -status: PaymentStatus
         -outcome: PaymentOutcome
-        +requireRefund(reason)
-        +recordOutcome(outcome)
     }
     class Refund {
         <<entity>>
@@ -81,10 +76,11 @@ classDiagram
         -targetSize: Count
         -payableUntil: Date-time
         -teamDeadline: Date-time
-        -fulfilled: Boolean
+        -expiredAt: Date-time
         +isPayable()
         +acceptsPayment(amount)
-        +markFulfilled(payment)
+        +fulfilBy(payment)
+        +expireAt(time)
     }
     class Membership {
         <<entity>>
@@ -96,32 +92,35 @@ classDiagram
         -amount: Money
         -status: OrderStatus
     }
-%% at Account 1,0
+%% at TeamPricePolicy 0,0
+%% at Product 1,0
 %% at StartTeamUI 2,0
-%% at PaymentGateway 3,0
+%% at PayUpfrontControl 3,0
 %% at PriceQuote 0,1
-%% at Product 1,1
+%% at Team 1,1
 %% at StartTeamControl 2,1
 %% at Payment 3,1
-%% at Refund 4,1
-%% at TeamPricePolicy 0,2
-%% at Team 1,2
+%% at Membership 0,2
+%% at Account 1,2
 %% at PurchaseIntent 2,2
-%% at Membership 0,3
-%% at Order 2,3
+%% at Refund 3,2
+%% at Order 0,3
     StartTeamUI "1" -- "1" StartTeamControl
-    StartTeamControl "1" -- "1" PaymentGateway
+    PayUpfrontControl "1" --> "1" StartTeamControl : base use case
     StartTeamControl "1" --> "1" Account
     StartTeamControl "1" --> "1" Product
     StartTeamControl "1" --> "*" PurchaseIntent
-    StartTeamControl "1" --> "1" Payment
-    Payment "1" *-- "0..1" Refund
+    Payment "1" -- "0..1" Refund : owes
     PriceQuote "*" -- "1" Account : owner
     Product "1" -- "*" PriceQuote : prices
     Product "1" -- "*" TeamPricePolicy : priced by
     TeamPricePolicy "1" -- "*" PriceQuote : issues
     Product "1" -- "*" Team : offers
     Team "0..1" -- "1" PurchaseIntent : opened by
-    Team "1" *-- "1..*" Membership
+    Team "1" *-- "1..*" Membership : has
+    Membership "*" -- "1" Account : member
+    Team "*" -- "1" Account : leader
+    Order "*" -- "1" Account : buyer
+    PurchaseIntent "*" -- "1" Account : buyer
     Payment "*" -- "1" PurchaseIntent : pays
-    Order "*" -- "1" Team
+    Order "*" -- "1" Team : for

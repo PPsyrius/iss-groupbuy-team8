@@ -5,7 +5,6 @@ sequenceDiagram
     participant OLS as :OrderLifecycleSubscriber
     participant Orders as :OrderRepository
     participant Out as :IntegrationOutboxWriter
-    participant OutM as :OutboxMapper
     participant Share as :ShareCreditSubscriber
     participant Credits as :ShareCreditRepository
     participant Cache as :OpenDealOfferCacheSubscriber
@@ -21,12 +20,9 @@ sequenceDiagram
             OLS-->>Tx: void
         end
         opt blocbuy.events.enabled (distributed topology)
-            Tx->>Out: onPaymentSucceeded(event)
-            Out->>OutM: insert(row)
-            opt TeamSucceeded was published
-                Tx->>Out: onTeamSucceeded(event)
-                Out->>OutM: insert(row)
-            end
+            Tx->>Out: onPaymentSucceeded(event), lowest precedence
+            Out-->>Tx: void
+            Note over Out,Cache: and onTeamSucceeded(event) if published; the writer's rows: @fig-a-ntf-ds-produce
         end
     end
     Note over Svc,Cache: COMMIT. Relay of the outbox rows: @sec-a-notifications

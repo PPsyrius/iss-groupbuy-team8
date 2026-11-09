@@ -6,6 +6,7 @@ sequenceDiagram
     participant Pay as Payment (entity)
     participant Intent as PurchaseIntent (entity)
     participant Base as BaseUseCaseControl (control)
+    create participant Rep as ProviderReport (entity)
     create participant RC as ReviewCase (entity)
     create participant Ref as Refund (entity)
 
@@ -18,8 +19,8 @@ sequenceDiagram
     end
     Ctl->>PG: B5: readPayment(paymentPage)
     PG-->>Ctl: page facts
-    Ctl->>Pay: B6: recordReport(report)
-    Pay-->>Ctl: first report or repeat
+    Ctl->>Rep: B6: «create» (eventId)
+    Rep-->>Ctl: first report, or repeat
     break report already recorded (A11)
         Ctl-->>PG: done: nothing applied twice
     end
@@ -35,7 +36,7 @@ sequenceDiagram
         Ctl->>Intent: B8: isPayable()
         Intent-->>Ctl: payable
         opt terms still payable
-            Ctl->>Base: B8: fulfil(payment)
+            Ctl->>Base: B8: paymentConfirmed(payment)
             Base-->>Ctl: outcome
         end
         alt terms lapsed (A14) or base use case refuses (A15)
@@ -46,6 +47,6 @@ sequenceDiagram
             Ctl->>Pay: B9: recordOutcome(fulfilled)
         end
     end
-    Ctl->>Pay: B9: finishReport(result)
+    Ctl->>Rep: B9: finish(result)
     Ctl-->>PG: done
     PG-->>Stripe: acknowledged

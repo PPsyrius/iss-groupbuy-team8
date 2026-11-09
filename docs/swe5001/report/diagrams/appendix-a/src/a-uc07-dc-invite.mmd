@@ -84,5 +84,6 @@ classDiagram
     RemoteUserAppService ..|> UserAppService
     ShareInviteRepository ..> ShareInvite
     RedisCachedShareInviteRepository ..|> ShareInviteRepository
-    RedisCachedShareInviteRepository "1" --> "1" ShareInviteRepositoryImpl
+    ShareInviteRepositoryImpl ..|> ShareInviteRepository
+    RedisCachedShareInviteRepository "1" --> "1" ShareInviteRepositoryImpl : source
     ShareInviteRepositoryImpl "1" --> "1" BizShareInviteMapper

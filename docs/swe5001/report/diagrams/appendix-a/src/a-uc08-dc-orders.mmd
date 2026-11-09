@@ -2,19 +2,19 @@
 classDiagram
     class OrderController {
         <<controller, Dist, Sec>>
-        +myOrders(page: Integer, size: Integer, response: HttpServletResponse): Result<PageResult<OrderController.OrderSummaryResponse>>
-        +myOrder(orderId: UUID, response: HttpServletResponse): Result<OrderController.OrderSummaryResponse>
+        +myOrders(page: Integer, size: Integer, response: HttpServletResponse): Result<​PageResult<​OrderSummaryResponse>>
+        +myOrder(orderId: UUID, response: HttpServletResponse): Result<OrderSummaryResponse>
     }
     class OrderAppService {
         <<interface>>
-        +pageMyOrders(page: PageQuery, userId: UUID): PageResult~OrderSummaryView~
-        +findMine(orderId: UUID, userId: UUID): Optional~OrderSummaryView~
+        +pageMyOrders(page: PageQuery, userId: UUID): PageResult<​OrderSummaryView>
+        +findMine(orderId: UUID, userId: UUID): Optional<​OrderSummaryView>
     }
     class OrderAppServiceImpl {
         <<application service>>
-        +pageMyOrders(page: PageQuery, userId: UUID): PageResult~OrderSummaryView~
-        +findMine(orderId: UUID, userId: UUID): Optional~OrderSummaryView~
-        -toView(order: Order): OrderSummaryView
+        +pageMyOrders(page: PageQuery, userId: UUID): PageResult<​OrderSummaryView>
+        +findMine(orderId: UUID, userId: UUID): Optional<​OrderSummaryView>
+        -toView(order: Order): OrderSummaryView «static»
     }
     class OrderSummaryView {
         <<record>>

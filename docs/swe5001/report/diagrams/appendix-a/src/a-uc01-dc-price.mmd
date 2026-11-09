@@ -1,7 +1,7 @@
 %% frame: UC1 design, slice 2: displayed prices and best open team (commerce-svc)
 classDiagram
     class PricingStrategyResolver {
-        <<application service, Lang>>
+        <<utility, Lang>>
         -strategies: Map~PricingMode,PricingStrategy~
         +strategyFor(mode: PricingMode): PricingStrategy
     }
@@ -58,7 +58,7 @@ classDiagram
     class OpenDealOfferCache {
         <<interface, gateway, Pers>>
         +findByProductIds(productIds: Collection~UUID~): OpenDealOfferCache.Lookup
-        +putAll(offers: Map~UUID,Optional~): void
+        +putAll(offers: Map<UUID, Optional<OpenDealOffer>>): void
     }
     class RedisOpenDealOfferCache {
         <<adapter, Pers>>

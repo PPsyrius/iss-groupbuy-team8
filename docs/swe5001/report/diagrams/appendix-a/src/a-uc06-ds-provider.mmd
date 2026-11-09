@@ -33,13 +33,15 @@ sequenceDiagram
     GW-->>Svc: Snapshot
     Note over Svc,GW: B8: the answer must name this PaymentIntent and obligation, the amount and the currency
     Svc->>Svc: apply(work, snapshot)
+    activate Svc
     Svc->>Svc: matches(work, snapshot)
     alt answer does not match (A8)
         Svc->>Svc: finish(work, providerRefundId, REVIEW, "PROVIDER_MISMATCH")
     else matches (B8, A9)
-        Note over Svc,Repo: succeeded: SUCCEEDED; pending: PROCESSING; failed, canceled: FAILED; other: REVIEW
+        Note over Svc,Repo: provider succeeded: SUCCEEDED; pending: PROCESSING; failed, canceled: FAILED; other: REVIEW
         Svc->>Svc: finish(work, snapshot.id, state, "PROVIDER_" + state)
     end
+    deactivate Svc
     critical each finish above, REQUIRED (new), READ COMMITTED, 5 s
         Svc->>Repo: finish(work, providerId, state, result): fenced by version (E2)
     end

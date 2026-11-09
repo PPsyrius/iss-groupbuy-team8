@@ -6,9 +6,8 @@ sequenceDiagram
     participant Acc as Account (entity)
     participant Prod as Product (entity)
     participant Pol as TeamPricePolicy (entity)
-    create participant Intent as PurchaseIntent (entity)
     create participant Quote as PriceQuote (entity)
-    participant PG as PaymentGateway (boundary)
+    create participant Intent as PurchaseIntent (entity)
 
     Buyer->>UI: B1: start(product)
     UI->>Ctl: B1: requestQuote(buyer, product)
@@ -40,5 +39,5 @@ sequenceDiagram
     end
     Prod-->>Ctl: team price, target size, team lifetime
     Ctl->>Intent: B7: «create» (price, target size, deadlines, reserved team)
-    Ctl->>PG: B8: requestPayment(intent)
-    Note over Ctl,PG: B8: «include» Pay upfront (@sec-a-pay-upfront)
+    Ctl-->>UI: intent
+    Note over Buyer,Intent: B8: «include» Pay upfront B1–B4 (@sec-a-pay-upfront): the buyer pays the frozen intent on Stripe's page

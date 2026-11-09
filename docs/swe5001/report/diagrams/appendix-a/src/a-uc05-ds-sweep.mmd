@@ -4,32 +4,33 @@ sequenceDiagram
     participant Job as :TeamExpirySweepJob
     participant Run as :LeasedJobRunner
     participant Lease as :SchedulerLeaseRepository
-    participant Work as work : LeasedJobRunner.LeaseAwareWork
     participant Sw as :GroupDealExpirySweeper
     participant Deals as :PaidGroupDealRepository
     participant Exp as :GroupDealExpiryService
 
-    Note over Sch,Job: B5: fixed delay PT1M after the previous run ends
-    Sch->>Job: run()
+    Sch->>Job: B5: run(), PT1M after the previous run
     Job->>Run: run("team-expiry-sweep", lease: PT2M, work: this::sweepOnce)
     Run->>Lease: tryAcquire(job, owner, lease)
-    Lease-->>Run: boolean acquired
-    alt not acquired: another instance holds the lease (A1)
+    alt RuntimeException: the lease row cannot be read
+        Lease-->>Run: exception
+        Run-->>Job: failed, nothing held
+    else false: another instance holds the lease (A1)
+        Lease-->>Run: false
         Run-->>Job: skipped
-    else acquired
+    else true
+        Lease-->>Run: true
         par renewal every lease / 3 on a virtual thread
             Run->>Lease: renew(job, owner, lease)
             Lease-->>Run: false sets leaseValid := false (A3)
-        and the work
-            Run->>Work: run(leaseValid)
-            Work->>Sw: sweep(batchSize: 100, leaseValid)
-            Note over Sw,Deals: B6
-            Sw->>Deals: currentTime()
+        and the work (LeaseAwareWork.run is this::sweepOnce)
+            Run->>Job: sweepOnce(leaseValid)
+            Job->>Sw: sweep(batchSize: 100, leaseValid)
+            Sw->>Deals: B6: currentTime()
             Deals-->>Sw: Instant now
             Sw->>Deals: dueForExpiry(now, limit)
             Deals-->>Sw: List of UUID, oldest deadline first
             loop each dealId, while leaseValid.getAsBoolean()
-                Note over Sw,Exp: B7-B10: one transaction per team, none around the batch (@fig-a-uc05-ds-expire)
+                Note over Sw,Exp: B7-B10: one transaction per team (@fig-a-uc05-ds-expire)
                 Sw->>Exp: expireOne(dealId)
                 alt returned true
                     Exp-->>Sw: true, expired + 1
@@ -40,8 +41,8 @@ sequenceDiagram
                     Sw->>Deals: deferExpiryRetry(dealId, RETRY_DELAY)
                 end
             end
-            Sw-->>Work: Result(due, expired, alreadyResolved, failed)
-            Work-->>Run: return (counters recorded)
+            Sw-->>Job: Result(due, expired, alreadyResolved, failed)
+            Job-->>Run: void, after recording the counters
         end
         Run->>Lease: release(job, owner)
         Run-->>Job: completed or failed

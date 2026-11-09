@@ -14,33 +14,35 @@ sequenceDiagram
         Svc->>OFA: B6: lockForSettlement(quote)
         OFA->>Set: lockTeam(dealId): lock 1
         OFA->>Intents: lockById(intentId): lock 2
-        Note over Svc,Users: payment side, @sec-a-pay-upfront: lock 4 (payment), succeed, publish PaymentSucceeded
-        break quote.expiredAt(now): paid too late (A5)
-            Note over Svc,Users: Outcome(null, null, "BUSINESS_EXPIRED"); fulfil is never called
+        Note over Svc,Users: Pay upfront (@sec-a-pay-upfront): lock 4, succeed, publish PaymentSucceeded
+        Svc->>Svc: quote.expiredAt(now)
+        break true: paid too late (A5)
+            Svc-->>Svc: Outcome(null, null, "BUSINESS_EXPIRED"), no fulfil
         end
-        Svc->>OFA: fulfil(event)
-        Note over OFA,Intents: re-takes lock 1 and lock 2 (already held)
+        Svc->>OFA: fulfil(event): re-takes locks 1 and 2 (held)
         break intent.fulfilled() (A8)
             OFA-->>Svc: replayed, or INTENT_ALREADY_FULFILLED
         end
         OFA->>Users: requireActive(userId)
         break identity-svc unreachable (E1)
-            Users-->>OFA: IdentityUnavailableException: rollback
+            Users-->>OFA: IdentityUnavailableException
         end
         OFA->>Cat: requirePurchasable(productId)
-        break intent lapsed, buyer inactive or product unavailable (A5)
-            OFA-->>Svc: Outcome: INTENT_EXPIRED, BUYER_INACTIVE or PRODUCT_UNAVAILABLE
+        break rejected (A5)
+            OFA-->>Svc: Outcome: INTENT_EXPIRED, BUYER_INACTIVE, PRODUCT_UNAVAILABLE
         end
-        Note over OFA,Groups: B7: @fig-a-uc04-ds-admit
-        OFA->>Groups: joinConfirmed(dealId, paid, sharerUserId)
+        OFA->>Groups: B7: joinConfirmed(dealId, paid, sharerUserId), @fig-a-uc04-ds-admit
         Groups-->>OFA: ParticipationResult
         break not applied (A6, A7)
             OFA-->>Svc: Outcome: GROUP_REJECTED
         end
-        Note over OFA,Orders: B8: the first business writes
-        OFA->>Ord: «create» create(terms, confirmedAt)
-        OFA->>Orders: save(order): PENDING
+        OFA->>Ord: B8, first write: «create» create(terms, confirmedAt)
+        OFA->>Orders: save(order)
+        Orders-->>OFA: Order (status PENDING)
         OFA->>Set: linkOrder(dealId, paymentId, orderId)
+        break false: no member row (E1)
+            OFA-->>Svc: IllegalStateException: rollback
+        end
         OFA->>Intents: markFulfilled(intent, paymentId)
         OFA->>Cat: consumeOneUnit(productId)
         break false: the last unit has gone (E1)

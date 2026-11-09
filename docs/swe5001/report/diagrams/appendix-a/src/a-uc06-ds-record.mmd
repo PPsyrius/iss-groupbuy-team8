@@ -7,6 +7,7 @@ sequenceDiagram
     participant Adp as :OrderFulfilmentAdapter
     participant Set as :GroupDealSettlementSupportImpl
     participant Deals as :PaidGroupDealRepository
+    participant Deal as :GroupDeal
     participant Repo as :CheckoutPaymentRepositoryImpl
     participant Map as :PaymentMapper
 
@@ -22,7 +23,9 @@ sequenceDiagram
         Adp->>Set: lockExpiredTeam(dealId)
         Set->>Deals: lockDeal(dealId): lock 1, the team row (already held)
         Deals-->>Set: Optional(GroupDeal)
-        break team missing or status() is not EXPIRED (E1)
+        Set->>Deal: status()
+        Deal-->>Set: DealStatus
+        break team missing or status is not EXPIRED (E1)
             Set-->>Svc: IllegalStateException, the expiry rolls back
         end
         Note over Svc,Map: B3 and B4: eventId = "team-expired-" + dealId

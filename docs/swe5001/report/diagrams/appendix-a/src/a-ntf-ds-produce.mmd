@@ -1,4 +1,4 @@
-%% frame: Notifications B1 with E2: the outbox record is written before commit (design, commerce-svc)
+%% frame: Notifications B1 with E1: the outbox record is written before commit (design, commerce-svc)
 sequenceDiagram
     participant Svc as :GroupDealExpiryService
     participant Pub as :ApplicationEventPublisher
@@ -22,10 +22,10 @@ sequenceDiagram
         alt row inserted
             M-->>W: 1, a sys_outbox row whose UUIDv7 id is the eventId
             W-->>Pub: void
-        else serialisation or insert fails (E2)
+        else serialisation or insert fails (E1)
             W-->>Pub: IllegalStateException or database error
             Pub-->>Svc: exception: the expiry rolls back and no event exists
         end
     end
-    Note over Svc,M: onTeamSucceeded (UC4 B10, @fig-a-uc04-ds-events) repeats these steps with TeamSucceededV1
+    Note over Svc,M: onTeamSucceeded (UC4 B10, UC5 B4) repeats these steps with TeamSucceededV1; UC4 and UC5 draw only the publishEvent
     Note over Svc,M: onPaymentSucceeded (Pay upfront) takes the recipient from event.quote().userId(): no lookup

@@ -5,7 +5,7 @@ sequenceDiagram
     participant OLS as :OrderLifecycleSubscriber
     participant Out as :IntegrationOutboxWriter
     participant Relay as :OutboxRelayService
-    participant Topic as domain events «topic»
+    participant Topic as domain-events «topic»
     participant Con as :SqsNotificationEventConsumer
     participant Hdl as :NotificationEventHandler
 
@@ -16,8 +16,7 @@ sequenceDiagram
         Pub->>OLS: onTeamSucceeded(event), @Order(10)
         OLS-->>Pub: orders confirmed
         Pub->>Out: onTeamSucceeded(event), lowest precedence
-        Out->>Out: write(eventType, dealId, payload)
-        Out-->>Pub: sys_outbox row inserted
+        Out-->>Pub: outbox row recorded (A.13: @sec-a-notifications)
     end
     Note over Svc,Out: COMMIT; AFTER_COMMIT subscribers then run (share credit, cache eviction: @fig-a-uc04-ds-events)
     Note over Relay,Topic: every 2 s under the job lease (S7): relayBatch reads up to 100 due outbox rows

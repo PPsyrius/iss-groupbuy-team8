@@ -20,7 +20,7 @@ classDiagram
     }
     class OAuthLoginAppServiceImpl {
         <<application service, Ext>>
-        -resolveRegisterRace(profile: OAuthProfile, race: DuplicateKeyException): OAuthLoginResult
+        -resolveRegisterRace(profile: OAuthIdentityGateway.OAuthProfile, race: DuplicateKeyException): OAuthLoginAppService.OAuthLoginResult
     }
     class OAuthIdentityGateway {
         <<interface, gateway, Ext>>
@@ -38,8 +38,8 @@ classDiagram
     }
     class OAuthUserTxService {
         <<application service, Pers, Conc>>
-        +registerNewUser(profile: OAuthProfile): OAuthLoginResult
-        +recordLogin(identity: OAuthIdentity, profile: OAuthProfile): OAuthLoginResult
+        +registerNewUser(profile: OAuthIdentityGateway.OAuthProfile): OAuthLoginAppService.OAuthLoginResult
+        +recordLogin(identity: OAuthIdentity, profile: OAuthIdentityGateway.OAuthProfile): OAuthLoginAppService.OAuthLoginResult
     }
     class UserOAuthRepository {
         <<interface, repository, Pers>>

@@ -1,4 +1,4 @@
-%% frame: CheckoutPayment
+%% frame: CheckoutPayment lifecycle (Pay upfront)
 stateDiagram-v2
     [*] --> CREATED : prepare [quote valid] / insert
     CREATED --> CREATED : session created / bind()

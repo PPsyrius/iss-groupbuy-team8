@@ -28,7 +28,7 @@ classDiagram
         +reasonCode: String
     }
     class GroupDeal {
-        <<aggregate root>>
+        <<aggregate root, Pers>>
         -leaderUserId: UUID
         -dealPrice: BigDecimal
         -targetSize: int

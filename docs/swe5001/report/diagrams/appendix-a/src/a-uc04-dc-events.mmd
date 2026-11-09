@@ -53,10 +53,6 @@ classDiagram
         <<interface, repository, Pers>>
         +confirmByDealId(dealId: UUID): int
     }
-    class OutboxMapper {
-        <<interface, mapper, Pers>>
-        +insert(row: OutboxInsert): int
-    }
     class ShareCreditRepository {
         <<interface, repository, Pers>>
         +recordIfAbsent(credit: ShareCredit): boolean
@@ -71,7 +67,6 @@ classDiagram
 %% at OrderLifecycleSubscriber 1,2
 %% at OpenDealOfferCacheSubscriber 2,2
 %% at ShareCreditSubscriber 3,2
-%% at OutboxMapper 0,3
 %% at OrderRepository 1,3
 %% at ShareCreditRepository 3,3
     StripeCheckoutService "1" --> "1" ApplicationEventPublisher
@@ -85,6 +80,5 @@ classDiagram
     OpenDealOfferCacheSubscriber ..> TeamSucceeded
     OpenDealOfferCacheSubscriber ..> MemberJoined
     ShareCreditSubscriber ..> MemberJoined
-    IntegrationOutboxWriter "1" --> "1" OutboxMapper
     OrderLifecycleSubscriber "1" --> "1" OrderRepository
     ShareCreditSubscriber "1" --> "1" ShareCreditRepository

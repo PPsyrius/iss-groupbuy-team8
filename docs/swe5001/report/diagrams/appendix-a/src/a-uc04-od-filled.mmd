@@ -1,0 +1,44 @@
+%% frame: UC4 the moment the last seat fills (analysis objects)
+classDiagram
+    class leader["leader : Membership"] {
+        role = leader
+    }
+    class o1["o1 : Order"] {
+        status = CONFIRMED
+    }
+    class o2["o2 : Order"] {
+        status = CONFIRMED
+    }
+    class invite["invite : Invitation"] {
+    }
+    class team["team : Team"] {
+        targetSize = 2
+        currentSize = 2
+        status = SUCCEEDED
+    }
+    class intent["intent : PurchaseIntent"] {
+        fulfilled = true
+    }
+    class joiner["joiner : Membership"] {
+        role = member
+    }
+    class payment["payment : Payment"] {
+        status = SUCCEEDED
+        outcome = FULFILLED
+    }
+%% at leader 0,0
+%% at o1 1,0
+%% at o2 2,0
+%% at invite 0,1
+%% at team 1,1
+%% at intent 2,1
+%% at joiner 1,2
+%% at payment 2,2
+    team -- leader
+    team -- o1
+    team -- o2
+    team -- intent
+    team -- joiner
+    intent -- payment : pays
+    leader -- invite : shares
+    joiner -- invite : joined via

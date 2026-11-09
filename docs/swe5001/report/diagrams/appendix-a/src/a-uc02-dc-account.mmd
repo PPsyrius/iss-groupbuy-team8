@@ -2,8 +2,8 @@
 classDiagram
     class OAuthUserTxService {
         <<application service, Pers, Conc>>
-        +registerNewUser(profile: OAuthProfile): OAuthLoginResult
-        +recordLogin(identity: OAuthIdentity, profile: OAuthProfile): OAuthLoginResult
+        +registerNewUser(profile: OAuthIdentityGateway.OAuthProfile): OAuthLoginAppService.OAuthLoginResult
+        +recordLogin(identity: OAuthIdentity, profile: OAuthIdentityGateway.OAuthProfile): OAuthLoginAppService.OAuthLoginResult
     }
     class UserRepository {
         <<interface, repository, Pers>>
@@ -29,7 +29,8 @@ classDiagram
         +touchLogin(at: Instant): void
     }
     class OAuthIdentity {
-        <<entity>>
+        <<aggregate root>>
+        -userId: UUID
         +bind(userId: UUID, provider: OAuthProvider, providerUserId: String, email: String, displayName: String, avatarUrl: String, rawProfile: String): OAuthIdentity «static»
         +touchLogin(at: Instant, email: String, displayName: String, avatarUrl: String, rawProfile: String): void
     }
@@ -56,3 +57,4 @@ classDiagram
     UserOAuthRepositoryImpl ..|> UserOAuthRepository
     UserOAuthRepositoryImpl "1" --> "1" SysUserOAuthMapper
     UserOAuthRepository ..> OAuthIdentity
+    OAuthIdentity ..> User : by id

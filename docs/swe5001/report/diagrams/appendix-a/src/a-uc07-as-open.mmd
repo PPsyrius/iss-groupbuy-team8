@@ -12,7 +12,7 @@ sequenceDiagram
     Inv-->>Ctl: invitation, or none
     alt known reference
         Ctl->>Inv: B6: sharer()
-        Inv-->>Ctl: sharer's account
+        Inv-->>Ctl: sharing membership's account
         Ctl->>Acc: B6: publicNickname()
         Acc-->>Ctl: nickname, or none
         Ctl->>UI: B6: showBanner(nickname)

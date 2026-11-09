@@ -1,11 +1,12 @@
 %% frame: UC7 B6 and B7: the cached lookup inside ShareInviteRepository.findByRef (design, commerce-svc)
 sequenceDiagram
-    participant C as client : ShareInviteAppService
-    participant Dec as :RedisCachedShareInviteRepository
+    participant C as client
+    participant Dec as proxy : RedisCachedShareInviteRepository
     participant SI as ShareInvite
     participant Src as :ShareInviteRepositoryImpl
     participant Map as :BizShareInviteMapper
 
+    Note over C,SI: client = ShareInviteAppService (B6) or GroupDealPurchaseSupportImpl (B7)
     C->>Dec: findByRef(ref)
     Dec->>SI: isWellFormedRef(ref)
     SI-->>Dec: boolean
@@ -23,7 +24,7 @@ sequenceDiagram
         Map-->>Src: BizShareInviteDO, or null
         Src-->>Dec: Optional(InviteWithDeadline)
         opt found, and Valkey was available
-            Note over Dec,Map: populate: SET the entry with TTL = min(time to the team's deadline, 20–30 s jitter)
+            Note over Dec,Map: populate: SET the entry with TTL = min(time to the team's deadline, 20–30 s jitter); a changed row may be served stale until then
         end
         Dec-->>C: Optional(ShareInvite) from PostgreSQL
     end

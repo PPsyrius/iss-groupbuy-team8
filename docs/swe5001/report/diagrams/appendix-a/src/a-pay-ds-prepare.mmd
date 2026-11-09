@@ -39,7 +39,7 @@ sequenceDiagram
             break attempt open, or now + 1860 s outlives the quote (A4)
                 Svc-->>PBS: PAYMENT_STATE_INVALID
             end
-            Svc->>Pay: new(paymentId, quote, requestKey, now, expires, CREATED)
+            Svc->>Pay: «create» new(paymentId, quote, requestKey, now, expires, CREATED)
             Svc->>Repo: insert(payment)
         end
     end

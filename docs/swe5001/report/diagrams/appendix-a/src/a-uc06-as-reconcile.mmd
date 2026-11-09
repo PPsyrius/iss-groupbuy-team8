@@ -10,7 +10,7 @@ sequenceDiagram
 
     Op->>RUI: A11: reconcile(payment, providerReference)
     RUI->>Ctl: A11: reconcile(payment, providerReference)
-    Ctl->>Ref: A11: claimForReview()
+    Ctl->>Ref: A11: claimForReview(payment)
     break refund is not parked for review or failed
         Ref-->>Ctl: none
         Ctl-->>RUI: nothing reconciled

@@ -1,7 +1,6 @@
 %% frame: UC4 basic flow, part 2: after payment (analysis)
 sequenceDiagram
-    actor Stripe
-    participant PG as PaymentGateway (boundary)
+    participant PU as PayUpfrontControl (control)
     participant Ctl as JoinTeamControl (control)
     participant Pay as Payment (entity)
     participant Intent as PurchaseIntent (entity)
@@ -12,8 +11,8 @@ sequenceDiagram
     participant UI as JoinTeamUI (boundary)
     create participant Mem as Membership (entity)
 
-    Stripe->>PG: B5: paid(paymentRef)
-    PG->>Ctl: B5: paymentConfirmed(paymentRef)
+    Note over PU,Ctl: B5: Pay upfront verified the payment (@sec-a-pay-upfront)
+    PU->>Ctl: B5: paymentConfirmed(payment)
     Ctl->>Intent: B6: isPayable()
     Intent-->>Ctl: payable
     Ctl->>Acc: B6: isActive()

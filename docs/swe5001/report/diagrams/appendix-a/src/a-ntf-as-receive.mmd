@@ -1,41 +1,43 @@
-%% frame: Receive notifications, basic flow part 2: receive, record and read (analysis)
+%% frame: Receive notifications, basic flow with A1-A4 (analysis)
 sequenceDiagram
     actor Buyer
     participant UI as NotificationListUI (boundary)
-    participant Feed as EventFeed (boundary)
+    participant Prod as producing control (control)
     participant Ctl as ReceiveNotificationsControl (control)
-    participant Cons as ConsumptionRecord (entity)
-    create participant N as Notification (entity)
+    participant Team as Team (entity)
+    participant Pay as Payment (entity)
+    participant NL as Notification (entity)
+    create participant N as n : Notification (entity)
 
-    Note over Feed,Ctl: B3: the feed delivers each passed-on event, perhaps more than once
-    Feed->>Ctl: B3: eventArrived(event)
-    alt type and version supported, content valid
-        Ctl->>Cons: B4: wasHandled(event, consumer)
-        Cons-->>Ctl: no
-        Ctl->>Cons: B4: «create» (event, consumer)
-        loop each recipient (none: A6)
-            Ctl->>N: B5: «create» (recipient, type, fixed text)
-        end
-        Ctl->>Feed: B6: acknowledge(event)
-    else handled already (A3)
-        Ctl->>Cons: A3: wasHandled(event, consumer)
-        Cons-->>Ctl: yes
-        Ctl->>Feed: A3: acknowledge(event)
-    else type or version not supported (A4)
-        Ctl->>Feed: A4: acknowledge(event)
-    else malformed (A5)
-        Note over Feed,Ctl: A5: not acknowledged; the feed delivers it again
-        Feed->>Feed: A5: setAside(event), after five deliveries
+    Note over Prod,Ctl: B1: UC4 B10 or UC5 (team succeeded or expired), Pay upfront (payment succeeded)
+    Prod->>Ctl: B1: factHappened(fact)
+    alt team succeeded or expired
+        Ctl->>Team: B1: activeMembers()
+        Team-->>Ctl: member accounts
+    else payment succeeded
+        Ctl->>Pay: B1: payer()
+        Pay-->>Ctl: payer account
     end
-    Note over Buyer,UI: B7: later, the buyer opens the notification list
-    Buyer->>UI: B7: listMine(page)
-    UI->>Ctl: B7: listNotifications(buyer, page)
+    Ctl-->>Prod: noted with the business change
+    Note over Ctl,N: B2: soon after, the kind and content of the fact are checked
+    alt kind known and content valid
+        loop each new recipient (A3: none)
+            Ctl->>N: B3: «create» (recipient, type, fixed text)
+        end
+    else kind not known (A1)
+        Note over Ctl,N: A1: logged and ignored
+    else malformed (A2)
+        Note over Ctl,N: A2: no notification; set aside for an operator
+    end
+    Note over Buyer,UI: B4: later, the buyer opens the notification list
+    Buyer->>UI: B4: listMine(page)
+    UI->>Ctl: B4: listNotifications(buyer, page)
     alt signed in
-        Ctl->>N: B7: forRecipient(buyer, page)
-        N-->>Ctl: page, newest first
+        Ctl->>NL: B4: forRecipient(buyer, page)
+        NL-->>Ctl: page, newest first
         Ctl-->>UI: page
-        UI->>UI: B7: showNotifications(page)
-    else not signed in (A7)
+        UI->>UI: B4: showNotifications(page)
+    else not signed in (A4)
         Ctl-->>UI: refused
-        UI->>UI: A7: showSignInRequired()
+        UI->>UI: A4: showSignInRequired()
     end

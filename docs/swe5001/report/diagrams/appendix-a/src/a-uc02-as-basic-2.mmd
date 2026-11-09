@@ -7,7 +7,6 @@ sequenceDiagram
     participant Role as Role (entity)
     create participant NAcc as new : Account (entity)
     create participant NBind as new : OAuthBinding (entity)
-    create participant Ses as Session (entity)
 
     Ctl->>Bind: B7: findBySubject(provider, subject)
     Bind-->>Ctl: binding, or none
@@ -20,20 +19,18 @@ sequenceDiagram
         Ctl->>Acc: B7: touchSignIn()
         Ctl->>Bind: B7: touchSignIn(profile)
     else first sign-in (A1)
-        Ctl->>Acc: A1: isEmailTaken(email)
-        Acc-->>Ctl: taken, or free
-        break e-mail used by another account (E4)
+        Ctl->>NAcc: A1: «create» (email, nickname)
+        break account refused: e-mail already used by another account (E4)
             Ctl->>UI: E4: showFailure(reason)
         end
-        Ctl->>NAcc: A1: «create» (email, nickname)
         Ctl->>NBind: A1: «create» (account, provider, subject)
         Ctl->>Role: A1: grantTo(account)
-        Note over Ctl,NBind: A2: a lost race re-reads the binding and goes on as "binding found"
+        Note over Ctl,NBind: A2: a lost race finds the binding and goes on as "binding found"
     end
     Ctl->>Role: B8: grantedTo(account)
     Role-->>Ctl: roles and permissions
-    Ctl->>Ses: B8: «create» (account, roles, permissions)
-    break session not saved, or a newer sign-in won (E6)
+    Ctl->>Ctl: B8: openSession(account, roles)
+    break session not opened, or a newer sign-in won (E6)
         Ctl->>UI: E6: showFailure(reason)
     end
     Ctl->>UI: B9: showSignedIn(returnTo)

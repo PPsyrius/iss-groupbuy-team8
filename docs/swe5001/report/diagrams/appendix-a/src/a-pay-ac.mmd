@@ -22,15 +22,20 @@ classDiagram
         +readReceipt(buyer, payment)
     }
     class BaseUseCaseControl {
+        <<control, abstract>>
+        +paymentConfirmed(payment)
+    }
+    class StartTeamControl {
         <<control>>
-        +fulfil(payment)
+    }
+    class JoinTeamControl {
+        <<control>>
     }
     class PurchaseIntent {
         <<entity>>
         -price: Money
         -payableUntil: Date-time
-        -deadline: Date-time
-        -fulfilled: Boolean
+        -teamDeadline: Date-time
         +isPayable()
     }
     class Payment {
@@ -42,19 +47,23 @@ classDiagram
         -status: PaymentStatus
         -outcome: PaymentOutcome
         +attachPage(paymentPage)
-        +recordReport(report)
         +matches(paymentPage)
         +succeed()
         +close(paymentPage)
         +requireRefund(reason)
         +recordOutcome(outcome)
-        +finishReport(result)
         +receipt()
+    }
+    class ProviderReport {
+        <<entity>>
+        -eventId: Identifier
+        -result: ReportResult
+        +finish(result)
     }
     class ReviewCase {
         <<entity>>
         -reason: Text
-        -status: Text
+        -status: ReviewStatus
     }
     class Refund {
         <<entity>>
@@ -62,19 +71,26 @@ classDiagram
         -reason: Text
         -status: RefundStatus
     }
-%% at PaymentUI 0,0
-%% at BaseUseCaseControl 1,0
-%% at PaymentGateway 2,0
-%% at PurchaseIntent 0,1
+%% at StartTeamControl 0,0
+%% at JoinTeamControl 1,0
+%% at PaymentUI 2,0
+%% at BaseUseCaseControl 0,1
 %% at PayUpfrontControl 1,1
-%% at ReviewCase 0,2
+%% at PaymentGateway 2,1
+%% at PurchaseIntent 0,2
 %% at Payment 1,2
-%% at Refund 2,2
+%% at ProviderReport 2,2
+%% at Refund 0,3
+%% at ReviewCase 2,3
+    StartTeamControl --|> BaseUseCaseControl
+    JoinTeamControl --|> BaseUseCaseControl
     PaymentUI "1" -- "1" PayUpfrontControl
     PayUpfrontControl "1" -- "1" PaymentGateway
     PayUpfrontControl "1" --> "1" PurchaseIntent
     PayUpfrontControl "1" --> "1" Payment
     PayUpfrontControl "1" --> "1" BaseUseCaseControl
+    PayUpfrontControl "1" --> "*" ProviderReport
     Payment "*" -- "1" PurchaseIntent : pays
-    Payment "1" *-- "0..1" Refund
+    Payment "1" -- "0..1" Refund : owes
     Payment "1" -- "0..1" ReviewCase : held by
+    ProviderReport "*" -- "0..1" Payment : about

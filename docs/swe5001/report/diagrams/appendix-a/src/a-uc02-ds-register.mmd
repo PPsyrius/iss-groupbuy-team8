@@ -1,5 +1,6 @@
 %% frame: UC2 A1 with A2 and E4: first sign-in registers a buyer (design, identity-svc)
 sequenceDiagram
+    participant AC as :AuthController
     participant App as :OAuthLoginAppServiceImpl
     participant Tx as :OAuthUserTxService
     participant Roles as :RoleRepository
@@ -9,7 +10,7 @@ sequenceDiagram
     create participant I as :OAuthIdentity
 
     Note over App,Tx: A1: no binding for this Google subject
-    critical registerNewUser: REQUIRED, default isolation, no timeout
+    critical registerNewUser: REQUIRED, READ COMMITTED (default), no timeout
         App->>Tx: registerNewUser(profile)
         Tx->>Roles: findActiveRoleIdByCode("buyer")
         Roles-->>Tx: Optional(UUID); empty gives IDENTITY_MISCONFIGURED
@@ -20,19 +21,23 @@ sequenceDiagram
         Tx->>UO: saveNew(identity)
         Tx->>Roles: assignRole(userId, buyerRoleId)
         Tx-->>App: OAuthLoginResult
-    option unique index violated (uq_sys_user_oauth_provider_subject or uq_sys_user_email)
-        Tx-->>App: DuplicateKeyException; transaction rolled back
     end
-    opt DuplicateKeyException
+    break unique index violated (uq_sys_user_oauth_provider_subject or uq_sys_user_email)
+        Tx-->>App: DuplicateKeyException; transaction rolled back
         App->>App: resolveRegisterRace(profile, race)
         App->>UO: findActiveByProviderAndSubject(provider, subject)
         UO-->>App: Optional(OAuthIdentity)
         alt binding now exists: another first sign-in won (A2)
             App->>Tx: recordLogin(identity, profile)
             Tx-->>App: OAuthLoginResult, as in @fig-a-uc02-ds-login
+            App-->>AC: OAuthLoginResult
         else no binding
             App->>Users: findActiveByEmail(email)
             Users-->>App: Optional(User)
-            Note over App,Users: E4: present gives EMAIL_ALREADY_REGISTERED (IDENTITY_409_001); never merged. Absent: the exception is rethrown
+            break present (E4)
+                App-->>AC: BizException EMAIL_ALREADY_REGISTERED (IDENTITY_409_001); never merged
+            end
+            App-->>AC: absent: the DuplicateKeyException is rethrown
         end
     end
+    App-->>AC: OAuthLoginResult

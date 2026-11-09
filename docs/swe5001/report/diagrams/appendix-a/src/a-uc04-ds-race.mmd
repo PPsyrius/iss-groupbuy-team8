@@ -7,28 +7,54 @@ sequenceDiagram
     participant Groups as :PaidGroupDealService
     participant Repo as :CheckoutPaymentRepository
 
-    Note over App,B: A7, at B7: two verified webhooks from StripeWebhookController (@sec-a-pay-upfront), one thread each
+    activate App
+    Note over App,B: A7, at B7: two verified webhooks (@fig-a-pay-ds-webhook), one thread each
     par buyer X's webhook
         App->>A: handleWebhook(rawX, sigX)
+        activate A
     and buyer Y's webhook
         App->>B: handleWebhook(rawY, sigY)
+        activate B
     end
-    A->>OFA: lockForSettlement(quoteX)
-    Note over A,OFA: txA holds the team row lock (lock 1)
-    B->>OFA: lockForSettlement(quoteY)
-    Note over B,OFA: txB waits on the same team row
-    A->>OFA: fulfil(eventX)
-    OFA->>Groups: joinConfirmed(dealId, paidX, sharer)
-    Groups-->>OFA: applied, team SUCCEEDED
-    OFA-->>A: Outcome(dealId, orderX, null)
-    Note over A: txA commits; lock released
+    Note over A,OFA: both settlements call lockForSettlement; txA takes lock 1 (team) first, txB waits on the same row
+    critical txA: settlement, REQUIRED, READ COMMITTED, 10 s
+        A->>OFA: lockForSettlement(quoteX): lock 1, then lock 2
+        activate OFA
+        OFA-->>A: void
+        deactivate OFA
+        A->>OFA: fulfil(eventX)
+        activate OFA
+        OFA->>Groups: joinConfirmed(dealId, paidX, sharer)
+        activate Groups
+        Groups-->>OFA: applied, team SUCCEEDED
+        deactivate Groups
+        OFA-->>A: Outcome(dealId, orderX, null)
+        deactivate OFA
+        Note over A,OFA: COMMIT releases lock 1
+    end
     A-->>App: void
-    OFA-->>B: void: lock granted
-    B->>OFA: fulfil(eventY)
-    OFA->>Groups: joinConfirmed(dealId, paidY, sharer)
-    Groups-->>OFA: compensation_required, DEAL_CLOSED
-    OFA-->>B: Outcome(dealId, null, "GROUP_REJECTED")
-    B->>Repo: requireRefund(paymentY, "GROUP_REJECTED", eventY)
-    B->>Repo: recordOutcome(paymentY, dealId, null, "REFUND_REQUIRED")
-    Note over B: txB commits
+    deactivate A
+    critical txB: settlement, REQUIRED, READ COMMITTED, 10 s
+        B->>OFA: lockForSettlement(quoteY): lock 1, granted after txA's commit
+        activate OFA
+        OFA-->>B: void
+        deactivate OFA
+        B->>OFA: fulfil(eventY)
+        activate OFA
+        OFA->>Groups: joinConfirmed(dealId, paidY, sharer)
+        activate Groups
+        Groups-->>OFA: compensation_required, DEAL_CLOSED
+        deactivate Groups
+        OFA-->>B: Outcome(dealId, null, "GROUP_REJECTED")
+        deactivate OFA
+        B->>Repo: requireRefund(paymentY, "GROUP_REJECTED", eventY)
+        activate Repo
+        deactivate Repo
+        B->>Repo: recordOutcome(paymentY, dealId, null, "REFUND_REQUIRED")
+        activate Repo
+        deactivate Repo
+        Note over B,Repo: COMMIT
+    end
     B-->>App: void
+    deactivate B
+    deactivate App

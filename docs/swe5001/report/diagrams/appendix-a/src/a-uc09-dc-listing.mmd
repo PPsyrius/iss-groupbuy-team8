@@ -54,10 +54,6 @@ classDiagram
         +deleteDraft(id: UUID, expectedVersion: int, actorId: UUID): void
         +countListingStatuses(): ListingStatusCounts
     }
-    class RemoteUserAppService {
-        <<adapter, Dist>>
-        +requireActive(userId: UUID): void
-    }
 %% at TeamTermsAppService 0,0
 %% at AdminListingController 1,0
 %% at AdminListingAppService 2,0
@@ -65,9 +61,8 @@ classDiagram
 %% at GroupDealQueryService 1,1
 %% at AdminListingAppServiceImpl 2,1
 %% at UserAppService 3,1
-%% at TeamPriceRepository 1,2
 %% at ProductRepository 2,2
-%% at RemoteUserAppService 3,2
+%% at TeamPriceRepository 3,2
     AdminListingController "1" --> "1" TeamTermsAppService
     AdminListingController "1" --> "1" AdminListingAppService
     AdminListingAppServiceImpl ..|> AdminListingAppService
@@ -76,4 +71,3 @@ classDiagram
     AdminListingAppServiceImpl "1" --> "1" UserAppService
     AdminListingAppServiceImpl "1" --> "1" TeamPriceRepository
     AdminListingAppServiceImpl "1" --> "1" ProductRepository
-    RemoteUserAppService ..|> UserAppService

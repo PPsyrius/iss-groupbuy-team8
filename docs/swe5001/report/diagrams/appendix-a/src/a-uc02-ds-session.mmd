@@ -33,7 +33,7 @@ sequenceDiagram
         AC-->>Buyer: 302 /login?error=COMMON_500_001, no cookie
     end
     PB->>SL: setTokenValue(token, parameter)
-    Note over PB,SL: only now the blocbuy-token cookie is written (HttpOnly, Secure, SameSite=Lax)
+    Note over PB,SL: only now the blocbuy-token cookie is written (HttpOnly, SameSite=Lax; Secure on HTTPS deployments)
     PB-->>AC: void
     AC-->>Buyer: 302 /auth/callback
     Note over Buyer,AC: B9: @fig-a-uc02-ds-access

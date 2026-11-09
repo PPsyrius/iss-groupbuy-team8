@@ -5,6 +5,7 @@ sequenceDiagram
     participant AC as :AuthController
     participant AL as :AdminListingController
     participant SU as :StpUtil
+    participant SL as :StpLogic
     participant UA as :UserAppService
     participant SSI as :SessionStpInterface
     participant DAO as :SaTokenDao
@@ -31,12 +32,14 @@ sequenceDiagram
     Buyer->>AL: counts()
     AL->>AL: administrator()
     AL->>SU: checkRole("admin")
-    SU->>SSI: getRoleList(loginId, loginType)
+    SU->>SL: checkRole("admin")
+    SL->>SL: getRoleList(loginId)
+    SL->>SSI: getRoleList(loginId, loginType)
     SSI->>DAO: getSession(sessionId)
     DAO-->>SSI: SaSession with the snapshot of B8
-    SSI-->>SU: roles; empty if missing or malformed
+    SSI-->>SL: roles; empty if missing or malformed
     break role missing
-        SU-->>AL: NotRoleException
+        SL-->>AL: NotRoleException
         AL-->>Buyer: 403 FORBIDDEN (COMMON_403_001)
     end
     AL-->>Buyer: 200; checkPermission follows the same path

@@ -14,7 +14,7 @@ sequenceDiagram
     IC->>App: resolve(ref, clientAddress)
     App->>RL: tryAcquire(RESOLVE_LIMIT, clientAddress)
     RL-->>App: boolean
-    break over 60 a minute from this address (A6)
+    break over 60 a minute from this address (A5)
         App-->>IC: RATE_LIMITED (COMMON_429_001)
     end
     App->>SI: isWellFormedRef(ref)
@@ -33,7 +33,7 @@ sequenceDiagram
         RU-->>App: Optional(nickname)
         App-->>IC: ResolvedInviteView
         IC-->>Visitor: Result(InviteResponse): team, nickname, deadline
-    else unreachable, slow or 5xx (E1)
+    else unreachable, slow or 5xx (A5)
         RU-->>App: IdentityUnavailableException
         App-->>IC: IdentityUnavailableException
         IC-->>Visitor: HTTP 500; the page shows a banner without a name
