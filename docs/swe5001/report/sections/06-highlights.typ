@@ -13,8 +13,6 @@
 
 This chapter gathers what the other chapters leave scattered: where each remark from the 21 October presentation is answered, how the briefing's success criteria are met, what the cloud actually cost, what only the real cloud revealed, what the platform measures, and where the system can be seen working.
 
-#pending[Draft options for review: 6.1–6.6 are each complete and independent, so any can be kept, reordered or dropped. Proposed order: 6.1 first (it answers both assessors' remarks one by one), then 6.2 and 6.3 (briefing success criteria and Q6). 6.4–6.6 are optional. Section references from §1 point to 6.1, 6.2, 6.3 and 6.5; renumber them if any are dropped.]
-
 == Assessor Remarks and Where They Are Answered
 
 The briefing asks the report to incorporate the remarks gathered at the presentation. #iss(596) lists the lecturers' twelve remarks of 21 October 2026, and the report framework records a thirteenth, F12, on the logical diagram. @tbl-remarks gives each remark the section and the artefact that answer it, so that an assessor can check every one.
