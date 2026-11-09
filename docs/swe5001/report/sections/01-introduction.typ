@@ -94,7 +94,7 @@ The briefing's first success criterion asks for the seed, the producers and the 
 
 #figure(
   image("../diagrams/d1-system-context.svg", width: 100%),
-  caption: [System context view (C4 model, level 1). People are grouped by platform role. At run time BlocBuy depends only on Google sign-in, Stripe and AWS; GitHub reaches AWS only by assuming its OIDC roles, for plans, environment sessions and releases (AD-17).],
+  caption: [System context view (C4 model, level 1): the people and software systems BlocBuy interacts with at run time, with people grouped by platform role. Where BlocBuy runs is in the deployment view (@fig-d5-deployment, §3.2), and how releases reach it is in §5.],
 ) <fig-d1-context>
 
 == Project Scope
