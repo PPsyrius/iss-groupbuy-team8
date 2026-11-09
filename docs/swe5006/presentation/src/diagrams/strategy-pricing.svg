@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="1770" viewBox="0 0 1160 1770" font-family="Inter, Helvetica, Arial, sans-serif">
+<!-- UC1 pricing: Strategy PricingStrategy and DualPricingStrategy -->
+<rect x="0" y="0" width="1160" height="1770" fill="#FFFFFF"/>
+<defs><marker id="spFill" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A18"/></marker><marker id="spFillRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8402A"/></marker><marker id="spOpen" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1B1A18" stroke-width="1.6"/></marker><marker id="spTri" viewBox="0 0 16 16" refX="15" refY="8" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M1,1 L15,8 L1,15 z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/></marker></defs>
+<text x="20.0" y="36.0" font-size="26" font-weight="700" fill="#1B1A18">Strategy: the pricing algorithm is chosen by the product's pricing mode</text>
+<rect x="20.0" y="96.0" width="540.0" height="198.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="290.0" y="132.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">ProductAppServiceImpl</text>
+<line x1="20.0" y1="142.0" x2="560.0" y2="142.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="174.0" font-size="24" fill="#1B1A18">-pricingStrategyResolver</text>
+<text x="34.0" y="206.0" font-size="24" fill="#1B1A18">      : PricingStrategyResolver</text>
+<line x1="20.0" y1="218.0" x2="560.0" y2="218.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="250.0" font-size="24" fill="#1B1A18">-resolvePrice(product: Product,</text>
+<text x="74.2" y="282.0" font-size="24" fill="#1B1A18">deal: OpenDealOffer): ListingPrice</text>
+<rect x="20.0" y="62.0" width="137.0" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="30.0" y="87.0" font-size="24" fill="#1B1A18">«Context»</text>
+<rect x="600.0" y="96.0" width="540.0" height="166.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="870.0" y="132.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">TeamPriceAppServiceImpl</text>
+<line x1="600.0" y1="142.0" x2="1140.0" y2="142.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="614.0" y="174.0" font-size="24" fill="#1B1A18">-strategies: PricingStrategyResolver</text>
+<line x1="600.0" y1="186.0" x2="1140.0" y2="186.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="614.0" y="218.0" font-size="24" fill="#1B1A18">+issueQuote(productId: UUID,</text>
+<text x="654.2" y="250.0" font-size="24" fill="#1B1A18">ownerId: UUID): TeamPriceQuote</text>
+<rect x="600.0" y="62.0" width="137.0" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="610.0" y="87.0" font-size="24" fill="#1B1A18">«Context»</text>
+<rect x="20.0" y="380.0" width="540.0" height="292.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="290.0" y="412.0" font-size="24" text-anchor="middle" fill="#1B1A18">{leaf}</text>
+<text x="290.0" y="446.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">PricingStrategyResolver</text>
+<line x1="20.0" y1="456.0" x2="560.0" y2="456.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="488.0" font-size="24" fill="#1B1A18">-strategies: Map&lt;PricingMode,</text>
+<text x="34.0" y="520.0" font-size="24" fill="#1B1A18">      PricingStrategy&gt;</text>
+<line x1="20.0" y1="532.0" x2="560.0" y2="532.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="564.0" font-size="24" fill="#1B1A18">+PricingStrategyResolver(</text>
+<text x="74.2" y="596.0" font-size="24" fill="#1B1A18">strategies: List&lt;PricingStrategy&gt;)</text>
+<text x="34.0" y="628.0" font-size="24" fill="#1B1A18">+strategyFor(mode: PricingMode)</text>
+<text x="74.2" y="660.0" font-size="24" fill="#1B1A18">: PricingStrategy</text>
+<rect x="20.0" y="346.0" width="246.9" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="30.0" y="371.0" font-size="24" fill="#1B1A18">«selector (registry)»</text>
+<rect x="600.0" y="380.0" width="540.0" height="280.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="870.0" y="412.0" font-size="24" text-anchor="middle" fill="#1B1A18">«interface»</text>
+<text x="870.0" y="446.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">PricingStrategy</text>
+<line x1="600.0" y1="456.0" x2="1140.0" y2="456.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="614.0" y="488.0" font-size="24" font-style="italic" fill="#1B1A18">+mode(): PricingMode</text>
+<text x="614.0" y="520.0" font-size="24" font-style="italic" fill="#1B1A18">+resolve(product: Product,</text>
+<text x="654.2" y="552.0" font-size="24" font-style="italic" fill="#1B1A18">activeDeal: GroupDealOffer): ListingPrice</text>
+<text x="614.0" y="584.0" font-size="24" font-style="italic" fill="#1B1A18">+quoteTeamPrice(product: Product,</text>
+<text x="654.2" y="616.0" font-size="24" font-style="italic" fill="#1B1A18">policy: TeamPricePolicy, now: Instant)</text>
+<text x="654.2" y="648.0" font-size="24" font-style="italic" fill="#1B1A18">: BigDecimal</text>
+<rect x="600.0" y="346.0" width="144.2" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="610.0" y="371.0" font-size="24" fill="#1B1A18">«Strategy»</text>
+<line x1="230.0" y1="294.0" x2="230.0" y2="346.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#spOpen)"/>
+<text x="242.0" y="334.0" font-size="24" fill="#1B1A18">1</text>
+<path d="M660,262 V302 H410.0 V346" fill="none" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#spOpen)"/>
+<text x="422.0" y="334.0" font-size="24" fill="#1B1A18">1</text>
+<line x1="560.0" y1="530.0" x2="600.0" y2="530.0" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#spOpen)"/>
+<text x="592.0" y="520.0" font-size="24" text-anchor="end" fill="#1B1A18">*</text>
+<rect x="600.0" y="780.0" width="540.0" height="280.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="870.0" y="812.0" font-size="24" text-anchor="middle" fill="#1B1A18">{leaf}</text>
+<text x="870.0" y="846.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">DualPricingStrategy</text>
+<line x1="600.0" y1="856.0" x2="1140.0" y2="856.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="614.0" y="888.0" font-size="24" fill="#1B1A18">+mode(): PricingMode</text>
+<text x="614.0" y="920.0" font-size="24" fill="#1B1A18">+resolve(product: Product,</text>
+<text x="654.2" y="952.0" font-size="24" fill="#1B1A18">activeDeal: GroupDealOffer): ListingPrice</text>
+<text x="614.0" y="984.0" font-size="24" fill="#1B1A18">+quoteTeamPrice(product: Product,</text>
+<text x="654.2" y="1016.0" font-size="24" fill="#1B1A18">policy: TeamPricePolicy, now: Instant)</text>
+<text x="654.2" y="1048.0" font-size="24" fill="#1B1A18">: BigDecimal</text>
+<rect x="600.0" y="746.0" width="248.4" height="34.0" rx="6" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="610.0" y="771.0" font-size="24" fill="#1B1A18">«ConcreteStrategy»</text>
+<line x1="870.0" y1="746.0" x2="870.0" y2="660.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#spTri)"/>
+<rect x="20.0" y="780.0" width="540.0" height="196.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="290.0" y="812.0" font-size="24" text-anchor="middle" fill="#1B1A18">«enumeration»</text>
+<text x="290.0" y="846.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">PricingMode</text>
+<line x1="20.0" y1="856.0" x2="560.0" y2="856.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="888.0" font-size="24" fill="#1B1A18">DUAL</text>
+<line x1="20.0" y1="900.0" x2="560.0" y2="900.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="34.0" y="932.0" font-size="24" fill="#1B1A18">+code(): String</text>
+<text x="34.0" y="964.0" font-size="24" fill="#1B1A18">+fromCode(code: String): PricingMode</text>
+<line x1="290.0" y1="672.0" x2="290.0" y2="780.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#spOpen)"/>
+<text x="302.0" y="734.0" font-size="24" fill="#1B1A18">key</text>
+<path d="M20,1110 H542 L560,1128 V1220 H20 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6"/>
+<path d="M542,1110 V1128 H560" fill="none" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6"/>
+<text x="34.0" y="1142.0" font-size="24" fill="#1B1A18">Future ConcreteStrategy (none today):</text>
+<text x="34.0" y="1172.0" font-size="24" fill="#1B1A18">a new PricingMode constant, a class that</text>
+<text x="34.0" y="1202.0" font-size="24" fill="#1B1A18">implements PricingStrategy, one @Bean.</text>
+<line x1="560.0" y1="1160.0" x2="600.0" y2="1160.0" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="6 4"/>
+<rect x="600.0" y="1110.0" width="540.0" height="152.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="870.0" y="1142.0" font-size="24" text-anchor="middle" fill="#1B1A18">«@Configuration»</text>
+<text x="870.0" y="1176.0" font-size="26" font-weight="700" text-anchor="middle" fill="#1B1A18">PricingConfig</text>
+<line x1="600.0" y1="1186.0" x2="1140.0" y2="1186.0" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="614.0" y="1218.0" font-size="24" fill="#1B1A18">+dualPricingStrategy()</text>
+<text x="654.2" y="1250.0" font-size="24" fill="#1B1A18">: PricingStrategy  «@Bean»</text>
+<line x1="870.0" y1="1110.0" x2="870.0" y2="1060.0" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#spOpen)"/>
+<text x="882.0" y="1093.0" font-size="24" fill="#1B1A18">«instantiate»</text>
+<rect x="10.0" y="1290.0" width="1145.0" height="474.0" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<path d="M10,1328 H410.96479999999997 L424.96479999999997,1314 V1290" fill="none" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="20.0" y="1318.0" font-size="24" font-weight="700" fill="#1B1A18">sd issueQuote (first-team price)</text>
+<rect x="43.0" y="1336" width="234.0" height="80.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="160" y="1370" font-size="26" text-anchor="middle" font-weight="700" fill="#1B1A18">:TeamPriceApp</text>
+<text x="160" y="1404" font-size="26" text-anchor="middle" font-weight="700" fill="#1B1A18">ServiceImpl</text>
+<line x1="160" y1="1416" x2="160" y2="1758" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="300.5" y="1336" width="239.0" height="80.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="420" y="1370" font-size="26" text-anchor="middle" font-weight="700" fill="#1B1A18">:PricingStrategy</text>
+<text x="420" y="1404" font-size="26" text-anchor="middle" font-weight="700" fill="#1B1A18">Resolver</text>
+<line x1="420" y1="1416" x2="420" y2="1758" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="565.4" y="1336" width="189.2" height="80.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="660" y="1370" font-size="26" text-anchor="middle" font-weight="700" fill="#1B1A18">:DualPricing</text>
+<text x="660" y="1404" font-size="26" text-anchor="middle" font-weight="700" fill="#1B1A18">Strategy</text>
+<line x1="660" y1="1416" x2="660" y2="1758" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="780.0" y="1336" width="240.0" height="80.0" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.6"/>
+<text x="900" y="1370" font-size="26" text-anchor="middle" font-weight="700" fill="#1B1A18">policy:</text>
+<text x="900" y="1404" font-size="26" text-anchor="middle" font-weight="700" fill="#1B1A18">TeamPricePolicy</text>
+<line x1="900" y1="1416" x2="900" y2="1758" stroke="#1B1A18" stroke-width="1.4" stroke-dasharray="7 5"/>
+<rect x="152" y="1450" width="16" height="262" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<circle cx="10" cy="1450" r="6" fill="#1B1A18"/>
+<line x1="10" y1="1450" x2="152" y2="1450" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#spFill)"/>
+<text x="16" y="1441" font-size="24" fill="#1B1A18">issueQuote</text>
+<rect x="412" y="1510" width="16" height="40" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<line x1="168" y1="1510" x2="412" y2="1510" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#spFill)"/>
+<text x="290" y="1471" font-size="24" text-anchor="middle" fill="#1B1A18">strategyFor(product</text>
+<text x="290" y="1501" font-size="24" text-anchor="middle" fill="#1B1A18">.pricingMode())</text>
+<line x1="412" y1="1550" x2="168" y2="1550" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#spOpen)"/>
+<text x="290" y="1541" font-size="24" text-anchor="middle" fill="#1B1A18">strategy</text>
+<rect x="652" y="1620" width="16" height="80" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<line x1="168" y1="1620" x2="652" y2="1620" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#spFill)"/>
+<text x="180" y="1581" font-size="24" fill="#1B1A18">quoteTeamPrice(product,</text>
+<text x="180" y="1611" font-size="24" fill="#1B1A18">policy, now)</text>
+<rect x="892" y="1660" width="16" height="24" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<line x1="668" y1="1660" x2="892" y2="1660" stroke="#1B1A18" stroke-width="1.6" marker-end="url(#spFill)"/>
+<text x="780" y="1623" font-size="24" text-anchor="middle" fill="#1B1A18">requireQuotable(</text>
+<text x="780" y="1651" font-size="24" text-anchor="middle" fill="#1B1A18">product, now)</text>
+<line x1="892" y1="1684" x2="668" y2="1684" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#spOpen)"/>
+<line x1="652" y1="1700" x2="168" y2="1700" stroke="#1B1A18" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#spOpen)"/>
+<text x="300" y="1691" font-size="24" fill="#1B1A18">amount: BigDecimal</text>
+<path d="M176,1716 H934 L946,1728 V1756 H176 Z" fill="#FFFFFF" stroke="#1B1A18" stroke-width="1.4"/>
+<path d="M934,1716 V1728 H946" fill="none" stroke="#1B1A18" stroke-width="1.4"/>
+<text x="186" y="1742" font-size="24" fill="#1B1A18">then prices.insertQuote(quote): TeamPriceRepository</text>
+</svg>

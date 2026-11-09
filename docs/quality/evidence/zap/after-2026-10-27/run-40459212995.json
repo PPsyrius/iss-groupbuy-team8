@@ -1,0 +1,19 @@
+{
+  "databaseId": 40459212995,
+  "event": "workflow_dispatch",
+  "headBranch": "dev",
+  "headSha": "2f23d9236a0870156e2ee46af76877e4cc5386ee",
+  "status": "completed",
+  "conclusion": "success",
+  "createdAt": "2026-10-27T06:07:19Z",
+  "startedAt": "2026-10-27T06:07:19Z",
+  "updatedAt": "2026-10-27T06:08:41Z",
+  "url": "https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459212995",
+  "artifact": {
+    "id": 12713228964,
+    "name": "zap-baseline",
+    "digest": "sha256:c3f5d26ac64a32ea29a6ed733cf0dee5732b33c79a60e50824fdfef808b31b0b",
+    "sizeInBytes": 31086
+  },
+  "scope": "Workflow/source SHA is known; deployed frontend artifact digest was not independently established. Dev only, anonymous passive scan."
+}

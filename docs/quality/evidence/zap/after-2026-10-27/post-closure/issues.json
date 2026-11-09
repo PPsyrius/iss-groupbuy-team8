@@ -1,0 +1,684 @@
+{
+  "query": "\"[OWASP ZAP]\" in:title (all states), plus #610 and #694",
+  "captureStartedAtUtc": "2026-10-27T07:53:38.8509342+00:00",
+  "capturedAtUtc": "2026-10-27T07:53:41.4946173+00:00",
+  "scope": "After owner-authorized closure of #636–#641; unverified functional acceptance retained in #610",
+  "issues": [
+    {
+      "body": "## Background\n\nThe SWE5006 DevSecOps course teaches dynamic application security testing as its own stage of the secure pipeline: DSO 11 (DAST) pp. 2 and 6 name OWASP ZAP, DSO 07.a p. 4 lists DAST beside SAST, and DSO 15 p. 15 places a penetration-test stage after deployment. The pipeline has SAST (SonarCloud gates; CodeQL is opt-in and currently off), SCA (Trivy fs), secret scanning (Gitleaks), IaC scanning (Checkov and Trivy config on `infra/swe5001`) and image scanning (Trivy image), but nothing exercises the *running* application. The SWE5006 deck already admits this gap (`docs/swe5006/presentation/src/content.js`, §3 DevSecOps notes), and report section 4.2 will be asked about it.\n\nThe briefing only requires \"minimal security considerations\", so this should be a light, advisory scan rather than a new merge gate.\n\n## Scope\n\n1. Add `.github/workflows/dast-baseline.yml`: a passive OWASP ZAP baseline scan (`zap-baseline.py`, image pinned by digest) of the dev environment at `vars.FRONTEND_URL_DEV`, for two surfaces: the SPA (`/`) and the backend behind the same CloudFront origin (`/api/v1/products`).\n2. Triggers: weekly schedule, manual dispatch (optional base URL), and a PR that edits the workflow itself. No trigger on ordinary PRs, to keep the Actions budget.\n3. Upload the HTML/JSON/Markdown reports as artifacts and write the Markdown report to the job summary.\n4. Record the new scan and its first findings in `docs/quality/quality-gates.md` (as an advisory, non-gating check), `docs/ci/backend-pipeline.md` and `docs/quality/nfr-register.md`.\n\n## Non-goals\n\n- Active scanning (attack payloads) or authenticated scanning: both could change shared dev data and need a separate decision.\n- Making the scan a required check or failing on findings.\n- Fixing the findings: each real finding gets its own issue.\n\n## Acceptance Criteria\n\n- [ ] `actionlint` (the `workflow-lint` job) passes on the new workflow.\n- [ ] One successful run on the PR, with both reports attached and the summary listing the alerts.\n- [ ] The quality-gate, pipeline and NFR documents describe the scan, its trigger and its advisory status, and list the first run's findings.\n",
+      "closedAt": "2026-10-22T11:29:13Z",
+      "comments": [],
+      "createdAt": "2026-10-22T06:20:43Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACz2udTQ",
+          "name": "github_actions",
+          "description": "Pull requests that update GitHub Actions code",
+          "color": "000000"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 606,
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "title": "ci(security): add a passive OWASP ZAP baseline (DAST) scan of the dev environment",
+      "updatedAt": "2026-10-22T11:29:13Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/606"
+    },
+    {
+      "body": "## Background\n\nThe first passive ZAP baseline of dev (#606, [run 39733450177](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39733450177)) reports the same findings on the SPA and on `/api/v1/products`, because CloudFront adds one response-headers policy to both (`infra/terraform/frontend-stack/cloudfront.tf`, `aws_cloudfront_response_headers_policy.security`):\n\n| Risk | ZAP rule | Finding |\n|---|---|---|\n| Medium | 10055 | CSP wildcard directive: `img-src 'self' https:` allows images from any HTTPS host |\n| Medium | 10055 | CSP `style-src 'unsafe-inline'` |\n| Low | 90004 | `Cross-Origin-Embedder-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy` missing |\n| Low | 10063 | `Permissions-Policy` not set |\n\nHSTS, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `frame-ancestors`, `object-src 'none'` and `upgrade-insecure-requests` are already present.\n\n## Scope\n\n1. Decide per finding: fix, or accept with a reason in `docs/quality/quality-gates.md` (for example, `'unsafe-inline'` styles if a UI library needs them; `https:` images while listing images are external URLs).\n2. For the fixes, change the response-headers policy in `infra/terraform/frontend-stack` (for example `Permissions-Policy` denying unused features, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-origin`, and an `img-src` allowlist of the image hosts actually used).\n3. Re-run `dast-baseline` by dispatch and record the result.\n\n## Non-goals\n\n- Active or authenticated ZAP scans.\n- Changes to the SWE5001 ECS edge.\n\n## Acceptance Criteria\n\n- [ ] `terraform plan` for `frontend-stack` shows only the response-headers policy change, applied by an authorized member.\n- [ ] A dispatched `dast-baseline` run shows the fixed alerts gone, linked here.\n- [ ] Each accepted finding has a written reason and revisit date in `quality-gates.md`; NFR-71 updated.\n",
+      "closedAt": null,
+      "comments": [
+        {
+          "id": "IC_kwDOUCKhp88AAAABf6aGMA",
+          "author": {
+            "login": "PPsyrius"
+          },
+          "authorAssociation": "OWNER",
+          "body": "## Remaining acceptance after dev header remediation\n\nOwner-directed disposition: #636–#641 are being closed for the deployed header/CSP findings, which are absent from the complete [post-apply ZAP run 40459212995](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459212995) (10/10 required responses, 67/67 passive rules, queue drained; 0 High/Medium/Low). [Anonymous Chromium verification 40459010478](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459010478) also passed exact headers, catalog/detail images, stylesheet/isolation assertions and unapproved-image rejection.\n\nThis does **not** establish every original functional acceptance item. Keep these follow-ups open here; they have not been marked passed:\n- [ ] Post-policy real Google sign-in/return and signed-in avatar display.\n- [ ] Any affected approved Stripe sandbox return, with explicit transaction authorization.\n- [ ] Authenticated historical-order image display after the owner-approved PoC picture substitution.\n- [ ] Relevant invitation copy/share and final interactive/touch checks, including physical iOS where required.\n\nThe owner executed the policy-only Terraform apply and reported exact live headers plus a final zero-drift plan. The agent executed no AWS command. #642–#647 remain open for Informational crawl/cache triage. The follow-up evidence/repair PR is not yet pushed; local evidence and screenshots will distinguish scan remediation from these remaining checks. Unperformed criteria in the finding issues are not being checked off.",
+          "createdAt": "2026-10-27T07:52:15Z",
+          "includesCreatedEdit": false,
+          "isMinimized": false,
+          "minimizedReason": "",
+          "reactionGroups": [],
+          "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/610#issuecomment-6436587056",
+          "viewerDidAuthor": true
+        }
+      ],
+      "createdAt": "2026-10-22T06:25:10Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 610,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "fix(security): close the CSP and security-header findings of the first ZAP baseline",
+      "updatedAt": "2026-10-27T07:52:15Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/610"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Medium** |\r\n| ZAP confidence | High; separate from severity |\r\n| Alert reference | `10055-4` |\r\n| Original alert name | CSP: Wildcard Directive |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nThe SPA root and product page return `img-src 'self' https:`, permitting images from any HTTPS origin instead of an approved host list. This weakens the CSP image-source restriction; the scan does not demonstrate an exploit.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739`\r\n\r\n**Security-finding tracker:** #610. This issue splits out one alert from that tracker; no fix, exploitation or risk acceptance is implied by creating it.\r\n\r\n## Scope\r\n\r\n1. Inventory legitimate catalog/detail image hosts and define an approved source list.\r\n2. Restrict `img-src` in `infra/terraform/frontend-stack/cloudfront.tf` without breaking legitimate product images.\r\n3. If restriction is impractical, document an owner-approved exception with rationale and a review date.\r\n\r\n## Non-goals\r\n\r\n- Other CSP/header findings, active attacks, or unrelated infrastructure changes.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] Allowed image sources and the fix/acceptance decision are documented.\r\n- [ ] Legitimate catalog/detail images still load; for a restrictive fix, a controlled image from an unapproved origin is blocked by the browser.\r\n- [ ] For a fix: a reviewed Terraform plan, authorized deployment, and a follow-up passive ZAP run show `10055-4` absent.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n",
+      "closedAt": "2026-10-27T07:52:18Z",
+      "comments": [
+        {
+          "id": "IC_kwDOUCKhp88AAAABf6aIGg",
+          "author": {
+            "login": "PPsyrius"
+          },
+          "authorAssociation": "OWNER",
+          "body": "Closed as **remediated in deployed dev at header/passive-scan scope**, per the owner's instruction.\n\n- [Complete follow-up ZAP](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459212995): `10055-4` instances **2 → 0**; 10/10 required responses, 67/67 rules processed, queue drained.\n- [Live Chromium verification](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459010478) passed. The exact image-origin allowlist is deployed; global legacy references were repaired using an owner-approved generic CDN picture for this PoC. Live catalog/detail images load and an unapproved image is blocked before a request.\n- Policy source merged in [PR #703](https://github.com/PPsyrius/iss-groupbuy-team8/pull/703); operator-authorized Terraform publication and final plan exit 0 were recorded.\n\n**Limits:** Historical picture identity is intentionally not preserved; authenticated historical display remains unverified. Remaining functional acceptance is retained in #610; unperformed original criteria have not been marked passed. This closes the observed security finding, not a claim of exhaustive security or integration acceptance. The evidence/repair follow-up PR is pending.",
+          "createdAt": "2026-10-27T07:52:17Z",
+          "includesCreatedEdit": false,
+          "isMinimized": false,
+          "minimizedReason": "",
+          "reactionGroups": [],
+          "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/636#issuecomment-6436587546",
+          "viewerDidAuthor": true
+        }
+      ],
+      "createdAt": "2026-10-22T11:40:32Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 636,
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "title": "[OWASP ZAP][Medium] Restrict CSP image sources (10055-4)",
+      "updatedAt": "2026-10-27T07:52:18Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/636"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Medium** |\r\n| ZAP confidence | High; separate from severity |\r\n| Alert reference | `10055-6` |\r\n| Original alert name | CSP: style-src unsafe-inline |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nThe SPA root and product page return `style-src 'self' 'unsafe-inline'`. ZAP flags the inline-style allowance as a weaker CSP restriction. This is not a finding that inline scripts are enabled, nor proof of an exploitable injection.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739`\r\n\r\n**Security-finding tracker:** #610. This issue splits out one alert from that tracker; no fix, exploitation or risk acceptance is implied by creating it.\r\n\r\n## Scope\r\n\r\n1. Identify inline style attributes, style blocks and UI-library dependencies that need the allowance.\r\n2. Evaluate CSS classes/static stylesheets or another compatible CSP strategy before removing `unsafe-inline`.\r\n3. Implement a compatible restriction or record an owner-approved, justified exception with a review date.\r\n\r\n## Non-goals\r\n\r\n- Relaxing `script-src`, changing other CSP directives without review, or blindly removing styles needed by the UI.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] Inline-style dependencies and the selected fix/acceptance decision are documented.\r\n- [ ] Any restrictive change passes browser checks for catalog/detail pages and affected interactive components without CSP-related styling regressions.\r\n- [ ] After any authorized deployment, a follow-up passive ZAP run confirms the new result; any retained alert has an owner-approved rationale and review date.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n",
+      "closedAt": "2026-10-27T07:52:21Z",
+      "comments": [
+        {
+          "id": "IC_kwDOUCKhp88AAAABf6aMHw",
+          "author": {
+            "login": "PPsyrius"
+          },
+          "authorAssociation": "OWNER",
+          "body": "Closed as **remediated in deployed dev at header/passive-scan scope**, per the owner's instruction.\n\n- [Complete follow-up ZAP](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459212995): `10055-6` instances **2 → 0**; 10/10 required responses, 67/67 rules processed, queue drained.\n- [Live Chromium verification](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459010478) passed. The deployed CSP replaces unsafe-inline styles with reviewed vendor hashes and denies style attributes. Anonymous live catalog/detail stylesheet assertions and the local interactive/browser regressions passed.\n- Policy source merged in [PR #703](https://github.com/PPsyrius/iss-groupbuy-team8/pull/703); operator-authorized Terraform publication and final plan exit 0 were recorded.\n\n**Limits:** Final live interactive/touch acceptance and physical iOS are not established by the passive scan. Remaining functional acceptance is retained in #610; unperformed original criteria have not been marked passed. This closes the observed security finding, not a claim of exhaustive security or integration acceptance. The evidence/repair follow-up PR is pending.",
+          "createdAt": "2026-10-27T07:52:21Z",
+          "includesCreatedEdit": false,
+          "isMinimized": false,
+          "minimizedReason": "",
+          "reactionGroups": [],
+          "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/637#issuecomment-6436588575",
+          "viewerDidAuthor": true
+        }
+      ],
+      "createdAt": "2026-10-22T11:40:34Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 637,
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "title": "[OWASP ZAP][Medium] Review the inline-style allowance in CSP (10055-6)",
+      "updatedAt": "2026-10-27T07:52:21Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/637"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Low** |\r\n| ZAP confidence | Medium; separate from severity |\r\n| Alert reference | `90004-2` |\r\n| Original alert name | Cross-Origin-Embedder-Policy Header Missing or Invalid |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP reports a missing or invalid `Cross-Origin-Embedder-Policy` on the SPA root and product page. Its suggested `require-corp` setting is not automatically appropriate: it can block legitimate external resources that do not grant CORS/CORP permission.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739`\r\n\r\n**Security-finding tracker:** #610. This issue splits out one alert from that tracker; no fix, exploitation or risk acceptance is implied by creating it.\r\n\r\n## Scope\r\n\r\n1. Decide whether this application needs cross-origin isolation and document the threat-model/compatibility rationale.\r\n2. Inventory relevant external images, fonts and integrations before selecting a policy.\r\n3. Implement an appropriate policy only after compatibility checks, or record an owner-approved exception with a review date.\r\n\r\n## Non-goals\r\n\r\n- Enabling `require-corp` merely to silence ZAP, breaking external product images, or changing third-party servers.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] The need for cross-origin isolation and the policy/acceptance decision are documented.\r\n- [ ] Any policy change is checked in a real browser against legitimate external resources and affected integrations; required content is not blocked by COEP.\r\n- [ ] A reviewed Terraform plan and authorized deployment precede any dev change; a follow-up passive scan or documented exception records disposition of `90004-2`.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n",
+      "closedAt": "2026-10-27T07:52:25Z",
+      "comments": [
+        {
+          "id": "IC_kwDOUCKhp88AAAABf6aPuw",
+          "author": {
+            "login": "PPsyrius"
+          },
+          "authorAssociation": "OWNER",
+          "body": "Closed as **remediated in deployed dev at header/passive-scan scope**, per the owner's instruction.\n\n- [Complete follow-up ZAP](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459212995): `90004-2` instances **2 → 0**; 10/10 required responses, 67/67 rules processed, queue drained.\n- [Live Chromium verification](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459010478) passed. COEP credentialless is deployed. Live public images and Chromium isolation passed; the documented design is progressive and makes no universal WebKit isolation guarantee.\n- Policy source merged in [PR #703](https://github.com/PPsyrius/iss-groupbuy-team8/pull/703); operator-authorized Terraform publication and final plan exit 0 were recorded.\n\n**Limits:** Real signed-in avatar/provider compatibility remains unverified; anonymous Chromium is not authenticated or universal-browser acceptance. Remaining functional acceptance is retained in #610; unperformed original criteria have not been marked passed. This closes the observed security finding, not a claim of exhaustive security or integration acceptance. The evidence/repair follow-up PR is pending.",
+          "createdAt": "2026-10-27T07:52:24Z",
+          "includesCreatedEdit": false,
+          "isMinimized": false,
+          "minimizedReason": "",
+          "reactionGroups": [],
+          "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/638#issuecomment-6436589499",
+          "viewerDidAuthor": true
+        }
+      ],
+      "createdAt": "2026-10-22T11:40:36Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 638,
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "title": "[OWASP ZAP][Low] Assess the missing Cross-Origin-Embedder-Policy (90004-2)",
+      "updatedAt": "2026-10-27T07:52:25Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/638"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Low** |\r\n| ZAP confidence | Medium; separate from severity |\r\n| Alert reference | `90004-3` |\r\n| Original alert name | Cross-Origin-Opener-Policy Header Missing or Invalid |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP reports a missing or invalid `Cross-Origin-Opener-Policy` on the SPA root and product page. Restricting browsing-context sharing can improve isolation, but the policy must preserve legitimate sign-in, popup and payment-navigation behavior.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739`\r\n\r\n**Security-finding tracker:** #610. This issue splits out one alert from that tracker; no fix, exploitation or risk acceptance is implied by creating it.\r\n\r\n## Scope\r\n\r\n1. Determine actual opener/popup requirements and choose an appropriate document policy.\r\n2. Evaluate `same-origin` and any compatibility needs rather than applying a blanket value without testing.\r\n3. Implement the reviewed policy or record an owner-approved exception with rationale and a review date.\r\n\r\n## Non-goals\r\n\r\n- Reworking OAuth/payment flows, performing transactions on shared dev, or claiming COOP is required on every API response.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] The opener-policy decision and integration assumptions are documented.\r\n- [ ] Browser checks verify legitimate sign-in and any affected popup/navigation flow after a restrictive change; payment-provider effects use an approved test environment if needed.\r\n- [ ] Any Terraform change is reviewed and applied by an authorized operator; follow-up passive ZAP evidence or an approved exception covers `90004-3`.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n",
+      "closedAt": "2026-10-27T07:52:28Z",
+      "comments": [
+        {
+          "id": "IC_kwDOUCKhp88AAAABf6aTVw",
+          "author": {
+            "login": "PPsyrius"
+          },
+          "authorAssociation": "OWNER",
+          "body": "Closed as **remediated in deployed dev at header/passive-scan scope**, per the owner's instruction.\n\n- [Complete follow-up ZAP](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459212995): `90004-3` instances **2 → 0**; 10/10 required responses, 67/67 rules processed, queue drained.\n- [Live Chromium verification](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459010478) passed. COOP same-origin is deployed and exact header/browser verification passed. The documented integration uses full-page provider navigation, not an opener-based popup dependency.\n- Policy source merged in [PR #703](https://github.com/PPsyrius/iss-groupbuy-team8/pull/703); operator-authorized Terraform publication and final plan exit 0 were recorded.\n\n**Limits:** Real Google sign-in/return and affected approved Stripe sandbox returns remain unverified; navigation stubs are not provider acceptance. Remaining functional acceptance is retained in #610; unperformed original criteria have not been marked passed. This closes the observed security finding, not a claim of exhaustive security or integration acceptance. The evidence/repair follow-up PR is pending.",
+          "createdAt": "2026-10-27T07:52:28Z",
+          "includesCreatedEdit": false,
+          "isMinimized": false,
+          "minimizedReason": "",
+          "reactionGroups": [],
+          "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/639#issuecomment-6436590423",
+          "viewerDidAuthor": true
+        }
+      ],
+      "createdAt": "2026-10-22T11:40:38Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 639,
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "title": "[OWASP ZAP][Low] Assess the missing Cross-Origin-Opener-Policy (90004-3)",
+      "updatedAt": "2026-10-27T07:52:28Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/639"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Low** |\r\n| ZAP confidence | Medium; separate from severity |\r\n| Alert reference | `90004-1` |\r\n| Original alert name | Cross-Origin-Resource-Policy Header Missing or Invalid |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP reports a missing or invalid `Cross-Origin-Resource-Policy` on document and icon responses. CORP is an opt-in restriction on cross-origin use of resources; its value should reflect whether each resource is intentionally shareable.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/apple-touch-icon.png`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/favicon.ico`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/favicon.svg`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739`\r\n\r\n**Security-finding tracker:** #610. This issue splits out one alert from that tracker; no fix, exploitation or risk acceptance is implied by creating it.\r\n\r\n## Scope\r\n\r\n1. Classify documents, assets and relevant API resources by intended cross-origin use.\r\n2. Select resource-appropriate policies, considering `same-origin` where cross-origin embedding is unnecessary.\r\n3. Apply reviewed restrictions or document an owner-approved exception with rationale and a review date.\r\n\r\n## Non-goals\r\n\r\n- Treating CORP as a substitute for CORS/authentication or imposing a global restriction that breaks intentional resource sharing.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] A resource-policy matrix records intended sharing and the fix/acceptance decision.\r\n- [ ] Browser checks confirm same-origin resources still load and any intended cross-origin use remains supported; restrictions are verified where intended.\r\n- [ ] After a reviewed plan and authorized deployment, a follow-up passive scan or an approved exception records disposition of `90004-1`.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n",
+      "closedAt": "2026-10-27T07:52:32Z",
+      "comments": [
+        {
+          "id": "IC_kwDOUCKhp88AAAABf6aWrQ",
+          "author": {
+            "login": "PPsyrius"
+          },
+          "authorAssociation": "OWNER",
+          "body": "Closed as **remediated in deployed dev at header/passive-scan scope**, per the owner's instruction.\n\n- [Complete follow-up ZAP](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459212995): `90004-1` instances **5 → 0**; 10/10 required responses, 67/67 rules processed, queue drained.\n- [Live Chromium verification](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459010478) passed. CORP same-origin is deployed, consistent with the documented resource-sharing matrix. Same-origin browser resources load; the local cross-origin embedding refusal check passed.\n- Policy source merged in [PR #703](https://github.com/PPsyrius/iss-groupbuy-team8/pull/703); operator-authorized Terraform publication and final plan exit 0 were recorded.\n\n**Limits:** This does not replace CORS/authentication or establish an intentional external embedding contract. Remaining functional acceptance is retained in #610; unperformed original criteria have not been marked passed. This closes the observed security finding, not a claim of exhaustive security or integration acceptance. The evidence/repair follow-up PR is pending.",
+          "createdAt": "2026-10-27T07:52:31Z",
+          "includesCreatedEdit": false,
+          "isMinimized": false,
+          "minimizedReason": "",
+          "reactionGroups": [],
+          "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/640#issuecomment-6436591277",
+          "viewerDidAuthor": true
+        }
+      ],
+      "createdAt": "2026-10-22T11:40:40Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 640,
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "title": "[OWASP ZAP][Low] Assess the missing Cross-Origin-Resource-Policy (90004-1)",
+      "updatedAt": "2026-10-27T07:52:32Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/640"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Low** |\r\n| ZAP confidence | Medium; separate from severity |\r\n| Alert reference | `10063-1` |\r\n| Original alert name | Permissions Policy Header Not Set |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP reports that `Permissions-Policy` is absent on sampled document and asset responses. A reviewed policy can limit unnecessary browser capabilities; absence alone does not show that a capability was exploited.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/assets/jsx-runtime-Dk72oS4N.js`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/assets/useBaseQuery-BILh5lN0.js`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/assets/useMutation-C5EBg87c.js`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739`\r\n\r\n**Security-finding tracker:** #610. This issue splits out one alert from that tracker; no fix, exploitation or risk acceptance is implied by creating it.\r\n\r\n## Scope\r\n\r\n1. Inventory browser features genuinely needed by the application and its integrations.\r\n2. Define a policy denying unused capabilities, such as camera/microphone/geolocation only when confirmed unused.\r\n3. Set the reviewed CloudFront response policy without blindly disabling required fullscreen, payment or other behavior.\r\n\r\n## Non-goals\r\n\r\n- Changing user-consent flows, disabling browser features without checking usage, or unrelated edge-policy changes.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] Required and denied browser capabilities are documented.\r\n- [ ] A reviewed Terraform plan and authorized deployment set the intended header; deployed response inspection confirms its value.\r\n- [ ] Relevant browser flows remain functional, and follow-up passive ZAP evidence resolves `10063-1` or records an owner-approved exception with a review date.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n",
+      "closedAt": "2026-10-27T07:52:35Z",
+      "comments": [
+        {
+          "id": "IC_kwDOUCKhp88AAAABf6aZgg",
+          "author": {
+            "login": "PPsyrius"
+          },
+          "authorAssociation": "OWNER",
+          "body": "Closed as **remediated in deployed dev at header/passive-scan scope**, per the owner's instruction.\n\n- [Complete follow-up ZAP](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459212995): `10063-1` instances **5 → 0**; 10/10 required responses, 67/67 rules processed, queue drained.\n- [Live Chromium verification](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40459010478) passed. The reviewed Permissions-Policy is deployed and exact live header verification passed. It denies camera/microphone/geolocation/Payment Request/USB, without adding clipboard, Web Share or fullscreen restrictions.\n- Policy source merged in [PR #703](https://github.com/PPsyrius/iss-groupbuy-team8/pull/703); operator-authorized Terraform publication and final plan exit 0 were recorded.\n\n**Limits:** Relevant invitation copy/share and real integration acceptance remain unverified; header presence alone is not proof of every feature flow. Remaining functional acceptance is retained in #610; unperformed original criteria have not been marked passed. This closes the observed security finding, not a claim of exhaustive security or integration acceptance. The evidence/repair follow-up PR is pending.",
+          "createdAt": "2026-10-27T07:52:34Z",
+          "includesCreatedEdit": false,
+          "isMinimized": false,
+          "minimizedReason": "",
+          "reactionGroups": [],
+          "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/641#issuecomment-6436592002",
+          "viewerDidAuthor": true
+        }
+      ],
+      "createdAt": "2026-10-22T11:40:42Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 641,
+      "state": "CLOSED",
+      "stateReason": "COMPLETED",
+      "title": "[OWASP ZAP][Low] Set an appropriate Permissions-Policy (10063-1)",
+      "updatedAt": "2026-10-27T07:52:35Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/641"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Informational** |\r\n| ZAP confidence | Medium; separate from severity |\r\n| Alert reference | `10109` |\r\n| Original alert name | Modern Web Application |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP identifies a Modern Web Application: the document has a module script but no ordinary links for the static spider. This is an Informational detection, not an application vulnerability. It highlights that static crawling does not execute the SPA's JavaScript.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739`\r\n\r\n**Classification:** Informational triage, not a confirmed vulnerability. The six Medium/Low findings from the same scan are tracked by #610; this item records a separate informational disposition.\r\n\r\n## Scope\r\n\r\n1. Confirm and document the coverage provided by the ten explicit anonymous probes and the restricted static crawl.\r\n2. Identify any meaningful JavaScript-only routes/interactions not covered by this baseline.\r\n3. Record expected SPA behavior or propose separately approved isolated browser coverage if a material gap exists.\r\n\r\n## Non-goals\r\n\r\n- Changing the SPA to remove this alert, adding active/authenticated scans to shared dev, or treating JavaScript asset counts as functional coverage.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] Disposition is recorded as expected behavior, an accepted scope limitation, or a concrete follow-up coverage task, with rationale.\r\n- [ ] The coverage record distinguishes fetched HTML/assets from browser-executed interactions and names any material missing paths.\r\n- [ ] Any proposed scanner change preserves read-only scope and runtime bounds; closure does not require the Informational alert to disappear.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n",
+      "closedAt": null,
+      "comments": [],
+      "createdAt": "2026-10-22T11:40:44Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 642,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "[OWASP ZAP][Informational] Review JavaScript application crawl coverage (10109)",
+      "updatedAt": "2026-10-22T11:40:44Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/642"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Informational** |\r\n| ZAP confidence | Medium; separate from severity |\r\n| Alert reference | `10049-1` |\r\n| Original alert name | Non-Storable Content |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP classifies `/robots.txt` and `/sitemap.xml` as Non-Storable Content; both sampled responses were HTTP 403. These are optional crawl resources, not successful application responses. This observation is not evidence of a cache leak or a confirmed security vulnerability.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/robots.txt`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/sitemap.xml`\r\n\r\n**Classification:** Informational triage, not a confirmed vulnerability. The six Medium/Low findings from the same scan are tracked by #610; this item records a separate informational disposition.\r\n\r\n## Scope\r\n\r\n1. Decide whether robots.txt and sitemap.xml should be provided by the site.\r\n2. If required, serve appropriate public files and select intentional status/cache behavior; otherwise document the current behavior.\r\n3. Keep this optional discovery-path decision separate from the ten required application probes.\r\n\r\n## Non-goals\r\n\r\n- Making sensitive responses cacheable to satisfy ZAP, changing unrelated authorization rules, or inventing an SEO requirement.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] Status codes and relevant cache headers for both paths are captured in evidence.\r\n- [ ] Disposition states whether the paths are required, intentionally absent/restricted, or need a scoped fix.\r\n- [ ] If files are added, verify intended HTTP status and valid robots/sitemap content; otherwise close with a documented rationale without requiring the Informational alert to disappear.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n",
+      "closedAt": null,
+      "comments": [],
+      "createdAt": "2026-10-22T11:40:46Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 643,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "[OWASP ZAP][Informational] Review non-storable robots and sitemap responses (10049-1)",
+      "updatedAt": "2026-10-22T11:40:46Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/643"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Informational** |\r\n| ZAP confidence | Low; separate from severity |\r\n| Alert reference | `10015` |\r\n| Original alert name | Re-examine Cache-control Directives |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP flags Re-examine Cache-control Directives on SPA HTML (`no-cache`) and `/manifest.webmanifest` (`public,max-age=31536000,immutable`). Public SPA revalidation may be intentional. The one-year immutable policy on an unversioned manifest deserves review, but the report does not demonstrate sensitive content being cached.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/manifest.webmanifest`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739`\r\n\r\n**Classification:** Informational triage, not a confirmed vulnerability. The six Medium/Low findings from the same scan are tracked by #610; this item records a separate informational disposition.\r\n\r\n## Scope\r\n\r\n1. Document cache intent for SPA HTML, fingerprinted assets, unversioned public files and private/user-specific responses.\r\n2. Distinguish `no-cache` revalidation from `no-store`, and evaluate immutable caching only for suitably versioned resources.\r\n3. Coordinate any actual fix with the related cache-classification issues instead of treating overlapping alerts as separate vulnerabilities.\r\n\r\n## Non-goals\r\n\r\n- Disabling all caching to remove an Informational alert or asserting that the anonymous scan verified authenticated cache isolation.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] A resource-specific cache-policy matrix and triage disposition are documented.\r\n- [ ] Header/configuration checks agree with the policy; any changed unversioned file has a verified browser freshness/update strategy.\r\n- [ ] Private/user-specific responses retain appropriate non-sharing protections; any untested authenticated behavior is explicitly qualified.\r\n- [ ] Any follow-up change has relevant browser/header tests; expected behavior may be documented without removing the Informational alert.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n",
+      "closedAt": null,
+      "comments": [],
+      "createdAt": "2026-10-22T11:40:48Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 644,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "[OWASP ZAP][Informational] Review Cache-Control directives (10015)",
+      "updatedAt": "2026-10-22T11:40:48Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/644"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Informational** |\r\n| ZAP confidence | Medium; separate from severity |\r\n| Alert reference | `10050-1` |\r\n| Original alert name | Retrieved from Cache |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP reports Retrieved from Cache (`Hit from cloudfront`) on public SPA HTML, icons and the web manifest. CDN hits for public content are expected. The listed instances do not establish that private API or another user's data was cached.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/apple-touch-icon.png`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/favicon.ico`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/favicon.svg`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/manifest.webmanifest`\r\n\r\n**Classification:** Informational triage, not a confirmed vulnerability. The six Medium/Low findings from the same scan are tracked by #610; this item records a separate informational disposition.\r\n\r\n## Scope\r\n\r\n1. Confirm that the flagged responses contain only public, non-user-specific content.\r\n2. Review relevant CloudFront cache behavior and response headers, keeping public resources separate from session/private data.\r\n3. Record expected CDN behavior, or raise a separately evidenced security defect if private sharing is actually found.\r\n\r\n## Non-goals\r\n\r\n- Disabling the CDN, claiming a cross-user leak from this alert alone, or running an unapproved authenticated/active scan.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] The sampled cache-hit URLs and headers are recorded and classified by sensitivity.\r\n- [ ] Relevant cache configuration/header tests support separation of public and private responses; any missing authenticated acceptance is explicitly stated rather than inferred.\r\n- [ ] Disposition records expected behavior or a concrete evidenced follow-up; removal of legitimate cache hits is not required.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n\r\n## Coordination\r\n\r\nCoordinate cache-policy decisions with #644; a shared implementation change may address multiple classifications, but each alert keeps its own disposition.\r\n",
+      "closedAt": null,
+      "comments": [],
+      "createdAt": "2026-10-22T11:40:49Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 645,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "[OWASP ZAP][Informational] Confirm the safety of shared-cache hits (10050-1)",
+      "updatedAt": "2026-10-22T11:40:49Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/645"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Informational** |\r\n| ZAP confidence | Medium; separate from severity |\r\n| Alert reference | `10049-3` |\r\n| Original alert name | Storable and Cacheable Content |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP classifies sampled JavaScript, icons and `/manifest.webmanifest` as Storable and Cacheable Content, with a one-year maximum age. This is normally suitable for fingerprinted public assets. Stable icon/manifest URLs need an intentional versioning or freshness strategy; the classification itself is not a confirmed vulnerability.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/apple-touch-icon.png`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/assets/jsx-runtime-Dk72oS4N.js`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/favicon.ico`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/favicon.svg`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/manifest.webmanifest`\r\n\r\n**Classification:** Informational triage, not a confirmed vulnerability. The six Medium/Low findings from the same scan are tracked by #610; this item records a separate informational disposition.\r\n\r\n## Scope\r\n\r\n1. Separate content-hashed assets from unversioned icons and the manifest.\r\n2. Check that long-lived caching is intentional and public-only, and that updates to stable URLs can reach existing browsers.\r\n3. Coordinate policy/remediation with the Cache-Control review rather than duplicating implementation work.\r\n\r\n## Non-goals\r\n\r\n- Removing appropriate caching from fingerprinted assets, treating CloudFront invalidation as proof that already-cached browser copies were refreshed, or assuming a private-data leak.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] A list of affected resource classes and a reasoned triage disposition are recorded.\r\n- [ ] A controlled browser update/revalidation test supports the strategy for unversioned files; hashed assets retain appropriate long-lived caching.\r\n- [ ] Any necessary code/configuration change is scoped and tested; expected public caching can be documented without eliminating the Informational alert.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n\r\n## Coordination\r\n\r\nCoordinate cache-policy decisions with #644; a shared implementation change may address multiple classifications, but each alert keeps its own disposition.\r\n",
+      "closedAt": null,
+      "comments": [],
+      "createdAt": "2026-10-22T11:40:51Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 646,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "[OWASP ZAP][Informational] Review cacheable assets and unversioned files (10049-3)",
+      "updatedAt": "2026-10-22T11:40:51Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/646"
+    },
+    {
+      "body": "## Background\r\n\r\n| Field | Value |\r\n|---|---|\r\n| Source | OWASP ZAP 2.17.0 passive baseline |\r\n| ZAP severity | **Informational** |\r\n| ZAP confidence | Medium; separate from severity |\r\n| Alert reference | `10049-2` |\r\n| Original alert name | Storable but Non-Cacheable Content |\r\n| Environment | Deployed dev, CloudFront origin |\r\n| Evidence | [Run 39768665359](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359); [report artifact](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39768665359/artifacts/12421027383) |\r\n| Tested revision | PR head `c5a87998d1250b4ff088f2b80b3f3ca5c48938ae`; merge revision `64b76cdf51b3bf5e8646620b6e0d2a3fd630aaff` |\r\n| Traceability | #606 / #607; NFR-71 |\r\n\r\nZAP classifies SPA root/product HTML as Storable but Non-Cacheable Content because of `Cache-Control: no-cache`. Such content can be stored but requires revalidation before reuse. This is often the intended SPA deployment behavior, not proof of a vulnerability.\r\n\r\n### Affected responses\r\n\r\n- `GET https://d1b3np88z657cp.cloudfront.net/`\r\n- `GET https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739`\r\n\r\n**Classification:** Informational triage, not a confirmed vulnerability. The six Medium/Low findings from the same scan are tracked by #610; this item records a separate informational disposition.\r\n\r\n## Scope\r\n\r\n1. Confirm the intended revalidation/freshness policy for the root and SPA deep links.\r\n2. Review relevant cache directives, validators and conditional request behavior against a controlled content update.\r\n3. Document expected behavior or coordinate a narrowly scoped freshness fix with the Cache-Control review.\r\n\r\n## Non-goals\r\n\r\n- Blanket `no-store` for public SPA HTML, changes to authenticated routes, or interpreting this alert as a demonstrated stale-content/security defect.\r\n\r\n## Acceptance Criteria\r\n\r\n- [ ] Headers and any applicable ETag/Last-Modified/conditional response behavior are recorded for root and deep-link HTML.\r\n- [ ] A controlled browser/update check demonstrates the intended freshness policy, or a concrete gap is separately tracked.\r\n- [ ] Disposition explains whether the behavior is expected or needs a scoped fix; the Informational alert need not disappear merely to close triage.\r\n- [ ] Record the disposition and verification evidence in `docs/quality/quality-gates.md` and the implementing/triage work's sprint log; update NFR-71's linked evidence when applicable.\r\n\r\n## Coordination\r\n\r\nCoordinate cache-policy decisions with #644; a shared implementation change may address multiple classifications, but each alert keeps its own disposition.\r\n",
+      "closedAt": null,
+      "comments": [],
+      "createdAt": "2026-10-22T11:40:53Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 647,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "[OWASP ZAP][Informational] Confirm the SPA HTML revalidation policy (10049-2)",
+      "updatedAt": "2026-10-22T11:40:53Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/647"
+    },
+    {
+      "body": "Part of #463 (SWE5006 final report, due **31 Oct 2026 23:59**). Report sections: §4 DevSecOps (#680) and appendices (#681). **Blocked by #610.**\n\n## Background\n\nThe final report should show our OWASP ZAP scan results before and after remediation. @PPsyrius provides the artefacts and @limjiechao puts them in the report.\n\n- **Before:** the first passive baseline of dev, [run 39733450177](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39733450177) (#606, 22 Oct). Findings: 0 High, 2 Medium, 4 Low, 6 Informational. Each finding has its own issue, #636–#647. The `zap-web` and `zap-api` artifacts **expire on 21 Nov 2026** (30-day retention).\n- **Latest clean run without remediation:** [run 40298983391](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40298983391) (scheduled, 26 Oct, success). It has the same findings as the first baseline.\n- **After:** no run exists yet. The response-headers fix is #610, still open.\n\n## Scope\n\n**Pan (provide)**\n1. Close #610 by fixing each finding or accepting it with a reason, then dispatch `dast-baseline` on `dev`.\n2. Download `zap-web` and `zap-api` from the before run and the after run (`gh run download <run-id>`). Attach the HTML reports to this issue, or put them in the shared report folder.\n3. Post a delta table as a comment here:\n\n   | ZAP rule | Risk | Issue | Before | After | Outcome (fixed / accepted + reason) |\n   |---|---|---|---|---|---|\n\n**Lim (include)**\n4. Add the delta table and a short summary to §4 (#680), with run IDs and dates.\n5. Add the full before/after reports, or excerpts from them, as a report appendix (#681).\n\n## Non-goals\n\n- Active or authenticated ZAP scans. #610 does not include them either.\n\n## Acceptance Criteria\n\n- [ ] An after run exists on `dev`, run after #610 merged, and is linked here.\n- [ ] Before and after reports saved outside GitHub Actions retention.\n- [ ] Delta table posted, covering every finding in #636–#647.\n- [ ] §4 and the appendix carry the table and the reports.\n\n**Fallback:** if #610 is not done by 29 Oct, the report shows the before run and the accepted-risk reasons, and states plainly that the remediation is pending.\n\n## References\n\n- #606, #610, #636–#647, #680, #681, #682 (ZAP beta-rules pin)\n- `.github/workflows/dast-baseline.yml`, `docs/quality/quality-gates.md` (NFR-71)\n",
+      "closedAt": null,
+      "comments": [],
+      "createdAt": "2026-10-26T09:38:58Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 694,
+      "state": "OPEN",
+      "stateReason": "",
+      "title": "docs(report): OWASP ZAP before/after remediation scan evidence for §4 (#463)",
+      "updatedAt": "2026-10-26T09:38:59Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/694"
+    }
+  ]
+}

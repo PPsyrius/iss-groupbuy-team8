@@ -1,0 +1,41 @@
+{
+  "scope": "Local built-SPA candidate policy; stubbed account/provider journeys and real loopback cookie probe, not deployed acceptance",
+  "sourceBase": "c5595525700fe42d37d0f57a381cd7a208602f8e",
+  "candidatePolicySha256": "bb34fac9bfcc42af31da7fd0aa51ea92cbf7ea361718fbc1f52a7403b43ddf35",
+  "command": "E2E_SECURITY_BROWSERS=all pnpm exec playwright test --workers=2 --reporter=list,json",
+  "total": 85,
+  "stats": {
+    "startTime": "2026-10-27T02:40:04.257Z",
+    "duration": 72360.985,
+    "expected": 69,
+    "skipped": 16,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "projects": [
+    {
+      "project": "chromium",
+      "passed": 27,
+      "skipped": 6,
+      "failed": 0
+    },
+    {
+      "project": "firefox",
+      "passed": 15,
+      "skipped": 4,
+      "failed": 0
+    },
+    {
+      "project": "webkit",
+      "passed": 15,
+      "skipped": 4,
+      "failed": 0
+    },
+    {
+      "project": "webkit-touch",
+      "passed": 12,
+      "skipped": 2,
+      "failed": 0
+    }
+  ]
+}

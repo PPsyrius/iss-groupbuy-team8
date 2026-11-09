@@ -82,9 +82,12 @@ test("a signed-in buyer starts a bloc at the quoted price and sees it paid under
     const { team, order } = settledStart(Date.now());
     api.state.teams.push(team);
     api.state.orders.push(order);
+    // WebKit interception cannot fulfill redirects. A controlled provider document
+    // performs the same top-level return without changing the app's CSP.
+    const returnUrl = new URL(`/payments/return?paymentId=${paymentId}`, origin).href;
     await route.fulfill({
-      status: 302,
-      headers: { location: new URL(`/payments/return?paymentId=${paymentId}`, origin).href },
+      contentType: "text/html",
+      body: `<!doctype html><title>Checkout stub</title><script>location.replace(${JSON.stringify(returnUrl)})</script>`,
     });
   });
 

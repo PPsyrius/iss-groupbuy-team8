@@ -1,0 +1,1393 @@
+{
+  "query": "All open repository issues (limit 1000)",
+  "captureStartedAtUtc": "2026-10-27T07:53:38.8509342+00:00",
+  "capturedAtUtc": "2026-10-27T07:53:41.4946173+00:00",
+  "issues": [
+    {
+      "createdAt": "2026-10-26T09:38:58Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 694,
+      "state": "OPEN",
+      "title": "docs(report): OWASP ZAP before/after remediation scan evidence for §4 (#463)",
+      "updatedAt": "2026-10-26T09:38:59Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/694"
+    },
+    {
+      "createdAt": "2026-10-26T09:38:54Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 693,
+      "state": "OPEN",
+      "title": "docs(report): send the repository link to Chandrasekaran, Team 8 (#463)",
+      "updatedAt": "2026-10-26T09:38:55Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/693"
+    },
+    {
+      "createdAt": "2026-10-24T08:14:42Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 681,
+      "state": "OPEN",
+      "title": "docs(report): plan for §5 contribution summary and appendices (#463)",
+      "updatedAt": "2026-10-26T09:40:48Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/681"
+    },
+    {
+      "createdAt": "2026-10-24T08:14:35Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 680,
+      "state": "OPEN",
+      "title": "docs(report): plan for §4 DevSecOps and Development Lifecycle (#463)",
+      "updatedAt": "2026-10-26T09:41:06Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/680"
+    },
+    {
+      "createdAt": "2026-10-24T08:14:27Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 679,
+      "state": "OPEN",
+      "title": "docs(report): plan for §3.5 Design Problems and Patterns and §3.6 Database Schemas (#463)",
+      "updatedAt": "2026-10-26T09:40:28Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/679"
+    },
+    {
+      "createdAt": "2026-10-24T08:14:20Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 678,
+      "state": "OPEN",
+      "title": "docs(report): plan for §3.4 Analysis & Design Models, one per member (#463)",
+      "updatedAt": "2026-10-26T09:40:26Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/678"
+    },
+    {
+      "createdAt": "2026-10-24T08:14:12Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 677,
+      "state": "OPEN",
+      "title": "docs(report): plan for §3.1–§3.3 architecture, transition strategies, use case model (#463)",
+      "updatedAt": "2026-10-26T09:40:23Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/677"
+    },
+    {
+      "createdAt": "2026-10-24T08:14:05Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 676,
+      "state": "OPEN",
+      "title": "docs(report): plan for §2 Project Conduct (#463)",
+      "updatedAt": "2026-10-26T09:40:20Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/676"
+    },
+    {
+      "createdAt": "2026-10-24T08:13:58Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 675,
+      "state": "OPEN",
+      "title": "docs(report): plan for front matter and §1 Introduction (#463)",
+      "updatedAt": "2026-10-26T09:40:18Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/675"
+    },
+    {
+      "createdAt": "2026-10-23T10:29:03Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        }
+      ],
+      "number": 663,
+      "state": "OPEN",
+      "title": "backend: state one combined lock order across ADR 0001 and ADR 0002 (PR #624 review)",
+      "updatedAt": "2026-10-23T10:29:03Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/663"
+    },
+    {
+      "createdAt": "2026-10-22T11:40:53Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 647,
+      "state": "OPEN",
+      "title": "[OWASP ZAP][Informational] Confirm the SPA HTML revalidation policy (10049-2)",
+      "updatedAt": "2026-10-22T11:40:53Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/647"
+    },
+    {
+      "createdAt": "2026-10-22T11:40:51Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 646,
+      "state": "OPEN",
+      "title": "[OWASP ZAP][Informational] Review cacheable assets and unversioned files (10049-3)",
+      "updatedAt": "2026-10-22T11:40:51Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/646"
+    },
+    {
+      "createdAt": "2026-10-22T11:40:49Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 645,
+      "state": "OPEN",
+      "title": "[OWASP ZAP][Informational] Confirm the safety of shared-cache hits (10050-1)",
+      "updatedAt": "2026-10-22T11:40:49Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/645"
+    },
+    {
+      "createdAt": "2026-10-22T11:40:48Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 644,
+      "state": "OPEN",
+      "title": "[OWASP ZAP][Informational] Review Cache-Control directives (10015)",
+      "updatedAt": "2026-10-22T11:40:48Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/644"
+    },
+    {
+      "createdAt": "2026-10-22T11:40:46Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 643,
+      "state": "OPEN",
+      "title": "[OWASP ZAP][Informational] Review non-storable robots and sitemap responses (10049-1)",
+      "updatedAt": "2026-10-22T11:40:46Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/643"
+    },
+    {
+      "createdAt": "2026-10-22T11:40:44Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 642,
+      "state": "OPEN",
+      "title": "[OWASP ZAP][Informational] Review JavaScript application crawl coverage (10109)",
+      "updatedAt": "2026-10-22T11:40:44Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/642"
+    },
+    {
+      "createdAt": "2026-10-22T06:47:54Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 623,
+      "state": "OPEN",
+      "title": "ops(dev): run the rollback-backend drill once on dev and record the evidence",
+      "updatedAt": "2026-10-22T06:47:54Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/623"
+    },
+    {
+      "createdAt": "2026-10-22T06:47:49Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 621,
+      "state": "OPEN",
+      "title": "docs(ci): export the dev ruleset and document branching, tags and developer authentication",
+      "updatedAt": "2026-10-22T06:47:49Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/621"
+    },
+    {
+      "createdAt": "2026-10-22T06:47:45Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 620,
+      "state": "OPEN",
+      "title": "docs(agile): milestones with achieved dates, effort per member, and one set of deadlines",
+      "updatedAt": "2026-10-23T07:22:09Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/620"
+    },
+    {
+      "createdAt": "2026-10-22T06:47:33Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 617,
+      "state": "OPEN",
+      "title": "docs(ci): DevSecOps maturity self-assessment (DSOMM) for report section 4",
+      "updatedAt": "2026-10-22T06:47:34Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/617"
+    },
+    {
+      "createdAt": "2026-10-22T06:31:57Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACz2siLQ",
+          "name": "java",
+          "description": "Pull requests that update java code",
+          "color": "ffa221"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 611,
+      "state": "OPEN",
+      "title": "test(events): pin the dispatch order and transaction phase of the team-resolution observers",
+      "updatedAt": "2026-10-22T06:31:58Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/611"
+    },
+    {
+      "createdAt": "2026-10-22T06:25:10Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        }
+      ],
+      "number": 610,
+      "state": "OPEN",
+      "title": "fix(security): close the CSP and security-header findings of the first ZAP baseline",
+      "updatedAt": "2026-10-27T07:52:15Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/610"
+    },
+    {
+      "createdAt": "2026-10-22T06:20:08Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq4oQ",
+          "name": "swe5006",
+          "description": "SWE5006 practice project course work",
+          "color": "0E8A16"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-lq5Dg",
+          "name": "swe5006:presentation-feedback",
+          "description": "Team review of the SWE5006 presentation deck and speaker script (#464)",
+          "color": "35ccde"
+        }
+      ],
+      "number": 605,
+      "state": "OPEN",
+      "title": "docs(swe5006): team review of the presentation slides and script, round 5 (#464)",
+      "updatedAt": "2026-10-25T02:22:42Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/605"
+    },
+    {
+      "createdAt": "2026-10-21T13:57:57Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-aFx4Q",
+          "name": "swe5001:presentation-feedback",
+          "description": "Lecturer feedback on the SWE5001 presentation (2026-10-21); address in the final report",
+          "color": "35ccde"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQk6Q",
+          "name": "swe5001",
+          "description": "SWE5001 Architecting Scalable Systems course work",
+          "color": "1D76DB"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        }
+      ],
+      "number": 596,
+      "state": "OPEN",
+      "title": "docs(swe5001): lecturer feedback from the 2026-10-21 presentation (Boon Kui, Lee Chiang)",
+      "updatedAt": "2026-10-21T13:57:57Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/596"
+    },
+    {
+      "createdAt": "2026-10-21T13:57:26Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-aFx4Q",
+          "name": "swe5001:presentation-feedback",
+          "description": "Lecturer feedback on the SWE5001 presentation (2026-10-21); address in the final report",
+          "color": "35ccde"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQk6Q",
+          "name": "swe5001",
+          "description": "SWE5001 Architecting Scalable Systems course work",
+          "color": "1D76DB"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        }
+      ],
+      "number": 595,
+      "state": "OPEN",
+      "title": "docs(ddd): explain how EventStorming led to the bounded contexts, aggregates and proposed architecture",
+      "updatedAt": "2026-10-21T13:57:26Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/595"
+    },
+    {
+      "createdAt": "2026-10-21T09:10:38Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-aFx4Q",
+          "name": "swe5001:presentation-feedback",
+          "description": "Lecturer feedback on the SWE5001 presentation (2026-10-21); address in the final report",
+          "color": "35ccde"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQk6Q",
+          "name": "swe5001",
+          "description": "SWE5001 Architecting Scalable Systems course work",
+          "color": "1D76DB"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        }
+      ],
+      "number": 592,
+      "state": "OPEN",
+      "title": "docs(ci): explain post-build container-image scanning and evidence",
+      "updatedAt": "2026-10-21T13:59:15Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/592"
+    },
+    {
+      "createdAt": "2026-10-21T09:10:38Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-aFx4Q",
+          "name": "swe5001:presentation-feedback",
+          "description": "Lecturer feedback on the SWE5001 presentation (2026-10-21); address in the final report",
+          "color": "35ccde"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQk6Q",
+          "name": "swe5001",
+          "description": "SWE5001 Architecting Scalable Systems course work",
+          "color": "1D76DB"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        }
+      ],
+      "number": 591,
+      "state": "OPEN",
+      "title": "docs(performance): explain load-test metrics and acceptance criteria",
+      "updatedAt": "2026-10-21T13:59:13Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/591"
+    },
+    {
+      "createdAt": "2026-10-21T09:02:37Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-aFx4Q",
+          "name": "swe5001:presentation-feedback",
+          "description": "Lecturer feedback on the SWE5001 presentation (2026-10-21); address in the final report",
+          "color": "35ccde"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQk6Q",
+          "name": "swe5001",
+          "description": "SWE5001 Architecting Scalable Systems course work",
+          "color": "1D76DB"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        }
+      ],
+      "number": 589,
+      "state": "OPEN",
+      "title": "fix(infra): separate database and application-server subnets",
+      "updatedAt": "2026-10-21T13:59:08Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/589"
+    },
+    {
+      "createdAt": "2026-10-21T08:59:51Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-aFx4Q",
+          "name": "swe5001:presentation-feedback",
+          "description": "Lecturer feedback on the SWE5001 presentation (2026-10-21); address in the final report",
+          "color": "35ccde"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQk6Q",
+          "name": "swe5001",
+          "description": "SWE5001 Architecting Scalable Systems course work",
+          "color": "1D76DB"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        }
+      ],
+      "number": 587,
+      "state": "OPEN",
+      "title": "docs(ddd): add detailed context and domain-model diagrams",
+      "updatedAt": "2026-10-21T13:59:03Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/587"
+    },
+    {
+      "createdAt": "2026-10-21T08:59:51Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-aFx4Q",
+          "name": "swe5001:presentation-feedback",
+          "description": "Lecturer feedback on the SWE5001 presentation (2026-10-21); address in the final report",
+          "color": "35ccde"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQk6Q",
+          "name": "swe5001",
+          "description": "SWE5001 Architecting Scalable Systems course work",
+          "color": "1D76DB"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        }
+      ],
+      "number": 588,
+      "state": "OPEN",
+      "title": "docs(data): document schemas and data-store models",
+      "updatedAt": "2026-10-21T13:59:06Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/588"
+    },
+    {
+      "createdAt": "2026-10-21T08:59:51Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-aFx4Q",
+          "name": "swe5001:presentation-feedback",
+          "description": "Lecturer feedback on the SWE5001 presentation (2026-10-21); address in the final report",
+          "color": "35ccde"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQk6Q",
+          "name": "swe5001",
+          "description": "SWE5001 Architecting Scalable Systems course work",
+          "color": "1D76DB"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        }
+      ],
+      "number": 586,
+      "state": "OPEN",
+      "title": "docs(architecture): add system perspectives and deployment diagrams",
+      "updatedAt": "2026-10-21T13:59:01Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/586"
+    },
+    {
+      "createdAt": "2026-10-21T08:59:51Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-aFx4Q",
+          "name": "swe5001:presentation-feedback",
+          "description": "Lecturer feedback on the SWE5001 presentation (2026-10-21); address in the final report",
+          "color": "35ccde"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQk6Q",
+          "name": "swe5001",
+          "description": "SWE5001 Architecting Scalable Systems course work",
+          "color": "1D76DB"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC-dQljA",
+          "name": "final-report",
+          "description": "Content destined for a course final report",
+          "color": "5319E7"
+        }
+      ],
+      "number": 585,
+      "state": "OPEN",
+      "title": "docs(design): add class and sequence diagrams for critical use cases",
+      "updatedAt": "2026-10-21T13:58:58Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/585"
+    },
+    {
+      "createdAt": "2026-10-18T03:15:43Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        }
+      ],
+      "number": 549,
+      "state": "OPEN",
+      "title": "chore(security): decide exposure of actuator, springdoc and error paths outside the Sa-Token interceptor",
+      "updatedAt": "2026-10-18T03:15:45Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/549"
+    },
+    {
+      "createdAt": "2026-10-18T03:14:26Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        }
+      ],
+      "number": 548,
+      "state": "OPEN",
+      "title": "fix(payment): sandbox-gate refusal retries refunds with no logged reason",
+      "updatedAt": "2026-10-18T03:14:27Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/548"
+    },
+    {
+      "createdAt": "2026-10-16T06:06:01Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        }
+      ],
+      "number": 516,
+      "state": "OPEN",
+      "title": "chore(catalog): publish dev listings for the Groceries and Kids categories",
+      "updatedAt": "2026-10-16T06:06:03Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/516"
+    },
+    {
+      "createdAt": "2026-10-16T05:58:18Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        }
+      ],
+      "number": 515,
+      "state": "OPEN",
+      "title": "chore(swe5001): set SWE5001_ALERT_EMAIL_ADDRESSES before the dev → prod promotion",
+      "updatedAt": "2026-10-16T06:03:00Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/515"
+    },
+    {
+      "createdAt": "2026-10-11T11:38:14Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        }
+      ],
+      "number": 465,
+      "state": "OPEN",
+      "title": "[T1] Sprint 4 — Goal & Use-Case Breakdown (2026-10-12 → 2026-10-23)",
+      "updatedAt": "2026-10-11T14:54:13Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/465"
+    },
+    {
+      "createdAt": "2026-10-11T11:35:23Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        }
+      ],
+      "number": 464,
+      "state": "OPEN",
+      "title": "docs(presentation): SWE5006 final presentation and demo (2026-11-03/04)",
+      "updatedAt": "2026-10-11T14:51:06Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/464"
+    },
+    {
+      "createdAt": "2026-10-11T11:35:18Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        }
+      ],
+      "number": 463,
+      "state": "OPEN",
+      "title": "docs(report): SWE5006 final project report with one use case and one design problem per member (due 2026-10-31 23:59)",
+      "updatedAt": "2026-10-26T09:40:37Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/463"
+    },
+    {
+      "createdAt": "2026-10-11T11:35:15Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        }
+      ],
+      "number": 462,
+      "state": "OPEN",
+      "title": "docs(swe5001): progress report 2 and the final project report (due 2026-11-16)",
+      "updatedAt": "2026-10-11T13:51:16Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/462"
+    },
+    {
+      "createdAt": "2026-10-11T11:35:12Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        }
+      ],
+      "number": 461,
+      "state": "OPEN",
+      "title": "docs(swe5001): prepare the 2026-10-21 presentation, demo script, rehearsal and fallback recording",
+      "updatedAt": "2026-10-11T14:51:03Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/461"
+    },
+    {
+      "createdAt": "2026-10-11T11:35:10Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3Yzdw",
+          "name": "frontend",
+          "description": "Frontend-related issues",
+          "color": "d9b35e"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        }
+      ],
+      "number": 460,
+      "state": "OPEN",
+      "title": "test(swe5001): run the smoke suite and buyer E2E against the ECS environment (V-a, WBS 6.3)",
+      "updatedAt": "2026-10-11T14:50:24Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/460"
+    },
+    {
+      "createdAt": "2026-10-11T11:35:07Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0IsGWw",
+          "name": "infrastructure",
+          "description": "",
+          "color": "0f1453"
+        }
+      ],
+      "number": 459,
+      "state": "OPEN",
+      "title": "test(swe5001): run the self-healing, safe-deployment and poison-message drills and record rebuild timings (V5–V8)",
+      "updatedAt": "2026-10-11T14:50:23Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/459"
+    },
+    {
+      "createdAt": "2026-10-11T11:35:04Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wktg",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        }
+      ],
+      "number": 458,
+      "state": "OPEN",
+      "title": "perf(swe5001): add k6 scripts and load seed, and run the V2 baseline and V3/V4 scaling scenarios",
+      "updatedAt": "2026-10-15T15:36:29Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/458"
+    },
+    {
+      "createdAt": "2026-10-11T11:34:52Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wktg",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        }
+      ],
+      "number": 454,
+      "state": "OPEN",
+      "title": "NFR: security, maintainability - NFR register sweep for the report (US17, rescoped)",
+      "updatedAt": "2026-10-11T14:50:37Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/454"
+    },
+    {
+      "createdAt": "2026-10-11T11:34:41Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        }
+      ],
+      "number": 451,
+      "state": "OPEN",
+      "title": "docs(agile): Sprint 3 review, retrospective and progress report",
+      "updatedAt": "2026-10-11T11:50:55Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/451"
+    },
+    {
+      "createdAt": "2026-10-11T11:22:54Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACz5WkSA",
+          "name": "feature",
+          "description": "New features for this project",
+          "color": "699e2b"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC0BmBfg",
+          "name": "complexity:complex",
+          "description": "Complex use case (payment/concurrency/lifecycle)",
+          "color": "d93f0b"
+        }
+      ],
+      "number": 450,
+      "state": "OPEN",
+      "title": "feat(notification): event-driven notification module (outbox → SNS → SQS + DLQ)",
+      "updatedAt": "2026-10-14T02:41:24Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/450"
+    },
+    {
+      "createdAt": "2026-10-11T11:22:30Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wktg",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        }
+      ],
+      "number": 448,
+      "state": "OPEN",
+      "title": "NFR: reliability, scalability - event delivery is effectively once, isolates poison messages and scales on backlog",
+      "updatedAt": "2026-10-11T14:51:01Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/448"
+    },
+    {
+      "createdAt": "2026-10-11T11:22:22Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wkow",
+          "name": "documentation",
+          "description": "Improvements or additions to documentation",
+          "color": "0075ca"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAAC6aeUqg",
+          "name": "design",
+          "description": "Design owner decision or artboard gap",
+          "color": "C5DEF5"
+        }
+      ],
+      "number": 443,
+      "state": "OPEN",
+      "title": "docs(adr): record cross-service events via transactional outbox, SNS fan-out and SQS + DLQ (backend ADR 0007)",
+      "updatedAt": "2026-10-11T11:35:44Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/443"
+    },
+    {
+      "createdAt": "2026-09-28T01:40:46Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wktg",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3ZPzw",
+          "name": "devsecops",
+          "description": "DevSecOps / Pipeline / Infrastructure",
+          "color": "ff48c6"
+        }
+      ],
+      "number": 227,
+      "state": "OPEN",
+      "title": "NFR: security - close NFR-33 and NFR-35, decide NFR-37 (US28b)",
+      "updatedAt": "2026-10-11T14:50:40Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/227"
+    },
+    {
+      "createdAt": "2026-09-28T01:40:37Z",
+      "labels": [
+        {
+          "id": "LA_kwDOUCKhp88AAAACx2wktg",
+          "name": "enhancement",
+          "description": "New feature or request",
+          "color": "a2eeef"
+        },
+        {
+          "id": "LA_kwDOUCKhp88AAAACx3YvJQ",
+          "name": "backend",
+          "description": "Backend-related issues",
+          "color": "21add1"
+        }
+      ],
+      "number": 224,
+      "state": "OPEN",
+      "title": "NFR: recoverability - refund idempotency proven on dev under replay and crash (US14)",
+      "updatedAt": "2026-10-11T14:50:38Z",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/224"
+    }
+  ]
+}

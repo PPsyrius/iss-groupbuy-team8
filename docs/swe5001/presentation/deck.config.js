@@ -6,6 +6,7 @@ module.exports = {
   fillLabel: 'FILL 19 Oct',
   guidelineLabel: 'Guideline requirement (V2.8)',
   demoSegment: 6,
+  motion: true,
   outputs: {
     deck: 'swe5001-presentation.html',
     deckPdf: 'swe5001-presentation.pdf',
@@ -14,6 +15,6 @@ module.exports = {
   scriptTitle: 'BlocBuy · Speaker script and demo run book',
   scriptHeader: {
     left: 'Speaker script and demo run book · Team 8 BlocBuy · 21 Oct 2026, 16:15–16:55 SGT',
-    right: 'BlocBuy tokens · 2026-10-18',
+    right: 'BlocBuy tokens · 2026-10-20',
   },
 };

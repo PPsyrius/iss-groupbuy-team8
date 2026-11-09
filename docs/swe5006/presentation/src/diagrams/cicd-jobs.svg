@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1164" height="522" viewBox="0 0 1164 522" font-family="Inter, Helvetica, Arial, sans-serif">
+<rect width="1164" height="522" fill="#FFFFFF"/>
+<rect x="1" y="0" width="1162" height="292" rx="10" fill="#F6F2EC" stroke="#DDD5C8" stroke-width="1.4"/>
+<text x="18" y="27" font-size="21" font-weight="700" fill="#1B1A18" text-anchor="start">1 · Pull request → dev</text>
+<rect x="950" y="11" width="30" height="20" rx="5" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="2.6"/>
+<text x="988" y="27" font-size="18" font-weight="400" fill="#6B655C" text-anchor="start">required check</text>
+<text x="18" y="89" font-size="18" font-weight="600" fill="#6B655C" text-anchor="start">ci-backend</text>
+<rect x="150" y="63" width="195" height="40" rx="8" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="2.6"/>
+<circle cx="170" cy="83" r="9.5" fill="#3E5CD9"/>
+<path d="M165.5,83 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="188" y="89.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">build-quality</text>
+<rect x="404" y="40" width="262" height="40" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="424" cy="60" r="9.5" fill="#3E5CD9"/>
+<path d="M419.5,60 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="442" y="66.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">contract-check</text>
+<rect x="404" y="86" width="262" height="40" rx="8" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="2.6"/>
+<circle cx="424" cy="106" r="9.5" fill="#3E5CD9"/>
+<path d="M419.5,106 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="442" y="112.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">SonarCloud Backend</text>
+<rect x="712" y="40" width="208" height="54" rx="8" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="2.6"/>
+<circle cx="732" cy="60" r="9.5" fill="#3E5CD9"/>
+<path d="M727.5,60 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="750" y="66.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">docker</text>
+<text x="750" y="85" font-size="18" font-weight="400" fill="#6B655C" text-anchor="start">Trivy image scan</text>
+<path d="M345,83 H366.5 Q374.5,83 374.5,75 V68 Q374.5,60 382.5,60 H404" fill="none" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="345" cy="83" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="404" cy="60" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<path d="M345,83 H366.5 Q374.5,83 374.5,91 V98 Q374.5,106 382.5,106 H404" fill="none" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="345" cy="83" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="404" cy="106" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<path d="M666,60 H712" fill="none" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="666" cy="60" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="712" cy="60" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<text x="18" y="185" font-size="18" font-weight="600" fill="#6B655C" text-anchor="start">ci-frontend</text>
+<rect x="150" y="159" width="206" height="40" rx="8" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="2.6"/>
+<circle cx="170" cy="179" r="9.5" fill="#3E5CD9"/>
+<path d="M165.5,179 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="188" y="185.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">frontend-check</text>
+<rect x="404" y="136" width="262" height="40" rx="8" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="2.6"/>
+<circle cx="424" cy="156" r="9.5" fill="#3E5CD9"/>
+<path d="M419.5,156 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="442" y="162.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">SonarCloud Frontend</text>
+<rect x="404" y="182" width="262" height="54" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="424" cy="202" r="9.5" fill="#3E5CD9"/>
+<path d="M419.5,202 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="442" y="208.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">e2e-preview</text>
+<text x="442" y="227" font-size="18" font-weight="400" fill="#6B655C" text-anchor="start">Playwright</text>
+<path d="M356,179 H372.0 Q380.0,179 380.0,171 V164 Q380.0,156 388.0,156 H404" fill="none" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="356" cy="179" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="404" cy="156" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<path d="M356,179 H372.0 Q380.0,179 380.0,187 V194 Q380.0,202 388.0,202 H404" fill="none" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="356" cy="179" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="404" cy="202" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<text x="18" y="264" font-size="18" font-weight="600" fill="#6B655C" text-anchor="start">security</text>
+<rect x="150" y="238" width="142" height="40" rx="8" fill="#FFFFFF" stroke="#3E5CD9" stroke-width="2.6"/>
+<circle cx="170" cy="258" r="9.5" fill="#3E5CD9"/>
+<path d="M165.5,258 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="188" y="264.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">gitleaks</text>
+<rect x="304" y="238" width="195" height="40" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="324" cy="258" r="9.5" fill="#3E5CD9"/>
+<path d="M319.5,258 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="342" y="264.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">workflow-lint</text>
+<rect x="511" y="238" width="164" height="40" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="531" cy="258" r="9.5" fill="#3E5CD9"/>
+<path d="M526.5,258 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="549" y="264.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">trivy-deps</text>
+<rect x="687" y="238" width="185" height="40" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="707" cy="258" r="9.5" fill="#3E5CD9"/>
+<path d="M702.5,258 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="725" y="264.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">trivy-config</text>
+<rect x="884" y="238" width="238" height="40" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="904" cy="258" r="9.5" fill="#3E5CD9"/>
+<path d="M899.5,258 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="922" y="264.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">deployment-bundle</text>
+<path d="M687,230 V224 H1122 V230" fill="none" stroke="#6B655C" stroke-width="1.4"/>
+<text x="904.5" y="215" font-size="18" font-weight="600" fill="#6B655C" text-anchor="middle">policy as code</text>
+<line x1="582.0" y1="292" x2="582.0" y2="300" stroke="#1B1A18" stroke-width="1.6"/>
+<line x1="582.0" y1="338" x2="582.0" y2="346" stroke="#1B1A18" stroke-width="1.6"/>
+<rect x="172.0" y="300" width="820" height="38" rx="19" fill="#1B1A18"/>
+<text x="582.0" y="325.5" font-size="19" fill="#FFFFFF" text-anchor="middle"><tspan font-weight="700">Merge gate:</tspan> code owner approves, 6 required checks green, squash merge</text>
+<rect x="1" y="346" width="1162" height="170" rx="10" fill="#F6F2EC" stroke="#DDD5C8" stroke-width="1.4"/>
+<text x="18" y="373" font-size="21" font-weight="700" fill="#1B1A18" text-anchor="start">2 · After merge: push to dev</text>
+<text x="1146" y="373" font-size="18" font-weight="400" fill="#6B655C" text-anchor="end">Scheduled or on demand: weekly security scan, ZAP baseline, SBOM</text>
+<text x="18" y="416" font-size="18" font-weight="600" fill="#6B655C" text-anchor="start">ci-backend</text>
+<rect x="150" y="384" width="226" height="40" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="170" cy="404" r="9.5" fill="#3E5CD9"/>
+<path d="M165.5,404 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="188" y="410.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">package-dev</text>
+<rect x="404" y="384" width="262" height="54" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="424" cy="404" r="9.5" fill="#3E5CD9"/>
+<path d="M419.5,404 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="442" y="410.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">publish-ecr-dev</text>
+<text x="442" y="429" font-size="18" font-weight="400" fill="#6B655C" text-anchor="start">image by digest</text>
+<rect x="712" y="384" width="311" height="54" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="732" cy="404" r="9.5" fill="#3E5CD9"/>
+<path d="M727.5,404 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="750" y="410.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">deploy-existing-ec2</text>
+<text x="750" y="429" font-size="18" font-weight="400" fill="#6B655C" text-anchor="start">SSM, health check, rollback</text>
+<path d="M376,404 H404" fill="none" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="376" cy="404" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="404" cy="404" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<path d="M666,404 H712" fill="none" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="666" cy="404" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="712" cy="404" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<text x="18" y="482" font-size="18" font-weight="600" fill="#6B655C" text-anchor="start">ci-frontend</text>
+<rect x="150" y="450" width="226" height="40" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="170" cy="470" r="9.5" fill="#3E5CD9"/>
+<path d="M165.5,470 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="188" y="476.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">package-dev</text>
+<rect x="404" y="450" width="262" height="54" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="424" cy="470" r="9.5" fill="#3E5CD9"/>
+<path d="M419.5,470 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="442" y="476.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">deploy-s3-dev</text>
+<text x="442" y="495" font-size="18" font-weight="400" fill="#6B655C" text-anchor="start">S3, CloudFront</text>
+<rect x="712" y="450" width="274" height="54" rx="8" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.4"/>
+<circle cx="732" cy="470" r="9.5" fill="#3E5CD9"/>
+<path d="M727.5,470 l3,3.2 l6,-6.4" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="750" y="476.5" font-size="19" font-weight="600" fill="#1B1A18" text-anchor="start">e2e-dev</text>
+<text x="750" y="495" font-size="18" font-weight="400" fill="#6B655C" text-anchor="start">Playwright smoke on dev</text>
+<path d="M376,470 H404" fill="none" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="376" cy="470" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="404" cy="470" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<path d="M666,470 H712" fill="none" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="666" cy="470" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+<circle cx="712" cy="470" r="3.5" fill="#FFFFFF" stroke="#A69E92" stroke-width="1.6"/>
+</svg>

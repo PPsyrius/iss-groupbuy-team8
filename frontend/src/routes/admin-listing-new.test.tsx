@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { server } from "@/test/msw";
 import { renderRoute, serveAdmin } from "@/test/render-route";
@@ -29,6 +29,34 @@ async function fillRequired(user: User) {
 
 // The new-draft editor (admin plan A1-05, artboard 4b.1) over the stateful admin store.
 describe("/admin/listings/new", () => {
+  it("returns to the listings when a successful save omits the new id", async () => {
+    serveAdmin();
+    server.use(
+      http.post("*/api/v1/admin/products", () =>
+        HttpResponse.json({ code: "COMMON_200_000", data: { status: "draft", version: 0 } }),
+      ),
+    );
+    const { router } = renderRoute("/admin/listings/new");
+    await fillRequired(userEvent.setup());
+    await userEvent.click(screen.getByRole("button", { name: "Save draft" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/admin/listings"));
+    expect(await screen.findByRole("heading", { name: "Listings" })).toBeVisible();
+  });
+  it("hands a revoked role during draft creation to the admin boundary", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    serveAdmin();
+    server.use(
+      http.post("*/api/v1/admin/products", () =>
+        HttpResponse.json({ code: "COMMON_403_001" }, { status: 403 }),
+      ),
+    );
+    renderRoute("/admin/listings/new");
+    await fillRequired(userEvent.setup());
+    await userEvent.click(screen.getByRole("button", { name: "Save draft" }));
+    expect(
+      await screen.findByRole("heading", { name: "You don’t have access to the admin console" }),
+    ).toBeVisible();
+  });
   it("explains the draft before anything is saved", async () => {
     serveAdmin();
     renderRoute("/admin/listings/new");
@@ -77,9 +105,17 @@ describe("/admin/listings/new", () => {
     const stock = screen.getByRole("textbox", { name: "Stock" });
     await user.clear(stock);
     await user.type(stock, "45");
+    await user.click(screen.getByRole("button", { name: /choose a category/i }));
+    await user.click(await screen.findByRole("option", { name: "Groceries" }));
+    await user.click(screen.getByRole("button", { name: "Add another URL" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Image URL 2" }),
+      "https://dcsjrkmummxi7.cloudfront.net/unused.jpg",
+    );
+    await user.click(screen.getByRole("button", { name: "Remove image URL 2" }));
     await user.type(
       screen.getByRole("textbox", { name: "Image URL 1" }),
-      "https://cdn.example.com/milk.jpg",
+      "https://dcsjrkmummxi7.cloudfront.net/milk.jpg",
     );
     await user.click(screen.getByRole("button", { name: "Save draft" }));
     await waitFor(() =>
@@ -98,8 +134,9 @@ describe("/admin/listings/new", () => {
         title: "Hokkaido milk, 12 cartons",
         originalPrice: "46.80",
         currency: "sgd",
+        category: "groceries",
         stock: 45,
-        images: ["https://cdn.example.com/milk.jpg"],
+        images: ["https://dcsjrkmummxi7.cloudfront.net/milk.jpg"],
       },
     });
     expect(store.rows[0]?.listing).not.toHaveProperty("subtitle");

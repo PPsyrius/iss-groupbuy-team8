@@ -101,22 +101,16 @@ export function useLifecycleChange(productId: string, expectedVersion: number) {
 // conflict and a revoked role are the page's to show (banner, route boundary), so they place
 // nothing here.
 export function problemFor(refusal: Refusal, notSaved: string): SubmitProblem {
-  switch (refusal.kind) {
-    case "conflict":
-    case "forbidden":
-      return {};
-    case "session":
-      return {
-        alert: { title: notSaved, description: "Your session ended. Sign in again to save." },
-        signIn: true,
-      };
-    case "fields":
-      return { fields: refusal.fields };
-    case "message":
-      return { alert: { title: notSaved, description: refusal.message } };
-    default:
-      return {};
+  if (refusal.kind === "session") {
+    return {
+      alert: { title: notSaved, description: "Your session ended. Sign in again to save." },
+      signIn: true,
+    };
   }
+  if (refusal.kind === "fields") return { fields: refusal.fields };
+  if (refusal.kind === "message")
+    return { alert: { title: notSaved, description: refusal.message } };
+  return {};
 }
 
 // A 403 on a write means the admin role went away mid-session (§12 note 2). Thrown from render,

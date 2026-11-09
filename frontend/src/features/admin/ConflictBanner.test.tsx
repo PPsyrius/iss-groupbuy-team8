@@ -2,10 +2,30 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { ConflictBanner } from "./ConflictBanner";
+import { renderWithRouter } from "@/test/render";
+
+import { ConflictBanner, ProblemsCard } from "./ConflictBanner";
+import { FormAlert } from "./FormAlert";
 
 // Artboard 4b.4: a page-level warning (not danger: nothing on the server was lost) with one Reload.
 describe("ConflictBanner", () => {
+  it("renders a title-only form alert without an empty description", async () => {
+    await renderWithRouter(<FormAlert alert={{ title: "Save refused", description: "" }} />);
+    expect(screen.getByRole("alert")).toHaveTextContent("Save refused");
+    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
+  });
+  it("counts more than ten field problems and explains an unknown server version", () => {
+    const fieldProblems = Array.from({ length: 11 }, (_, i) => ({
+      label: `Field ${i}`,
+      message: "Required",
+    }));
+    render(<ProblemsCard fieldProblems={fieldProblems} />);
+    expect(screen.getByRole("heading", { name: "12 problems to clear" })).toBeVisible();
+    expect(
+      screen.getByText("Someone else saved a newer version while this page was open."),
+    ).toBeVisible();
+    expect(screen.getAllByRole("listitem")).toHaveLength(12);
+  });
   it("names both versions once the server's is known", () => {
     render(<ConflictBanner loadedVersion={4} serverVersion={5} onReload={() => {}} />);
     expect(screen.getByText("This listing was updated by someone else")).toBeVisible();

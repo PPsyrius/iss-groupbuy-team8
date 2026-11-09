@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
+import { OK_CODE } from "@/api/envelope";
 import { queryClient } from "@/api/query-client";
 import { adminSeed, createAdminStore } from "@/test/admin-msw";
 import { server } from "@/test/msw";
@@ -11,6 +12,25 @@ import { renderRoute, serveAdmin } from "@/test/render-route";
 // The listings table route (admin plan A1-04, artboards 4a.2–4a.4) over the stateful admin store:
 // 62 rows, of which 14 are drafts, 34 on sale and 14 off sale.
 describe("/admin/listings", () => {
+  it("defaults missing page and status counts to zero", async () => {
+    serveAdmin();
+    server.use(
+      http.get("*/api/v1/admin/products", () => HttpResponse.json({ code: OK_CODE, data: {} })),
+      http.get("*/api/v1/admin/products/counts", () =>
+        HttpResponse.json({ code: OK_CODE, data: {} }),
+      ),
+    );
+    renderRoute("/admin/listings");
+    expect(await screen.findByRole("heading", { name: "No listings yet" })).toBeVisible();
+    const tabs = await screen.findByRole("tablist", { name: "Listing status" });
+    await waitFor(() =>
+      expect(
+        within(tabs)
+          .getAllByRole("tab")
+          .map((t) => t.textContent),
+      ).toEqual(["All0", "Draft0", "On sale0", "Off sale0"]),
+    );
+  });
   it("shows the first page with the tab counts and the pager", async () => {
     serveAdmin();
     const urls: string[] = [];

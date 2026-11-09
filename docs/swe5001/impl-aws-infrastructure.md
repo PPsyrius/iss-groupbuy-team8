@@ -80,7 +80,8 @@ Origin TLS: the ALB listener is HTTP because there is no custom domain for an AC
 | --- | --- |
 | VPC CIDR | `10.50.0.0/16` (does not overlap the default VPC used by the EC2 dev host) |
 | Public subnets | `10.50.0.0/24` (a), `10.50.1.0/24` (b): ALB, fck-nat |
-| Private subnets | `10.50.10.0/24` (a), `10.50.11.0/24` (b): ECS tasks, RDS, ElastiCache |
+| Private subnets | `10.50.10.0/24` (a), `10.50.11.0/24` (b): ECS tasks only; default route to fck-nat |
+| Data subnets | `10.50.20.0/24` (a), `10.50.21.0/24` (b): RDS and ElastiCache only; one route table with the local VPC route and nothing else (no NAT, no S3 endpoint). Added 2026-11-04 for #589 (assessor remark F6); `terraform test` asserts the two sets are disjoint. Configured, not yet applied on AWS |
 | Egress | fck-nat on `t4g.nano` in public subnet a, route `0.0.0.0/0` from both private route tables. Needed for Stripe, Google OAuth and AWS APIs |
 | VPC endpoints | Gateway endpoint for S3 (free; ECR layer pulls). Interface endpoints are skipped for cost; traffic to ECR API, SSM, SNS, SQS and CloudWatch goes through fck-nat |
 
@@ -135,7 +136,7 @@ IAM per service (all under path `/swe5001/` with `permissions_boundary` set to t
 
 | Store | Settings |
 | --- | --- |
-| RDS PostgreSQL (`modules/rds-postgres`) | Engine 18 if available in the region, otherwise 17 (then update `docs` and the Testcontainers image to match); `db.t4g.micro`, 20 GiB gp3, single-AZ, private subnets, storage encrypted with the AWS-managed key, `skip_final_snapshot = true`, `deletion_protection = false`, backups 0 days, master password from an ephemeral `random_password` written to the instance (`password_wo`) and to SSM `/blocbuy/swe5001/shared/DB_MASTER_PASSWORD` (`value_wo`), so it never reaches the state; parameter group with `rds.force_ssl = 1` |
+| RDS PostgreSQL (`modules/rds-postgres`) | Engine 18 if available in the region, otherwise 17 (then update `docs` and the Testcontainers image to match); `db.t4g.micro`, 20 GiB gp3, single-AZ, data subnets, storage encrypted with the AWS-managed key, `skip_final_snapshot = true`, `deletion_protection = false`, backups 0 days, master password from an ephemeral `random_password` written to the instance (`password_wo`) and to SSM `/blocbuy/swe5001/shared/DB_MASTER_PASSWORD` (`value_wo`), so it never reaches the state; parameter group with `rds.force_ssl = 1` |
 | Database bootstrap | One-off ECS task `db-init` (image `public.ecr.aws/docker/library/postgres:<version>-alpine`, SG `dbinit`) run by `env-up` after RDS is available. `db-init/init.sh` runs `psql` and creates databases `identity`, `commerce`, `notification`; schema `domain` in each; owner roles `blocbuy_<db>_owner` (Flyway) and runtime roles `blocbuy_<db>_app` with default data privileges in `domain`; role passwords are ephemeral values written to SSM `/blocbuy/swe5001/<db>/DB_OWNER_PASSWORD` and `DB_APP_PASSWORD` and re-applied on every run. Idempotent (existence checks before every `CREATE`). The Terraform `postgresql` provider is not used because runners cannot reach the private instance |
 | ElastiCache Valkey (`modules/cache`) | Replication group, 1 node `cache.t4g.micro`, engine Valkey, in-transit encryption on, at-rest encryption on, AUTH token from `random_password` in SSM `/blocbuy/swe5001/shared/REDIS_PASSWORD` (the replication group has no write-only argument, so the token is in the `runtime` state while the environment exists), no snapshots |
 

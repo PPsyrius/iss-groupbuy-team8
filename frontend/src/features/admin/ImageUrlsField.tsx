@@ -3,13 +3,13 @@ import { useState } from "react";
 
 import { ImageFallback } from "@/components/ImageFallback";
 
-import { isHttpsUrl } from "./listing-form";
+import { imageHostHelp, isApprovedImageUrl } from "./image-policy";
 
 const MAX_ROWS = 20;
 
 // The gallery as a list of URL rows (artboard 4b.1 "Image URLs · up to 20"). There is no upload:
 // the contract and the design take URLs only (admin plan §12 note 12). Each row previews its image
-// on the striped fallback tile once the URL is an https one, so a mistyped or vanished host shows
+// on the striped fallback tile once CSP permits the URL, so a mistyped or vanished host shows
 // as stripes rather than a broken image. The rows are controlled: the form owns the values, and this
 // field owns only a stable id per row, so removing a middle row keeps every other row's input.
 // The form remounts this field on reset (the editor is keyed by version), which re-seeds the ids.
@@ -36,7 +36,7 @@ export function ImageUrlsField({
       {rows.map(({ value, id }, i) => (
         <div key={id} className="flex items-start gap-3">
           <ImageFallback
-            src={isHttpsUrl(value.trim()) ? value.trim() : null}
+            src={isApprovedImageUrl(value.trim()) ? value.trim() : null}
             className="size-11 shrink-0 overflow-hidden rounded-md"
           />
           <TextField
@@ -70,8 +70,7 @@ export function ImageUrlsField({
         Add another URL
       </Button>
       <Description className="text-muted text-xs">
-        URLs only — there is no file upload. Every image needs a fallback tile, because these hosts
-        can disappear.
+        URLs only — there is no file upload. {imageHostHelp}
       </Description>
     </fieldset>
   );

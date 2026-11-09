@@ -92,7 +92,7 @@ describe("Header", () => {
       http.get("*/api/v1/auth/me", () =>
         HttpResponse.json({
           code: "COMMON_200_000",
-          data: { userId: "u1", nickname: null, avatarUrl: null },
+          data: { userId: "u1", nickname: null, avatarUrl: "https://example.test/avatar.jpg" },
           message: "ok",
         }),
       ),

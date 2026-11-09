@@ -43,6 +43,8 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -278,16 +280,25 @@ class StripeRolloutAcceptanceIT {
         verify(refunds, times(2)).createRefund(any());
     }
 
-    @Test
-    void permanentProviderRefusalParksTheObligationForOperatorReview() throws Exception {
+    /**
+     * Both permanent refusals park the obligation for review with their own reason. The second
+     * worker run proves, at the database level, that a parked row is not retried on the next tick.
+     */
+    @ParameterizedTest
+    @CsvSource({
+        "PAYMENT_STATE_INVALID,PROVIDER_STATE_MISMATCH",
+        "PAYMENT_PROVIDER_REJECTED,PROVIDER_REJECTED"
+    })
+    void permanentProviderRefusalParksTheObligationForOperatorReview(
+            PaymentErrorCode refusal, String expectedResult) throws Exception {
         Cookie owner = login(buyer());
         CheckoutPayment payment = prepare(owner, "START", product);
-        settle(payment, "evt_rollout_permanent");
+        settle(payment, "evt_rollout_permanent_" + refusal.name());
         overdue(team(payment));
         expiry.run();
         doAnswer(
                         call -> {
-                            throw new BizException(PaymentErrorCode.PAYMENT_STATE_INVALID);
+                            throw new BizException(refusal);
                         })
                 .when(refunds)
                 .createRefund(any());
@@ -298,7 +309,7 @@ class StripeRolloutAcceptanceIT {
         assertThat(jdbc.queryForObject("SELECT status FROM biz_refund", String.class))
                 .isEqualTo("review");
         assertThat(jdbc.queryForObject("SELECT last_result FROM biz_refund", String.class))
-                .isEqualTo("PROVIDER_STATE_MISMATCH");
+                .isEqualTo(expectedResult);
         verify(refunds, times(1)).createRefund(any());
     }
 

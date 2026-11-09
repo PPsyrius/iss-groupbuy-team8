@@ -1,0 +1,30 @@
+id,item,owner,hours,issues
+US13,"Checkout, scheduling and expiry refunds on dev",Yorick-Yu,7,223
+US14,Refund idempotency acceptance record from local evidence,Yorick-Yu,1,224
+US34,Paid START and JOIN on dev (Phase B),l0sgAi,2,222
+US28b,NFR-37 accepted risk,PPsyrius,0.5,227
+US17,NFR register sweep for the report,PPsyrius,1,454
+RF,Admission reuse and receipt identity refactor,EricWang1358,2,421|422|423
+DEC,Backend ADR 0007,l0sgAi,3,443
+US38,"Notification domain, persistence and one list endpoint",PPsyrius,8,215
+US39,Transactional outbox and versioned event contracts,Yorick-Yu,12,444
+US40,"Outbox relay, SQS/SNS transports, ElasticMQ",Yorick-Yu,10,445
+US41,Idempotent SQS consumer creating notifications,EricWang1358,12,446
+NFR,"Effectively-once delivery, poison isolation, backlog scaling evidence",l0sgAi,4,448
+P1,"Messaging module: SNS, queues, DLQ, alarm",PPsyrius,8,447
+P2,"Three service assemblies, ADR 0008, grants, guardrails",l0sgAi,21,455
+P3,Distributed topology on ECS,l0sgAi,11,456
+P4,"HTTP scaling, dashboard, min 2 commerce tasks",PPsyrius,5,457
+P5,"k6 scripts, V4 seed, V2 baseline, V3/V4 runs",EricWang1358,5,458
+P6,"Drills V5, V7, identity outage; V8 timings",Yorick-Yu,4,459
+P7,Smoke suite and manual checks on ECS,limjiechao,3,460
+P8,"SWE5001 presentation, demo script, rehearsal, fallback",limjiechao,13,461
+P9,SWE5001 progress report 2,l0sgAi,2,462
+P10,Session roles outside identity (WP-B4),PPsyrius,6,467
+P11,Remote identity check from commerce (WP-B5),EricWang1358,15,468
+P12,Admin attention nicknames through the identity port,Yorick-Yu,6,469
+S3C,"Sprint 3 review, retrospective, progress report",limjiechao,4,451
+RPT,SWE5006 report drafts and agile artefacts,all,41,463
+PRS,SWE5006 slide master,limjiechao,4,464
+SM,Scrum Master duties,EricWang1358,4,465
+EV,Evidence (2 h x 5),all,10,

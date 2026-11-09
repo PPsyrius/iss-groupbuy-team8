@@ -1,0 +1,109 @@
+name: SWE5006 slide feedback
+description: One correction to the SWE5006 final presentation deck or speaker script (#464). Open it as a sub-issue of the current review round.
+title: "swe5006 slides <n>: <what is wrong, in a few words>"
+labels: ["swe5006:presentation-feedback", "swe5006"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One issue per problem, so each can be fixed and closed on its own. Open it from the review round's parent issue with **Create sub-issue**, so it is linked automatically.
+        The deck is graded against `docs/swe5006/presentation/RUBRIC.md`; facts must come from merged code, issues and PRs, the board, AWS or recorded evidence.
+  - type: input
+    id: slides
+    attributes:
+      label: Slide number(s)
+      description: Main slides 1–39, a backup (B6) or a detail page (D16-2). Use the number shown in the bottom-right corner of the deck.
+      placeholder: "16, D16-2"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where is the problem?
+      multiple: true
+      options:
+        - Slide (what the audience sees)
+        - Speaker script (the "say" text in the notes window or script PDF)
+        - Cues or Q&A answers in the script
+        - Demo run book (pipeline P1–P6 or system demo D1–D6)
+        - Backup or detail page
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of problem
+      multiple: true
+      options:
+        - Content is wrong or out of date
+        - Misses or contradicts a rubric row
+        - Script is hard to read or say aloud
+        - Missing information (a FILL, VERIFY or CONFIRM marker)
+        - Too dense, hard to read, or text too small
+        - Over its time slot
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: rubric
+    attributes:
+      label: Rubric row(s), if any
+      description: Codes from RUBRIC.md, such as 2.5, 4.4 or V3. Leave empty if none applies.
+      placeholder: "2.5, G10"
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What is wrong
+      description: Quote the exact text, or describe the element, and say why it is wrong.
+      placeholder: |
+        Slide <n>, <element>: "<the exact text on the slide or in the script>".
+        <Why it is wrong, or what is missing.>
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Correction
+      description: The replacement wording or value, ready to paste. For a missing value, give the value itself.
+      placeholder: "<The replacement text or value, as it should appear.>"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Where the correct fact comes from (file and line, issue, PR, run, AWS read, meeting decision with date). Required for a changed fact or a filled marker.
+      placeholder: "<file:line, #issue, PR, workflow run, AWS read, or meeting decision with its date>"
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Must fix before the 25 Oct rehearsal
+        - Should fix
+        - Nice to have
+    validations:
+      required: true
+  - type: dropdown
+    id: owner
+    attributes:
+      label: Whose slide is it?
+      description: The speaker who presents the slide (shown top right on each slide).
+      options:
+        - Lim Jiechao
+        - Wang Ziang (Eric)
+        - Yu Qianshuo (Yorik)
+        - Panpakorn Siripanich (Pan)
+        - Liu Jin
+        - Shared or not sure
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit
+      options:
+        - label: I checked the latest deck on dev (HTML or PDF), not an older copy.
+          required: true
+        - label: This issue covers one problem; I opened separate issues for others.
+          required: true

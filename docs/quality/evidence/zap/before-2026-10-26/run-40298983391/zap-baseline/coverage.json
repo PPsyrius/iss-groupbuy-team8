@@ -1,0 +1,679 @@
+{
+  "complete": true,
+  "phase": "ZAP coverage",
+  "checks": [
+    {
+      "name": "SPA root",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/",
+      "expected_status": 200,
+      "passed": true,
+      "observed_statuses": [
+        200
+      ]
+    },
+    {
+      "name": "Catalog",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products",
+      "expected_status": 200,
+      "passed": true,
+      "observed_statuses": [
+        200
+      ]
+    },
+    {
+      "name": "Pagination",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=2&size=1",
+      "expected_status": 200,
+      "passed": true,
+      "observed_statuses": [
+        200
+      ]
+    },
+    {
+      "name": "Category filter",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?category=electronics",
+      "expected_status": 200,
+      "passed": true,
+      "observed_statuses": [
+        200
+      ]
+    },
+    {
+      "name": "Keyword search",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?keyword=Universal&ai=false",
+      "expected_status": 200,
+      "passed": true,
+      "observed_statuses": [
+        200
+      ]
+    },
+    {
+      "name": "Product detail",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "expected_status": 200,
+      "passed": true,
+      "observed_statuses": [
+        200
+      ]
+    },
+    {
+      "name": "SPA product deep link",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "expected_status": 200,
+      "passed": true,
+      "observed_statuses": [
+        200
+      ]
+    },
+    {
+      "name": "Invalid pagination",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=0",
+      "expected_status": 400,
+      "passed": true,
+      "observed_statuses": [
+        400
+      ]
+    },
+    {
+      "name": "Anonymous orders denial",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/orders/me",
+      "expected_status": 401,
+      "passed": true,
+      "observed_statuses": [
+        401
+      ]
+    },
+    {
+      "name": "Anonymous admin denial",
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/admin/products",
+      "expected_status": 401,
+      "passed": true,
+      "observed_statuses": [
+        401
+      ]
+    }
+  ],
+  "errors": [],
+  "visited": [
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products",
+      "status": 200,
+      "content_type": "application/json"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=2&size=1",
+      "status": 200,
+      "content_type": "application/json"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?category=electronics",
+      "status": 200,
+      "content_type": "application/json"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?keyword=Universal&ai=false",
+      "status": 200,
+      "content_type": "application/json"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "status": 200,
+      "content_type": "application/json"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/products?page=0",
+      "status": 400,
+      "content_type": "application/json"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/orders/me",
+      "status": 401,
+      "content_type": "application/json"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/api/v1/admin/products",
+      "status": 401,
+      "content_type": "application/json"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/robots.txt",
+      "status": 403,
+      "content_type": "application/xml"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "status": 200,
+      "content_type": "text/html"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/sitemap.xml",
+      "status": 403,
+      "content_type": "application/xml"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/favicon.svg",
+      "status": 200,
+      "content_type": "image/svg+xml"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/favicon.ico",
+      "status": 200,
+      "content_type": "image/vnd.microsoft.icon"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/apple-touch-icon.png",
+      "status": 200,
+      "content_type": "image/png"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/manifest.webmanifest",
+      "status": 200,
+      "content_type": "application/manifest+json"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/jsx-runtime-ByaQ0wya.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/removable-DG1cRz_r.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/useBaseQuery-Bbvz3vz7.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/useMutation-CyWGUTOU.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/react-query.gen-DUi2ZpiV.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/compiler-runtime-CT5mb2cZ.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/use-session-CrZjzG1r.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/useRouter-D7annWLj.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/matchContext-BKrjQWny.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/link-DktiHC9H.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/useSelector-ExfXV8G0.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/useMatch-BCZ-OSaQ.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/useNavigate-DCaDQQMJ.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/preload-helper-Bf4zR-IU.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/Match-Bl_s1653.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/useLocation-UemhGXS5.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/dist-Br92DQhA.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/compose-pMfqVF0J.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/button-C0p-I2AT.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/BrandMark-B9ZKlpvS.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/initials-CraPhzX5.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/searchMiddleware-BzN01tKP.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/icons-8LoRhEhU.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/close-button-CIu93oTo.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/Autocomplete-B52cP3Xu.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/PortalProvider-Cu6b8sXu.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/Text-BxTZfbS3.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/deal-time-bfY4nMn5.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/Pressable-DZxml_un.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/admin-api-CrJ6jtti.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/use-listing-mutations-DTS_kO6u.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/alert-o6kFQ052.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/admin-guard-D992YzvK.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/LifecycleDialogs-5jwNyWOO.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/chip-CY3FC5KN.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/skeleton-DnonJZbq.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/page-clock-DTcdKfQy.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/use-minute-clock-d6IRDlML.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/categories-uW4MXM04.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/useListState-DrGsgvCF.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/ListingsTable-Cnh6PUbq.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/dist-BNfHYasx.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/collection-prop-injection-EANKpL67.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/listings.index-C7nLS52K.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/listings.index-CHJ_viS_.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/ErrorCard-Uez_DQnB.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/routes-CP5T-RC_.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/products-search-Bh9DIJSC.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/return-to-DerdNy2g.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/routes-DwOMDyCJ.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/login-CmVJfvhN.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/progress-bar-XWv8VSus.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/my-teams-query-IJa_iR04.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/account-BzKdA75l.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/useTextField-CjLGgQT3.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/input-PMQkjhit.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/Price-B4P2e3ow.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/ShareBlock-qAQlTqZU.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/account-Dz3UW968.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/spinner-Cqby0Z0f.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/auth.callback-KujUlwa9.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/products._productId-Cjx2z9AP.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/use-checkout-P3DGjou5.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/sgt-D1Xt7iuq.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/products._productId-TgjeDmX5.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/admin-Blz0HyOJ.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/StatCards-BwZZIpFj.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/payments._paymentId-DsdAaYP3.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/listings._productId-CRmpkNSJ.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/index-CGBV0f94.css",
+      "status": 200,
+      "content_type": "text/css"
+    },
+    {
+      "method": "GET",
+      "url": "https://d1b3np88z657cp.cloudfront.net/assets/index-BgeXvSkQ.js",
+      "status": 200,
+      "content_type": "text/javascript"
+    }
+  ],
+  "unfetched_nodes": 7,
+  "origin": "https://d1b3np88z657cp.cloudfront.net",
+  "expected": 10,
+  "unavailable": [],
+  "alerts": {
+    "2": 2,
+    "1": 4,
+    "0": 6
+  },
+  "passive_scan": {
+    "verified": true,
+    "enabled_rules": 67,
+    "executed_rules": 67,
+    "required_rule_ids": [
+      10010,
+      10011,
+      10015,
+      10020,
+      10021,
+      10035,
+      10036,
+      10038,
+      10054,
+      10055,
+      10063,
+      90004
+    ],
+    "queued": 0
+  },
+  "covered": 10
+}

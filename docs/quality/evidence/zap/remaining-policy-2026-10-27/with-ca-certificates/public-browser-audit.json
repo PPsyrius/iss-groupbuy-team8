@@ -1,0 +1,383 @@
+{
+  "checkedAtUtc": "2026-10-27T02:42:05.601Z",
+  "target": "https://d1b3np88z657cp.cloudfront.net",
+  "scope": "Anonymous real public images under local candidate document-header overrides; no AWS changes, account, transaction or deployed-remediation claim",
+  "results": [
+    {
+      "browser": "chromium",
+      "version": "156.0.8078.4",
+      "surface": "catalog",
+      "status": 200,
+      "isolated": true,
+      "images": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        }
+      ],
+      "styleViolations": [],
+      "imageFailures": []
+    },
+    {
+      "browser": "chromium",
+      "version": "156.0.8078.4",
+      "surface": "detail",
+      "status": 200,
+      "isolated": true,
+      "images": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        }
+      ],
+      "styleViolations": [],
+      "imageFailures": []
+    },
+    {
+      "browser": "chromium",
+      "version": "156.0.8078.4",
+      "surface": "login",
+      "status": 200,
+      "isolated": true,
+      "images": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        }
+      ],
+      "styleViolations": [],
+      "imageFailures": []
+    },
+    {
+      "browser": "firefox",
+      "version": "157.0",
+      "surface": "catalog",
+      "status": 200,
+      "isolated": true,
+      "images": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        }
+      ],
+      "styleViolations": [],
+      "imageFailures": []
+    },
+    {
+      "browser": "firefox",
+      "version": "157.0",
+      "surface": "detail",
+      "status": 200,
+      "isolated": true,
+      "images": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        }
+      ],
+      "styleViolations": [],
+      "imageFailures": []
+    },
+    {
+      "browser": "firefox",
+      "version": "157.0",
+      "surface": "login",
+      "status": 200,
+      "isolated": true,
+      "images": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        }
+      ],
+      "styleViolations": [],
+      "imageFailures": []
+    },
+    {
+      "browser": "webkit",
+      "version": "27.2",
+      "surface": "catalog",
+      "status": 200,
+      "isolated": false,
+      "images": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        }
+      ],
+      "styleViolations": [],
+      "imageFailures": []
+    },
+    {
+      "browser": "webkit",
+      "version": "27.2",
+      "surface": "detail",
+      "status": 200,
+      "isolated": false,
+      "images": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://dcsjrkmummxi7.cloudfront.net",
+          "loaded": true
+        }
+      ],
+      "styleViolations": [],
+      "imageFailures": []
+    },
+    {
+      "browser": "webkit",
+      "version": "27.2",
+      "surface": "login",
+      "status": 200,
+      "isolated": false,
+      "images": [
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        },
+        {
+          "origin": "https://d1b3np88z657cp.cloudfront.net",
+          "loaded": true
+        }
+      ],
+      "styleViolations": [],
+      "imageFailures": []
+    }
+  ],
+  "status": "passed"
+}

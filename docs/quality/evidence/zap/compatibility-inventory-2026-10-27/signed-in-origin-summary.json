@@ -1,0 +1,11 @@
+{
+  "capturedAtUtc": "2026-10-26T15:58:23.574Z",
+  "target": "https://d1b3np88z657cp.cloudfront.net",
+  "scope": "Current signed-in account only; no cross-account coverage or credentials retained",
+  "avatar": { "invalid": 0, "missing": 0, "origins": { "https://lh3.googleusercontent.com": 1 } },
+  "scopes": [
+    { "endpoint": "/api/v1/orders/me", "status": 200, "complete": true, "rows": 0, "images": { "invalid": 0, "missing": 0, "origins": {} } },
+    { "endpoint": "/api/v1/group-deals/me", "status": 200, "complete": true, "rows": 0, "images": { "invalid": 0, "missing": 0, "origins": {} } },
+    { "endpoint": "/api/v1/admin/products", "status": 403, "complete": false }
+  ]
+}

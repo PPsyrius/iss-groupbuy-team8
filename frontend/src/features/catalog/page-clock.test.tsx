@@ -27,6 +27,17 @@ describe("page clock", () => {
     vi.useRealTimers();
   });
 
+  it("can reset a running clock and tolerate the old subscriber's later cleanup", () => {
+    const row = render(<Probe />);
+    expect(vi.getTimerCount()).toBe(1);
+    resetPageClockForTests();
+    expect(vi.getTimerCount()).toBe(0);
+    row.unmount();
+    expect(vi.getTimerCount()).toBe(0);
+    render(<Probe />);
+    expect(vi.getTimerCount()).toBe(1);
+  });
+
   it("runs one timer for every subscriber and clears it when the last one unmounts", () => {
     const cleared = vi.spyOn(globalThis, "clearTimeout");
     const rows = Array.from({ length: 25 }, (_, i) => render(<Probe id={`p${i}`} />));

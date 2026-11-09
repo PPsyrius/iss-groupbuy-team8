@@ -9,11 +9,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Repository port for the CheckoutPayment aggregate (one repository per aggregate root).
- * Implemented in the infrastructure layer; DOs and MyBatis mappers never cross this boundary.
- * PostgreSQL is the source of truth for payment state. All mutations join the caller's short
- * transaction; a failed write must roll it back. Checkout reads exclude legacy rows without a
- * frozen business intent.
+ * Repository port for the CheckoutPayment aggregate. Implemented in the infrastructure layer; DOs
+ * and MyBatis mappers never cross this boundary. PostgreSQL is the source of truth for payment
+ * state. All mutations join the caller's short transaction; a failed write must roll it back.
+ * Checkout reads exclude legacy rows without a frozen business intent.
  */
 public interface CheckoutPaymentRepository {
 

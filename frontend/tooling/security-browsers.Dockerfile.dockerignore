@@ -1,0 +1,11 @@
+# The recipe copies only the app, contract, canonical policy and public audit.
+.git
+**/node_modules
+**/dist
+**/coverage
+**/test-results
+**/playwright-report
+**/.auth
+**/.env
+**/.env.*
+**/src/api/generated

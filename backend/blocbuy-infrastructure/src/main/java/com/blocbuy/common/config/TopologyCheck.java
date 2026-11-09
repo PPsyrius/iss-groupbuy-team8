@@ -16,6 +16,8 @@ import org.springframework.core.env.Environment;
 @Configuration(proxyBeanMethods = false)
 public class TopologyCheck {
 
+    private TopologyCheck() {}
+
     @Bean
     static BeanFactoryPostProcessor topologyValueCheck(Environment environment) {
         return beanFactory -> requireKnown(environment.getProperty(Topology.PROPERTY));

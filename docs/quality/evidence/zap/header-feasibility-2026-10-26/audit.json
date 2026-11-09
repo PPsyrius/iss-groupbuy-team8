@@ -1,0 +1,1145 @@
+{
+  "capturedAtUtc": "2026-10-26T14:53:09.270Z",
+  "target": "https://d1b3np88z657cp.cloudfront.net",
+  "browserVersion": "156.0.8078.4",
+  "styleHashes": "'sha256-38RhXrc7EdReTKsOm23ZPOCUgniTUUcjky8QOOrQx6o=' 'sha256-gYiS/BvZvRcK27JIXTuwhZ3hs2+VJ1X+2gUlE+farlg='",
+  "cases": [
+    {
+      "name": "baseline"
+    },
+    {
+      "name": "image-allowlist-and-low-headers",
+      "restrictImages": true,
+      "headers": true
+    },
+    {
+      "name": "strict-style",
+      "restrictImages": true,
+      "headers": true,
+      "strictStyle": true
+    },
+    {
+      "name": "hashed-react-aria-styles",
+      "restrictImages": true,
+      "headers": true,
+      "strictStyle": true,
+      "hashStyles": true
+    },
+    {
+      "name": "coep-require-corp",
+      "restrictImages": true,
+      "headers": true,
+      "coep": "require-corp"
+    },
+    {
+      "name": "coep-credentialless",
+      "restrictImages": true,
+      "headers": true,
+      "coep": "credentialless"
+    }
+  ],
+  "scope": "Anonymous GET-only browsing with local response-header overrides; no AWS changes or real sign-in/payment. The image allowlist includes a provisional Google avatar host that has not been verified with a signed-in account.",
+  "results": [
+    {
+      "policy": "baseline",
+      "pagePath": "/",
+      "status": 200,
+      "title": "Listings · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 20%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 60%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 75%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        }
+      ],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-03/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-02/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-01/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/cover.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "unapprovedOriginBlockedByCsp": false,
+      "failed": [
+        {
+          "url": "https://example.com/blocbuy-controlled-csp-probe.png",
+          "failure": "net::ERR_BLOCKED_BY_ORB"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "policy": "baseline",
+      "pagePath": "/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "status": 200,
+      "title": "Universal Travel Adapter · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/2.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "baseline",
+      "pagePath": "/login",
+      "status": 200,
+      "title": "Sign in · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-isologo-Cpyc5L1k.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/google-g.svg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "image-allowlist-and-low-headers",
+      "pagePath": "/",
+      "status": 200,
+      "title": "Listings · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 20%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 60%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 75%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        }
+      ],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-03/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-02/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-01/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/cover.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "unapprovedOriginBlockedByCsp": true,
+      "failed": [
+        {
+          "url": "https://example.com/blocbuy-controlled-csp-probe.png",
+          "failure": "csp"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "policy": "image-allowlist-and-low-headers",
+      "pagePath": "/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "status": 200,
+      "title": "Universal Travel Adapter · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/2.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "image-allowlist-and-low-headers",
+      "pagePath": "/login",
+      "status": 200,
+      "title": "Sign in · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-isologo-Cpyc5L1k.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/google-g.svg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "strict-style",
+      "pagePath": "/",
+      "status": 200,
+      "title": "Listings · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 20%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 60%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 75%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        }
+      ],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-03/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-02/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-01/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/cover.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [
+        {
+          "directive": "style-src-elem",
+          "blockedURI": "inline",
+          "sample": ""
+        }
+      ],
+      "unapprovedOriginBlockedByCsp": true,
+      "failed": [
+        {
+          "url": "https://example.com/blocbuy-controlled-csp-probe.png",
+          "failure": "csp"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "policy": "strict-style",
+      "pagePath": "/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "status": 200,
+      "title": "Universal Travel Adapter · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/2.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [
+        {
+          "directive": "style-src-elem",
+          "blockedURI": "inline",
+          "sample": ""
+        }
+      ],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "strict-style",
+      "pagePath": "/login",
+      "status": 200,
+      "title": "Sign in · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-isologo-Cpyc5L1k.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/google-g.svg",
+          "loaded": true
+        }
+      ],
+      "violations": [
+        {
+          "directive": "style-src-elem",
+          "blockedURI": "inline",
+          "sample": ""
+        }
+      ],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "hashed-react-aria-styles",
+      "pagePath": "/",
+      "status": 200,
+      "title": "Listings · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 20%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 60%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 75%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        }
+      ],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-03/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-02/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-01/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/cover.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "unapprovedOriginBlockedByCsp": true,
+      "failed": [
+        {
+          "url": "https://example.com/blocbuy-controlled-csp-probe.png",
+          "failure": "csp"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "policy": "hashed-react-aria-styles",
+      "pagePath": "/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "status": 200,
+      "title": "Universal Travel Adapter · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/2.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "hashed-react-aria-styles",
+      "pagePath": "/login",
+      "status": 200,
+      "title": "Sign in · BlocBuy",
+      "isolated": false,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-isologo-Cpyc5L1k.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/google-g.svg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "coep-require-corp",
+      "pagePath": "/",
+      "status": 200,
+      "title": "Listings · BlocBuy",
+      "isolated": true,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 20%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 60%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 75%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        }
+      ],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "unapprovedOriginBlockedByCsp": true,
+      "failed": [
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-02/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-01/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-03/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/cover.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://example.com/blocbuy-controlled-csp-probe.png",
+          "failure": "csp"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "policy": "coep-require-corp",
+      "pagePath": "/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "status": 200,
+      "title": "Universal Travel Adapter · BlocBuy",
+      "isolated": true,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        },
+        {
+          "url": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/2.jpg",
+          "failure": "net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "policy": "coep-require-corp",
+      "pagePath": "/login",
+      "status": 200,
+      "title": "Sign in · BlocBuy",
+      "isolated": true,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-isologo-Cpyc5L1k.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/google-g.svg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "coep-credentialless",
+      "pagePath": "/",
+      "status": 200,
+      "title": "Listings · BlocBuy",
+      "isolated": true,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 20%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 60%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 75%;",
+          "label": null
+        },
+        {
+          "tag": "DIV",
+          "style": "width: 66.6667%;",
+          "label": null
+        }
+      ],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-03/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-02/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-01/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0010/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0009/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0008/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0007/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0006/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0005/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0004/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0003/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0002/cover.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/DEMO-P-0001/cover.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "unapprovedOriginBlockedByCsp": true,
+      "failed": [
+        {
+          "url": "https://example.com/blocbuy-controlled-csp-probe.png",
+          "failure": "csp"
+        }
+      ],
+      "errors": []
+    },
+    {
+      "policy": "coep-credentialless",
+      "pagePath": "/products/01a11acc-b84a-7134-90bd-a80c8c719739",
+      "status": 200,
+      "title": "Universal Travel Adapter · BlocBuy",
+      "isolated": true,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/1.jpg",
+          "loaded": true
+        },
+        {
+          "src": "https://dcsjrkmummxi7.cloudfront.net/products/US34-04/2.jpg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [],
+      "errors": []
+    },
+    {
+      "policy": "coep-credentialless",
+      "pagePath": "/login",
+      "status": 200,
+      "title": "Sign in · BlocBuy",
+      "isolated": true,
+      "styleTags": [
+        {
+          "text": "@layer {\n  [data-react-aria-pressable] {\n    touch-action: pan-x pan-y pinch-zoom;\n  }\n}",
+          "nonce": ""
+        }
+      ],
+      "inlineStyles": [],
+      "images": [
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-logo-04p00lRY.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/assets/blocbuy-isologo-Cpyc5L1k.svg",
+          "loaded": true
+        },
+        {
+          "src": "https://d1b3np88z657cp.cloudfront.net/google-g.svg",
+          "loaded": true
+        }
+      ],
+      "violations": [],
+      "failed": [],
+      "errors": []
+    }
+  ]
+}

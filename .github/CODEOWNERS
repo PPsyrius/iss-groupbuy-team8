@@ -67,6 +67,13 @@ pnpm-lock.yaml @limjiechao
 /infra/terraform/frontend-stack/ @PPsyrius @limjiechao
 
 # ---------------------------------------------------------
-# Unassigned, To Be Decided Later
+# BackEnd bounded contexts (after the backend catch-alls, so these rules win)
 # ---------------------------------------------------------
-# @EricWang1358 @Yorick-Yu
+# Payments and refunds: Yorick, with the backend owner
+/backend/**/com/blocbuy/payment/ @Yorick-Yu @l0sgAi
+/backend/**/mapper/payment/ @Yorick-Yu @l0sgAi
+/backend/docs/payment/ @Yorick-Yu @l0sgAi
+
+# Group buying and team formation (UC3, UC4): Eric, with the backend owner
+/backend/**/com/blocbuy/groupbuy/ @EricWang1358 @l0sgAi
+/backend/**/mapper/groupbuy/ @EricWang1358 @l0sgAi

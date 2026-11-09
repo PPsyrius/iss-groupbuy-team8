@@ -1,0 +1,69 @@
+{
+  "scope": "PR 703 local uncommitted write-boundary follow-up; no deployment or hosted validation of these changes",
+  "sourceBase": "db0438461d21851a50c84e18fbbe36d897556508",
+  "sourceSha256": {
+    "frontend/tooling/security-browsers.Dockerfile": "6bdae2c3c2ce7013525bf212431e22fb4a782b1a06967d144c33f832ff44b936",
+    "frontend/tooling/verify-write-boundary.mjs": "27ef58060efe0e20d9305c0555fa1bd912c80e667e0ea0d58f1ea3240e35ff4d",
+    "frontend/scripts/clean-api-output.mjs": "050843468cb78b1243e076b888bb018f84fa5dffd895e1782e0cdba17686cc1b",
+    "frontend/openapi-ts.config.ts": "0b79e5672675662644338564c4159973aa3d8e3c77ee2f978a3e02c27fe03083",
+    "frontend/package.json": "c3882c84ab10ce16eb75bc88ad0197b29f510a0065b9b2535c06012158b7c53f",
+    ".github/workflows/security-browsers.yml": "6b29542e99b73cc631bcf3c71ad62fe07ece0d46311052a6dcf1c5301c96ce1c",
+    ".github/workflows/security.yml": "8771e6cc7ffad5646e7e728e3f0a3978ac677af582140fb4d88b8577a4c1c43c",
+    ".github/tests/api-output-clean.test.cjs": "d801ad33085f628126fd280a808702249d5748336f33078ec93585e71cd41b2b",
+    ".github/tests/security_browsers_workflow_test.py": "4d67523d1e3684a6ba270c300797420c1d20a80124736c1baecd5dc45c667dbc"
+  },
+  "imageID": "sha256:1c42ac960dd0ba635c565e6e6259836126eb2f56a4b6cc847fc759f5917f8d5f",
+  "configuredUser": "node",
+  "boundary": {
+    "uid": 1000,
+    "protectedFiles": 11,
+    "protectedDirectories": 8,
+    "writableOutputs": ["src/api/generated", "node_modules/.vite", "node_modules/.vite-temp", "/evidence"],
+    "buildProbe": "passed",
+    "beforeAndAfterFrontendCheck": "passed",
+    "beforeAndAfterBrowserSuite": "passed",
+    "negativeControl": "Probe rejected the previous broad-ownership image"
+  },
+  "pnpmMetadataCorrection": "Initial restricted image failed before tests because root-owned mode-600 verification metadata was unreadable and pnpm attempted dependency reinstallation. Final image grants read access only; metadata remains root-owned and rejects writes. Dependency verification is not disabled.",
+  "frontendCheck": {
+    "command": "docker run --rm --cpus=2 --memory=6g blocbuy-security-browsers:restricted sh -c 'node tooling/verify-write-boundary.mjs && pnpm check && node tooling/verify-write-boundary.mjs'",
+    "status": "passed all stages",
+    "files": 79,
+    "tests": 891,
+    "setup": "Directly in final image, no source mounts or per-file overrides"
+  },
+  "browserStats": {
+    "startTime": "2026-10-27T04:41:44.340Z",
+    "expected": 69,
+    "skipped": 16,
+    "unexpected": 0,
+    "flaky": 0,
+    "total": 85
+  },
+  "browserReportSha256": "b29d591d77aac57de55853e0dbdb30171101acbc103eb48b9c1d09dc56ea810f",
+  "browserScope": "Chromium, Firefox, WebKit and touch-emulated WebKit; local fixtures and synthetic provider navigation, not real OAuth/Stripe acceptance or physical iOS",
+  "outputBinding": "Windows Docker Desktop report bind; default UID 1000",
+  "generatedClient": {"comparison": "Byte-identical to previous non-root image across all 19 files", "contractChanged": false},
+  "nodeTooling": {"passed": 31, "cleanupRegressions": 4},
+  "pythonTooling": {"tests": 238, "skipped": 4, "failures": 0},
+  "actionlint": "Passed security.yml and security-browsers.yml in Docker",
+  "focusedTrivy": {
+    "version": "0.74.0",
+    "command": "trivy config --severity HIGH,CRITICAL --exit-code 1 --format json frontend/tooling",
+    "exitCode": 0,
+    "target": "security-browsers.Dockerfile",
+    "successes": 20,
+    "failures": 0,
+    "reportSha256": "8103f424079f5c798248c090a061d6d9636f0bea9e9d4e67593fa868ee21d2ae"
+  },
+  "hostedTrivy": {
+    "sha": "db0438461d21851a50c84e18fbbe36d897556508",
+    "config": "https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40449094646/job/122007349338",
+    "dependencies": "https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/40449094646/job/122007349330",
+    "conclusion": "Both SUCCESS; applies only to pushed SHA, not current local changes"
+  },
+  "fullLocalTrivy": "Retained same-scope debug rerun ended with helm scan error / context deadline exceeded, exit 1, OOMKilled false; no full-local-scan success claimed and no CI scope, gate or timeout changed",
+  "rawEvidenceRoot": "$env:LOCALAPPDATA/Temp/opencode/pr703-restricted-write-boundary-2026-10-27/",
+  "rawEvidence": ["write-boundary.json", "generated-client-manifest.json", "runtime-final/browser-suite.json", "runtime-final/playwright-report/", "runtime-final/trivy-tooling-final.json"],
+  "limitations": "Current source is uncommitted and has no hosted rerun. Manual workflow not dispatched. Global stored-image inventory, real provider acceptance, physical iOS, authorized apply, live verification and follow-up ZAP remain pending. Previous captures are unchanged."
+}

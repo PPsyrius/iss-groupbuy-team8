@@ -1,1 +1,5 @@
 *.sh text eol=lf
+# CloudFront hashes function bytes; archives and Windows checkouts must match LIVE.
+/deployment/frontend/cloudfront/spa-fallback.js text eol=lf
+# Frozen delivery inputs are byte-hashed; preserve their bytes on Windows checkouts.
+/docs/ci/evidence/dora-metrics-*-inputs.json text eol=lf

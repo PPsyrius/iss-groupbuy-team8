@@ -151,7 +151,7 @@ The mandatory [SPA function](../../deployment/frontend/cloudfront/spa-fallback.j
 
 ## 15. Security response headers
 
-The versioned [policy](../../deployment/frontend/cloudfront/response-headers-policy.json) attaches to both behaviors and defines CSP, HSTS, content-type, frame and referrer headers. On 2026-09-30 live HEAD responses for `/` and `/api/actuator/health` returned 200 with all five values matching the policy (NFR-16). Use reviewed Terraform changes for future edits.
+The versioned [policy](../../deployment/frontend/cloudfront/response-headers-policy.json) attaches to both behaviors and defines CSP, HSTS, content-type, frame, referrer and custom headers. On 2026-09-30 live HEAD responses for `/` and `/api/actuator/health` returned 200 with the original five values matching that revision of the policy (NFR-16). The image allowlist and Permissions-Policy candidate status below is superseded by the [2026-10-27 operator continuation](#remaining-browser-policy-candidate--2026-10-27), which records the applied dev policy. Use reviewed Terraform changes for future edits.
 
 After a policy or deploy change, run this stronger GET/value check from the repository root with `DIST_DOMAIN` set in §2; require 2xx from both behaviors, not merely present header names.
 
@@ -186,6 +186,10 @@ expected = {
     'x-frame-options': security['FrameOptions']['FrameOption'],
     'referrer-policy': security['ReferrerPolicy']['ReferrerPolicy'],
 }
+expected.update({
+    item['Header'].lower(): item['Value']
+    for item in policy.get('CustomHeadersConfig', {}).get('Items', [])
+})
 for path in map(Path, sys.argv[1:]):
     actual = {}
     for line in path.read_text().splitlines():
@@ -198,7 +202,45 @@ for path in map(Path, sys.argv[1:]):
 PY
 ```
 
-`style-src 'unsafe-inline'` supports React Aria's injected styles; `img-src https:` permits product images. Use Terraform, not manual policy updates.
+Historical context: the earlier policy used `style-src 'unsafe-inline'` for React Aria's injected styles. The [2026-10-27 operator continuation](#remaining-browser-policy-candidate--2026-10-27) supersedes that status: the deployed dev policy uses reviewed stylesheet hashes and denies inline style attributes. Use Terraform, not manual policy updates.
+
+### Image allowlist and Permissions-Policy candidate — 2026-10-26
+
+Status notice: the [2026-10-27 operator continuation](#remaining-browser-policy-candidate--2026-10-27) and [post-closure evidence](../quality/evidence/zap/after-2026-10-27/post-closure/README.md) record the applied dev policy and owner-directed closure of #636–#641. Pending-publication and keep-open statements in this section describe the historical candidate stage, not current operator instructions; remaining functional acceptance is tracked in #610.
+
+Refs #636 and #641. Decision: restrict image loading to `'self'`, `https://dcsjrkmummxi7.cloudfront.net` (catalog CDN) and `https://lh3.googleusercontent.com` (Google profile images); no scheme-wide, wildcard, `data:` or `blob:` source is allowed. The public inventory covered 14 on-sale listings and 42 image URLs on the catalog CDN. The [27 October continuation](../quality/evidence/zap/compatibility-inventory-2026-10-27/README.md) verifies one real signed-in avatar at the approved Google origin, but the account has no order/bloc history and cannot read admin listings (403). Before applying, an authorized data owner must run the [read-only aggregate inventory](queries/image-origin-inventory.sql), review all stored catalog/history/avatar origins, and retain privacy-reviewed aggregate evidence. Stop on any unreviewed legitimate origin; do not infer global compatibility from this one account.
+
+2026-10-27 review decision: admin cover/gallery validation derives allowed HTTPS origins from the canonical CSP JSON. Unsupported legacy URLs remain visible with an immediate warning and block saving until replaced/removed; they are not silently dropped. Only approved URLs are previewed. [Frontend ADR 0015](../../frontend/docs/adr/0015-admin-console-shell-and-guard.md) records this compatibility guard. Direct API clients retain the existing backend HTTPS rule, so API acceptance is not proof of browser display compatibility. No stored history/profile is rewritten. Deploy the rebuilt frontend through its normal reviewed delivery path for the editor guard; Terraform apply alone changes only edge headers. Later allowlist changes require both an app rebuild and policy publication.
+
+Decision: deny the unused camera, microphone, geolocation, Payment Request and USB capabilities with `camera=(), microphone=(), geolocation=(), payment=(), usb=()`. Leave clipboard, Web Share and fullscreen at their default policies. Source uses clipboard/Web Share for invitations, Google login and Stripe Hosted Checkout are full-page navigations, and no use of the denied APIs was found. Top-level Stripe navigation is not an embedded Payment Request integration. The JSON's custom-header entries are consumed by Terraform, Vite preview and the localhost Caddy generator; both edge behaviors receive the same versioned policy after apply.
+
+Local validation is not deployment evidence. Review a private saved plan using the [frontend stack procedure](../../infra/terraform/frontend-stack/README.md), with current account/region/distribution confirmed and the existing origin secret supplied privately. Expect an in-place update of `aws_cloudfront_response_headers_policy.security` only; stop on unrelated changes, replacement, deletion or secret rotation. An authorized operator applies the exact reviewed plan after merge to `dev`; no `prod` promotion, EC2 restart or normal S3 app deployment is required to publish the header policy. Do not attach raw plans/state or print the origin secret.
+
+After propagation, dispatch the separate read-only [`verify-dev-edge`](../../.github/workflows/verify-dev-edge.yml) workflow from merged `dev` (`gh workflow run verify-dev-edge.yml --ref dev` after authorization). It requires `FRONTEND_URL_DEV` to equal the reviewed dev origin, checks exact SPA/API headers, loads real anonymous catalog/detail images, retains image-load failures even when fallbacks remove the image, and verifies CSP blocks an unapproved image before a request. It uploads aggregate JSON and public-page screenshots as `dev-edge-policy`; it uses no AWS role and cannot deploy. Ordinary application delivery does not depend on this candidate before its authorized Terraform apply. The workflow has not yet run on GitHub; local header-verifier tests are not live acceptance.
+
+Also run the exact GET/header comparison above on both behaviors, check real signed-in avatars and inventoried historical images, exercise invitation copy/share and sandbox navigation as appropriate, then dispatch `dast-baseline` on `dev`. Preserve the new run separately from the before snapshot and compare alert references `10055-4` and `10063-1`. Keep #636/#641 open until authorized deployment and follow-up scan evidence exist; #637–#640 are not changed or accepted by this candidate. Local results and limitations are recorded in [quality gates](../quality/quality-gates.md#image-csp-and-permissions-policy-candidate--2026-10-26).
+
+### Remaining browser-policy candidate — 2026-10-27
+
+Operator continuation (2026-10-27): the global read-only `domain` inventory found 19 legacy `loremflickr.com` references, including five retained orders. The owner authorized and completed generic approved-CDN picture substitution for this PoC, then applied the reviewed dev response policy. Exact nine-header checks passed on root/catalog/health, API health was `UP`, and the final normalized-source Terraform plan exited 0. [Operational evidence](../quality/evidence/zap/poc-image-repair-2026-10-27/README.md) records backups, CRLF-only function normalization, cleanup and successful hosted anonymous Chromium verification. [Complete follow-up ZAP comparison](../quality/evidence/zap/after-2026-10-27/comparison.md) records zero High/Medium/Low and six Informational types, with all six targeted references absent. [Repair/recovery guidance](legacy-poc-images.md) remains available; #636–#641 are closed at the deployed-header/passive-scan scope, while #642–#647 remain open. Real-provider, mobile and authenticated-history acceptance remains tracked in #610. Historical candidate statements below are not current rollout status.
+
+Refs #637–#640; [frontend ADR 0016](../../frontend/docs/adr/0016-hashed-styles-and-cross-origin-policies.md). This extends the preceding #636/#641 candidate: remove `style-src 'unsafe-inline'` in favor of two exact React Aria stylesheet hashes, deny inline style attributes, and emit COEP `credentialless`, COOP `same-origin` and CORP `same-origin`. Terraform dev/SWE5001, Vite preview and localhost Caddy consume the same canonical JSON. Earlier statements that #637–#640 are unchanged describe the first candidate only, not this follow-up. This source update does not apply either CloudFront stack.
+
+The user approved progressive COEP after WebKit testing on 27 October: Chromium and Firefox enforce credentialless isolation; tested WebKit does not, but must retain working images and UI. There is no universal-isolation claim, no automatic user-agent policy switching and no dependence on SharedArrayBuffer. `require-corp` is rejected for this rollout because it blocks the current product/avatar images. COOP may sever external opener relationships; Google OAuth and Stripe Hosted Checkout use full-page navigation, not opener-based communication. Test actual sign-in/return and approved sandbox checkout/return before deployment acceptance; mocked navigation alone does not establish third-party acceptance.
+
+| Resource class | Intended sharing and selected policy |
+|---|---|
+| SPA documents and hashed JS/CSS/fonts | Same-origin application use; CORP `same-origin`. Public caching is unchanged. |
+| Favicon, app icons and manifest | Same-origin site/PWA use; CORP `same-origin`. No external hotlinking requirement is documented; top-level navigation is not prohibited by CORP. |
+| `/api/*`, including session/user data | Same-origin app access; CORP `same-origin` is defense-in-depth, not authentication, CORS or cache isolation. Existing access controls and cache behavior remain unchanged. |
+| Product CDN and Google avatars | External public no-CORS images remain CSP-allowlisted; credentialless omits credentials in supporting browsers. The app's CORP header does not change these servers. WebKit's existing baseline behavior remains, without a credentialless guarantee. |
+| Google and Stripe destinations | Full-page outbound/return navigation is retained; no cross-origin embedding or popup integration is added. |
+
+Before CloudShell/apply, complete the existing global image-origin inventory and confirm images are publicly readable without cookies; investigate any private/cookie-dependent image rather than weakening the policy. Pass the combined policy through build/check, interactive Chromium tests and the opt-in cross-browser matrix (`E2E_SECURITY_BROWSERS=all pnpm exec playwright test` after installing the corresponding browsers in Docker). Recheck touch overlays and both vendor hashes after dependency upgrades. A future hash change needs an old/new hash overlap at the edge before app delivery; never deploy an app with a hash the live edge does not allow. This candidate's hashes match the currently deployed dependency strings.
+
+Use only an authorized, privately reviewed Terraform plan/apply for the dev response policy, stopping on unrelated drift. SWE5001 is a separate state/operator action; do not infer its deployment from dev. After propagation, run `verify-dev-edge` (now also checking style violations and Chromium isolation), real integration checks and a fresh passive ZAP baseline. Preserve before evidence and record the six Medium/Low dispositions separately; the six Informational issues #642–#647 concern SPA crawling/cache behavior and are not resolved by these isolation headers. No finding closure, universal-browser guarantee or scan success is implied by adding headers in source.
+
+Review hardening (2026-10-27): use the [versioned Docker tooling or supplemental manual workflow](../../frontend/tooling/README.md) for all-engine checks; the manual workflow is not a required PR gate and has not yet been verified on a hosted runner. Its local two-origin cookie probe requires a credentialed baseline before testing omission and does not establish real OAuth/Stripe acceptance. WebKit may gain isolation support without failing compatibility; require cookie omission when it does. The exact style-policy guard also needs explicit review updates for any future old/new hash overlap. Cross-origin policies remain an intentional maintenance/compatibility cost, not a prerequisite of an existing isolation-dependent app feature.
 
 ## 16. Frontend deploy role (GitHub OIDC)
 

@@ -124,12 +124,7 @@ export function LifecycleDialog({
   };
   const text = kind ? copy[kind] : undefined;
   return (
-    <AlertDialog.Backdrop
-      isOpen={kind !== null}
-      onOpenChange={(isOpen) => {
-        if (!isOpen && !isPending) close();
-      }}
-    >
+    <AlertDialog.Backdrop isOpen={kind !== null}>
       <AlertDialog.Container size="sm">
         <AlertDialog.Dialog>
           {kind && text ? (
