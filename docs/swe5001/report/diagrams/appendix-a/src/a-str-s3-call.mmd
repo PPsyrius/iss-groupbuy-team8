@@ -1,0 +1,29 @@
+%% frame: S3 Distribution: the one synchronous call, failing closed (design)
+sequenceDiagram
+    participant App as :PurchaseIntentAppService
+    participant Remote as :RemoteUserAppService
+    participant Ctl as :InternalUserController
+    participant Impl as :UserAppServiceImpl
+    participant Repo as :UserRepository
+
+    Note over App,Remote: commerce-svc, inside the caller's transaction
+    App->>Remote: requireActive(userId)
+    Remote->>Ctl: requireActive(id): GET /internal/users/{id}/active
+    Note over Ctl,Repo: identity-svc, reached by service name; 500 ms connect, 1500 ms read, no retry
+    Ctl->>Impl: requireActive(id)
+    critical identity read, REQUIRED, read-only
+        Impl->>Repo: findById(id)
+        Repo-->>Impl: Optional<User>
+    end
+    alt account exists and is active
+        Impl-->>Ctl: void
+        Ctl-->>Remote: 200, Result.ok
+        Remote-->>App: void
+    else account missing or disabled
+        Impl-->>Ctl: BizException USER_NOT_FOUND or ACCOUNT_DISABLED
+        Ctl-->>Remote: 404 IDENTITY_404_001 or 403 IDENTITY_403_001
+        Remote-->>App: BizException with the same IdentityErrorCode
+    else timeout, 5xx, unknown route or any other answer
+        Remote-->>App: IdentityUnavailableException
+        Note over App,Remote: not a BizException: the caller's transaction rolls back and the request fails with HTTP 500
+    end

@@ -1,0 +1,34 @@
+%% frame: S9 Domain and integration events: one fact, in process and across services (design)
+sequenceDiagram
+    participant Svc as :PaidGroupDealService
+    participant Pub as :ApplicationEventPublisher
+    participant OLS as :OrderLifecycleSubscriber
+    participant Out as :IntegrationOutboxWriter
+    participant Relay as :OutboxRelayService
+    participant Topic as domain events «topic»
+    participant Con as :SqsNotificationEventConsumer
+    participant Hdl as :NotificationEventHandler
+
+    critical settlement transaction, REQUIRED, READ COMMITTED, 10 s (commerce-svc)
+        Svc->>Pub: publishEvent(event: TeamSucceeded)
+        Pub-->>Svc: registered, no subscriber runs yet
+        Note over Svc,Out: BEFORE_COMMIT, same transaction, in @Order
+        Pub->>OLS: onTeamSucceeded(event), @Order(10)
+        OLS-->>Pub: orders confirmed
+        Pub->>Out: onTeamSucceeded(event), lowest precedence
+        Out->>Out: write(eventType, dealId, payload)
+        Out-->>Pub: sys_outbox row inserted
+    end
+    Note over Svc,Out: COMMIT; AFTER_COMMIT subscribers then run (share credit, cache eviction: @fig-a-uc04-ds-events)
+    Note over Relay,Topic: every 2 s under the job lease (S7): relayBatch reads up to 100 due outbox rows
+    Relay-)Topic: PublishBatch via OutboxEventTransport.publish(events, leaseValid)
+    Topic-)Con: copy on the notification SQS queue
+    Note over Con,Hdl: IntegrationEventDecoder.decode(body) yields a NotificationEvent
+    Con->>Hdl: handle(consumer, event)
+    Note over Con,Hdl: one transaction: markConsumed, then recordBatch (@sec-a-notifications)
+    alt first delivery
+        Hdl-->>Con: APPLIED
+    else duplicate eventId
+        Hdl-->>Con: DUPLICATE
+    end
+    Note over Con,Hdl: message deleted; a failure leaves it for redelivery, then the DLQ after 5 receives
