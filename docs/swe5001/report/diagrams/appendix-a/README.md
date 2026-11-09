@@ -1,0 +1,113 @@
+# Appendix A diagrams
+
+Appendix A ("Detailed Design Specifications", `sections/07-appendix-a.typ`) draws every UML diagram from a Mermaid source with the SWE5006 UML kit (`docs/swe5006/report/typst/uml.typ`, Visual Paradigm style). The pilot part `sections/appendix-a/a06-uc4.typ` (UC4) shows every convention below in use.
+
+```
+diagrams/appendix-a/
+  src/<id>.mmd     editable Mermaid source, one diagram per file (commit)
+  gen/<id>.typ     generated Typst drawing (commit with its source; never edit by hand)
+sections/appendix-a/
+  lib-a.typ        afig, atable, step and the appendix numbering
+  aNN-name.typ     one file per part (A.1 to A.14)
+scripts/
+  appendix-diagrams.mjs   src -> gen (wraps mermaid() from docs/swe5006/report/scripts/typst.mjs)
+  preview-part.sh         render one part to PNGs and report each diagram's label size
+```
+
+## Commands
+
+Run from the repository (worktree) root.
+
+```bash
+node docs/swe5001/report/scripts/appendix-diagrams.mjs              # all sources
+node docs/swe5001/report/scripts/appendix-diagrams.mjs a-uc04-ac    # only these ids
+node docs/swe5001/report/scripts/appendix-diagrams.mjs --check      # fail if gen/ is stale or orphaned
+docs/swe5001/report/scripts/preview-part.sh a06                     # one part alone, about 35 s
+FULL=1 docs/swe5001/report/scripts/preview-part.sh a06              # inside the whole report
+typst compile --root . docs/swe5001/report/main.typ docs/swe5001/report/build/report.pdf
+```
+
+The generator prints one line per diagram (`wrote`, `same` or `FAIL` with the line and the reason) and exits 1 if any source fails.
+
+`preview-part.sh` regenerates all diagrams, compiles, and writes the part's pages to `.build/swe5001-appendix/preview/<part>/page-NNN.png` in the main checkout. It prints the compiler's warnings and one line per figure:
+
+```
+a-uc04-dc-settle           p10   class    scale 0.96  labels 8.1 pt
+a-uc04-dc-admit            p12   class    scale 0.89  labels 7.5 pt  landscape  SMALL: split the diagram or narrow its members
+```
+
+By default the part is set alone (`--input apart=<part>`): no chapters 1–6 and no other parts, so another writer's error cannot block you. The part keeps its number (A.6), its figures count from A.1, and a reference to a label outside the part prints as a red `?label`. `FULL=1` gives the real numbers and references; it falls back to the part alone if the report does not compile. Look at every PNG before you hand a part in.
+
+## Naming
+
+- Diagram id: `a-ucNN-<kind>[-<slice or flow>]`, lowercase kebab-case, starting `a-`. Kinds: `ac` analysis class, `as-basic` / `as-alt-…` analysis sequence per flow, `dc-<slice>` design class slice, `ds-<flow>` design sequence, `st-<object>` statechart. Shared parts: `a-str-…` (strategies), `a-pkg-…` (package-like views). Use only your own ids.
+- Figure label: `<fig-ID>`, created by `afig`; refer to it as `@fig-a-uc04-ac`. Tables: `<tbl-a-ucNN-…>`. Sections: `<sec-a-ucNN-…>`; each part's level-2 heading already has `<sec-a-ucNN>` (or `<sec-a-reading>`, `<sec-a-strategies>`, `<sec-a-pay-upfront>`, `<sec-a-notifications>`, `<sec-a-trace>`).
+
+## Source format
+
+```
+%% frame: UC4 design, slice 2: webhook settlement (commerce-svc)
+classDiagram
+    class StripeCheckoutService {
+        <<application service, Ext, Conc>>
+        -tx: TransactionTemplate
+        +handleWebhook(rawBody: String, signature: String): void
+    }
+    …
+%% at StripeCheckoutService 1,2
+    StripeCheckoutService "1" --> "1" CheckoutGateway
+```
+
+- The first line is `%% frame: <name>`, the heading in the frame's tab (`class …`, `sd …`, `stm …`). Required.
+- `%% at Id col,row` pins a class or state to a grid cell (integers, column first, row down). Pin every box of a class diagram; the automatic layout is a fallback. Two pins may not share a cell. Pins do nothing in sequence diagrams (lifelines keep declaration order).
+- Cross-references: `@fig-…`, `@tbl-…` or `@sec-…` inside a message, note or edge label becomes a real reference that follows renumbering (`Note over A,B: B7: @fig-a-uc04-ds-admit`). Never type "Figure A.12" by hand. Not allowed in fragment guards or names.
+
+### Supported Mermaid
+
+Anything else fails loudly, because the translator itself silently drops lines it does not understand.
+
+- `classDiagram`: `class X { … }` with members one per line (a line with `(` is an operation, otherwise an attribute or enumeration literal), `<<stereo>>` inside the body or as `<<stereo>> X`, `X : member`, `class X~T~` generics, `direction`. Relations `<|--` `..|>` `*--` `o--` `-->` `..>` `--` `..` in either direction, with `"mult"` on either end and `: label`. Every class must be declared with `class X` (a typo would otherwise create a box).
+- `sequenceDiagram`: `actor X`, `participant X as Name`, `create participant X as Name` (the next message to it draws «create»), `destroy X`; messages `->>` sync, `-)` async, `-->>` return, each with a `: label`; `activate`/`deactivate` or none (activations are inferred); `alt`/`else`, `opt`, `loop`, `par`/`and`, `critical`/`option`, `break`, plain `rect`; `Note over A,B: text`. Every participant must be declared before use.
+- `stateDiagram-v2`: `[*]`, `state "Name" as X`, `state X <<choice>>` (or fork, join), `A --> B : trigger [guard] / effect`, `X : entry / …` (body lines), a self-transition (drawn inside the state), `direction`.
+- Not supported: namespaces and packages, notes in class or state diagrams, composite or concurrent states, `ref` fragments, self-associations, coloured `rect`, static (underlined) members, `box`, flowcharts. Say these things in the caption or text instead.
+
+## Placing figures and tables (lib-a.typ)
+
+```typst
+#import "lib-a.typ": *
+
+#afig("a-uc04-ac", [UC4 analysis class diagram (UML class notation, BCE stereotypes). JoinTeamControl is the only object that talks to both boundaries and to the entities.])
+#afig("a-uc04-dc-admit", orient: "landscape", [ … ])   // force a flipped page
+
+#atable([UC4 flows of events. …], <tbl-a-uc04-flows>,
+  columns: (auto, auto, 1fr),
+  header: ([Step], [At], [What happens]),
+  [*B1*], [], [The buyer asks to join an open team.],
+)
+```
+
+- `afig(id, caption, lbl: auto, orient: auto, float: false)` puts the drawing in a numbered figure (Figure A.n) labelled `<fig-ID>`. It scales the drawing to the text width and the page height left under the caption. A class or state diagram that would print below 8 pt turns landscape on a flipped page of its own, caption included, when that helps. `orient: "landscape"` forces it (the kit only turns when landscape is at least 0.03 larger); `"portrait"` forbids it. Sequence diagrams never turn: split them.
+- Call `afig` at the top level of the part file, never inside a list, block or table: a landscape figure needs a page break.
+- `atable(caption, lbl, columns:, header:, ..cells)` is the report's table style with a repeating header; long inline code in a cell wraps at `_ . / ( ,` and camelCase boundaries.
+- Caption: notation + viewpoint + what to notice, two sentences at most.
+
+## Layouts that stay legible (lessons from the UC4 pilot)
+
+- Text is 8.5 pt and may shrink to 8 pt (scale 0.94). The preview's `SMALL` flag means fix it.
+- Portrait text width holds three class columns at full size; four or five columns go landscape (25 cm wide, about 13.5 cm tall for the drawing). A design slice of 9 to 13 classes fits in 3 columns × 4–5 rows (portrait) or 4–5 columns × 3 rows (landscape).
+- Put the class with the most links in the middle and its partners in the eight cells around it. Link only neighbouring cells. An edge that skips a cell diagonally clips the corner of the box in between and the router turns it into an arc that can cross other boxes.
+- Short horizontal edges cannot carry two multiplicities and a label: use `*` instead of `0..*`, drop the label, or make the edge vertical or diagonal.
+- Remove members that no diagram uses (private helpers no sequence calls). Every operation a sequence sends must stay on some design class diagram.
+- Two edges between the same two boxes fan out into arcs; keep one (an attribute can stand for the association).
+- Sequence diagrams: up to 8 lifelines read well; at 10 a «boundary» stereotype just overflows its head box. Split a long flow at a natural seam (before and after payment; receipt and transaction) and link the parts with a `@fig-…` note.
+- A return message goes back to its caller, one lifeline at a time; do not jump to the actor.
+- Lifelines are `:Class`. Name the interface the caller holds, unless the diagram shows what happens inside the implementation (then name the class, for example `:GroupDealPurchaseSupportImpl`). Two objects of one class: `txA : StripeCheckoutService`.
+- Mark each transaction with `critical <name>, <isolation>, <timeout>`, row locks as explicit messages (`lockDeal(dealId): lock 1, the team row`), and step tags (`B4`) in a `Note over` at the start of each step group.
+
+## Gotchas
+
+- Compile time is about 1 s per diagram (each class diagram is laid out once to decide its orientation and once to draw). The whole report will take minutes once every part is in: use the default preview (part alone) while writing.
+- Typst text: escape `#` as `\#`; `@word` is a reference and `<word>` a label, so put code such as `@Order(10)` or `Optional<UUID>` in backticks; `*` and `_` start strong and emphasis.
+- `typst query` is deprecated in Typst 0.15; the preview uses `typst eval`.
+- Floats are off by default: a floating figure escaped before the appendix heading and was lost at the end of the document in tests.
+- `ApplicationEventPublisher` is Spring's interface; it is the one framework type the UC4 diagrams draw, as the Observer's subject. Keep other framework and `java.util` types out of the boxes.
