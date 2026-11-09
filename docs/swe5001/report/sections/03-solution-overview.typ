@@ -50,7 +50,7 @@ Six architectural decisions (`AD-01` to `AD-06` in the canonical register) gover
     *Context:* When a team succeeds, expires, or settles a payment in `commerce-svc`, downstream platform services (`notification-svc` and future audit/analytics consumers) must react reliably without coupling the checkout transaction to downstream availability or losing events on process crashes. \
     *Options considered:* (a) _Synchronous REST callbacks from `commerce-svc` to `notification-svc` or `AFTER_COMMIT` broker publish without an outbox_—rejected because a crash between database commit and network send drops events (dual-write hazard), and synchronous calls propagate notification latency/outages to checkout; (b) _Central Saga Mediator / Step Functions or always-on Kafka (MSK) / RabbitMQ (Amazon MQ)_—rejected because post-commit notifications require fan-out choreography rather than multi-step orchestration, and always-on brokers violate our ephemeral cost model; (c) _Point-to-point SQS without SNS_—rejected because adding a second consumer would require modifying `commerce-svc`; (d) _`BEFORE_COMMIT` writes to `sys_outbox` + leased `OutboxRelayService` → SNS standard topic → per-consumer SQS queues with `maxReceiveCount = 5` DLQs + `sys_consumed_message` deduplication_. \
     *Choice:* Option (d). \
-    *Trade-off & Consequence:* Business state commits and event publication are atomic; adding the `audit` consumer required 2 lines of Terraform and zero changes to `commerce-svc` (verified on AWS on 17 October 2026). The trade-off is eventual consistency with a ~2 s relay polling lag (`AISS-11`, by design) and a calculated single-relay ceiling of ~50 events/s under `LeasedJobRunner`.
+    *Trade-off & Consequence:* Business state commits and event publication are atomic; the `audit` consumer, created with the notification queue in PR `#487`, costs 2 lines of Terraform and no change to `commerce-svc` (Section 4.4). The trade-off is eventual consistency with a ~2 s relay polling lag (`AISS-11`, by design) and a calculated single-relay ceiling of ~50 events/s under `LeasedJobRunner`.
   ]),
   ("AD-05", [
     *Shared authentication and immutable RBAC authorization snapshot in the distributed Session Store* (#link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/backend/docs/adr/0008-dual-deployment-topology.md")[ADR 0008], `#467`). \
@@ -111,7 +111,7 @@ Inside the backend reactor, every bounded context (`identity`, `catalog`, `group
 4. *Infrastructure Layer (`blocbuy-infrastructure`, `..persistence..`, `..messaging..`, `..outbox..`):* Implements domain repository and gateway ports using MyBatis-Plus data objects (`*DO`), XML/annotation mappers (`*Mapper`), converter classes (`*Converter`), Redis/Valkey templates, Stripe SDK adapters, and AWS SDK v2 SNS/SQS transports (`SnsOutboxEventTransport`, `SqsNotificationEventConsumer`).
 5. *Contract & Assembly Modules (`blocbuy-client`, `blocbuy-bootstrap`, `services/*`):* `blocbuy-client` holds versioned cross-service integration event contracts (`IntegrationEventEnvelope`, `TeamSucceededV1`, `TeamExpiredV1`, `PaymentSucceededV1`). `blocbuy-bootstrap` and the three `services/*` modules wire Spring Boot configurations and scheduled jobs (`LeasedJobRunner`).
 
-To prevent architectural erosion as five developers worked in parallel, these layer and service boundaries are enforced on every pull request by *18 automated architecture checks* (13 `@ArchTest` rules in `ArchitectureTest.java` plus 5 contract, SQL-ownership, and assembly-isolation test suites):
+To prevent architectural erosion as five developers worked in parallel, these layer and service boundaries are enforced on every pull request by *19 automated architecture checks* (17 `@ArchTest` rules in `ArchitectureTest.java` plus 2 plain tests for what ArchUnit cannot see, `IdentityTablesStayInIdentityMappersTest` and `InternalPathsContractTest`):
 
 #figure(
   table(
@@ -125,11 +125,11 @@ To prevent architectural erosion as five developers worked in parallel, these la
     [`commerce_reaches_identity_only_through_user_port` \ `only_identity_reads_current_user` \ `nothing_depends_on_notification` \ `notification_depends_on_no_other_service`],
     [Restricts `commerce` → `identity` calls strictly to the remote-capable `UserAppService` port; forbids `currentUser` outside `identity`; ensures `notification-svc` has zero incoming or outgoing code dependencies on `commerce` or `identity`.],
 
-    [Database & SQL Ownership \ (4 rules)],
+    [Database & SQL Ownership \ (3 rules + 1 test)],
     [`identity_persistence_is_owned` \ `commerce_persistence_is_owned` \ `notification_persistence_is_owned` \ `IdentityTablesStayInIdentityMappersTest`],
     [Verifies in bytecode and MyBatis XML files that no service references another service's persistence package or SQL table names (`sys_user*`, `biz_notification`, etc.).],
 
-    [API & Perimeter Guards \ (4 rules)],
+    [API & Perimeter Guards \ (4 rules + 1 test)],
     [`controllers_are_validated` \ `numeric_request_params_have_range_constraints` \ `internal_controllers_are_hidden_and_distributed_only` \ `internal_paths_live_in_internal_controllers` + `InternalPathsContractTest`],
     [Requires `@Validated` and numeric bounds on all controllers; requires `@Hidden` and `@ConditionalOnProperty(blocbuy.topology=distributed)` on `..web.internal..` controllers; fails if `/internal/*` leaks into `contracts/openapi.json`.],
   ),
@@ -155,7 +155,7 @@ Every architecturally significant element in @fig-d3-logical-view is catalogued 
     [Logical Element], [Stereotype & Tier], [Provider], [Provided / Required Interfaces], [Responsibility in the Solution],
     [Web SPA],
     [`«component»` \ Presentation],
-    [Custom (Team 8, React 19 + Orval client)],
+    [Custom (Team 8, React 19 + hey-api client)],
     [*Req:* `AuthAPI`, `CommerceAPI`, `NotificationAPI` (HTTPS)],
     [Single-page browser client for buyers, team leaders, and administrators; generated from `contracts/openapi.json`.],
 
@@ -547,11 +547,11 @@ BlocBuy's platform architecture serves two external participant sides and an exp
 - *Consumers (Buyers & Event Subscribers):* Joining buyers (`UC1`, `UC4`, `UC8`) browse dual-priced listings, join open teams with automatic refund protection, and read in-app notifications. On the technical plane, downstream services (`notification-svc` and the `audit` queue's reader) act as *event consumers* that derive new user-facing or analytical value from `commerce-svc` facts.
 
 *Demonstrated platform extensibility (measured reuse):*
-- *Zero-code event subscriber onboarding:* Adding the `audit` queue and its dead-letter queue to capture all `TeamSucceeded` and `TeamExpired` facts required *2 lines of Terraform configuration* in `infra/swe5001/modules/messaging/main.tf` (PR `#487`) and *zero code or configuration changes* in `commerce-svc` (verified on AWS on 17 October 2026; detailed in Section 4.4).
+- *Zero-code event subscriber onboarding:* The `audit` queue and its dead-letter queue, which receive every `Team*` event, are *2 lines of Terraform configuration* in `infra/swe5001/modules/messaging/main.tf`. They were created with the notification queue in PR `#487` and have no worker yet, so they show by construction that a new subscriber needs *no code or configuration change* in `commerce-svc` (detailed in Section 4.4).
 - *Workload-isolated path for future high-compute and batch consumers (`#741`):* Because every team and payment fact is fanned out through SNS to independent SQS queues, future *compute-intensive or long-running batch workloads*—such as end-of-day financial settlement reconciliation, seller payout aggregation, or machine-learning deal-recommendation retraining that would exceed serverless FaaS 15-minute execution limits—can read the `audit` queue and run as isolated *ECS Scheduled Tasks or AWS Batch jobs* (`AD-07`, `AD-16`). This guarantees that heavy analytical or batch compute never contends with `commerce-svc` checkout tasks for CPU or PostgreSQL connection-pool capacity.
 
 *API contract and perimeter governance boundary:*
-- *Implemented and verified in CI/AWS today:* A single OpenAPI 3.1 specification (`contracts/openapi.json`, 23 public operations under `/api/v1`) serves as the contract for all three services. The React SPA's TypeScript client is generated directly from `contracts/openapi.json` via Orval, and CI fails any pull request whose controller mappings drift from the committed spec or expose `/internal/*` (`InternalPathsContractTest`). At runtime, CloudFront and the ALB route only public `/api/v1/*` paths while `/internal/users/*` is reachable solely over internal ECS Service Connect within the VPC (`AD-06`, `AD-09`).
+- *Implemented and verified in CI/AWS today:* A single OpenAPI 3.1 specification (`contracts/openapi.json`, 31 operations in 27 paths under `/api/v1`) serves as the contract for all three services. The React SPA's TypeScript client is generated directly from `contracts/openapi.json` by hey-api (`@hey-api/openapi-ts`), and CI fails any pull request whose controller mappings drift from the committed spec or expose `/internal/*` (`InternalPathsContractTest`). At runtime, CloudFront and the ALB route only public `/api/v1/*` paths while `/internal/users/*` is reachable solely over internal ECS Service Connect within the VPC (`AD-06`, `AD-09`).
 - *Designed for external partner onboarding (not built in current scope):* When third-party merchants or partner apps integrate directly with BlocBuy APIs in a future phase, a dedicated *API Gateway* tier will be placed in front of the ALB to enforce per-partner API keys, usage plans, quota tiers, and per-tenant rate limiting (`AISS-04`, Section 1.4).
 
 ==== Ubiquitous Language Glossary
