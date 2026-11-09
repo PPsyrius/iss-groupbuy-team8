@@ -91,11 +91,11 @@ Reviewer pairs (second owner per [`AGENTS.md`](AGENTS.md#workflow-per-section)):
 
 ## Cross-section facts
 
-Facts that one section states and another depends on. The owner of the second section checks them before the final review; the reconcile of 3.1 with 3.2–3.4 on 6 November 2026 aligned the aggregate names and AD-01 to AD-06, except the placement of `ShareInvite` and `ShareCredit`, which stays open until Eric confirms it (first row).
+Facts that one section states and another depends on. The owner of the second section checks them before the final review; the reconcile of 3.1 with 3.2–3.4 on 6 November 2026 aligned the aggregate names, `ShareInvite`/`ShareCredit` own-repository boundary, and AD-01 to AD-06.
 
 | Stated in | Fact | Must match |
 |---|---|---|
-| 3.1.4 (Eric) | `ShareInvite` and `ShareCredit` are value objects inside `GroupDeal`; the code stores them through their own repositories (red marker in 3.1.4) | 3.2.3 aggregate-to-table mapping, D4, D7 |
+| 3.1.4 (Eric) | `ShareInvite` (`biz_share_invite`) and `ShareCredit` (`biz_share_credit`, `AFTER_COMMIT` `REQUIRES_NEW`) sit outside `GroupDeal`'s aggregate lock with their own repositories and reference `GroupDeal` by `dealId` | 3.2.3 aggregate-to-table mapping, D4, D7 |
 | 3.2.2 (Liu Jin) | One 0.5 vCPU commerce task saturated at about 280 req/s; three tasks about 455 req/s, the generator's limit (19 Oct 2026) | 4.1 (Pan) |
 | 3.4 AISS-13 (Liu Jin) | V4, V5, V7 and the identity outage have local results only | 4.2 (Yu Qianshuo) |
 | 3.2.3 (Liu Jin) | Settlement lock order team → purchase intent → payment | 3.2.4 UC4 sequence (Yu Qianshuo) |
@@ -131,7 +131,7 @@ Template headings are fixed. "Must contain" lists what an assessor will look for
 | Section | Must contain | Sources |
 |---|---|---|
 | 3.1.1 Key Architectural Decisions | AD table with trade-off and rationale per row | [`02-proposed-architecture.md` §11](../architecture-options-study/02-proposed-architecture.md), ADRs 0007, 0008 |
-| 3.1.2 Tiers and Layers | Tiers, and the COLA layers inside each service; the 18 architecture rules that enforce them | [`02-proposed-architecture.md` §2.1](../architecture-options-study/02-proposed-architecture.md), backend constraints skill |
+| 3.1.2 Tiers and Layers | Tiers, and the COLA layers inside each service; the 19 architecture checks (17 ArchUnit rules + 2 plain tests) that enforce them | [`02-proposed-architecture.md` §2.1](../architecture-options-study/02-proposed-architecture.md), backend constraints skill |
 | 3.1.3 Nodes and Subsystems | F12: redrawn logical view (D3); element catalogue: element, responsibility, provider | `logical-view.svg` |
 | 3.1.4 Platform Design | F3, F4, F9: EventStorming method, subdomains, context map with patterns, aggregates and how they were derived, domain event catalogue (internal vs published), how producers and consumers use the platform (API contract, versioned events) | [`06-eventstorming-ddd.md`](../architecture-options-study/06-eventstorming-ddd.md) §1–§6, `context-map.svg`, `aggregates.svg`, [`contracts/openapi.json`](../../../contracts/openapi.json) |
 
