@@ -1,0 +1,46 @@
+%% frame: UC8 design, slice 1: my orders (commerce-svc, order module)
+classDiagram
+    class OrderController {
+        <<controller, Dist, Sec>>
+        +myOrders(page: Integer, size: Integer, response: HttpServletResponse): Result<PageResult<OrderController.OrderSummaryResponse>>
+        +myOrder(orderId: UUID, response: HttpServletResponse): Result<OrderController.OrderSummaryResponse>
+    }
+    class OrderAppService {
+        <<interface>>
+        +pageMyOrders(page: PageQuery, userId: UUID): PageResult~OrderSummaryView~
+        +findMine(orderId: UUID, userId: UUID): Optional~OrderSummaryView~
+    }
+    class OrderAppServiceImpl {
+        <<application service>>
+        +pageMyOrders(page: PageQuery, userId: UUID): PageResult~OrderSummaryView~
+        +findMine(orderId: UUID, userId: UUID): Optional~OrderSummaryView~
+        -toView(order: Order): OrderSummaryView
+    }
+    class OrderSummaryView {
+        <<record>>
+        +productTitle: String
+        +productImage: String
+        +totalAmount: BigDecimal
+        +status: String
+    }
+    class OrderRepository {
+        <<interface, repository, Pers>>
+        +pageByUserId(query: PageQuery, userId: UUID): PageResult~Order~
+        +findById(id: UUID): Optional~Order~
+    }
+    class Order {
+        <<aggregate root>>
+        -status: OrderStatus
+        +userId(): UUID
+    }
+%% at OrderController 0,0
+%% at OrderSummaryView 1,0
+%% at OrderAppService 0,1
+%% at OrderAppServiceImpl 1,1
+%% at Order 0,2
+%% at OrderRepository 1,2
+    OrderController "1" --> "1" OrderAppService
+    OrderAppServiceImpl ..|> OrderAppService
+    OrderAppServiceImpl ..> OrderSummaryView : «create»
+    OrderAppServiceImpl "1" --> "1" OrderRepository
+    OrderRepository ..> Order

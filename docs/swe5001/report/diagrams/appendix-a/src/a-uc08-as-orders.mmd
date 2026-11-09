@@ -1,0 +1,26 @@
+%% frame: UC8 view my orders, B3–B4 and A6 (analysis)
+sequenceDiagram
+    actor Buyer
+    participant UI as MyBlocsUI (boundary)
+    participant Ctl as ViewMyOrdersControl (control)
+    participant Acc as Account (entity)
+    participant O as Order (entity)
+
+    UI->>Ctl: B3: listMyOrders(buyer, page)
+    Ctl->>Acc: B3: orders(page)
+    Acc-->>Ctl: orders, newest first, and total
+    loop each order on the page
+        Ctl->>O: B3: summary()
+        O-->>Ctl: product snapshot, amount, status
+    end
+    Ctl->>UI: B4: showOrders(rows, total)
+    opt the buyer opens one order (A6)
+        Buyer->>UI: A6: openOrder(order)
+        UI->>Ctl: A6: findMyOrder(buyer, order)
+        Ctl->>O: A6: belongsTo(buyer)
+        O-->>Ctl: yes or no
+        break missing, or another buyer's order
+            Ctl->>UI: A6: showNotFound()
+        end
+        Ctl->>UI: A6: showOrders(order, 1)
+    end
