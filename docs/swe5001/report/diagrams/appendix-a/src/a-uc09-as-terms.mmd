@@ -1,0 +1,44 @@
+%% frame: UC9 B7 set team terms and a team price; A4 delete a draft (analysis)
+sequenceDiagram
+    actor Admin
+    participant UI as ListingConsoleUI (boundary)
+    participant Ctl as AdministerListingControl (control)
+    participant Prod as Product (entity)
+    create participant Pol as TeamPricePolicy (entity)
+    create participant Chg as TeamTermsChange (entity)
+
+    Admin->>UI: B7: setTeamTerms(listing, terms, price, v)
+    UI->>Ctl: B7: setTeamTerms(admin, listing, terms, price, v)
+    Ctl->>Prod: B7: checkVersion(v)
+    Ctl->>Prod: B7: setTeamTerms(size, lifetime)
+    break size or lifetime out of range (E8)
+        Prod-->>Ctl: E8: refused, field errors
+        Ctl-->>UI: E8: showRefusal(field errors)
+    end
+    Prod-->>Ctl: new terms, version v + 1
+    opt team price given (B7)
+        Ctl->>Pol: B7: latestFor(product)
+        Ctl->>Pol: B7: «create» (price, validFrom, validUntil)
+        break price not below the listing price, window too short, listing not on sale or price revision stale (E8)
+            Pol-->>Ctl: E8: refused, terms not kept
+            Ctl-->>UI: E8: showRefusal(reason)
+        end
+        Pol-->>Ctl: new price revision
+    end
+    Ctl->>Chg: B7: «create» (old terms, new terms, admin)
+    Ctl-->>UI: B7: saved terms
+    UI-->>Admin: B7: showListing(listing)
+    Note over Admin,Chg: A4: delete a draft
+    Admin->>UI: A4: deleteDraft(listing, v)
+    UI->>Ctl: A4: delete(admin, listing, v)
+    Ctl->>Prod: A4: checkVersion(v)
+    Ctl->>Prod: A4: checkDeletable()
+    Note over Prod: A4: no linked price revision or team
+    alt published before, units sold or any history (E9)
+        Prod-->>Ctl: E9: refused
+        Ctl-->>UI: E9: showRefusal(listing has history)
+    else never-published draft without history
+        Prod-->>Ctl: deletable
+        Ctl->>Prod: A4: markDeleted()
+        Ctl-->>UI: A4: deleted, record kept
+    end

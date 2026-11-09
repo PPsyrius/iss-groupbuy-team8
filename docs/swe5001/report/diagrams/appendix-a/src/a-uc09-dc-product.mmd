@@ -1,0 +1,103 @@
+%% frame: UC9 design, slice 3: the Product aggregate, its State and the persistence chain (commerce-svc)
+classDiagram
+    class ProductRepository {
+        <<interface, repository, Pers>>
+        +lockById(id: UUID): Optional~Product~
+        +updateListing(product: Product, expectedVersion: int, actorId: UUID): void
+    }
+    class ListingDetails {
+        <<value object, record>>
+        +title: String
+        +subtitle: String
+        +description: String
+        +coverImage: String
+        +images: List~String~
+        +category: String
+        +originalPrice: BigDecimal
+        +currency: String
+        +stock: int
+    }
+    class ProductTeamTerms {
+        <<value object, record>>
+        +MIN_TARGET_SIZE: int = 2 «static»
+        +MIN_LIFETIME_SECONDS: int = 2400 «static»
+        +MAX_LIFETIME_SECONDS: int = 86400 «static»
+        +targetSize: Integer
+        +lifetimeSeconds: Integer
+    }
+    class Product {
+        <<aggregate root>>
+        -id: UUID
+        -productNo: String
+        -originalPrice: BigDecimal
+        -currency: String
+        -stock: int
+        -soldCount: int
+        -version: int
+        +draft(id: UUID, productNo: String, details: ListingDetails): Product «static»
+        +revise(details: ListingDetails): Product
+        +publish(): Product
+        +delist(): Product
+        +requireDeletable(): void
+        +configureTeamTerms(targetSize: int, lifetimeSeconds: int): Product
+        +requireVersion(expected: int): void
+        -transition(next: ProductStatus): Product
+    }
+    class TeamTermsSpecification {
+        <<utility>>
+        ~violations(targetSize: int, lifetimeSeconds: int): Map<String, Object> «static»
+    }
+    class ProductRepositoryImpl {
+        <<adapter, Pers>>
+        +lockById(id: UUID): Optional~Product~
+        +updateListing(product: Product, expectedVersion: int, actorId: UUID): void
+        -requireChanged(count: int): void «static»
+    }
+    class ProductStatus {
+        <<enumeration>>
+        DRAFT
+        ON_SALE
+        OFF_SALE
+        ~publish(): ProductStatus
+        ~delist(): ProductStatus
+        ~deletionError(): CatalogErrorCode
+        ~requireCommercialEdit(current: Product, next: ListingDetails): void
+    }
+    class ProductStatusOFFSALE["ProductStatus.OFF_SALE"] {
+        ~publish(): ProductStatus
+    }
+    class BizProductMapper {
+        <<interface, mapper, Pers, Conc>>
+        +selectActiveByIdForUpdate(id: UUID): BizProductDO
+        +updateListing(row: BizProductDO, expectedVersion: int, actorId: UUID): int
+    }
+    class ProductStatusDRAFT["ProductStatus.DRAFT"] {
+        ~publish(): ProductStatus
+        ~deletionError(): CatalogErrorCode
+        ~requireCommercialEdit(current: Product, next: ListingDetails): void
+    }
+    class ProductStatusONSALE["ProductStatus.ON_SALE"] {
+        ~delist(): ProductStatus
+    }
+%% at ListingDetails 1,0
+%% at ProductTeamTerms 2,0
+%% at ProductRepository 0,1
+%% at Product 1,1
+%% at TeamTermsSpecification 2,1
+%% at ProductRepositoryImpl 0,2
+%% at ProductStatus 1,2
+%% at ProductStatusOFFSALE 2,2
+%% at BizProductMapper 0,3
+%% at ProductStatusDRAFT 1,3
+%% at ProductStatusONSALE 2,3
+    ProductRepository ..> Product
+    Product ..> ListingDetails
+    Product "1" *-- "1" ProductTeamTerms : teamTerms
+    Product ..> TeamTermsSpecification
+    TeamTermsSpecification ..> ProductTeamTerms
+    Product "*" --> "1" ProductStatus : status
+    ProductRepositoryImpl ..|> ProductRepository
+    ProductRepositoryImpl "1" --> "1" BizProductMapper
+    ProductStatus <|-- ProductStatusDRAFT
+    ProductStatus <|-- ProductStatusONSALE
+    ProductStatus <|-- ProductStatusOFFSALE

@@ -1,0 +1,16 @@
+%% frame: Listing lifecycle (Product.status, ProductStatus)
+stateDiagram-v2
+    state "DRAFT" as Draft
+    state "ON_SALE" as OnSale
+    state "OFF_SALE" as OffSale
+    [*] --> Draft : create / version 0
+    Draft --> OnSale : publish [stock > 0 and price > 0] / version + 1
+    OnSale --> OffSale : delist / version + 1
+    OffSale --> OnSale : publish [stock > 0 and price > 0] / version + 1
+    Draft --> [*] : delete [soldCount = 0 and no history] / deleted = true
+    Draft : revise / version + 1
+    Draft : configureTeamTerms / version + 1
+    OnSale : revise [price, currency, stock unchanged] / version + 1
+    OnSale : configureTeamTerms / version + 1
+    OffSale : revise [price, currency, stock unchanged] / version + 1
+    OffSale : configureTeamTerms / version + 1

@@ -1,0 +1,47 @@
+%% frame: UC9 B5, B6, A1, A2: revise or change the state under both locks (design)
+sequenceDiagram
+    actor Admin
+    participant Ctl as :AdminListingController
+    participant App as :AdminListingAppServiceImpl
+    participant Repo as :ProductRepository
+    participant Users as :UserAppService
+    participant Prod as :Product
+    participant State as status : ProductStatus
+
+    alt B5, A1: edit the content
+        Admin->>Ctl: revise(productId, request)
+        Ctl->>App: revise(id, details, expectedVersion, actorId)
+    else B6, A2: publish or delist
+        Admin->>Ctl: changeStatus(productId, request)
+        Ctl->>App: changeStatus(id, target, expectedVersion, actorId)
+    end
+    critical REQUIRED, READ COMMITTED, 10 s
+        App->>App: lockForChange(id, expectedVersion, actorId)
+        App->>Repo: lockById(id): lock 1, product row (empty: E10 PRODUCT_NOT_FOUND)
+        Repo-->>App: Optional(Product)
+        App->>Users: requireActive(actorId)
+        App->>Prod: requireVersion(expectedVersion)
+        break another admin saved first (E5)
+            Prod-->>App: E5: PRODUCT_VERSION_CONFLICT (CATALOG_412_002), currentVersion
+        end
+        alt revise (B5, A1)
+            App->>Prod: revise(details)
+            Prod->>State: requireCommercialEdit(this, details)
+        else target ON_SALE (B6)
+            App->>Prod: publish()
+            Prod->>State: publish()
+        else target OFF_SALE (A2)
+            App->>Prod: delist()
+            Prod->>State: delist()
+        end
+        break commercial edit after publication (E6), or move not allowed, no stock or no price (E7)
+            State-->>Prod: PRODUCT_STATE_CONFLICT (CATALOG_409_002)
+            Prod-->>App: E6, E7: PRODUCT_STATE_CONFLICT
+        end
+        State-->>Prod: next status
+        Prod->>Prod: transition(next)
+        Prod-->>App: next revision, version + 1
+        App->>Repo: updateListing(changed, expectedVersion, actorId)
+    end
+    App-->>Ctl: ManagedListing
+    Ctl-->>Admin: AdminListingResponse, new version

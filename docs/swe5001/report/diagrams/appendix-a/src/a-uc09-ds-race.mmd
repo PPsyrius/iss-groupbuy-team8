@@ -1,0 +1,38 @@
+%% frame: UC9 E5: two administrators save the same listing (design)
+sequenceDiagram
+    actor A1 as Admin 1
+    actor A2 as Admin 2
+    participant Ctl as :AdminListingController
+    participant TA as txA : AdminListingAppServiceImpl
+    participant TB as txB : AdminListingAppServiceImpl
+    participant Repo as :ProductRepositoryImpl
+    participant Map as :BizProductMapper
+    participant Prod as :Product
+
+    Note over A1,Prod: B5: both read the listing at version 3, then both save with expectedVersion 3
+    A1->>Ctl: revise(productId, request)
+    Ctl->>TA: revise(id, detailsA, 3, admin1)
+    A2->>Ctl: revise(productId, request)
+    Ctl->>TB: revise(id, detailsB, 3, admin2)
+    TA->>Repo: lockById(id)
+    Repo->>Map: selectActiveByIdForUpdate(id): lock 1
+    Repo-->>TA: Product version 3, row locked
+    TB->>Repo: lockById(id)
+    Repo->>Map: selectActiveByIdForUpdate(id)
+    Note over TB,Map: txB waits on the product row
+    TA->>Prod: requireVersion(3)
+    TA->>Prod: revise(detailsA)
+    Prod-->>TA: Product version 4
+    TA->>Repo: updateListing(revised, 3, admin1)
+    Repo->>Map: updateListing(row, 3, admin1)
+    Map-->>Repo: 1 row
+    Repo->>Repo: requireChanged(1)
+    Note over TA,Map: txA commits; the row lock is released
+    TA-->>Ctl: ManagedListing, version 4
+    Ctl-->>A1: AdminListingResponse, version 4
+    Repo-->>TB: Product version 4, row locked
+    TB->>Prod: requireVersion(3)
+    Prod-->>TB: E5: PRODUCT_VERSION_CONFLICT, currentVersion 4
+    TB-->>Ctl: BizException; txB rolls back, nothing written
+    Ctl-->>A2: 412 with currentVersion 4
+    Note over A2,Ctl: E5: conflict banner; Admin 2 reloads version 4 and saves again

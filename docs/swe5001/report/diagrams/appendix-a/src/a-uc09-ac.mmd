@@ -1,0 +1,100 @@
+%% frame: UC9 Administer product listings (analysis)
+classDiagram
+    class ListingConsoleUI {
+        <<boundary>>
+        +openConsole()
+        +enterListing(details)
+        +saveDetails(listing, details, version)
+        +changeStatus(listing, target, version)
+        +deleteDraft(listing, version)
+        +setTeamTerms(listing, terms, price, version)
+        +showListing(listing)
+        +showConflict(currentVersion)
+        +showRefusal(reason)
+    }
+    class AdministerListingControl {
+        <<control>>
+        +openConsole(admin)
+        +create(admin, details)
+        +revise(admin, listing, details, version)
+        +changeStatus(admin, listing, target, version)
+        +delete(admin, listing, version)
+        +setTeamTerms(admin, listing, terms, price, version)
+    }
+    class Account {
+        <<entity>>
+        -nickname: Text
+        -status: AccountStatus
+        +isActive()
+        +mayChangeListings()
+    }
+    class Role {
+        <<entity>>
+        -code: Text
+        -permissions: Text
+        +grants(permission)
+    }
+    class Product {
+        <<entity>>
+        -number: Text
+        -title: Text
+        -price: Money
+        -stock: Count
+        -soldCount: Count
+        -status: ProductStatus
+        -version: Count
+        -teamSize: Count
+        -teamLifetime: Count
+        +checkVersion(version)
+        +revise(details)
+        +publish()
+        +delist()
+        +checkDeletable()
+        +setTeamTerms(size, lifetime)
+        +markDeleted()
+    }
+    class TeamPricePolicy {
+        <<entity>>
+        -price: Money
+        -validFrom: Date-time
+        -validUntil: Date-time
+        -revision: Count
+        +latestFor(product)
+    }
+    class TeamTermsChange {
+        <<entity>>
+        -previousTerms: Text
+        -currentTerms: Text
+        -changeTime: Date-time
+    }
+    class PriceQuote {
+        <<entity>>
+        -price: Money
+        -expiresAt: Date-time
+    }
+    class Team {
+        <<entity>>
+        -targetSize: Count
+        -deadline: Date-time
+        -status: TeamStatus
+    }
+%% at ListingConsoleUI 1,0
+%% at Account 2,0
+%% at Role 3,0
+%% at TeamPricePolicy 0,1
+%% at AdministerListingControl 1,1
+%% at TeamTermsChange 2,1
+%% at PriceQuote 0,2
+%% at Product 1,2
+%% at Team 2,2
+    ListingConsoleUI "1" -- "1" AdministerListingControl
+    AdministerListingControl "*" --> "1" Account : admin
+    AdministerListingControl "1" --> "*" Product
+    AdministerListingControl "1" --> "*" TeamPricePolicy
+    AdministerListingControl ..> TeamTermsChange : «create»
+    Account "*" -- "1..*" Role : holds
+    TeamTermsChange "*" -- "1" Account : changed by
+    Product "1" -- "*" TeamTermsChange : history
+    Product "1" -- "*" Team : offers
+    Product "1" -- "*" TeamPricePolicy : priced by
+    TeamPricePolicy "1" -- "*" PriceQuote : issues

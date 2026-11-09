@@ -1,0 +1,94 @@
+%% frame: UC9 design, slice 2: team terms with an optional team price, application layer (commerce-svc)
+classDiagram
+    class TeamTermsAppServiceConfigureTerms["TeamTermsAppService.ConfigureTerms"] {
+        <<value object, record>>
+        +expectedVersion: int
+        +targetSize: int
+        +lifetimeSeconds: int
+        +teamPrice: TeamPriceAppServiceConfigurePolicy
+    }
+    class TeamTermsAppService {
+        <<interface, application service>>
+        +configure(productId: UUID, command: ConfigureTerms, actorId: UUID): TeamTermsResult
+    }
+    class TeamTermsAppServiceTeamTermsResult["TeamTermsAppService.TeamTermsResult"] {
+        <<value object, record>>
+        +teamPrice: TeamPricePolicy
+    }
+    class TeamTermsChange {
+        <<value object, record>>
+        +productId: UUID
+        +productVersion: int
+        +previous: ProductTeamTerms
+        +current: ProductTeamTerms
+        +teamPriceVersion: Integer
+        +actorId: UUID
+    }
+    class TeamTermsAppServiceImpl {
+        <<application service, Sec, Conc>>
+    }
+    class Product {
+        <<aggregate root>>
+        +requireVersion(expected: int): void
+        +configureTeamTerms(targetSize: int, lifetimeSeconds: int): Product
+    }
+    class ProductRepository {
+        <<interface, repository, Pers>>
+        +lockById(id: UUID): Optional~Product~
+        +updateTeamTerms(product: Product, expectedVersion: int, actorId: UUID): void
+        +appendTeamTermsLog(change: TeamTermsChange): void
+    }
+    class TeamPriceAppService {
+        <<interface, application service>>
+        +configure(productId: UUID, actorId: UUID, command: ConfigurePolicy): TeamPricePolicy
+    }
+    class UserAppService {
+        <<interface, Dist>>
+        +requireActive(userId: UUID): void
+    }
+    class TeamPriceAppServiceImpl {
+        <<application service, Sec, Conc>>
+        -lockProduct(productId: UUID): Product
+    }
+    class TeamPricePolicy {
+        <<aggregate root, record>>
+        +amount: BigDecimal
+        +currency: String
+        +validFrom: Instant
+        +validUntil: Instant
+        +version: int
+        +requireCompatible(product: Product): void
+        +requireStartableWindow(now: Instant): void
+    }
+    class TeamPriceRepository {
+        <<interface, repository, Pers>>
+        +findLatestPolicy(productId: UUID): Optional~TeamPricePolicy~
+        +currentTime(): Instant
+        +appendPolicy(policy: TeamPricePolicy, actorId: UUID, now: Instant): void
+    }
+%% at TeamTermsAppServiceConfigureTerms 0,0
+%% at TeamTermsAppService 1,0
+%% at TeamTermsAppServiceTeamTermsResult 2,0
+%% at TeamTermsChange 0,1
+%% at TeamTermsAppServiceImpl 1,1
+%% at Product 2,1
+%% at ProductRepository 0,2
+%% at TeamPriceAppService 1,2
+%% at UserAppService 2,2
+%% at TeamPriceAppServiceImpl 1,3
+%% at TeamPricePolicy 2,3
+%% at TeamPriceRepository 0,3
+    TeamTermsAppService ..> TeamTermsAppServiceConfigureTerms
+    TeamTermsAppService ..> TeamTermsAppServiceTeamTermsResult
+    TeamTermsAppServiceTeamTermsResult "*" --> "1" Product : product
+    TeamTermsAppServiceImpl ..|> TeamTermsAppService
+    TeamTermsAppServiceImpl ..> TeamTermsChange : «create»
+    TeamTermsAppServiceImpl ..> Product
+    TeamTermsAppServiceImpl "1" --> "1" ProductRepository
+    TeamTermsAppServiceImpl "1" --> "1" TeamPriceAppService
+    TeamTermsAppServiceImpl "1" --> "1" UserAppService
+    TeamPriceAppServiceImpl ..|> TeamPriceAppService
+    TeamPriceAppServiceImpl "1" --> "1" ProductRepository
+    TeamPriceAppServiceImpl "1" --> "1" UserAppService
+    TeamPriceAppServiceImpl ..> TeamPricePolicy : «create»
+    TeamPriceAppServiceImpl "1" --> "1" TeamPriceRepository

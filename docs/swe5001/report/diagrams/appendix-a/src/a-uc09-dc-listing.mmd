@@ -1,0 +1,79 @@
+%% frame: UC9 design, slice 1: listing commands, web and application layers (commerce-svc)
+classDiagram
+    class AdminListingController {
+        <<controller, Pres, Sec>>
+        +create(request: CreateListingRequest): Result~AdminListingResponse~
+        +counts(): Result~ListingCountsResponse~
+        +revise(productId: UUID, request: UpdateListingRequest): Result~AdminListingResponse~
+        +changeStatus(productId: UUID, request: ListingStatusRequest): Result~AdminListingResponse~
+        +configureTeamTerms(productId: UUID, request: TeamTermsRequest): Result~TeamTermsResponse~
+        +delete(productId: UUID, expectedVersion: int): Result~Void~
+        -administrator(): UUID «static»
+    }
+    class TeamTermsAppService {
+        <<interface, application service>>
+    }
+    class AdminListingAppService {
+        <<interface, application service>>
+        +create(productNo: String, details: ListingDetails, actorId: UUID): ManagedListing
+        +counts(actorId: UUID): ListingCounts
+        +revise(id: UUID, details: ListingDetails, expectedVersion: int, actorId: UUID): ManagedListing
+        +changeStatus(id: UUID, target: ProductStatus, expectedVersion: int, actorId: UUID): ManagedListing
+        +delete(id: UUID, expectedVersion: int, actorId: UUID): void
+    }
+    class ManagedListing["AdminListingAppService.ManagedListing"] {
+        <<value object, record>>
+        +product: Product
+        +latestPolicy: TeamPricePolicy
+        +references: ListingReferences
+    }
+    class AdminListingAppServiceImpl {
+        <<application service, Sec, Conc>>
+        -lockForChange(id: UUID, expectedVersion: int, actorId: UUID): Product
+    }
+    class GroupDealQueryService {
+        <<interface, application service>>
+        +countOpenDeals(): long
+        +hasProductReferences(productId: UUID): boolean
+    }
+    class UserAppService {
+        <<interface, Dist>>
+        +requireActive(userId: UUID): void
+    }
+    class TeamPriceRepository {
+        <<interface, repository, Pers>>
+        +hasProductReferences(productId: UUID): boolean
+        +countListingsWithActivePolicy(): long
+    }
+    class ProductRepository {
+        <<interface, repository, Pers>>
+        +resolveProductNumber(productNo: String): String
+        +insertDraft(product: Product, actorId: UUID): void
+        +lockById(id: UUID): Optional~Product~
+        +updateListing(product: Product, expectedVersion: int, actorId: UUID): void
+        +deleteDraft(id: UUID, expectedVersion: int, actorId: UUID): void
+        +countListingStatuses(): ListingStatusCounts
+    }
+    class RemoteUserAppService {
+        <<adapter, Dist>>
+        +requireActive(userId: UUID): void
+    }
+%% at TeamTermsAppService 0,0
+%% at AdminListingController 1,0
+%% at AdminListingAppService 2,0
+%% at ManagedListing 3,0
+%% at GroupDealQueryService 1,1
+%% at AdminListingAppServiceImpl 2,1
+%% at UserAppService 3,1
+%% at TeamPriceRepository 1,2
+%% at ProductRepository 2,2
+%% at RemoteUserAppService 3,2
+    AdminListingController "1" --> "1" TeamTermsAppService
+    AdminListingController "1" --> "1" AdminListingAppService
+    AdminListingAppServiceImpl ..|> AdminListingAppService
+    AdminListingAppServiceImpl ..> ManagedListing : «create»
+    AdminListingAppServiceImpl "1" --> "1" GroupDealQueryService
+    AdminListingAppServiceImpl "1" --> "1" UserAppService
+    AdminListingAppServiceImpl "1" --> "1" TeamPriceRepository
+    AdminListingAppServiceImpl "1" --> "1" ProductRepository
+    RemoteUserAppService ..|> UserAppService
