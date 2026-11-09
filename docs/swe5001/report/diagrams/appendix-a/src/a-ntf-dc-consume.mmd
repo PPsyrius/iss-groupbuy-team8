@@ -1,0 +1,84 @@
+%% frame: Notifications design, slice 3: the SQS consumer and the anti-corruption layer (notification-svc)
+classDiagram
+    class SqsNotificationEventConsumer {
+        <<adapter, Evt, Dist, Conc>>
+        -sqs: SqsClient
+        -queueUrl: String
+        -settings: NotificationConsumerProperties
+        -freeWorkers: Semaphore
+        +start(): void
+        +stop(): void
+        ~pollOnce(): void
+        ~process(message: Message): void
+    }
+    class NotificationEventHandler {
+        <<interface, Evt>>
+        +handle(consumer: String, event: NotificationEvent): NotificationEventHandler.ConsumeOutcome
+    }
+    class ConsumeOutcome["NotificationEventHandler.ConsumeOutcome"] {
+        <<enumeration>>
+        APPLIED
+        DUPLICATE
+    }
+    class MalformedIntegrationEventException {
+        <<exception>>
+        +eventId(): UUID
+    }
+    class IntegrationEventDecoder {
+        <<converter, Dist>>
+        +decode(body: String): IntegrationEventDecoder.Decoded
+    }
+    class NotificationEvent {
+        <<interface, value object>>
+        +eventId(): UUID
+        +type(): NotificationType
+        +referenceId(): UUID
+        +recipientUserIds(): List~UUID~
+    }
+    class NeTeamSucceeded["NotificationEvent.TeamSucceeded"] {
+        <<value object, record>>
+        +eventId: UUID
+        +teamId: UUID
+        +teamSize: int
+        +recipientUserIds: List~UUID~
+    }
+    class Decoded["IntegrationEventDecoder.Decoded"] {
+        <<record>>
+        +eventId: UUID
+        +eventType: String
+        +version: int
+        +traceId: String
+        +supported(): boolean
+    }
+    class NePaymentSucceeded["NotificationEvent.PaymentSucceeded"] {
+        <<value object, record>>
+        +eventId: UUID
+        +paymentId: UUID
+        +recipientUserId: UUID
+        +startedTeam: boolean
+    }
+    class NeTeamExpired["NotificationEvent.TeamExpired"] {
+        <<value object, record>>
+        +eventId: UUID
+        +teamId: UUID
+        +recipientUserIds: List~UUID~
+    }
+%% at MalformedIntegrationEventException 0,0
+%% at SqsNotificationEventConsumer 1,0
+%% at NotificationEventHandler 2,0
+%% at IntegrationEventDecoder 0,1
+%% at Decoded 1,1
+%% at ConsumeOutcome 2,1
+%% at NotificationEvent 1,2
+%% at NeTeamSucceeded 0,3
+%% at NeTeamExpired 1,3
+%% at NePaymentSucceeded 2,3
+    SqsNotificationEventConsumer "1" --> "1" IntegrationEventDecoder : decoder
+    SqsNotificationEventConsumer "1" --> "1" NotificationEventHandler : handler
+    NotificationEventHandler ..> ConsumeOutcome
+    IntegrationEventDecoder ..> MalformedIntegrationEventException : «create»
+    IntegrationEventDecoder ..> Decoded : «create»
+    Decoded "*" --> "0..1" NotificationEvent : event
+    NotificationEvent <|.. NeTeamSucceeded
+    NotificationEvent <|.. NeTeamExpired
+    NotificationEvent <|.. NePaymentSucceeded

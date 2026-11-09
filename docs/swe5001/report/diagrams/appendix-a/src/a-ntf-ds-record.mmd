@@ -1,0 +1,38 @@
+%% frame: Notifications B4-B5 with A3, A6, E1: apply an event once (design, notification-svc)
+sequenceDiagram
+    participant C as :SqsNotificationEventConsumer
+    participant S as :NotificationEventAppService
+    participant A as :NotificationEventAssembler
+    create participant N as n : Notification
+    participant CM as :ConsumedMessageRepository
+    participant NA as :NotificationAppService
+    participant NR as :NotificationRepository
+
+    C->>S: handle(consumer, event)
+    critical handle transaction, REQUIRED, READ COMMITTED, 10 s
+        Note over S,N: B5, rendered first: fixed plain text, no names or amounts
+        S->>A: toNotifications(event, now)
+        loop each distinct recipient
+            A->>N: «create»
+        end
+        A-->>S: List<Notification> effects
+        Note over S,CM: B4: insert if absent on the key (event_id, consumer); a concurrent copy waits on it
+        S->>CM: markConsumed(eventId, consumer)
+        alt marker already there (A3)
+            CM-->>S: false
+            S-->>C: DUPLICATE
+        else marker inserted, no recipient (A6)
+            CM-->>S: true
+            S-->>C: APPLIED, with a WARN log
+        else marker inserted
+            CM-->>S: true
+            loop each batch of at most 1000
+                S->>NA: recordBatch(batch)
+                NA->>NR: insertIfAbsent(batch)
+                NR-->>NA: int inserted
+                NA-->>S: int
+            end
+            S-->>C: APPLIED
+        end
+    end
+    Note over C,NR: E1: any exception rolls back the marker and every notification; the caller does not delete the message

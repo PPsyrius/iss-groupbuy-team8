@@ -1,0 +1,41 @@
+%% frame: Receive notifications, basic flow part 2: receive, record and read (analysis)
+sequenceDiagram
+    actor Buyer
+    participant UI as NotificationListUI (boundary)
+    participant Feed as EventFeed (boundary)
+    participant Ctl as ReceiveNotificationsControl (control)
+    participant Cons as ConsumptionRecord (entity)
+    create participant N as Notification (entity)
+
+    Note over Feed,Ctl: B3: the feed delivers each passed-on event, perhaps more than once
+    Feed->>Ctl: B3: eventArrived(event)
+    alt type and version supported, content valid
+        Ctl->>Cons: B4: wasHandled(event, consumer)
+        Cons-->>Ctl: no
+        Ctl->>Cons: B4: «create» (event, consumer)
+        loop each recipient (none: A6)
+            Ctl->>N: B5: «create» (recipient, type, fixed text)
+        end
+        Ctl->>Feed: B6: acknowledge(event)
+    else handled already (A3)
+        Ctl->>Cons: A3: wasHandled(event, consumer)
+        Cons-->>Ctl: yes
+        Ctl->>Feed: A3: acknowledge(event)
+    else type or version not supported (A4)
+        Ctl->>Feed: A4: acknowledge(event)
+    else malformed (A5)
+        Note over Feed,Ctl: A5: not acknowledged; the feed delivers it again
+        Feed->>Feed: A5: setAside(event), after five deliveries
+    end
+    Note over Buyer,UI: B7: later, the buyer opens the notification list
+    Buyer->>UI: B7: listMine(page)
+    UI->>Ctl: B7: listNotifications(buyer, page)
+    alt signed in
+        Ctl->>N: B7: forRecipient(buyer, page)
+        N-->>Ctl: page, newest first
+        Ctl-->>UI: page
+        UI->>UI: B7: showNotifications(page)
+    else not signed in (A7)
+        Ctl-->>UI: refused
+        UI->>UI: A7: showSignInRequired()
+    end

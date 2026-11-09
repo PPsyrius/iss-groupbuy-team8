@@ -1,0 +1,80 @@
+%% frame: Notifications design, slice 4: applying an event once, and reading notifications (notification-svc)
+classDiagram
+    class NotificationEventHandler {
+        <<interface, Evt>>
+        +handle(consumer: String, event: NotificationEvent): NotificationEventHandler.ConsumeOutcome
+    }
+    class NotificationEventAssembler {
+        <<converter>>
+        +toNotifications(event: NotificationEvent, now: Instant): List~Notification~ «static»
+    }
+    class NotificationEvent {
+        <<interface, value object>>
+    }
+    class ConsumedMessageRepository {
+        <<interface, repository, Pers, Conc>>
+        +markConsumed(eventId: UUID, consumer: String): boolean
+    }
+    class NotificationEventAppService {
+        <<application service, Evt, Conc>>
+        +handle(consumer: String, event: NotificationEvent): NotificationEventHandler.ConsumeOutcome
+    }
+    class Notification {
+        <<aggregate root, record>>
+        +id: UUID
+        +eventId: UUID
+        +userId: UUID
+        +type: NotificationType
+        +referenceId: UUID
+        +title: String
+        +content: String
+        +createTime: Instant
+    }
+    class NotificationRepository {
+        <<interface, repository, Pers>>
+        +insertIfAbsent(notifications: List~Notification~): int
+        +pageByUserId(query: PageQuery, userId: UUID): PageResult~Notification~
+    }
+    class NotificationAppService {
+        <<application service>>
+        +MAX_BATCH_SIZE: int = 1000
+        +recordBatch(batch: List~Notification~): int
+        +pageMine(query: PageQuery, userId: UUID): PageResult~Notification~
+    }
+    class NotificationController {
+        <<controller, Pres, Sec>>
+        +list(page: Integer, size: Integer, response: HttpServletResponse): Result<PageResult<NotificationResponse>>
+    }
+    class NotificationRepositoryImpl {
+        <<adapter, Pers>>
+        +insertIfAbsent(notifications: List~Notification~): int
+        +pageByUserId(query: PageQuery, userId: UUID): PageResult~Notification~
+    }
+    class BizNotificationMapper {
+        <<interface, mapper, Pers>>
+        +insertIfAbsent(rows: List~BizNotificationDO~): int
+        +selectPageByUserId(userId: UUID, limit: int, offset: long): List~BizNotificationDO~
+        +countByUserId(userId: UUID): long
+    }
+%% at NotificationEventHandler 0,0
+%% at NotificationEventAssembler 1,0
+%% at NotificationEvent 2,0
+%% at ConsumedMessageRepository 0,1
+%% at NotificationEventAppService 1,1
+%% at Notification 2,1
+%% at NotificationRepository 0,2
+%% at NotificationAppService 1,2
+%% at NotificationController 2,2
+%% at NotificationRepositoryImpl 0,3
+%% at BizNotificationMapper 1,3
+    NotificationEventHandler <|.. NotificationEventAppService
+    NotificationEventAppService "1" --> "1" ConsumedMessageRepository : consumedMessages
+    NotificationEventAppService ..> NotificationEventAssembler
+    NotificationEventAppService "1" --> "1" NotificationAppService : notifications
+    NotificationEventAssembler ..> NotificationEvent
+    NotificationEventAssembler ..> Notification : «create»
+    NotificationAppService "1" --> "1" NotificationRepository : notifications
+    NotificationAppService ..> Notification
+    NotificationController "1" --> "1" NotificationAppService : notifications
+    NotificationRepository <|.. NotificationRepositoryImpl
+    NotificationRepositoryImpl "1" --> "1" BizNotificationMapper : mapper

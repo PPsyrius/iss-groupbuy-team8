@@ -1,0 +1,31 @@
+%% frame: Notifications B1 with E2: the outbox record is written before commit (design, commerce-svc)
+sequenceDiagram
+    participant Svc as :GroupDealExpiryService
+    participant Pub as :ApplicationEventPublisher
+    participant W as :IntegrationOutboxWriter
+    participant R as :IntegrationRecipientRepository
+    create participant V1 as payload : TeamExpiredV1
+    create participant Row as row : OutboxInsert
+    participant M as :OutboxMapper
+
+    critical expireOne transaction, REQUIRED, READ COMMITTED, 10 s
+        Note over Svc,Pub: B1: UC5 expired the team and publishes the fact, @sec-a-uc05
+        Svc->>Pub: publishEvent(event: TeamExpired)
+        Note over Svc,M: commit begins: BEFORE_COMMIT listeners run on this thread, the outbox writer last
+        Pub->>W: onTeamExpired(event)
+        W->>R: findActiveMemberIdsByDealId(dealId)
+        R-->>W: List<UUID> recipientUserIds
+        W->>V1: «create»
+        Note over W,Row: payload with the recipients; row = type TeamExpired, version 1, team id, JSON payload, trace id
+        W->>Row: «create»
+        W->>M: insert(row)
+        alt row inserted
+            M-->>W: 1, a sys_outbox row whose UUIDv7 id is the eventId
+            W-->>Pub: void
+        else serialisation or insert fails (E2)
+            W-->>Pub: IllegalStateException or database error
+            Pub-->>Svc: exception: the expiry rolls back and no event exists
+        end
+    end
+    Note over Svc,M: onTeamSucceeded (UC4 B10, @fig-a-uc04-ds-events) repeats these steps with TeamSucceededV1
+    Note over Svc,M: onPaymentSucceeded (Pay upfront) takes the recipient from event.quote().userId(): no lookup

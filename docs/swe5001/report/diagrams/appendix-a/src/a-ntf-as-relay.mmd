@@ -1,0 +1,34 @@
+%% frame: Receive notifications, basic flow part 1: record and pass on (analysis)
+sequenceDiagram
+    participant Prod as producing control (control)
+    participant Relay as RelayEventsControl (control)
+    participant Team as Team (entity)
+    participant Pay as Payment (entity)
+    create participant Ev as EventRecord (entity)
+    participant Feed as EventFeed (boundary)
+
+    Note over Prod,Relay: B1: UC4 B10 or UC5 (team succeeded or expired), Pay upfront (payment succeeded)
+    Prod->>Relay: B1: recordEvent(fact)
+    alt team succeeded or expired
+        Relay->>Team: B1: activeMembers()
+        Team-->>Relay: member accounts
+    else payment succeeded
+        Relay->>Pay: B1: payer()
+        Pay-->>Relay: payer account
+    end
+    Relay->>Ev: B1: «create» (fact, recipients)
+    Relay-->>Prod: recorded with the business change
+    Note over Relay,Feed: B2: about every 2 s, at most 100 due events, oldest first
+    Relay->>Relay: B2: relayPending()
+    loop each due event
+        Relay->>Ev: B2: isDue()
+        Ev-->>Relay: due
+        Relay->>Feed: B2: passOn(event)
+        alt passed on
+            Feed-->>Relay: accepted
+            Relay->>Ev: B2: markPassedOn()
+        else refused or unreachable (A1)
+            Feed-->>Relay: failed
+            Relay->>Ev: A1: recordFailure()
+        end
+    end
