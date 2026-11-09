@@ -27,7 +27,7 @@ The briefing asks the report to incorporate the remarks gathered at the presenta
     [F4], [How are the aggregates arrived at?], [§3.1.4.4], [Command → invariant → consistency boundary → aggregate, one row per aggregate (@tbl-aggregates)],
     [—], [How did EventStorming help us arrive at the proposed solution?], [§3.1.4.1], [Event timeline for UC3–UC6 and the trace from each finding to a decision (@fig-d4a-timeline, @tbl-es-traceability)],
     [F5], [Resultant detailed object design], [§3.2.4], [Class diagrams with real class names for the two critical use cases (@d11-paid, @d13-expiry)],
-    [F6], [The database should be in its own subnet], [§3.2], [Data subnets with no route out of the VPC (AD-15, @tbl-subnets); configured and tested offline, not yet applied on AWS (AISS-07)],
+    [F6], [The database should be in its own subnet], [§3.2], [Data subnets with no route out of the VPC (AD-15, @tbl-subnets); tested offline, then applied on AWS once, on 9 November, by a run that failed at the `edge` step and destroyed them 37 minutes later. Placement was not read back, so the remark is answered in design only (AISS-07, #dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record])],
     [F7], [Show the group-buy user flow for two users], [§3.2.4], [Two-buyer sequence including the race for the last seat (@d12-paid)],
     [F8], [More perspectives from Architecting Software Solutions, for example deployment], [§3.1, §3.2], [Logical view (@fig-d3-logical-view), deployment view (@fig-d5-deployment), network view (@fig-d6-network), plus the context (@fig-d1-context) and use case (@fig-d2-use-cases) views],
     [F9], [Detailed DDD diagrams (Platform Engineering)], [§3.1.4], [Context map, aggregate diagrams with invariants and life cycles (@fig-d7-aggregates), domain event catalogue (@fig-d8-domain-events)],
@@ -61,7 +61,7 @@ The briefing gives five success criteria for the platform. @tbl-success shows ho
 
 == What the Cloud Cost
 
-Calculated: the SWE5001 runtime cost about US\$10 from its first session to 8 November 2026. That is the value of the disposable design (briefing Q6): the environment exists only while it is used, and the permanent layer costs under US\$1 a month. The figures below were read from AWS Cost Explorer on 8 November 2026 and are recorded in #dev-src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[the cost record].
+Calculated: the SWE5001 runtime cost about US\$10 from its first session to 8 November 2026. That is the value of the disposable design (briefing Q6): the environment exists only while it is used, and the permanent layer costs under US\$1 a month. The figures below were read from AWS Cost Explorer on 8 November 2026 and are recorded in #dev-src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[the cost record]. The runtime of about 37 minutes on 9 November (#dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record]) came after that read and is not included.
 
 #figure(
   table(
@@ -103,10 +103,11 @@ Mocks, local runs and Terraform plans passed before each of these problems appea
     [New SNS subscription filters take up to 15 minutes to apply], [Events published earlier are silently dropped], [The deployment waits 900 seconds (AISS-06)],
     [An organisation SCP blocked CloudFront metrics (16 October)], [CloudFront metrics are served only from `us-east-1`, which the region guardrail denied], [SCPs consolidated with a narrow exception. #src("docs/swe5001/evidence/20261016-scp-consolidation/README.md")[SCP record]],
     [An interrupted start-up left auto-scaling suspended], [The start-up reported success, but the scaling targets stayed paused], [Repaired by hand; no fix yet (AISS-14)],
+    [The apply role could not update the edge's response headers policy (9 November)], [#pr(700) (27 October) added a header to the `edge` stack's response headers policy. The required plan check passed, because for `edge` it runs offline with a mocked provider and the live plan covers only `foundation`; the apply role may read the policy but not update it. With no promotion for 13 days, the gap surfaced at the next release, which was denied `cloudfront:UpdateResponseHeadersPolicy` and destroyed its runtime (#dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record])], [Open: on 9 November neither the permission nor an operator apply of the change exists. Lesson: a plan cannot detect a gap in the apply role's permissions],
     [The edge points at a deleted load balancer after teardown (read 8 November)], [`/api/*` on the SWE5001 distribution names the last runtime's load balancer, which no longer exists], [Harmless while the runtime is down: the next start-up passes the new load balancer to the distribution (#src("docs/swe5001/HANDOFF.md")[handoff record])],
   ),
   kind: table,
-  caption: [Problems that appeared only on AWS. Sources: #src("docs/swe5001/presentation/src/slides-backup.js")[presentation backup slide B8]\; #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October record]\; the 8 November AWS read, #dev-src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[cost record, last section].],
+  caption: [Problems that appeared only on AWS. Sources: #src("docs/swe5001/presentation/src/slides-backup.js")[presentation backup slide B8]\; #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October record]\; the 8 November AWS read, #dev-src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[cost record, last section]\; #dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record].],
 ) <tbl-findings>
 
 == Analytics
@@ -134,7 +135,7 @@ The platform measures how it runs today, and stores the data to measure how the 
 
 == Where to See the System Working
 
-The runtime is destroyed between sessions (AD-12), so the system is shown through recorded runs and can be rebuilt by one promotion (§4.2). @tbl-demo lists where each part can be seen.
+The runtime is destroyed between sessions (AD-12), so the system is shown through recorded runs and can be rebuilt by one promotion (§4.2) once the `edge` change of 27 October is applied or the apply role may update the response headers policy; until then a promotion fails at the `edge` step, as on 9 November (@tbl-findings). @tbl-demo lists where each part can be seen.
 
 #figure(
   table(

@@ -3,6 +3,8 @@
 // Links in Lim's chapters are pinned to dev at b80debcd (8 November 2026).
 #let repo = "https://github.com/PPsyrius/iss-groupbuy-team8"
 #let src(path, body) = link(repo + "/blob/b80debcd8b8cdeb1272219758789e1a9927b9d7d/" + path, body)
+// Files added by this change are linked through dev until it merges.
+#let dev-src(path, body) = link(repo + "/blob/dev/" + path, body)
 
 = Introduction
 
@@ -14,7 +16,7 @@ BlocBuy is a community group-buying platform: buyers form a team at a team price
 
 *What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They run on Amazon ECS Fargate, each with its own database, and exchange events through a transactional outbox, one Amazon SNS topic and one Amazon SQS queue per consumer. Terraform creates the runtime for each working session and destroys it afterwards. The logical design is in §3.1 and the physical design in §3.2.
 
-*Status on 8 November 2026.* The three-service release was promoted to `prod`, built from zero on AWS and smoke-tested through CloudFront on 17, 19 and 20 October (§2.2). Since the presentation on 21 October only the two permanent stacks, `foundation` and `edge`, exist; the runtime is destroyed. After the presentation the team answered the assessors' remarks (§6.1). The one infrastructure change among them, separate data subnets (AD-15), is configured and tested offline but not yet applied on AWS, and several availability drills have local results only (AISS-13). The evidence status of every capability is in §2.2, and every open limitation is in §3.4.
+*Status on 9 November 2026.* The three-service release was promoted to `prod`, built from zero on AWS and smoke-tested through CloudFront on 17, 19 and 20 October (§2.2). Since the presentation on 21 October only the two permanent stacks, `foundation` and `edge`, exist; the runtime is destroyed, apart from about 37 minutes on 9 November. After the presentation the team answered the assessors' remarks (§6.1). The one infrastructure change among them, separate data subnets (AD-15), was applied on AWS by that promotion of 9 November, but its start-up failed at the `edge` step and the runtime was destroyed before any smoke test, so the subnets' placement was never read back (#dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record], §6.4). Several availability drills have local results only (AISS-13). The evidence status of every capability is in §2.2, and every open limitation is in §3.4.
 
 == Business Needs
 

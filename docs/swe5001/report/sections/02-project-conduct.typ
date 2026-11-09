@@ -38,7 +38,7 @@ Three choices kept the plan inside the guideline. The split stopped at three ser
 
 == Project Status
 
-Every use case and platform capability in scope is built, and building, routing, scaling out and releasing are verified on AWS. What remains open is mostly evidence on AWS rather than features; the one undeployed change is the data subnets. @tbl-status gives the evidence kind of each capability. Timings and measurements are stated once, in the sections the table points to.
+Every use case and platform capability in scope is built, and building, routing, scaling out and releasing are verified on AWS. What remains open is mostly evidence on AWS rather than features; the one change not verified on AWS is the data subnets, which existed on AWS for 37 minutes on 9 November but were never read back. @tbl-status gives the evidence kind of each capability. Timings and measurements are stated once, in the sections the table points to.
 
 #figure(
   table(
@@ -46,7 +46,7 @@ Every use case and platform capability in scope is built, and building, routing,
     table.header([Capability], [Status], [Evidence and section]),
     [Permanent stacks: `foundation` (ECR, OIDC roles) and `edge` (CloudFront, S3)], [Verified on AWS], [Applied 5–6 October; present on 8 November (#dev-src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[8 November record])],
     [Unchanged monolith on ECS Fargate (strangler step 0)], [Verified on AWS], [First green promotion, 6 October, #run("37470479078")[run 37470479078]],
-    [Promotion pipeline: build, scan, create, smoke, release, destroy], [Verified on AWS], [Green on 6, 17, 19 and 20 October (AD-19, §5.3)],
+    [Promotion pipeline: build, scan, create, smoke, release, destroy], [Verified on AWS], [Green on 6, 17, 19 and 20 October (AD-19, §5.3). The eleventh promotion, 9 November (#pr(757)), failed at the `edge` step and still destroyed the runtime (#dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record], §6.4)],
     [Three services running on ECS (`distributed` topology)], [Verified on AWS], [#run("39008208244")[Run 39008208244], 17 October; repeated in #run("39259845179")[run 39259845179] (19 October) and #run("39435280952")[run 39435280952] (20 October)],
     [HTTP target-tracking auto-scaling and the CloudWatch dashboard], [Scale-out verified on AWS; invalid as acceptance evidence], [One to three tasks on 19 October; the load generator dropped iterations, so the run proves neither the throughput target nor linear scaling (§4.1, AISS-12)],
     [Outbox, SNS/SQS fan-out and the idempotent consumer], [Built; routing verified on AWS], [Messaging readiness check passed in the promotions; no end-to-end notification on AWS is recorded],
@@ -56,10 +56,10 @@ Every use case and platform capability in scope is built, and building, routing,
     [Safe deployment rollback with a broken image (V6)], [Not run], [Drill cut on 11 October; the circuit breaker is configured (§4.2)],
     [Queue-driven scaling demonstration (V4) and the connection budget], [Open], [Scaling policy built and enabled, never demonstrated (#iss(458))],
     [Buyer journey end to end on the deployed system], [Open], [Smoke suite only; manual checks not recorded (#iss(460))],
-    [Data subnets for RDS and Valkey (AD-15)], [Configured, tested offline], [4 November; not applied on AWS (#iss(589), AISS-07)],
+    [Data subnets for RDS and Valkey (AD-15)], [Applied on AWS once (9 November); placement not read back], [Configured and tested offline on 4 November. Created by the promotion of 9 November (#run("42587537517")[run 42587537517]) and destroyed 37 minutes later, before any smoke test; placement, routes and security groups were not read back (#iss(589), AISS-07)],
   ),
   kind: table,
-  caption: [Project status on 8 November 2026. Status words follow the evidence rules of this report: "verified on AWS" needs a dated AWS record; "verified locally" never stands in for it.],
+  caption: [Project status on 9 November 2026. Status words follow the evidence rules of this report: "verified on AWS" needs a dated AWS record; "verified locally" never stands in for it.],
 ) <tbl-status>
 
 *Outstanding issues.* Each open item is a limitation with an owner and a date in §3.4: the AWS-only evidence (AISS-07, AISS-13, AISS-14) is planned for one AWS session in phase R0, and the rest waits for a production decision (R1, R2). Two project items sit outside the AISS register: progress report 2, due 18 October, has no record (#iss(462)), and #iss(620) asks for milestone and effort records, which this section answers in part.
