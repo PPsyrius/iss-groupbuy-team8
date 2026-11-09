@@ -95,7 +95,7 @@ Most delivery milestones were met on time or early. The platform module and outb
 
 === Effort per member
 
-The team spent about 50 person-days, inside the briefing's guideline of about ten person-days for each member (briefing Q8). All five members agreed the split in @tbl-effort on 19 October and declared it in the presentation.
+The team spent about 50 person-days on SWE5001, inside the briefing's guideline of about ten person-days for each member (briefing Q8). All five members agreed the split in @tbl-effort on 19 October and declared it in the presentation.
 
 #figure(
   table(
@@ -112,4 +112,4 @@ The team spent about 50 person-days, inside the briefing's guideline of about te
   caption: [Effort per member in person-days (pd), agreed by all members on 19 October 2026. Source: #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6].],
 ) <tbl-effort>
 
-*How the figures were obtained.* Nobody logged hours, although the plan asked each pull request to record them. The team therefore summed the planned hours of the issues each member delivered and agreed the split from that sum. The figures are an agreed estimate, not a measurement; the range of 8.5–12.5 person-days reflects that Liu Jin carried phase A and Pan most of the messaging and scaling work of phase B. #pending[Team to confirm: the SWE5006 report (§2) uses the same split as the effort of the whole project for both courses. Decide whether this report says "SWE5001 effort" (as the presentation did) or "project effort shared by both courses", and use the same wording in both reports.]
+*How the figures were obtained.* Nobody logged hours, although the plan asked each pull request to record them. The team therefore summed the planned hours of the issues each member delivered and agreed the split from that sum. The figures are an agreed estimate, not a measurement; the range of 8.5–12.5 person-days reflects that Liu Jin carried phase A and Pan most of the messaging and scaling work of phase B.
