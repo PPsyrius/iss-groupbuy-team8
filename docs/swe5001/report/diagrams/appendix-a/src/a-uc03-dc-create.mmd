@@ -1,0 +1,83 @@
+%% frame: UC3 design, slice 4: team creation by Factory Method, group-buy module (commerce-svc)
+classDiagram
+    class GroupDealCreationConfig {
+        <<configuration, Lang>>
+        +paidGroupDealCreator(): PaidGroupDealCreator
+    }
+    class PaidGroupDealCreator {
+        <<abstract, domain service>>
+        +initiate(terms: NewDealTerms, payment: PaidParticipation, now: Instant): GroupDeal «leaf»
+        #createGroupDeal(terms: NewDealTerms, payment: PaidParticipation, now: Instant): GroupDeal «abstract»
+    }
+    class PaidParticipation {
+        <<value object, record>>
+        ~requirePrice(expectedAmount: BigDecimal, expectedCurrency: String): void
+    }
+    class StandardPaidGroupDealCreator {
+        <<domain service>>
+        #createGroupDeal(terms: NewDealTerms, payment: PaidParticipation, now: Instant): GroupDeal
+    }
+    class PaidGroupDealService {
+        <<application service, Conc>>
+        +startConfirmed(terms: NewDealTerms, paid: PaidParticipation): ParticipationResult
+    }
+    class ParticipationResult {
+        <<value object, record>>
+        +outcome: String
+        +dealId: UUID
+        +reasonCode: String
+    }
+    class GroupDeal {
+        <<aggregate root>>
+        -leaderUserId: UUID
+        -dealPrice: BigDecimal
+        -targetSize: int
+        -currentSize: int
+        -status: DealStatus
+        -expireTime: Instant
+        ~startPaid(terms: NewDealTerms, payment: PaidParticipation, now: Instant): GroupDeal «static»
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers, Conc>>
+        +reserveAndLock(paymentId: UUID, fingerprint: String, actorId: UUID): ParticipationReceipt
+        +currentTime(): Instant
+        +insertStartedDeal(deal: GroupDeal, paid: PaidParticipation, now: Instant): void
+        +complete(paymentId: UUID, result: ParticipationResult, actorId: UUID, now: Instant): void
+    }
+    class ParticipationReceipt {
+        <<value object, record>>
+        +fingerprint: String
+        +result: ParticipationResult
+    }
+    class PaidGroupDealMapper {
+        <<interface, mapper, Pers, Conc>>
+        +reserveReceipt(paymentId: UUID, fingerprint: String, actorId: UUID): int
+        +lockReceipt(paymentId: UUID): ParticipationReceiptDO
+        +insertDeal(deal: BizGroupDealDO): int
+        +insertMember(dealId: UUID, paymentId: UUID, userId: UUID, role: String, sharerUserId: UUID, now: Instant): int
+        +completeReceipt(paymentId: UUID, result: ParticipationReceiptDO, actorId: UUID, now: Instant): int
+    }
+    class PaidGroupDealRepositoryImpl {
+        <<adapter, Pers>>
+    }
+%% at GroupDealCreationConfig 0,0
+%% at PaidGroupDealCreator 1,0
+%% at PaidParticipation 2,0
+%% at StandardPaidGroupDealCreator 0,1
+%% at PaidGroupDealService 1,1
+%% at ParticipationResult 2,1
+%% at GroupDeal 0,2
+%% at PaidGroupDealRepository 1,2
+%% at ParticipationReceipt 2,2
+%% at PaidGroupDealMapper 0,3
+%% at PaidGroupDealRepositoryImpl 1,3
+    GroupDealCreationConfig ..> StandardPaidGroupDealCreator : «create»
+    StandardPaidGroupDealCreator --|> PaidGroupDealCreator
+    PaidGroupDealCreator ..> PaidParticipation
+    PaidGroupDealService "1" --> "1" PaidGroupDealCreator
+    PaidGroupDealService ..> ParticipationResult
+    StandardPaidGroupDealCreator ..> GroupDeal : «create»
+    PaidGroupDealService "1" --> "1" PaidGroupDealRepository
+    PaidGroupDealRepository ..> ParticipationReceipt
+    PaidGroupDealRepositoryImpl ..|> PaidGroupDealRepository
+    PaidGroupDealRepositoryImpl "1" --> "1" PaidGroupDealMapper

@@ -1,0 +1,127 @@
+%% frame: UC3 Initiate a team by paying for the first membership (analysis)
+classDiagram
+    class Account {
+        <<entity>>
+        -status: AccountStatus
+        +isActive()
+    }
+    class StartTeamUI {
+        <<boundary>>
+        +start(product)
+        +continueToPayment(quote)
+        +showQuote(teamPrice, validUntil)
+        +showStarted(teamStatus)
+        +showRejected(reason)
+        +showRefundPending()
+    }
+    class PaymentGateway {
+        <<boundary>>
+        +requestPayment(intent)
+        +paid(paymentRef)
+    }
+    class PriceQuote {
+        <<entity>>
+        -teamPrice: Money
+        -issuedAt: Date-time
+        -validUntil: Date-time
+        +isValidFor(buyer)
+    }
+    class Product {
+        <<entity>>
+        -title: Text
+        -soloPrice: Money
+        -stock: Count
+        -targetSize: Count
+        -teamLifetime: Duration
+        -status: ProductStatus
+        +issueTeamQuote(buyer, time)
+        +startTerms(buyer, quote)
+        +isPurchasable()
+        +takeOneUnit()
+    }
+    class StartTeamControl {
+        <<control>>
+        +requestQuote(buyer, product)
+        +requestStart(buyer, product, quote)
+        +paymentConfirmed(paymentRef)
+    }
+    class Payment {
+        <<entity>>
+        -amount: Money
+        -status: PaymentStatus
+        -outcome: PaymentOutcome
+        +requireRefund(reason)
+        +recordOutcome(outcome)
+    }
+    class Refund {
+        <<entity>>
+        -amount: Money
+        -reason: Text
+        -status: RefundStatus
+    }
+    class TeamPricePolicy {
+        <<entity>>
+        -teamPrice: Money
+        -validFrom: Date-time
+        -validUntil: Date-time
+        -version: Count
+        +priceAt(time)
+    }
+    class Team {
+        <<entity>>
+        -price: Money
+        -targetSize: Count
+        -currentSize: Count
+        -deadline: Date-time
+        -status: TeamStatus
+    }
+    class PurchaseIntent {
+        <<entity>>
+        -price: Money
+        -targetSize: Count
+        -payableUntil: Date-time
+        -teamDeadline: Date-time
+        -fulfilled: Boolean
+        +isPayable()
+        +acceptsPayment(amount)
+        +markFulfilled(payment)
+    }
+    class Membership {
+        <<entity>>
+        -role: MemberRole
+        -joinTime: Date-time
+    }
+    class Order {
+        <<entity>>
+        -amount: Money
+        -status: OrderStatus
+    }
+%% at Account 1,0
+%% at StartTeamUI 2,0
+%% at PaymentGateway 3,0
+%% at PriceQuote 0,1
+%% at Product 1,1
+%% at StartTeamControl 2,1
+%% at Payment 3,1
+%% at Refund 4,1
+%% at TeamPricePolicy 0,2
+%% at Team 1,2
+%% at PurchaseIntent 2,2
+%% at Membership 0,3
+%% at Order 2,3
+    StartTeamUI "1" -- "1" StartTeamControl
+    StartTeamControl "1" -- "1" PaymentGateway
+    StartTeamControl "1" --> "1" Account
+    StartTeamControl "1" --> "1" Product
+    StartTeamControl "1" --> "*" PurchaseIntent
+    StartTeamControl "1" --> "1" Payment
+    Payment "1" *-- "0..1" Refund
+    PriceQuote "*" -- "1" Account : owner
+    Product "1" -- "*" PriceQuote : prices
+    Product "1" -- "*" TeamPricePolicy : priced by
+    TeamPricePolicy "1" -- "*" PriceQuote : issues
+    Product "1" -- "*" Team : offers
+    Team "0..1" -- "1" PurchaseIntent : opened by
+    Team "1" *-- "1..*" Membership
+    Payment "*" -- "1" PurchaseIntent : pays
+    Order "*" -- "1" Team

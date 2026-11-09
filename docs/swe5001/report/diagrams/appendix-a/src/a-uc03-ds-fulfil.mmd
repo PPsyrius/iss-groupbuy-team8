@@ -1,0 +1,48 @@
+%% frame: UC3 B9 to B11: fulfilment of a START, order side (design)
+sequenceDiagram
+    participant Svc as :StripeCheckoutService
+    participant OFA as :OrderFulfilmentAdapter
+    participant Set as :GroupDealSettlementSupport
+    participant Intents as :PurchaseIntentRepository
+    participant Users as :UserAppService
+    participant Cat as :CatalogPurchaseSupport
+    participant Groups as :PaidGroupDealService
+    create participant Ord as :Order
+    participant Orders as :OrderRepository
+
+    Note over Svc,Groups: B8: inside the settlement transaction of @sec-a-pay-upfront
+    Svc->>OFA: lockForSettlement(quote)
+    OFA->>Set: lockTeam(dealId): lock 1, no row
+    OFA->>Intents: lockById(intentId): lock 2
+    OFA-->>Svc: void
+    Note over Svc,Groups: lock 3 is the payment; a quote past its deadline is refused there (A5)
+    Svc->>OFA: fulfil(event)
+    OFA->>Set: lockTeam(dealId): no row
+    OFA->>Intents: lockById(intentId): already held
+    break intent already fulfilled: replay, or INTENT_ALREADY_FULFILLED (A7)
+        OFA-->>Svc: Outcome
+    end
+    Note over OFA,Cat: B9
+    OFA->>Users: requireActive(userId)
+    OFA->>Cat: requirePurchasable(productId)
+    break INTENT_EXPIRED, BUYER_INACTIVE or PRODUCT_UNAVAILABLE (A5)
+        OFA-->>Svc: Outcome(rejection)
+    end
+    Note over OFA,Groups: B10: @fig-a-uc03-ds-create
+    OFA->>OFA: admit(event, intent)
+    OFA->>Groups: startConfirmed(terms, paid)
+    Groups-->>OFA: ParticipationResult
+    alt applied (B11)
+        OFA->>Ord: «create» create(terms, confirmedAt)
+        OFA->>Orders: save(order): PENDING
+        OFA->>Set: linkOrder(dealId, paymentId, orderId)
+        OFA->>Intents: markFulfilled(intent, paymentId)
+        OFA->>Cat: consumeOneUnit(productId)
+        break last unit taken by a concurrent settlement: everything rolls back (E1)
+            Cat-->>OFA: false
+            OFA-->>Svc: IllegalStateException
+        end
+        OFA-->>Svc: Outcome(dealId, orderId, null)
+    else compensation required (A6)
+        OFA-->>Svc: Outcome(dealId, null, "GROUP_REJECTED")
+    end

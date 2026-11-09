@@ -1,0 +1,44 @@
+%% frame: UC3 basic flow, part 1: quote and purchase intent, before payment (analysis)
+sequenceDiagram
+    actor Buyer
+    participant UI as StartTeamUI (boundary)
+    participant Ctl as StartTeamControl (control)
+    participant Acc as Account (entity)
+    participant Prod as Product (entity)
+    participant Pol as TeamPricePolicy (entity)
+    create participant Intent as PurchaseIntent (entity)
+    create participant Quote as PriceQuote (entity)
+    participant PG as PaymentGateway (boundary)
+
+    Buyer->>UI: B1: start(product)
+    UI->>Ctl: B1: requestQuote(buyer, product)
+    Ctl->>Acc: B2: isActive()
+    Acc-->>Ctl: active
+    Ctl->>Prod: B3: issueTeamQuote(buyer, time)
+    Prod->>Pol: B3: priceAt(time)
+    Pol-->>Prod: team price, valid until
+    break no team price can be quoted (A2)
+        Prod-->>Ctl: refused(reason)
+        Ctl->>UI: A2: showRejected(reason)
+        UI-->>Buyer: no quote
+    end
+    Prod->>Quote: B3: «create» (buyer, price)
+    Prod-->>Ctl: quote
+    Ctl->>UI: B4: showQuote(teamPrice, validUntil)
+    UI-->>Buyer: price with countdown
+    Buyer->>UI: B4: continueToPayment(quote)
+    UI->>Ctl: B5: requestStart(buyer, product, quote)
+    Ctl->>Acc: B5: isActive()
+    Acc-->>Ctl: active
+    Ctl->>Prod: B6: startTerms(buyer, quote)
+    Prod->>Quote: B6: isValidFor(buyer)
+    Quote-->>Prod: valid
+    break quote or listing refused (A3)
+        Prod-->>Ctl: refused(reason)
+        Ctl->>UI: A3: showRejected(reason)
+        UI-->>Buyer: "Get a new price", back to B1
+    end
+    Prod-->>Ctl: team price, target size, team lifetime
+    Ctl->>Intent: B7: «create» (price, target size, deadlines, reserved team)
+    Ctl->>PG: B8: requestPayment(intent)
+    Note over Ctl,PG: B8: «include» Pay upfront (@sec-a-pay-upfront)

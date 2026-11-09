@@ -1,0 +1,19 @@
+%% frame: UC3 start refused after payment (analysis)
+sequenceDiagram
+    actor Stripe
+    participant PG as PaymentGateway (boundary)
+    participant Ctl as StartTeamControl (control)
+    participant Intent as PurchaseIntent (entity)
+    participant Pay as Payment (entity)
+    participant UI as StartTeamUI (boundary)
+    create participant Ref as Refund (entity)
+
+    Stripe->>PG: B8: paid(paymentRef)
+    PG->>Ctl: B8: paymentConfirmed(paymentRef)
+    Note over Ctl,Intent: A5 at B9: isPayable, isActive or isPurchasable answers no. A6 at B10: acceptsPayment answers no (@fig-a-uc03-as-basic-2)
+    Ctl->>Intent: B10: acceptsPayment(amount)
+    Intent-->>Ctl: refused(reason)
+    Ctl->>Pay: A5, A6: requireRefund(reason)
+    Pay->>Ref: A5, A6: «create»
+    Ctl->>Pay: A5, A6: recordOutcome(refund required)
+    Ctl->>UI: A5, A6: showRefundPending()

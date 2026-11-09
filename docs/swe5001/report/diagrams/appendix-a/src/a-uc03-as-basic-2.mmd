@@ -1,0 +1,30 @@
+%% frame: UC3 basic flow, part 2: open the team, after payment (analysis)
+sequenceDiagram
+    actor Stripe
+    participant PG as PaymentGateway (boundary)
+    participant Ctl as StartTeamControl (control)
+    participant Intent as PurchaseIntent (entity)
+    participant Acc as Account (entity)
+    participant Prod as Product (entity)
+    create participant Team as Team (entity)
+    create participant Ord as Order (entity)
+    participant UI as StartTeamUI (boundary)
+    create participant Mem as Membership (entity)
+
+    Stripe->>PG: B8: paid(paymentRef)
+    PG->>Ctl: B8: paymentConfirmed(paymentRef)
+    Ctl->>Intent: B9: isPayable()
+    Intent-->>Ctl: payable
+    Ctl->>Acc: B9: isActive()
+    Acc-->>Ctl: active
+    Ctl->>Prod: B9: isPurchasable()
+    Prod-->>Ctl: purchasable
+    Ctl->>Intent: B10: acceptsPayment(amount)
+    Intent-->>Ctl: accepted
+    Ctl->>Team: B10: «create» (intent terms, leader)
+    Team->>Mem: B10: «create» (leader)
+    Ctl->>Ord: B11: «create» (buyer, team price)
+    Ctl->>Intent: B11: markFulfilled(payment)
+    Ctl->>Prod: B11: takeOneUnit()
+    Note over Ctl,PG: B12: the payment's outcome is recorded as fulfilled (@sec-a-pay-upfront)
+    Ctl->>UI: B13: showStarted(teamStatus)
