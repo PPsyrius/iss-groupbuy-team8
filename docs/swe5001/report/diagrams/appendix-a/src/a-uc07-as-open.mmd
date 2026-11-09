@@ -1,0 +1,23 @@
+%% frame: UC7 open an invite link, B5–B6 (analysis)
+sequenceDiagram
+    actor Visitor
+    participant UI as InviteLandingUI (boundary)
+    participant Ctl as ShareInvitationControl (control)
+    participant Inv as Invitation (entity)
+    participant Acc as Account (entity)
+
+    Visitor->>UI: B5: openLink(team, reference)
+    UI->>Ctl: B6: resolveInvitation(reference)
+    Ctl->>Inv: B6: lookUp(reference)
+    Inv-->>Ctl: invitation, or none
+    alt known reference
+        Ctl->>Inv: B6: sharer()
+        Inv-->>Ctl: sharer's account
+        Ctl->>Acc: B6: publicNickname()
+        Acc-->>Ctl: nickname, or none
+        Ctl->>UI: B6: showBanner(nickname)
+        UI-->>Visitor: banner naming the sharer, "Join this bloc"
+    else unknown or malformed reference (A5)
+        Ctl->>UI: A5: showGenericBanner()
+        UI-->>Visitor: banner without a name; joining still works
+    end
