@@ -1,0 +1,54 @@
+%% frame: UC1 Browse and search team-priced products (analysis)
+classDiagram
+    class CatalogUI {
+        <<boundary>>
+        +browse(category, keyword, page)
+        +open(product)
+        +showListings(page)
+        +showListing(detail)
+        +showNotFound()
+    }
+    class BrowseListingsControl {
+        <<control>>
+        +browse(criteria)
+        +search(criteria, reorder)
+        +viewListing(product)
+    }
+    class SemanticRanker {
+        <<boundary>>
+        +rank(keyword, products)
+    }
+    class Product {
+        <<entity>>
+        -title: Text
+        -description: Text
+        -category: Text
+        -individualPrice: Money
+        -stock: Count
+        -soldCount: Count
+        -status: ProductStatus
+        -pricingMode: PricingMode
+        +selectOnSale(criteria)
+        +matchOnSale(keyword, criteria)
+        +isOnSale()
+        +priceFor(team)
+    }
+    class Team {
+        <<entity>>
+        -price: Money
+        -targetSize: Count
+        -currentSize: Count
+        -deadline: Date-time
+        -status: TeamStatus
+        +bestOpenFor(products)
+    }
+%% at CatalogUI 0,0
+%% at BrowseListingsControl 1,0
+%% at SemanticRanker 2,0
+%% at Product 0,1
+%% at Team 2,1
+    CatalogUI "1" -- "1" BrowseListingsControl
+    BrowseListingsControl "1" -- "1" SemanticRanker
+    BrowseListingsControl "1" --> "*" Product
+    BrowseListingsControl "1" --> "*" Team
+    Product "1" -- "*" Team : offers
