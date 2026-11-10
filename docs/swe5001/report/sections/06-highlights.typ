@@ -155,4 +155,3 @@ The runtime is destroyed between sessions (AD-12), so the system is shown throug
 
 After the final `terraform destroy` of 16 November (@tbl-milestones) removes every stack, the GitHub Actions runs, the evidence records under `docs/swe5001/evidence/` and the source remain, and a rebuild needs an operator to re-apply `foundation` (the GitHub OIDC roles the pipeline assumes and the ECR repositories) and `edge` before any promotion can run (#src("docs/swe5001/impl-aws-infrastructure.md")[infrastructure design], sections 4 and 5).
 
-#pending[Team to decide: if the proposed AWS session of 13 November (phase R0, §3.4) runs, add its run link here as a live rebuild of the current release.]
