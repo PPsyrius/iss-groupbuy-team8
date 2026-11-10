@@ -1,0 +1,43 @@
+%% frame: UC4 B10: subscribers at commit (design)
+sequenceDiagram
+    participant Svc as :StripeCheckoutService
+    participant Tx as :TransactionTemplate
+    participant OLS as :OrderLifecycleSubscriber
+    participant Orders as :OrderRepository
+    participant Out as :IntegrationOutboxWriter
+    participant Share as :ShareCreditSubscriber
+    participant Credits as :ShareCreditRepository
+    participant Cache as :OpenDealOfferCacheSubscriber
+
+    Svc->>Tx: executeWithoutResult(settle)
+    Note over Svc,Orders: settle ran B6 to B9; each publishEvent was held for its listener's phase
+    rect
+        Note over Tx,Cache: BEFORE_COMMIT: synchronous calls on the committing thread, inside the settlement transaction
+        opt TeamSucceeded was published (B10: UC5 B3)
+            Tx->>OLS: onTeamSucceeded(event), @Order(10)
+            OLS->>Orders: confirmByDealId(dealId)
+            Orders-->>OLS: int confirmed
+            OLS-->>Tx: void
+        end
+        opt blocbuy.events.enabled (distributed topology)
+            Tx->>Out: onPaymentSucceeded(event), lowest precedence
+            Out-->>Tx: void
+            Note over Out,Cache: and onTeamSucceeded(event) if published; the writer's rows: @fig-a-ntf-ds-produce
+        end
+    end
+    Note over Svc,Cache: COMMIT. Relay of the outbox rows: @sec-a-notifications
+    rect
+        Note over Tx,Cache: AFTER_COMMIT: synchronous calls, outside the settlement transaction; a failure is logged and cannot undo the join
+        opt event.attributed() (A1)
+            Tx->>Share: onMemberJoined(event)
+            critical share credit, REQUIRES_NEW, 10 s
+                Share->>Credits: recordIfAbsent(credit)
+                Credits-->>Share: boolean
+            end
+        end
+        Tx->>Cache: onMemberJoined(event)
+        opt TeamSucceeded was published
+            Tx->>Cache: onTeamSucceeded(event)
+        end
+    end
+    Tx-->>Svc: void

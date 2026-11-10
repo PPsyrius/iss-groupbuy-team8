@@ -1,0 +1,22 @@
+%% frame: UC1 basic flow B6 to B9 with A5: view one product (analysis)
+sequenceDiagram
+    actor Visitor
+    participant UI as CatalogUI (boundary)
+    participant Ctl as BrowseListingsControl (control)
+    participant Prod as Product (entity)
+    participant Team as Team (entity)
+
+    Visitor->>UI: B6: open(product)
+    UI->>Ctl: B6: viewListing(product)
+    Ctl->>Prod: B7: isOnSale()
+    Prod-->>Ctl: on sale, or not
+    break missing, draft or delisted (A5)
+        Ctl->>UI: A5: showNotFound()
+        UI-->>Visitor: not-found card
+    end
+    Ctl->>Team: B8: bestOpenFor(product)
+    Team-->>Ctl: best open team, or none
+    Ctl->>Prod: B8: priceFor(team)
+    Prod-->>Ctl: individual price, team price or none
+    Ctl->>UI: B9: showListing(detail)
+    UI-->>Visitor: detail page; start or join needs sign-in (UC2)

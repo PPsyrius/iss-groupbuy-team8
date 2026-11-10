@@ -1,0 +1,48 @@
+%% frame: UC8 B1, B2 and B4: my teams (design, commerce-svc)
+sequenceDiagram
+    actor Buyer
+    participant SI as :SaInterceptor
+    participant Ctl as :GroupDealController
+    participant SU as :StpUtil
+    participant App as :GroupDealAppServiceImpl
+    participant Repo as :GroupDealRepositoryImpl
+    participant Map as :BizGroupDealMapper
+    participant Ad as :GroupbuyListingDisplayAdapter
+    participant PR as :ProductRepository
+
+    Buyer->>SI: B1: preHandle(request, response, handler)
+    SI->>SU: checkLogin()
+    break no session (A1)
+        SU-->>SI: NotLoginException
+        SI-->>Buyer: 401 UNAUTHENTICATED (COMMON_401_001)
+    end
+    Buyer->>Ctl: B1: myTeams(page, size, response)
+    Ctl->>SU: checkLogin()
+    Ctl->>SU: getLoginIdAsString()
+    SU-->>Ctl: buyer; Cache-Control: no-store is set
+    Ctl->>App: pageMyTeams(query, buyer)
+    critical B2: REQUIRED, read-only, REPEATABLE_READ, 5 s (one snapshot)
+        App->>Repo: pageMembershipsByUserId(query, buyer)
+        Repo->>Map: selectMembershipPageByUserId(buyer, size, offset)
+        Map-->>Repo: List(TeamMembershipDO)
+        Repo->>Map: countMembershipsByUserId(buyer)
+        Map-->>Repo: long total
+        Repo-->>App: PageResult(TeamMembership)
+        alt the page is empty (A2)
+            App-->>Ctl: empty PageResult(MyTeamView) with total
+        else B2: one batch read of the page's products, joining the transaction
+            App->>Ad: findByProductIds(productIds)
+            Ad->>PR: findDisplaysByIds(productIds)
+            PR-->>Ad: List(ProductDisplay), inactive products absent (A3)
+            loop each ProductDisplay
+                Ad->>Ad: toDisplay(product)
+            end
+            Ad-->>App: Map(UUID, ListingDisplay)
+            loop each membership; a missing listing gives null title and image (A3)
+                App->>App: toView(membership, listing)
+            end
+            App-->>Ctl: PageResult(MyTeamView)
+        end
+    end
+    Note over Buyer,Ctl: B4: labels and chips are set by the account page (S2)
+    Ctl-->>Buyer: Result(PageResult(MyTeamResponse))

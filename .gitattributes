@@ -3,3 +3,5 @@
 /deployment/frontend/cloudfront/spa-fallback.js text eol=lf
 # Frozen delivery inputs are byte-hashed; preserve their bytes on Windows checkouts.
 /docs/ci/evidence/dora-metrics-*-inputs.json text eol=lf
+# Appendix A diagrams: the generator writes LF and --check compares bytes; keep Windows checkouts in LF.
+/docs/swe5001/report/diagrams/appendix-a/** text eol=lf

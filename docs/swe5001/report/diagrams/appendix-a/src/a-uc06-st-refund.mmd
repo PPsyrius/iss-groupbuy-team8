@@ -1,0 +1,32 @@
+%% frame: refund obligation (biz_refund.status)
+stateDiagram-v2
+    state "pending" as pending
+    state "processing" as processing
+    state "succeeded" as succeeded
+    state "failed" as failed
+    state "review" as review
+    state worker <<choice>>
+    state recon <<choice>>
+    [*] --> pending : «create» / insert 'pending'
+    pending --> worker : processNext() [due]
+    processing --> worker : processNext() [due]
+    worker --> processing : [provider pending or retryable]
+    worker --> failed : [provider failed or canceled]
+    worker --> review : [unsafe]
+    worker --> succeeded : [provider succeeded]
+    review --> recon : reconcile(paymentId, providerId)
+    failed --> recon : reconcile(paymentId, providerId)
+    recon --> processing : [provider pending]
+    recon --> failed : [provider failed or canceled]
+    recon --> review : [mismatch, refusal, provider error or unknown status]
+    recon --> succeeded : [provider succeeded]
+    succeeded --> [*]
+%% at __start0 0,0
+%% at pending 0,1
+%% at worker 1,3
+%% at processing 3,0
+%% at failed 3,2
+%% at review 3,5
+%% at succeeded 3,7
+%% at __end0 4,7
+%% at recon 5,3

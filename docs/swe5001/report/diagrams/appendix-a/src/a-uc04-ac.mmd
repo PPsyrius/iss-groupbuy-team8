@@ -1,0 +1,113 @@
+%% frame: UC4 Join an existing team by paying (analysis)
+classDiagram
+    class JoinTeamUI {
+        <<boundary>>
+        +join(team, invitation)
+        +showJoined(teamStatus)
+        +showRejected(reason)
+    }
+    class Account {
+        <<entity>>
+        -status: AccountStatus
+        +isActive()
+    }
+    class PayUpfrontControl {
+        <<control>>
+        +paymentReported(report)
+    }
+    class Product {
+        <<entity>>
+        -title: Text
+        -stock: Count
+        -status: ProductStatus
+        +isPurchasable()
+        +takeOneUnit()
+    }
+    class JoinTeamControl {
+        <<control>>
+        +requestJoin(buyer, team, invitation)
+        +paymentConfirmed(payment)
+    }
+    class Payment {
+        <<entity>>
+        -amount: Money
+        -status: PaymentStatus
+        -outcome: PaymentOutcome
+    }
+    class Refund {
+        <<entity>>
+        -amount: Money
+        -reason: Text
+        -status: RefundStatus
+    }
+    class Order {
+        <<entity>>
+        -amount: Money
+        -status: OrderStatus
+    }
+    class ResolveTeamControl {
+        <<control>>
+        +teamFilled(team)
+    }
+    class Team {
+        <<entity>>
+        -price: Money
+        -targetSize: Count
+        -currentSize: Count
+        -deadline: Date-time
+        -status: TeamStatus
+        +resolveSharer(invitation, buyer)
+        +checkAdmission(buyer)
+        +admit(buyer, payment)
+    }
+    class PurchaseIntent {
+        <<entity>>
+        -price: Money
+        -payableUntil: Date-time
+        -teamDeadline: Date-time
+        +isPayable()
+        +fulfilBy(payment)
+    }
+    class Membership {
+        <<entity>>
+        -role: MemberRole
+        -joinTime: Date-time
+    }
+    class Invitation {
+        <<entity>>
+        -reference: Text
+        +attributes(team, buyer)
+    }
+%% at JoinTeamUI 1,0
+%% at Account 2,0
+%% at PayUpfrontControl 3.3,0.35
+%% at Product 1,1
+%% at JoinTeamControl 2,1
+%% at ResolveTeamControl 3,1
+%% at Payment 4,1
+%% at Refund 4,2
+%% at Order 1,2
+%% at Team 2,2
+%% at PurchaseIntent 3,2
+%% at Membership 1.3,3.75
+%% at Invitation 3,3.75
+%% mside JoinTeamUI JoinTeamControl right left
+%% mside JoinTeamControl Order left right
+%% mside JoinTeamControl PurchaseIntent right left
+%% mside Payment PurchaseIntent left right
+    JoinTeamUI "1" -- "1" JoinTeamControl
+    PayUpfrontControl "1" --> "1" JoinTeamControl : base use case
+    JoinTeamControl "1" --> "1" Account
+    JoinTeamControl "1" --> "1" Product
+    JoinTeamControl "1" --> "1" ResolveTeamControl : last seat
+    JoinTeamControl "1" --> "*" Order : creates
+    JoinTeamControl "1" --> "1" Team
+    JoinTeamControl "1" --> "*" PurchaseIntent
+    Payment "1" -- "0..1" Refund : owes
+    Order "*" -- "1" Team : for
+    Team "1" *-- "1..*" Membership
+    PurchaseIntent "*" -- "0..1" Team : for
+    Payment "*" -- "1" PurchaseIntent : pays
+    Membership "1" -- "0..1" Invitation : shares
+    Membership "*" -- "0..1" Invitation : joined via
+    PurchaseIntent "*" -- "0..1" Invitation : via

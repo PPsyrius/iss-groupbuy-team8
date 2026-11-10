@@ -1,0 +1,44 @@
+%% frame: Notifications B2 with A6, A7: relay one batch to SNS (design, commerce-svc)
+sequenceDiagram
+    participant Job as :OutboxRelayJob
+    participant Run as :LeasedJobRunner
+    participant Svc as :OutboxRelayService
+    participant Repo as :OutboxRelayRepository
+    participant T as :SnsOutboxEventTransport
+    participant F as :OutboxMessageFactory
+    participant Topic as domain-events (topic)
+    participant Q as notification queue (queue)
+
+    Note over Job,Run: B2: every 2 s; no transaction spans provider I/O
+    Job->>Run: run(job, lease, work)
+    alt another instance holds the lease outbox-relay (A7)
+        Run-->>Job: skipped
+    else lease taken for 2 min, renewed every 40 s
+        Run->>Job: run(leaseValid): the job's lambda, a LeasedJobRunner.LeaseAwareWork
+        Job->>Svc: relayBatch(leaseValid)
+        Svc->>Repo: findDue(100)
+        Repo-->>Svc: List<OutboxEvent>, oldest due first
+        Svc->>T: publish(events, leaseValid)
+        Note over T,F: final template method inherited from BatchingOutboxEventTransport
+        loop each slice of 10 events, while leaseValid
+            loop each event of the slice
+                T->>T: entry(event)
+                T->>F: body(event, json)
+                F-->>T: IntegrationEventEnvelope as JSON
+                T->>F: attributes(event)
+                F-->>T: eventType, version, traceId
+            end
+            opt lease still valid (else the slice stays unattempted, A7)
+                T->>T: send(events, entries)
+                T->>Topic: PublishBatch(topicArn, entries)
+                Topic-->>T: successful ids, failed ids
+                Note over T,Q: SNS hop designed and unit-tested, not yet run on AWS (AISS-13); local and CI path SqsOutboxEventTransport to ElasticMQ, same consumer input (raw delivery)
+                Topic-)Q: deliver(message), filter on eventType
+            end
+        end
+        T-->>Svc: List<OutboxPublishResult>: published, failed or skipped
+        Note over Svc,Repo: A6: a failed row gets attempts + 1 and a retry delay; the tenth failure marks it failed
+        Svc->>Repo: recordResults(attempted, 10)
+        Repo-->>Svc: int updated
+        Svc-->>Job: int
+    end

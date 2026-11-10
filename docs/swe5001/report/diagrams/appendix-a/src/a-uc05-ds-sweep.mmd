@@ -1,0 +1,49 @@
+%% frame: UC5 B5-B7: the expiry sweep under its lease (design)
+sequenceDiagram
+    actor Sch as Scheduler
+    participant Job as :TeamExpirySweepJob
+    participant Run as :LeasedJobRunner
+    participant Lease as :SchedulerLeaseRepository
+    participant Sw as :GroupDealExpirySweeper
+    participant Deals as :PaidGroupDealRepository
+    participant Exp as :GroupDealExpiryService
+
+    Sch->>Job: B5: run(), PT1M after the previous run
+    Job->>Run: run("team-expiry-sweep", lease: PT2M, work: this::sweepOnce)
+    Run->>Lease: tryAcquire(job, owner, lease)
+    alt RuntimeException: the lease row cannot be read
+        Lease-->>Run: exception
+        Run-->>Job: failed, nothing held
+    else false: another instance holds the lease (A1)
+        Lease-->>Run: false
+        Run-->>Job: skipped
+    else true
+        Lease-->>Run: true
+        par renewal every lease / 3 on a virtual thread
+            Run->>Lease: renew(job, owner, lease)
+            Lease-->>Run: false sets leaseValid := false (A3)
+        and the work (LeaseAwareWork.run is this::sweepOnce)
+            Run->>Job: sweepOnce(leaseValid)
+            Job->>Sw: sweep(batchSize: 100, leaseValid)
+            Sw->>Deals: B6: currentTime()
+            Deals-->>Sw: Instant now
+            Sw->>Deals: dueForExpiry(now, limit)
+            Deals-->>Sw: List of UUID, oldest deadline first
+            loop each dealId, while leaseValid.getAsBoolean()
+                Note over Sw,Exp: B7-B10: one transaction per team (@fig-a-uc05-ds-expire)
+                Sw->>Exp: expireOne(dealId)
+                alt returned true
+                    Exp-->>Sw: true, expired + 1
+                else returned false: already resolved (A2)
+                    Exp-->>Sw: false, alreadyResolved + 1
+                else RuntimeException: the team's transaction rolled back (E1)
+                    Exp-->>Sw: exception, failed + 1
+                    Sw->>Deals: deferExpiryRetry(dealId, RETRY_DELAY)
+                end
+            end
+            Sw-->>Job: Result(due, expired, alreadyResolved, failed)
+            Job-->>Run: void, after recording the counters
+        end
+        Run->>Lease: release(job, owner)
+        Run-->>Job: completed or failed
+    end

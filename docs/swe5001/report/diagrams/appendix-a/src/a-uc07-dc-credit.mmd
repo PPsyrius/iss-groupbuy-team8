@@ -1,0 +1,55 @@
+%% frame: UC7 design, slice 2: sharer on the membership and share credit (commerce-svc)
+classDiagram
+    class OrderFulfilmentAdapter {
+        <<adapter, application service>>
+    }
+    class PaidGroupDealService {
+        <<application service, Conc, Evt>>
+        +joinConfirmed(dealId: UUID, paid: PaidParticipation, sharerUserId: UUID): ParticipationResult
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers, Conc>>
+        +insertJoinedMember(before: GroupDeal, after: GroupDeal, paid: PaidParticipation, sharerUserId: UUID, now: Instant): void
+    }
+    class ApplicationEventPublisher {
+        <<interface, Evt>>
+        +publishEvent(event: Object): void
+    }
+    class MemberJoined {
+        <<domain event, record>>
+        +dealId: UUID
+        +memberUserId: UUID
+        +paymentId: UUID
+        +sharerUserId: UUID
+        +attributed(): boolean
+    }
+    class ShareCreditSubscriber {
+        <<subscriber, Evt>>
+        +onMemberJoined(event: MemberJoined): void
+    }
+    class ShareCredit {
+        <<aggregate root, record>>
+        +paymentId: UUID
+        +sharerUserId: UUID
+        +inviteeUserId: UUID
+        +of(joined: MemberJoined): ShareCredit «static»
+    }
+    class ShareCreditRepository {
+        <<interface, repository, Pers>>
+        +recordIfAbsent(credit: ShareCredit): boolean
+    }
+%% at OrderFulfilmentAdapter 0,0
+%% at PaidGroupDealService 1,0
+%% at PaidGroupDealRepository 2,0
+%% at ApplicationEventPublisher 0,1
+%% at MemberJoined 1,1
+%% at ShareCreditSubscriber 2,1
+%% at ShareCredit 1,2
+%% at ShareCreditRepository 2,2
+    OrderFulfilmentAdapter "1" --> "1" PaidGroupDealService
+    PaidGroupDealService "1" --> "1" PaidGroupDealRepository
+    PaidGroupDealService "1" --> "1" ApplicationEventPublisher
+    PaidGroupDealService ..> MemberJoined : «create»
+    ShareCreditSubscriber ..> MemberJoined
+    ShareCreditSubscriber ..> ShareCredit : «create»
+    ShareCreditSubscriber "1" --> "1" ShareCreditRepository

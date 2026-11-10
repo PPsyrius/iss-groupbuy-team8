@@ -1,0 +1,44 @@
+%% frame: UC6 B5 and B6: the worker claims one refund (design)
+sequenceDiagram
+    participant Job as :RefundWorkerJob
+    participant Run as :LeasedJobRunner
+    participant Lease as :SchedulerLeaseRepository
+    participant Svc as :RefundService
+    participant Impl as :RefundRepositoryImpl
+    participant Map as :RefundMapper
+    participant W as :RefundWork
+
+    Note over Job,Run: B5: @Scheduled, fixed delay 30 s (first run after 45 s)
+    Job->>Run: run("refund-worker", PT2M, work)
+    Run->>Lease: tryAcquire("refund-worker", owner, PT2M)
+    Lease-->>Run: boolean acquired
+    break another instance holds the job lease
+        Run-->>Job: skipped
+    end
+    par this run's work
+        Run->>Job: attemptOne(leaseValid), through LeasedJobRunner.LeaseAwareWork
+        Job->>Svc: processNext()
+        critical claim transaction, REQUIRED (new), READ COMMITTED, 5 s
+            Svc->>Impl: claimNext()
+            Impl->>Map: claimNext(): oldest due row, FOR UPDATE SKIP LOCKED
+            Note over Impl,Map: pending or processing, next attempt due, row lease free; lease 2 min, version + 1
+            Map-->>Impl: RefundWork
+            Impl->>Map: audit(work, "CLAIMED")
+            Impl-->>Svc: RefundWork
+        end
+        break nothing due (A2)
+            Svc-->>Job: false
+        end
+        Note over Svc,W: B6: payment succeeded, same amount, currency sgd, Stripe PaymentIntent known
+        Svc->>W: valid()
+        W-->>Svc: boolean
+        break not valid (A3)
+            Svc->>Svc: finish(work, providerRefundId, REVIEW, "PAYMENT_MISMATCH")
+            Svc-->>Job: true
+        end
+        Note over Svc,W: B7 and B8: @fig-a-uc06-ds-provider
+        Svc-->>Job: true
+    and renewal thread, every third of the lease
+        Run->>Lease: renew("refund-worker", owner, PT2M)
+    end
+    Run->>Lease: release("refund-worker", owner)

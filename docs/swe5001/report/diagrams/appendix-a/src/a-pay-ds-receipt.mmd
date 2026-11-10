@@ -1,0 +1,39 @@
+%% frame: Pay upfront B10 with A1 and A8: capabilities and receipt (design)
+sequenceDiagram
+    actor Buyer
+    participant Ctl as :StripeCheckoutController
+    participant Sw as :StripeFeatureSwitch
+    participant PBS as :PaymentBrowserService
+    participant Impl as :CheckoutPaymentRepositoryImpl
+    participant Map as :PaymentMapper
+    participant Ref as :RefundRepository
+    participant IP as :PaymentIntentPort
+
+    Note over Buyer,Sw: A1: GET /api/v1/payments/capabilities
+    Buyer->>Ctl: capabilities(response)
+    Ctl->>Sw: enabled()
+    Sw-->>Ctl: boolean
+    Ctl-->>Buyer: PaymentCapabilities: pay action hidden when false
+    Note over Buyer,PBS: B10: GET /api/v1/payments/{id}, polled every 2 s for at most 60 s
+    Buyer->>Ctl: receipt(id, response)
+    Ctl->>Sw: requireEnabled()
+    break Checkout switched off (A1)
+        Sw-->>Ctl: NOT_FOUND
+        Ctl-->>Buyer: HTTP 404
+    end
+    Ctl->>PBS: receipt(user, id)
+    critical read-only, REPEATABLE READ, 5 s
+        PBS->>Impl: receipt(id)
+        Impl->>Map: receipt(id)
+        Map-->>Impl: BizPaymentDO
+        Impl-->>PBS: Optional of ReceiptSnapshot
+        break absent, or another buyer's payment
+            PBS-->>Ctl: PAYMENT_NOT_FOUND
+        end
+        PBS->>Ref: status(paymentId)
+        Ref-->>PBS: refund status, or null
+        PBS->>IP: purchasedProduct(user, intentId)
+        IP-->>PBS: Optional of product id
+    end
+    PBS-->>Ctl: Receipt, outcome PENDING until recorded (A8)
+    Ctl-->>Buyer: HTTP 200, Cache-Control no-store

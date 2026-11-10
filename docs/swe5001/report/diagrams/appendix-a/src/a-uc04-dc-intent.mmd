@@ -1,0 +1,102 @@
+%% frame: UC4 design, slice 1: purchase intent before payment (commerce-svc)
+classDiagram
+    class StripeCheckoutController {
+        <<controller, Dist, Sec>>
+        +intent(csrf: String, request: IntentRequest): Result~IntentResponse~
+        -checkCsrf(value: String): void
+    }
+    class PaymentBrowserService {
+        <<application service, Sec>>
+        +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
+    }
+    class RateLimitGateway {
+        <<interface, gateway, Sec>>
+        +tryAcquire(limit: RateLimitGateway.RateLimit, subject: String): boolean
+    }
+    class PaymentIntentPort {
+        <<interface, Dist>>
+        +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
+    }
+    class PurchaseIntent {
+        <<aggregate root, Pers>>
+        -terms: PurchaseIntent.Terms
+        -quoteValidUntil: Instant
+        -businessDeadline: Instant
+        -sharerUserId: UUID
+        +issue(terms: PurchaseIntent.Terms, quoteValidUntil: Instant, businessDeadline: Instant, now: Instant): PurchaseIntent «static»
+        +attributedTo(sharer: UUID): PurchaseIntent
+    }
+    class UserAppService {
+        <<interface, Dist>>
+        +requireActive(userId: UUID): void
+    }
+    class PurchaseIntentAppService {
+        <<adapter, application service, Dist>>
+        +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
+        -join(user: UUID, dealId: UUID, inviteRef: String, now: Instant): PurchaseIntent
+    }
+    class PurchaseIntentRepository {
+        <<interface, repository, Pers>>
+        +currentTime(): Instant
+        +save(intent: PurchaseIntent): PurchaseIntent
+    }
+    class RemoteUserAppService {
+        <<adapter, Dist>>
+        +requireActive(userId: UUID): void
+    }
+    class GroupDealPurchaseSupport {
+        <<interface, Dist>>
+        +resolveSharer(inviteRef: String, dealId: UUID, buyerId: UUID): Optional~UUID~
+        +lockJoinTerms(dealId: UUID, buyerId: UUID): GroupDealPurchaseSupport.JoinTerms
+    }
+    class CatalogPurchaseSupport {
+        <<interface, Dist>>
+        +requirePurchasable(productId: UUID): CatalogPurchaseSupport.PurchasableProduct
+    }
+    class GroupDealPurchaseSupportImpl {
+        <<application service, Conc>>
+    }
+    class ShareInviteRepository {
+        <<interface, repository, Pers>>
+        +findByRef(ref: String): Optional~ShareInvite~
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers, Conc>>
+        +lockDeal(dealId: UUID): Optional~GroupDeal~
+        +currentTime(): Instant
+        +hasActiveMember(dealId: UUID, userId: UUID): boolean
+    }
+    class ShareInvite {
+        <<aggregate root, record>>
+        +attributes(joiningDealId: UUID, buyerId: UUID): boolean
+    }
+%% at StripeCheckoutController 0,0
+%% at PaymentBrowserService 1,0
+%% at RateLimitGateway 2,0
+%% at PaymentIntentPort 1,1
+%% at PurchaseIntent 2,1
+%% at UserAppService 0,2
+%% at PurchaseIntentAppService 1,2
+%% at PurchaseIntentRepository 2,2
+%% at RemoteUserAppService 0,3
+%% at GroupDealPurchaseSupport 1,3
+%% at CatalogPurchaseSupport 2,3
+%% at GroupDealPurchaseSupportImpl 1,4
+%% at ShareInviteRepository 2,4
+%% at ShareInvite 2,5
+%% at PaidGroupDealRepository 0,4
+    StripeCheckoutController "1" --> "1" PaymentBrowserService
+    PaymentBrowserService "1" --> "1" RateLimitGateway
+    PaymentBrowserService "1" --> "0..1" PaymentIntentPort
+    PurchaseIntentAppService ..|> PaymentIntentPort
+    PurchaseIntentAppService ..> PurchaseIntent : «create»
+    PurchaseIntentAppService "1" --> "1" UserAppService
+    PurchaseIntentAppService "1" --> "1" PurchaseIntentRepository
+    RemoteUserAppService ..|> UserAppService
+    PurchaseIntentAppService "1" --> "1" GroupDealPurchaseSupport
+    PurchaseIntentAppService "1" --> "1" CatalogPurchaseSupport
+    PurchaseIntentRepository ..> PurchaseIntent
+    GroupDealPurchaseSupportImpl ..|> GroupDealPurchaseSupport
+    GroupDealPurchaseSupportImpl "1" --> "1" ShareInviteRepository
+    ShareInviteRepository ..> ShareInvite
+    GroupDealPurchaseSupportImpl "1" --> "1" PaidGroupDealRepository

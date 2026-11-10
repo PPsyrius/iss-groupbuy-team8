@@ -1,0 +1,27 @@
+%% frame: Notifications B4 with A4, A5: list my notifications (design, notification-svc)
+sequenceDiagram
+    actor Buyer
+    participant Ctl as :NotificationController
+    participant NA as :NotificationAppService
+    participant Impl as :NotificationRepositoryImpl
+    participant M as :BizNotificationMapper
+
+    Note over Buyer,Ctl: B4: GET /api/v1/notifications?page,size
+    Buyer->>Ctl: list(page, size, response)
+    alt page below 1 or size outside 1 to 100 (A5)
+        Ctl-->>Buyer: 400 VALIDATION_FAILED
+    else no valid session (A4)
+        Ctl-->>Buyer: 401 UNAUTHENTICATED
+    else signed in: userId from the session
+        Ctl->>NA: pageMine(query, userId)
+        critical read-only, REPEATABLE READ, 3 s
+            NA->>Impl: pageByUserId(query, userId)
+            Impl->>M: selectPageByUserId(userId, limit, offset)
+            M-->>Impl: List<BizNotificationDO>, newest first
+            Impl->>M: countByUserId(userId)
+            M-->>Impl: long total
+            Impl-->>NA: PageResult<Notification>
+        end
+        NA-->>Ctl: PageResult<Notification>
+        Ctl-->>Buyer: 200, page of NotificationResponse, Cache-Control no-store
+    end

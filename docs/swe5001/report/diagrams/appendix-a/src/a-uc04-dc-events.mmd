@@ -1,0 +1,84 @@
+%% frame: UC4 design, slice 4: domain events and their subscribers (commerce-svc)
+classDiagram
+    class StripeCheckoutService {
+        <<application service, Evt>>
+    }
+    class PaidGroupDealService {
+        <<application service, Evt>>
+    }
+    class ApplicationEventPublisher {
+        <<interface, Evt>>
+        +publishEvent(event: Object): void
+    }
+    class PaymentSucceeded {
+        <<domain event, record>>
+        +paymentId: UUID
+        +confirmedAt: Instant
+    }
+    class MemberJoined {
+        <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +memberUserId: UUID
+        +paymentId: UUID
+        +sharerUserId: UUID
+        +attributed(): boolean
+    }
+    class TeamSucceeded {
+        <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +size: int
+        +at: Instant
+    }
+    class OrderLifecycleSubscriber {
+        <<subscriber, Evt>>
+        +onTeamSucceeded(event: TeamSucceeded): void
+    }
+    class IntegrationOutboxWriter {
+        <<subscriber, Evt, Dist>>
+        +onTeamSucceeded(event: TeamSucceeded): void
+        +onPaymentSucceeded(event: PaymentSucceeded): void
+    }
+    class ShareCreditSubscriber {
+        <<subscriber, Evt>>
+        +onMemberJoined(event: MemberJoined): void
+    }
+    class OpenDealOfferCacheSubscriber {
+        <<subscriber, Evt>>
+        +onMemberJoined(event: MemberJoined): void
+        +onTeamSucceeded(event: TeamSucceeded): void
+    }
+    class OrderRepository {
+        <<interface, repository, Pers>>
+        +confirmByDealId(dealId: UUID): int
+    }
+    class ShareCreditRepository {
+        <<interface, repository, Pers>>
+        +recordIfAbsent(credit: ShareCredit): boolean
+    }
+%% at StripeCheckoutService 0,0
+%% at ApplicationEventPublisher 1,0
+%% at PaidGroupDealService 2,0
+%% at PaymentSucceeded 0,1
+%% at TeamSucceeded 1,1
+%% at MemberJoined 2,1
+%% at IntegrationOutboxWriter 0,2
+%% at OrderLifecycleSubscriber 1,2
+%% at OpenDealOfferCacheSubscriber 2,2
+%% at ShareCreditSubscriber 3,2
+%% at OrderRepository 1,3
+%% at ShareCreditRepository 3,3
+    StripeCheckoutService "1" --> "1" ApplicationEventPublisher
+    PaidGroupDealService "1" --> "1" ApplicationEventPublisher
+    StripeCheckoutService ..> PaymentSucceeded : «create»
+    PaidGroupDealService ..> TeamSucceeded : «create»
+    PaidGroupDealService ..> MemberJoined : «create»
+    IntegrationOutboxWriter ..> PaymentSucceeded
+    IntegrationOutboxWriter ..> TeamSucceeded
+    OrderLifecycleSubscriber ..> TeamSucceeded
+    OpenDealOfferCacheSubscriber ..> TeamSucceeded
+    OpenDealOfferCacheSubscriber ..> MemberJoined
+    ShareCreditSubscriber ..> MemberJoined
+    OrderLifecycleSubscriber "1" --> "1" OrderRepository
+    ShareCreditSubscriber "1" --> "1" ShareCreditRepository

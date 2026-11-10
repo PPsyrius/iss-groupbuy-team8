@@ -1,0 +1,70 @@
+%% frame: UC2 Sign in with Google (analysis)
+classDiagram
+    class SignInUI {
+        <<boundary>>
+        +signIn(returnTo)
+        +returned(code, state)
+        +showSignedIn(returnTo)
+        +showFailure(reason)
+        +signOut()
+    }
+    class SignInWithGoogleControl {
+        <<control>>
+        +startSignIn()
+        +issueState()
+        +completeSignIn(code, state, binding)
+        +checkState(state, binding)
+        +openSession(account, roles)
+        +signOut()
+        +checkAccess(request, role)
+    }
+    class IdentityProvider {
+        <<boundary>>
+        +authorize(state)
+        +verify(code)
+    }
+    class MemberAreaUI {
+        <<boundary>>
+        +requestMemberAction(action)
+        +offerSignIn(returnTo)
+        +showAccessDenied()
+    }
+    class OAuthBinding {
+        <<entity>>
+        -provider: Text
+        -subject: Text
+        -lastSignIn: Date-time
+        +findBySubject(provider, subject)
+        +touchSignIn(profile)
+    }
+    class Account {
+        <<entity>>
+        -email: Text
+        -nickname: Text
+        -status: AccountStatus
+        -lastSignIn: Date-time
+        +ensureActive()
+        +touchSignIn()
+    }
+    class Role {
+        <<entity>>
+        -code: Text
+        -permissions: Text
+        +grantTo(account)
+        +grantedTo(account)
+    }
+%% at SignInUI 0,0
+%% at MemberAreaUI 1,0
+%% at IdentityProvider 2,0
+%% at SignInWithGoogleControl 1,1
+%% at Role 0,2
+%% at Account 1,2
+%% at OAuthBinding 2,2
+    SignInUI "1" -- "1" SignInWithGoogleControl
+    SignInWithGoogleControl "1" -- "1" IdentityProvider
+    MemberAreaUI "*" -- "1" SignInWithGoogleControl
+    SignInWithGoogleControl "1" --> "0..1" OAuthBinding
+    SignInWithGoogleControl "1" --> "0..1" Account
+    SignInWithGoogleControl "1" --> "*" Role
+    Account "1" -- "*" OAuthBinding : signs in with
+    Account "*" -- "1..*" Role : holds

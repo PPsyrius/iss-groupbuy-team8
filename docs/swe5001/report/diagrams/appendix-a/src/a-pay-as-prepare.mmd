@@ -1,0 +1,33 @@
+%% frame: Pay upfront, prepare the payment and read the receipt (analysis)
+sequenceDiagram
+    actor Buyer
+    participant UI as PaymentUI (boundary)
+    participant Ctl as PayUpfrontControl (control)
+    participant Intent as PurchaseIntent (entity)
+    participant PG as PaymentGateway (boundary)
+    create participant Pay as Payment (entity)
+
+    Buyer->>UI: B1: pay(intent)
+    UI->>Ctl: B1: preparePayment(buyer, intent, attempt)
+    Ctl->>Intent: B2: isPayable()
+    Intent-->>Ctl: payable
+    break not payable, or another attempt open (A4)
+        Ctl->>UI: A4: showRefused(reason)
+    end
+    alt same attempt sent again (A3)
+        Note over Ctl,Pay: A3: the payment of the first request is reused; no second page
+    else new attempt (B2)
+        Ctl->>Pay: B2: «create» (intent terms, attempt)
+    end
+    Ctl->>PG: B3: requestPayment(payment)
+    PG-->>Ctl: paymentPage
+    Ctl->>Pay: B3: attachPage(paymentPage)
+    Ctl->>UI: B3: showCheckout(paymentPage)
+    UI-->>Buyer: Stripe's hosted page
+    Note over Buyer,PG: B4: the buyer pays on Stripe's page; B5 to B9 in @fig-a-pay-as-settle
+    Buyer->>UI: B10: openReceipt(payment)
+    UI->>Ctl: B10: readReceipt(buyer, payment)
+    Ctl->>Pay: B10: receipt()
+    Pay-->>Ctl: status, outcome, refund status
+    Ctl->>UI: B10: showReceipt(receipt)
+    UI-->>Buyer: "Payment received"; A8: "Waiting" until an outcome exists

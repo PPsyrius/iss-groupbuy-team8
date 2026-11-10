@@ -1,0 +1,19 @@
+%% frame: UC4 refused after payment (analysis)
+sequenceDiagram
+    participant PU as PayUpfrontControl (control)
+    participant Ctl as JoinTeamControl (control)
+    participant Intent as PurchaseIntent (entity)
+    participant Team as Team (entity)
+
+    Note over PU,Team: B5: Pay upfront verified the payment (@sec-a-pay-upfront). A7: payments for the last seat are handled one at a time
+    PU->>Ctl: B5: paymentConfirmed(payment)
+    Ctl->>Intent: B6: isPayable()
+    Intent-->>Ctl: payable, or lapsed; then isActive(), isPurchasable() as in @fig-a-uc04-as-basic-2
+    opt every B6 check passes
+        Ctl->>Team: B7: admit(buyer, payment)
+        Team-->>Ctl: admitted (B8 to B11 as in @fig-a-uc04-as-basic-2), or refused(reason)
+    end
+    opt a B6 check failed (A5), or the team refused (A6, A7)
+        Ctl-->>PU: A5, A6: refused(reason)
+        Note over PU,Team: A5, A6: refund owed, recorded by Pay upfront (A15, @sec-a-pay-upfront); no membership or order
+    end

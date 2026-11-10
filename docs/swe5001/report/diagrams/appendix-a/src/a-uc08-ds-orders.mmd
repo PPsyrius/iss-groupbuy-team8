@@ -1,0 +1,51 @@
+%% frame: UC8 B3 and A6: my orders and one of my orders (design, commerce-svc)
+sequenceDiagram
+    actor Buyer
+    participant SI as :SaInterceptor
+    participant Ctl as :OrderController
+    participant SU as :StpUtil
+    participant App as :OrderAppServiceImpl
+    participant Repo as :OrderRepository
+    participant O as :Order
+
+    Note over Buyer,SU: B3: GET /api/v1/orders/me passes the interceptor first
+    Buyer->>SI: preHandle(request, response, handler)
+    SI->>SU: checkLogin()
+    break no session (A1)
+        SU-->>SI: NotLoginException
+        SI-->>Buyer: 401 UNAUTHENTICATED (COMMON_401_001)
+    end
+    Buyer->>Ctl: myOrders(page, size, response)
+    Ctl->>SU: checkLogin()
+    Ctl->>SU: getLoginIdAsString()
+    SU-->>Ctl: buyer; Cache-Control: no-store is set
+    Ctl->>App: pageMyOrders(query, buyer)
+    critical tx REQUIRED, read-only, READ COMMITTED, no timeout
+        App->>Repo: pageByUserId(query, buyer)
+        Repo-->>App: PageResult(Order), rows then count
+        loop each order
+            App->>App: toView(order)
+        end
+    end
+    App-->>Ctl: PageResult(OrderSummaryView)
+    Ctl-->>Buyer: Result(PageResult(OrderSummaryResponse))
+    Note over Buyer,SU: A6: GET /api/v1/orders/{orderId}, from the payment receipt; the same interceptor and session checks
+    Buyer->>Ctl: myOrder(orderId, response)
+    Ctl->>App: findMine(orderId, buyer)
+    critical tx REQUIRED, read-only, READ COMMITTED, no timeout
+        App->>Repo: findById(orderId)
+        Repo-->>App: Optional(Order)
+        App->>O: userId()
+        O-->>App: UUID owner
+        alt missing, or owner is not the buyer (A6)
+            App-->>Ctl: Optional.empty()
+        else
+            App->>App: toView(order)
+            App-->>Ctl: Optional(OrderSummaryView)
+        end
+    end
+    alt empty
+        Ctl-->>Buyer: ORDER_NOT_FOUND (ORDER_404_001)
+    else
+        Ctl-->>Buyer: Result(OrderSummaryResponse)
+    end

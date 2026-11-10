@@ -1,0 +1,17 @@
+%% frame: UC3 start refused after payment (analysis)
+sequenceDiagram
+    participant PU as PayUpfrontControl (control)
+    participant Ctl as StartTeamControl (control)
+    participant Intent as PurchaseIntent (entity)
+    participant Acc as Account (entity)
+    participant Prod as Product (entity)
+
+    PU->>Ctl: B8: paymentConfirmed(payment)
+    Ctl->>Intent: B9: isPayable()
+    Ctl->>Acc: B9: isActive()
+    Ctl->>Prod: B9: isPurchasable()
+    Note over Ctl,Prod: A5 at B9: any of the three answers no
+    Ctl->>Intent: B10: acceptsPayment(amount)
+    Note over Ctl,Intent: A6 at B10: the team refuses to open
+    Ctl-->>PU: A5, A6: refused(reason)
+    Note over PU,Ctl: A5, A6: refund owed, recorded by Pay upfront (A15, @sec-a-pay-upfront); no team, membership or order

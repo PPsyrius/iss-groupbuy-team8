@@ -1,0 +1,46 @@
+%% frame: UC9 B1-B4: authorise, read the console and create a draft (design)
+sequenceDiagram
+    actor Admin
+    participant Ctl as :AdminListingController
+    participant App as :AdminListingAppServiceImpl
+    participant Users as :UserAppService
+    participant Repo as :ProductRepository
+    participant Prices as :TeamPriceRepository
+    participant Deals as :GroupDealQueryService
+    create participant Prod as :Product
+
+    Note over Admin,Ctl: B1: on every request
+    Admin->>Ctl: counts()
+    Ctl->>Ctl: administrator()
+    Note over Ctl,App: checkLogin, checkRole(ADMIN), checkPermission("catalog:product:write"); roles from the session snapshot (S6)
+    break not signed in, not an admin or no permission (E1)
+        Ctl-->>Admin: E1: UNAUTHENTICATED (COMMON_401_001) or FORBIDDEN (COMMON_403_001)
+    end
+    Ctl->>App: B2: counts(actorId)
+    critical B2: REQUIRED, read-only, REPEATABLE READ, one snapshot
+        App->>Users: requireActive(actorId)
+        App->>Repo: countListingStatuses()
+        App->>Deals: countOpenDeals()
+        App->>Prices: countListingsWithActivePolicy()
+    end
+    App-->>Ctl: ListingCounts
+    Ctl-->>Admin: ListingCountsResponse
+    Note over Admin,Prod: B3-B4: create a draft (after administrator() as above)
+    Admin->>Ctl: create(request)
+    Ctl->>App: create(productNo, details, actorId)
+    critical REQUIRED, READ COMMITTED, 10 s
+        App->>Users: requireActive(actorId)
+        break account disabled or unknown, or identity-svc unreachable (E2)
+            Users-->>App: E2: ACCOUNT_DISABLED (IDENTITY_403_001), USER_NOT_FOUND or IdentityUnavailableException
+        end
+        App->>Repo: resolveProductNumber(productNo)
+        Repo-->>App: given or next BB- number
+        App->>Prod: «create» draft(id, productNo, details)
+        Prod-->>App: Product DRAFT, version 0
+        App->>Repo: insertDraft(product, actorId)
+        break number used by another live listing (E4)
+            Repo-->>App: E4: PRODUCT_NUMBER_CONFLICT (CATALOG_409_003)
+        end
+    end
+    App-->>Ctl: ManagedListing
+    Ctl-->>Admin: AdminListingResponse, version 0

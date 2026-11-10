@@ -1,0 +1,69 @@
+%% frame: UC5 design, slice 1: the expiry sweep (commerce-svc)
+classDiagram
+    class TeamExpirySweepJob {
+        <<scheduled job, Sched>>
+        ~JOB: String = "team-expiry-sweep"
+        +run(): void
+        -sweepOnce(leaseValid: BooleanSupplier): void
+    }
+    class ExpirySweep["SchedulingProperties.ExpirySweep"] {
+        <<record>>
+        +interval: Duration
+        +lease: Duration
+        +batchSize: int
+    }
+    class LeasedJobRunner {
+        <<utility, Sched, Conc>>
+        -owner: String
+        +run(job: String, lease: Duration, work: LeasedJobRunner.LeaseAwareWork): void
+    }
+    class LeaseAwareWork["LeasedJobRunner.LeaseAwareWork"] {
+        <<interface>>
+        +run(leaseValid: BooleanSupplier): void
+    }
+    class SchedulerLeaseRepository {
+        <<interface, repository, Pers, Conc>>
+        +tryAcquire(lockKey: String, owner: String, lease: Duration): boolean
+        +renew(lockKey: String, owner: String, lease: Duration): boolean
+        +release(lockKey: String, owner: String): boolean
+    }
+    class GroupDealExpirySweeper {
+        <<application service, Sched>>
+        ~RETRY_DELAY: Duration = PT5M
+        +sweep(limit: int, leaseValid: BooleanSupplier): GroupDealExpirySweeper.Result
+    }
+    class SweepResult["GroupDealExpirySweeper.Result"] {
+        <<record>>
+        +due: int
+        +expired: int
+        +alreadyResolved: int
+        +failed: int
+    }
+    class GroupDealExpiryService {
+        <<application service, Conc, Evt>>
+        +expireOne(dealId: UUID): boolean
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers, Conc>>
+        +currentTime(): Instant
+        +dueForExpiry(now: Instant, limit: int): List~UUID~
+        +deferExpiryRetry(dealId: UUID, delay: Duration): void
+    }
+%% at LeaseAwareWork 0,0
+%% at LeasedJobRunner 1,0
+%% at SchedulerLeaseRepository 2,0
+%% at ExpirySweep 0,1
+%% at TeamExpirySweepJob 1,1
+%% at SweepResult 0,2
+%% at GroupDealExpirySweeper 1,2
+%% at PaidGroupDealRepository 2,2
+%% at GroupDealExpiryService 1,3
+    TeamExpirySweepJob "*" --> "1" ExpirySweep : settings
+    TeamExpirySweepJob "1" --> "1" LeasedJobRunner
+    TeamExpirySweepJob "1" --> "1" GroupDealExpirySweeper
+    TeamExpirySweepJob ..> LeaseAwareWork : «create» this::sweepOnce
+    LeasedJobRunner ..> LeaseAwareWork
+    LeasedJobRunner "1" --> "1" SchedulerLeaseRepository
+    GroupDealExpirySweeper "1" --> "1" GroupDealExpiryService
+    GroupDealExpirySweeper "1" --> "1" PaidGroupDealRepository
+    GroupDealExpirySweeper ..> SweepResult : «create»

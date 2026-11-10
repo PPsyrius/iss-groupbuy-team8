@@ -1,0 +1,40 @@
+%% frame: UC7 B5–B6: resolve an invite reference (design, commerce-svc and identity-svc)
+sequenceDiagram
+    actor Visitor
+    participant IC as :InviteController
+    participant App as :ShareInviteAppService
+    participant RL as :RateLimitGateway
+    participant SI as ShareInvite
+    participant SIR as :ShareInviteRepository
+    participant GDR as :GroupDealRepository
+    participant RU as :RemoteUserAppService
+
+    Visitor->>IC: resolve(ref, request, response)
+    Note over Visitor,RL: B6: GET /api/v1/invites/{ref}, anonymous; ref must match REF_PATTERN; clientAddress from ClientAddressResolver
+    IC->>App: resolve(ref, clientAddress)
+    App->>RL: tryAcquire(RESOLVE_LIMIT, clientAddress)
+    RL-->>App: boolean
+    break over 60 a minute from this address (A5)
+        App-->>IC: RATE_LIMITED (COMMON_429_001)
+    end
+    App->>SI: isWellFormedRef(ref)
+    SI-->>App: boolean
+    App->>SIR: findByRef(ref)
+    Note over SIR: @fig-a-uc07-ds-lookup
+    SIR-->>App: Optional(ShareInvite)
+    App->>GDR: findById(dealId)
+    GDR-->>App: Optional(GroupDeal)
+    break malformed, unknown or deleted reference, or its team gone (A5)
+        App-->>IC: INVITE_NOT_FOUND (GROUPBUY_404_002)
+    end
+    App->>RU: publicNickname(sharerUserId)
+    Note over GDR,RU: HTTP GET identity-svc /internal/users/{id}/public-nickname (500 ms connect, 1,500 ms read)
+    alt identity-svc answers
+        RU-->>App: Optional(nickname)
+        App-->>IC: ResolvedInviteView
+        IC-->>Visitor: Result(InviteResponse): team, nickname, deadline
+    else unreachable, slow or 5xx (A5)
+        RU-->>App: IdentityUnavailableException
+        App-->>IC: IdentityUnavailableException
+        IC-->>Visitor: HTTP 500; the page shows a banner without a name
+    end

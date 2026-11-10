@@ -1,0 +1,103 @@
+%% frame: UC7 Share an invitation and attribute referrals (analysis)
+classDiagram
+    class ShareInviteUI {
+        <<boundary>>
+        +shareTeam(team)
+        +showLink(invitation)
+        +showRefused(reason)
+    }
+    class InviteLandingUI {
+        <<boundary>>
+        +openLink(team, reference)
+        +showBanner(nickname)
+        +showGenericBanner()
+    }
+    class JoinTeamUI {
+        <<boundary>>
+        +join(team, invitation)
+    }
+    class ShareInvitationControl {
+        <<control>>
+        +requestInvitation(member, team)
+        +resolveInvitation(reference)
+    }
+    class PurchaseIntent {
+        <<entity>>
+        -price: Money
+        -payableUntil: Date-time
+    }
+    class JoinTeamControl {
+        <<control>>
+        +requestJoin(buyer, team, invitation)
+        +paymentConfirmed(payment)
+    }
+    class Account {
+        <<entity>>
+        -nickname: Text
+        -status: AccountStatus
+        +publicNickname()
+    }
+    class Invitation {
+        <<entity>>
+        -reference: Text
+        +lookUp(reference)
+        +attributes(team, buyer)
+        +sharer()
+    }
+    class Team {
+        <<entity>>
+        -targetSize: Count
+        -currentSize: Count
+        -deadline: Date-time
+        -status: TeamStatus
+        +hasMember(member)
+        +isOpen()
+        +invitationOf(member)
+        +resolveSharer(invitation, buyer)
+        +admit(buyer, payment)
+    }
+    class ReferralCreditControl {
+        <<control>>
+        +memberJoined(membership)
+    }
+    class Membership {
+        <<entity>>
+        -role: MemberRole
+        -joinTime: Date-time
+        +sharer()
+    }
+    class ShareCredit {
+        <<entity>>
+        -creditTime: Date-time
+    }
+%% at ShareInviteUI 0,0
+%% at InviteLandingUI 1,0
+%% at JoinTeamUI 3,0
+%% at ShareInvitationControl 1,1
+%% at PurchaseIntent 2,1
+%% at JoinTeamControl 3,1.3
+%% at Account 0,3
+%% at Invitation 1,2
+%% at Team 2,2
+%% at ReferralCreditControl 3,2.45
+%% at Membership 1,3
+%% at ShareCredit 3,3
+    ShareInviteUI "1" -- "1" ShareInvitationControl
+    InviteLandingUI "1" -- "1" ShareInvitationControl
+    JoinTeamUI "1" -- "1" JoinTeamControl
+    ShareInvitationControl "1" --> "*" Account
+    ShareInvitationControl "1" --> "*" Invitation
+    ShareInvitationControl "1" --> "*" Team
+    JoinTeamControl "1" --> "*" PurchaseIntent
+    JoinTeamControl "1" --> "1" Team
+    JoinTeamControl "1" -- "1" ReferralCreditControl : notifies
+    ReferralCreditControl "1" --> "*" Membership
+    ReferralCreditControl "1" --> "*" ShareCredit
+    Account "1" -- "*" Membership : holds
+    Membership "1" -- "0..1" Invitation : shares
+    Team "1" -- "*" Invitation : invites to
+    PurchaseIntent "*" -- "0..1" Invitation : via
+    PurchaseIntent "*" -- "0..1" Team : for
+    Team "1" *-- "1..*" Membership
+    Membership "*" -- "0..1" Invitation : joined via
+    Membership "1" -- "*" ShareCredit : credits

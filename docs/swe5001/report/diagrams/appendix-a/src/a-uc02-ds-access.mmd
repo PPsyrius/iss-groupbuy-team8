@@ -1,0 +1,45 @@
+%% frame: UC2 B9, A3 to A5: current user, sign out, and later requests (design)
+sequenceDiagram
+    actor Buyer
+    participant SI as :SaInterceptor
+    participant AC as :AuthController
+    participant AL as :AdminListingController
+    participant SU as :StpUtil
+    participant SL as :StpLogic
+    participant UA as :UserAppService
+    participant SSI as :SessionStpInterface
+    participant DAO as :SaTokenDao
+
+    Note over Buyer,UA: B9 (identity-svc): the callback page reads the current user
+    Buyer->>AC: me()
+    AC->>SU: getLoginIdAsString()
+    SU-->>AC: userId
+    AC->>UA: currentUser(userId)
+    UA-->>AC: CurrentUser
+    AC->>SU: getRoleList()
+    SU-->>AC: roles; in identity-svc StpInterfaceImpl reads the database
+    AC-->>Buyer: 200 Result(MeResponse)
+    Note over Buyer,SU: A3: sign out
+    Buyer->>AC: logout()
+    AC->>SU: logout()
+    AC-->>Buyer: 200; only this browser's token ends
+    Note over Buyer,SU: A4: a protected /api/v1 path without a session
+    Buyer->>SI: preHandle(request, response, handler)
+    SI->>SU: checkLogin()
+    SU-->>SI: NotLoginException
+    SI-->>Buyer: 401 UNAUTHENTICATED (COMMON_401_001)
+    Note over Buyer,DAO: A5 (commerce-svc): an admin operation, here the UC9 counts
+    Buyer->>AL: counts()
+    AL->>AL: administrator()
+    AL->>SU: checkRole("admin")
+    SU->>SL: checkRole("admin")
+    SL->>SL: getRoleList(loginId)
+    SL->>SSI: getRoleList(loginId, loginType)
+    SSI->>DAO: getSession(sessionId)
+    DAO-->>SSI: SaSession with the snapshot of B8
+    SSI-->>SL: roles; empty if missing or malformed
+    break role missing
+        SL-->>AL: NotRoleException
+        AL-->>Buyer: 403 FORBIDDEN (COMMON_403_001)
+    end
+    AL-->>Buyer: 200; checkPermission follows the same path

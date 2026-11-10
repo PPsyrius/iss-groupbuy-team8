@@ -1,0 +1,89 @@
+%% frame: UC1 design, slice 2: displayed prices and best open team (commerce-svc)
+classDiagram
+    class PricingStrategyResolver {
+        <<utility, Lang>>
+        -strategies: Map~PricingMode,PricingStrategy~
+        +strategyFor(mode: PricingMode): PricingStrategy
+    }
+    class ProductAppServiceImpl {
+        <<application service>>
+        -resolvePrice(product: Product, deal: OpenDealOffer): ListingPrice
+        -toOffer(deal: OpenDealOffer): GroupDealOffer «static»
+    }
+    class GroupDealQueryService {
+        <<interface, Dist>>
+        +findBestOpenDealsByProductIds(productIds: Collection~UUID~): Map~UUID,OpenDealOffer~
+    }
+    class OpenDealOffer {
+        <<record>>
+        +dealId: UUID
+        +productId: UUID
+        +dealPrice: BigDecimal
+        +currency: String
+        +targetSize: int
+        +currentSize: int
+        +expireTime: Instant
+    }
+    class PricingStrategy {
+        <<interface, domain service>>
+        +resolve(product: Product, activeDeal: GroupDealOffer): ListingPrice
+    }
+    class GroupDealOffer {
+        <<value object, record>>
+        +dealId: UUID
+        +dealPrice: BigDecimal
+        +currency: String
+        +targetSize: int
+        +currentSize: int
+        +expireTime: Instant
+    }
+    class GroupDealQueryServiceImpl {
+        <<application service, Pers>>
+        -toOffer(deal: GroupDeal): OpenDealOffer «static»
+    }
+    class GroupDealRepository {
+        <<interface, repository, Pers>>
+        +findBestOpenDealsByProductIds(productIds: Collection~UUID~): List~GroupDeal~
+    }
+    class DualPricingStrategy {
+        <<domain service>>
+        +resolve(product: Product, activeDeal: GroupDealOffer): ListingPrice
+    }
+    class ListingPrice {
+        <<value object, record>>
+        +individualPrice: BigDecimal
+        +groupPrice: BigDecimal
+        +currency: String
+    }
+    class OpenDealOfferCache {
+        <<interface, gateway, Pers>>
+        +findByProductIds(productIds: Collection~UUID~): OpenDealOfferCache.Lookup
+        +putAll(offers: Map<UUID, Optional<OpenDealOffer>>): void
+    }
+    class RedisOpenDealOfferCache {
+        <<adapter, Pers>>
+    }
+%% at PricingStrategyResolver 0,0
+%% at ProductAppServiceImpl 1,0
+%% at GroupDealQueryService 2,0
+%% at OpenDealOffer 3,0
+%% at PricingStrategy 0,1
+%% at GroupDealOffer 1,1
+%% at GroupDealQueryServiceImpl 2,1
+%% at GroupDealRepository 3,1
+%% at DualPricingStrategy 0,2
+%% at ListingPrice 1,2
+%% at OpenDealOfferCache 2,2
+%% at RedisOpenDealOfferCache 3,2
+    ProductAppServiceImpl "1" --> "1" PricingStrategyResolver
+    ProductAppServiceImpl "1" --> "1" GroupDealQueryService
+    ProductAppServiceImpl ..> GroupDealOffer : «create»
+    PricingStrategyResolver "1" --> "1..*" PricingStrategy
+    DualPricingStrategy ..|> PricingStrategy
+    PricingStrategy ..> GroupDealOffer
+    PricingStrategy ..> ListingPrice
+    GroupDealQueryServiceImpl ..|> GroupDealQueryService
+    GroupDealQueryServiceImpl ..> OpenDealOffer : «create»
+    GroupDealQueryServiceImpl "1" --> "1" GroupDealRepository
+    GroupDealQueryServiceImpl "1" --> "1" OpenDealOfferCache
+    RedisOpenDealOfferCache ..|> OpenDealOfferCache

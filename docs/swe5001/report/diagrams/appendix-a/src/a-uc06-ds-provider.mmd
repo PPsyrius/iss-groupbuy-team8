@@ -1,0 +1,47 @@
+%% frame: UC6 B7 and B8: ask Stripe, then finish (design)
+sequenceDiagram
+    participant Svc as :RefundService
+    participant W as :RefundWork
+    participant Repo as :RefundRepository
+    participant GW as :RefundGateway
+
+    Note over Svc,GW: B7: no database transaction is open from here to finish
+    alt providerRefundId is stored (A4)
+        Svc->>GW: retrieveRefund(providerRefundId)
+    else no refund id yet
+        Svc->>Svc: databaseNow()
+        critical clock read, REQUIRED (new), 5 s
+            Svc->>Repo: now()
+            Repo-->>Svc: Instant
+        end
+        alt 23 hours or more since firstAttemptAt (A5)
+            Svc->>GW: findRefund(work)
+            break no single refund tagged with this obligation (A5)
+                GW-->>Svc: null
+                Svc->>Svc: finish(work, null, REVIEW, "UNKNOWN_AFTER_RETRY_WINDOW")
+            end
+        else otherwise (B7)
+            Svc->>W: providerKey()
+            W-->>Svc: "blocbuy-refund-" + id
+            Svc->>GW: createRefund(work): idempotency key providerKey()
+        end
+    end
+    break BizException from the gateway (A6, A7)
+        Svc->>Svc: permanent(refused)
+        Svc->>Svc: finish(work, providerRefundId, state, result): permanent REVIEW (A7), else PROCESSING, "PROVIDER_RETRY" (A6)
+    end
+    GW-->>Svc: Snapshot
+    Note over Svc,GW: B8: the answer must name this PaymentIntent and obligation, the amount and the currency
+    Svc->>Svc: apply(work, snapshot)
+    activate Svc
+    Svc->>Svc: matches(work, snapshot)
+    alt answer does not match (A8)
+        Svc->>Svc: finish(work, providerRefundId, REVIEW, "PROVIDER_MISMATCH")
+    else matches (B8, A9)
+        Note over Svc,Repo: provider succeeded: SUCCEEDED; pending: PROCESSING; failed, canceled: FAILED; other: REVIEW
+        Svc->>Svc: finish(work, snapshot.id, state, "PROVIDER_" + state)
+    end
+    deactivate Svc
+    critical each finish above, REQUIRED (new), READ COMMITTED, 5 s
+        Svc->>Repo: finish(work, providerId, state, result): fenced by version (E2)
+    end

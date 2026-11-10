@@ -1,0 +1,43 @@
+%% frame: UC1 B6 to B9 with A5 and E3: view one product, cache-aside team lookup (design)
+sequenceDiagram
+    actor Visitor
+    participant Ctl as :ProductController
+    participant App as :ProductAppServiceImpl
+    participant Repo as :ProductRepository
+    participant P as :Product
+    participant Q as :GroupDealQueryServiceImpl
+    participant C as :OpenDealOfferCache
+    participant R as :GroupDealRepository
+
+    Note over Visitor,Ctl: B6
+    Visitor->>Ctl: getListing(id)
+    Ctl->>App: getListingDetail(productId)
+    Note over App,P: B7
+    critical read-only, REQUIRED, READ COMMITTED (default), no timeout
+        App->>Repo: findById(productId)
+        Repo-->>App: Optional(Product)
+    end
+    App->>P: isOnSale()
+    P-->>App: boolean
+    break missing, deleted, draft or delisted (A5)
+        App-->>Ctl: BizException PRODUCT_NOT_FOUND (CATALOG_404_001)
+        Ctl-->>Visitor: 404, one answer for all four cases
+    end
+    Note over App,R: B8 (and B3 for a whole page): cache-aside lookup
+    App->>Q: findBestOpenDealsByProductIds([productId])
+    Q->>C: findByProductIds(ids)
+    C-->>Q: Lookup(hits, available); available false if Valkey fails (E3)
+    opt ids missing from hits
+        Q->>R: findBestOpenDealsByProductIds(missing)
+        R-->>Q: List(GroupDeal): cheapest open team per product, ties by lowest id
+        Q->>Q: toOffer(deal)
+        opt lookup.available
+            Q->>C: putAll(offers, empty ones included)
+        end
+    end
+    Q-->>App: Map(productId, OpenDealOffer)
+    Note over App: prices as in @fig-a-uc01-ds-browse
+    App->>App: resolvePrice(product, deal)
+    App-->>Ctl: ListingDetailView
+    Note over Visitor,Ctl: B9
+    Ctl-->>Visitor: 200 Result(ProductDetailResponse)

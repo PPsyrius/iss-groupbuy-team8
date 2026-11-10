@@ -254,10 +254,18 @@ function classDiagram(lines, frame) {
     (c) => `(id: ${str(c.id)}, name: ${str(c.name)}, stereo: ${c.stereo ? str(c.stereo) : 'none'}, attrs: ${typstArray(c.attrs.map(str))}, ops: ${typstArray(c.ops.map(str))}, abstract: ${c.abstract}, pos: (${pos[c.id][0]}, ${pos[c.id][1]}))`,
   );
   const bends = routes(rels, pos);
-  const rs = rels.map(
-    (r, i) =>
-      `(from: ${str(r.a)}, to: ${str(r.b)}, kind: ${str(r.kind)}, label: ${r.label ? str(r.label) : 'none'}, mfrom: ${r.ma ? str(r.ma) : 'none'}, mto: ${r.mb ? str(r.mb) : 'none'}, bend: ${bends[i]}deg, vert: ${pos[r.a][0] === pos[r.b][0] && bends[i] === 0})`,
-  );
+  // `%% mside A B <side at A> <side at B>` (left or right, walking from the relation's source)
+  // moves a multiplicity off a box corner that a diagonal edge reaches; unhinted edges keep right.
+  const msides = new Map();
+  for (const l of lines) {
+    const m = l.trim().match(/^%%\s*mside\s+([\w.]+)\s+([\w.]+)\s+(left|right)\s+(left|right)\s*$/);
+    if (m) msides.set(`${m[1]}\u0000${m[2]}`, [m[3], m[4]]).set(`${m[2]}\u0000${m[1]}`, [m[4], m[3]]);
+  }
+  const rs = rels.map((r, i) => {
+    const side = msides.get(`${r.a}\u0000${r.b}`);
+    const sides = side ? `, sfrom: ${side[0]}, sto: ${side[1]}` : '';
+    return `(from: ${str(r.a)}, to: ${str(r.b)}, kind: ${str(r.kind)}, label: ${r.label ? str(r.label) : 'none'}, mfrom: ${r.ma ? str(r.ma) : 'none'}, mto: ${r.mb ? str(r.mb) : 'none'}, bend: ${bends[i]}deg, vert: ${pos[r.a][0] === pos[r.b][0] && bends[i] === 0}${sides})`;
+  });
   // The least gap between columns (rows) that leaves room for the labels and multiplicities of
   // the edges joining neighbours in one row (column): about 4.3 pt per character at 8.5 pt,
   // a label wrapping at 40 mm, the end marks, and air on both sides.
@@ -348,12 +356,25 @@ function participantKind(label) {
 // closed then; a callee still open at the end of the interaction closes after the last message.
 // An alt/par branch starts from the activations open when the fragment began. The first
 // sender, if it is not an actor, is active for the whole interaction.
-function inferActivations(steps, parts) {
+// continuous (opt-in, Appendix A of the SWE5001 report): an activation that a branch closes and
+// the next branch (or the flow after a break) reopens is one activation in UML, so its bar runs
+// on unbroken through the fragment instead of stopping and starting again.
+function inferActivations(steps, parts, { continuous = false } = {}) {
   const out = [];
   const stack = [];
   const isActor = (id) => parts.get(id)?.kind === 'actor';
-  const closeTo = (n) => {
-    while (stack.length > n) out.push({ t: 'deact', id: stack.pop().callee, implicit: true });
+  // Stack entry -> how to take back the deactivation that closed it (continuous only). Only a
+  // close that a reply unwinds or a branch boundary makes can be taken back; a callee closed
+  // because its caller sent again has really ended (control went back to the caller).
+  const closed = new Map();
+  const closeTo = (n, undoable = false) => {
+    while (stack.length > n) {
+      const e = stack.pop();
+      const d = { t: 'deact', id: e.callee, implicit: true };
+      out.push(d);
+      if (continuous && undoable) closed.set(e, () => (d.skip = true));
+      else closed.delete(e);
+    }
   };
   const calleeAt = (id) => stack.findLastIndex((e) => e.callee === id);
   const snaps = [];
@@ -369,7 +390,12 @@ function inferActivations(steps, parts) {
       if (t.t === 'frag') depth++;
       else if (t.t === 'end' && depth-- === 0) break;
       else if (t.t === 'else' && depth === 0 && branch) break;
-      else if (t.t === 'msg') used.add(t.from).add(t.to);
+      else if (t.t === 'msg') {
+        used.add(t.from);
+        // continuous: only a sender needs its activation back; a lifeline that is only called
+        // again gets a new activation from that call, so reopening it would leave a stray stub.
+        if (!continuous) used.add(t.to);
+      }
     }
     return used;
   };
@@ -380,7 +406,11 @@ function inferActivations(steps, parts) {
     const last = rest.findLastIndex((e) => used.has(e.callee));
     for (const e of rest.slice(0, last + 1)) {
       stack.push(e);
-      out.push({ t: 'act', id: e.callee, here: true });
+      const undo = closed.get(e);
+      if (undo) {
+        undo();
+        closed.delete(e);
+      } else out.push({ t: 'act', id: e.callee, here: true });
     }
   };
   for (const [i, s] of steps.entries()) {
@@ -399,9 +429,10 @@ function inferActivations(steps, parts) {
         // sources also draw «create» that way) is an ordinary message from its sender.
         const i = stack.findLastIndex((e) => e.callee === a && e.caller === b);
         if (i >= 0) {
-          closeTo(i + 1);
-          stack.pop();
+          closeTo(i + 1, true);
+          const e = stack.pop();
           s.deact = true;
+          if (continuous) closed.set(e, () => (s.deact = false));
         } else {
           const ia = calleeAt(a);
           if (ia >= 0) closeTo(ia + 1);
@@ -424,7 +455,7 @@ function inferActivations(steps, parts) {
       const snap = snaps[snaps.length - 1];
       let k = 0;
       while (k < stack.length && k < snap.length && stack[k] === snap[k]) k++;
-      closeTo(k);
+      closeTo(k, true);
       out.push(s);
       reopen(snap, k, usedAhead(i, true));
     } else if (s.t === 'end') {
@@ -435,17 +466,17 @@ function inferActivations(steps, parts) {
       if (f?.kind === 'break') {
         let k = 0;
         while (k < stack.length && k < snap.length && stack[k] === snap[k]) k++;
-        closeTo(k);
+        closeTo(k, true);
         reopen(snap, k, usedAhead(i, false));
       }
     } else out.push(s);
     if (s.t === 'frag') frags.push(s);
   }
   closeTo(0);
-  return out;
+  return out.filter((s) => !s.skip);
 }
 
-function sequenceDiagram(lines, frame) {
+function sequenceDiagram(lines, frame, opts = {}) {
   const parts = new Map();
   let steps = [];
   let explicit = false;
@@ -497,7 +528,7 @@ function sequenceDiagram(lines, frame) {
       steps.push(s);
     }
   }
-  if (!explicit) steps = inferActivations(steps, parts);
+  if (!explicit) steps = inferActivations(steps, parts, opts);
   // Each combined fragment spans the lifelines its messages and notes touch, a message to
   // itself with the lifeline to the right (where its label goes), nested ones inset by depth.
   const order = [...parts.keys()];
@@ -540,7 +571,9 @@ export function frameName(caption) {
   return s ? s[0].toUpperCase() + s.slice(1) : '';
 }
 
-export function mermaid(src, caption = '') {
+// opts.continuousActivations: keep an activation's bar unbroken through the alt, else and break
+// fragments that close and reopen it (opt-in; the SWE5006 report keeps the default).
+export function mermaid(src, caption = '', opts = {}) {
   const lines = src.split('\n');
   const first = lines.findIndex((l) => l.trim() && !l.trim().startsWith('%%') && l.trim() !== '---');
   const kind = lines[first].trim();
@@ -548,7 +581,7 @@ export function mermaid(src, caption = '') {
   const own = lines.map((l) => l.trim().match(/^%%\s*frame:\s*(.+)$/)).find(Boolean);
   const frame = own ? own[1].trim() : frameName(caption);
   if (kind.startsWith('classDiagram')) return classDiagram(body, frame);
-  if (kind.startsWith('sequenceDiagram')) return sequenceDiagram(body, frame);
+  if (kind.startsWith('sequenceDiagram')) return sequenceDiagram(body, frame, { continuous: Boolean(opts.continuousActivations) });
   if (kind.startsWith('stateDiagram')) return stateDiagram(body, frame);
   throw new Error(`unsupported Mermaid diagram "${kind}" (use classDiagram, sequenceDiagram or stateDiagram-v2)`);
 }

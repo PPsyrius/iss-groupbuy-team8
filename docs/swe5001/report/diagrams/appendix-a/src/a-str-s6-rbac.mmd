@@ -1,0 +1,61 @@
+%% frame: S6 Security: roles from the database in identity, from the session snapshot elsewhere
+classDiagram
+    class StpInterfaceImpl {
+        <<adapter, Sec>>
+        +getRoleList(loginId: Object, loginType: String): List~String~
+        +getPermissionList(loginId: Object, loginType: String): List~String~
+    }
+    class StpInterface {
+        <<interface, Sec>>
+        +getRoleList(loginId: Object, loginType: String): List~String~
+        +getPermissionList(loginId: Object, loginType: String): List~String~
+    }
+    class SessionStpInterface {
+        <<adapter, Sec>>
+        +getRoleList(loginId: Object, loginType: String): List~String~
+        +getPermissionList(loginId: Object, loginType: String): List~String~
+    }
+    class RoleRepository {
+        <<interface, repository, Pers>>
+        +findRoleCodesByUserId(userId: UUID): List~String~
+        +findPermissionCodesByUserId(userId: UUID): List~String~
+    }
+    class RbacAutoConfiguration {
+        <<configuration, Sec>>
+        ~databaseStpInterface(roles: RoleRepository): StpInterfaceImpl
+        ~sessionStpInterface(sessions: SaTokenDao): SessionStpInterface
+    }
+    class LoginAuthorizationService {
+        <<application service, Sec>>
+        +snapshot(userId: UUID): LoginAuthorizationService.Snapshot
+    }
+    class LoginSessionPublisher {
+        <<utility, Sec>>
+        +login(userId: UUID): void
+    }
+    class LoginSnapshotGateway {
+        <<interface, gateway, Sec>>
+        +beginRefresh(userId: UUID): String
+        +publish(userId: UUID, refresh: String, roles: List~String~, permissions: List~String~, timeoutSeconds: long): boolean
+    }
+    class RedisLoginSnapshotGateway {
+        <<adapter, Sec>>
+    }
+%% at StpInterfaceImpl 0,0
+%% at StpInterface 1,0
+%% at SessionStpInterface 2,0
+%% at RoleRepository 0,1
+%% at RbacAutoConfiguration 1,1
+%% at LoginAuthorizationService 0,2
+%% at LoginSessionPublisher 1,2
+%% at LoginSnapshotGateway 2,2
+%% at RedisLoginSnapshotGateway 2,1
+    StpInterfaceImpl ..|> StpInterface
+    SessionStpInterface ..|> StpInterface
+    StpInterfaceImpl "1" --> "1" RoleRepository
+    RbacAutoConfiguration ..> StpInterfaceImpl : «create»
+    RbacAutoConfiguration ..> SessionStpInterface : «create»
+    LoginAuthorizationService "1" --> "1" RoleRepository
+    LoginSessionPublisher "1" --> "1" LoginAuthorizationService
+    LoginSessionPublisher "1" --> "1" LoginSnapshotGateway
+    RedisLoginSnapshotGateway ..|> LoginSnapshotGateway

@@ -1,0 +1,29 @@
+%% frame: UC7 share an invitation, B1–B4 (analysis)
+sequenceDiagram
+    actor Member
+    participant UI as ShareInviteUI (boundary)
+    participant Ctl as ShareInvitationControl (control)
+    participant T as Team (entity)
+    create participant Inv as Invitation (entity)
+
+    Member->>UI: B1: shareTeam(team)
+    UI->>Ctl: B1: requestInvitation(member, team)
+    Ctl->>T: B2: hasMember(member)
+    T-->>Ctl: member or not
+    break no such team, or not a member (A2)
+        Ctl->>UI: A2: showRefused(not found)
+        UI-->>Member: only members can share
+    end
+    Ctl->>T: B2: isOpen()
+    T-->>Ctl: open or closed
+    break closed, full or past its deadline (A3)
+        Ctl->>UI: A3: showRefused(closed)
+        UI-->>Member: no longer taking members
+    end
+    Ctl->>T: B3: invitationOf(member)
+    T-->>Ctl: invitation, or none
+    opt first share by this member (B3)
+        Ctl->>Inv: B3: «create» (team, member, unguessable reference)
+    end
+    Ctl->>UI: B3: showLink(invitation)
+    UI-->>Member: B4: invite link to copy or share

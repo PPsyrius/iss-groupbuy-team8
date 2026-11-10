@@ -1,0 +1,18 @@
+%% frame: Outbox event lifecycle (sys_outbox row)
+stateDiagram-v2
+    state "Pending" as P
+    state "Published" as Pub
+    state "Failed" as F
+    P : due when nextAttemptAt is reached
+    F : failedAt set, ERROR logged
+    [*] --> P : «create» / insert
+    P --> P : send failed [attempts + 1 < 10] / attempts + 1, retry after min(300, 2^attempts) s
+    P --> Pub : send confirmed / publishedAt = now
+    P --> F : send failed [attempts + 1 = 10] / failedAt = now
+    F --> P : operator replay [cause fixed] / attempts = 0, failedAt = null
+    Pub --> [*] : retention [published over 7 days ago] / delete
+%% at __start0 0,0
+%% at P 3,0
+%% at F 5,0
+%% at Pub 3,1
+%% at __end0 1,1

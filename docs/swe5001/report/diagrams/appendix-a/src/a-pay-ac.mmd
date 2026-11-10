@@ -1,0 +1,96 @@
+%% frame: Pay upfront via Stripe Checkout (analysis)
+classDiagram
+    class PaymentUI {
+        <<boundary>>
+        +pay(intent)
+        +openReceipt(payment)
+        +showCheckout(paymentPage)
+        +showReceipt(receipt)
+        +showRefused(reason)
+    }
+    class PaymentGateway {
+        <<boundary>>
+        +requestPayment(payment)
+        +paid(report)
+        +verify(report)
+        +readPayment(paymentPage)
+    }
+    class PayUpfrontControl {
+        <<control>>
+        +preparePayment(buyer, intent, attempt)
+        +paymentReported(report)
+        +readReceipt(buyer, payment)
+    }
+    class BaseUseCaseControl {
+        <<control, abstract>>
+        +paymentConfirmed(payment)
+    }
+    class StartTeamControl {
+        <<control>>
+    }
+    class JoinTeamControl {
+        <<control>>
+    }
+    class PurchaseIntent {
+        <<entity>>
+        -price: Money
+        -payableUntil: Date-time
+        -teamDeadline: Date-time
+        +isPayable()
+    }
+    class Payment {
+        <<entity>>
+        -amount: Money
+        -currency: Text
+        -attemptKey: Identifier
+        -pageClosesAt: Date-time
+        -status: PaymentStatus
+        -outcome: PaymentOutcome
+        +attachPage(paymentPage)
+        +matches(paymentPage)
+        +succeed()
+        +close(paymentPage)
+        +requireRefund(reason)
+        +recordOutcome(outcome)
+        +receipt()
+    }
+    class ProviderReport {
+        <<entity>>
+        -eventId: Identifier
+        -result: ReportResult
+        +finish(result)
+    }
+    class ReviewCase {
+        <<entity>>
+        -reason: Text
+        -status: ReviewStatus
+    }
+    class Refund {
+        <<entity>>
+        -amount: Money
+        -reason: Text
+        -status: RefundStatus
+    }
+%% at StartTeamControl 0,0
+%% at JoinTeamControl 1,0
+%% at PaymentUI 2,0
+%% at BaseUseCaseControl 0,1
+%% at PayUpfrontControl 1,1
+%% at PaymentGateway 2,1
+%% at PurchaseIntent 0,2
+%% at Payment 1,2
+%% at ProviderReport 2,2
+%% at Refund 0,3
+%% at ReviewCase 2,3
+    StartTeamControl --|> BaseUseCaseControl
+    JoinTeamControl --|> BaseUseCaseControl
+    PaymentUI "1" -- "1" PayUpfrontControl
+    PayUpfrontControl "1" -- "1" PaymentGateway
+    PayUpfrontControl "1" --> "1" PurchaseIntent
+    PayUpfrontControl "1" --> "1" Payment
+    PayUpfrontControl "1" --> "1" BaseUseCaseControl
+    PayUpfrontControl "1" --> "*" ProviderReport
+    Payment "*" -- "1" PurchaseIntent : pays
+    Payment "1" -- "0..1" Refund : owes
+    Payment "1" -- "0..1" ReviewCase : held by
+    ProviderReport "*" -- "0..1" Payment : about

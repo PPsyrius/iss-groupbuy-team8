@@ -1,0 +1,90 @@
+%% frame: UC4 design, slice 2: fulfilment, order module (commerce-svc)
+classDiagram
+    class PaymentBusinessPort {
+        <<interface, Dist, Conc>>
+        +lockForSettlement(quote: CheckoutQuote): void
+        +fulfil(event: PaymentSucceeded): PaymentBusinessPort.Outcome
+    }
+    class Outcome["PaymentBusinessPort.Outcome"] {
+        <<value object, record>>
+        +dealId: UUID
+        +orderId: UUID
+        +rejection: String
+        +accepted(): boolean
+    }
+    class OrderFulfilmentAdapter {
+        <<adapter, application service, Dist, Conc>>
+        +lockForSettlement(quote: CheckoutQuote): void
+        +fulfil(event: PaymentSucceeded): PaymentBusinessPort.Outcome
+    }
+    class UserAppService {
+        <<interface, Dist>>
+        +requireActive(userId: UUID): void
+    }
+    class GroupDealSettlementSupport {
+        <<interface, Dist>>
+        +lockTeam(dealId: UUID): void
+        +linkOrder(dealId: UUID, paymentId: UUID, orderId: UUID): boolean
+    }
+    class PurchaseIntentRepository {
+        <<interface, repository, Pers, Conc>>
+        +lockById(id: UUID): Optional~PurchaseIntent~
+        +markFulfilled(intent: PurchaseIntent, paymentId: UUID): PurchaseIntent
+    }
+    class CatalogPurchaseSupport {
+        <<interface, Dist>>
+        +requirePurchasable(productId: UUID): CatalogPurchaseSupport.PurchasableProduct
+        +consumeOneUnit(productId: UUID): boolean
+    }
+    class PaidGroupDealService {
+        <<application service, Conc, Evt>>
+        +joinConfirmed(dealId: UUID, paid: PaidParticipation, sharerUserId: UUID): ParticipationResult
+    }
+    class OrderRepository {
+        <<interface, repository, Pers>>
+        +save(order: Order): Order
+    }
+    class PurchaseIntent {
+        <<aggregate root, Pers>>
+        -fulfilledPaymentId: UUID
+        -expiredAt: Instant
+        +fulfilled(): boolean
+        +expiredAt(): Instant
+    }
+    class Order {
+        <<aggregate root, Pers>>
+        -status: OrderStatus
+        -totalAmount: BigDecimal
+        +create(terms: Order.NewOrderTerms, paidAt: Instant): Order «static»
+    }
+    class PaidParticipation {
+        <<value object, record>>
+        +paymentId: UUID
+        +userId: UUID
+        +amount: BigDecimal
+        +currency: String
+    }
+%% at Outcome 0,0
+%% at PaymentBusinessPort 1,0
+%% at UserAppService 2,0
+%% at GroupDealSettlementSupport 3,0
+%% at PurchaseIntent 0,1
+%% at PurchaseIntentRepository 1,1
+%% at OrderFulfilmentAdapter 2,1
+%% at OrderRepository 3,1
+%% at CatalogPurchaseSupport 1,2
+%% at PaidGroupDealService 2,2
+%% at Order 3,2
+%% at PaidParticipation 2,3
+    OrderFulfilmentAdapter ..|> PaymentBusinessPort
+    PaymentBusinessPort ..> Outcome
+    OrderFulfilmentAdapter "1" --> "1" UserAppService
+    OrderFulfilmentAdapter "1" --> "1" GroupDealSettlementSupport
+    OrderFulfilmentAdapter "1" --> "1" PurchaseIntentRepository
+    OrderFulfilmentAdapter "1" --> "1" CatalogPurchaseSupport
+    OrderFulfilmentAdapter "1" --> "1" PaidGroupDealService
+    OrderFulfilmentAdapter "1" --> "1" OrderRepository
+    OrderFulfilmentAdapter ..> Order : «create»
+    PurchaseIntentRepository ..> PurchaseIntent
+    OrderRepository ..> Order
+    PaidGroupDealService ..> PaidParticipation

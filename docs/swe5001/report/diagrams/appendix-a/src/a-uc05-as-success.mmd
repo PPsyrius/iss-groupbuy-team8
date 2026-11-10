@@ -1,0 +1,23 @@
+%% frame: UC5 basic flow 1: the last seat fills the team (analysis)
+sequenceDiagram
+    participant J as JoinTeamControl (control)
+    participant T as Team (entity)
+    participant R as ResolveTeamControl (control)
+    participant O as Order (entity)
+
+    Note over J,T: UC4 B7 admits a paid buyer (@fig-a-uc04-as-basic-2)
+    J->>T: B1: admit(buyer, payment)
+    alt admitted and currentSize + 1 = targetSize
+        T->>T: B2: canMoveTo(SUCCEEDED)
+        T-->>J: admitted, team filled
+        J->>R: B3: teamFilled(team)
+        loop each pending order of the team
+            R->>O: B3: confirm()
+        end
+        Note over R,O: B4: the result is published for members (design only)
+    else admitted, seats remain
+        T-->>J: admitted, team still open
+    else refused: team resolved, full or closed (A4)
+        T-->>J: refused
+        Note over J: UC4 A6: the payment is owed a refund
+    end

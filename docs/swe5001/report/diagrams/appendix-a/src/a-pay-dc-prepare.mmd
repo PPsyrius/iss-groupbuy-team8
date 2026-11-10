@@ -1,0 +1,82 @@
+%% frame: Pay upfront design, slice 2: checkout preparation (commerce-svc)
+classDiagram
+    class StripeCheckoutController {
+        <<controller, Pres, Sec>>
+        +checkout(csrf: String, key: String, request: CheckoutRequest): Result~CheckoutResult~
+    }
+    class PaymentBrowserService {
+        <<application service, Sec>>
+        +prepare(user: UUID, intent: UUID, requestKey: String): CheckoutResult
+    }
+    class RateLimitGateway {
+        <<interface, gateway, Sec>>
+        +tryAcquire(limit: RateLimitGateway.RateLimit, subject: String): boolean
+    }
+    class CheckoutResult["StripeCheckoutService.CheckoutResult"] {
+        <<record>>
+        +paymentId: UUID
+        +checkoutUrl: String
+        +status: String
+    }
+    class StripeCheckoutService {
+        <<application service, Ext, Conc>>
+        -tx: TransactionTemplate
+        +prepare(actor: UUID, intentId: UUID, requestKey: String): CheckoutResult
+        -bindAndReturn(id: UUID, session: CheckoutGateway.Session): CheckoutResult
+    }
+    class PaymentBusinessPort {
+        <<interface, Dist, Conc>>
+        +lockQuote(authenticatedUser: UUID, intentId: UUID): CheckoutQuote
+        +lockForSettlement(quote: CheckoutQuote): void
+    }
+    class CheckoutPayment {
+        <<aggregate root, record>>
+        +id: UUID
+        +quote: CheckoutQuote
+        +requestKey: String
+        +sessionExpiresAt: Instant
+        +sessionId: String
+        +status: CheckoutPayment.Status
+        +bind(session: String, url: String, intent: String): CheckoutPayment
+    }
+    class CheckoutPaymentRepository {
+        <<interface, repository, Pers, Conc>>
+        +now(): Instant
+        +findRequest(userId: UUID, requestKey: String): Optional~CheckoutPayment~
+        +findBlockingAttempt(intentId: UUID): Optional~CheckoutPayment~
+        +insert(payment: CheckoutPayment): void
+        +findById(id: UUID): Optional~CheckoutPayment~
+        +lock(id: UUID): CheckoutPayment
+        +save(payment: CheckoutPayment): void
+        +review(paymentId: UUID, reason: String, operator: String): void
+    }
+    class CheckoutQuote {
+        <<value object, record>>
+        +intentId: UUID
+        +userId: UUID
+        +operation: String
+        +businessId: UUID
+        +amount: BigDecimal
+        +currency: String
+        +quoteValidUntil: Instant
+        +businessDeadline: Instant
+        +expiredAt(now: Instant): boolean
+    }
+%% at StripeCheckoutController 0,0
+%% at PaymentBrowserService 1,0
+%% at RateLimitGateway 2,0
+%% at CheckoutResult 0,1
+%% at StripeCheckoutService 1,1
+%% at PaymentBusinessPort 2,1
+%% at CheckoutPayment 0,2
+%% at CheckoutPaymentRepository 1,2
+%% at CheckoutQuote 2,2
+    StripeCheckoutController "1" --> "1" PaymentBrowserService
+    PaymentBrowserService "1" --> "1" RateLimitGateway
+    PaymentBrowserService "1" --> "0..1" StripeCheckoutService
+    StripeCheckoutService ..> CheckoutResult : «create»
+    StripeCheckoutService "1" --> "1" PaymentBusinessPort
+    StripeCheckoutService "1" --> "1" CheckoutPaymentRepository
+    StripeCheckoutService ..> CheckoutPayment : «create»
+    CheckoutPaymentRepository ..> CheckoutPayment
+    PaymentBusinessPort ..> CheckoutQuote

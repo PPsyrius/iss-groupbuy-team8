@@ -1,0 +1,24 @@
+%% frame: UC2 alternate flows A3 to A5: sign out and later requests (analysis)
+sequenceDiagram
+    actor Buyer
+    participant M as MemberAreaUI (boundary)
+    participant UI as SignInUI (boundary)
+    participant Ctl as SignInWithGoogleControl (control)
+    participant Role as Role (entity)
+
+    Buyer->>UI: A3: signOut()
+    UI->>Ctl: A3: signOut()
+    UI-->>Buyer: signed out here; other devices stay signed in
+    Buyer->>M: A4, A5: requestMemberAction(action)
+    M->>Ctl: A4, A5: checkAccess(request, role)
+    break not signed in (A4)
+        Ctl->>M: A4: offerSignIn(returnTo)
+        M-->>Buyer: sign-in page, back to returnTo afterwards
+    end
+    Ctl->>Role: A5: grantedTo(account)
+    Role-->>Ctl: roles and permissions
+    break role or permission missing (A5)
+        Ctl->>M: A5: showAccessDenied()
+        M-->>Buyer: access denied
+    end
+    Ctl-->>M: allowed; the member action runs

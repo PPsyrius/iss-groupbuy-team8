@@ -1,0 +1,82 @@
+%% frame: UC1 design, slice 1: catalog read path (commerce-svc)
+classDiagram
+    class ProductController {
+        <<controller, Dist, Sec>>
+        +pageListings(page: Integer, size: Integer, category: String, keyword: String, ai: boolean): Result<​PageResult<​ProductSummaryResponse>>
+        +getListing(id: UUID): Result~ProductDetailResponse~
+    }
+    class ProductAppService {
+        <<interface, Dist>>
+        +pageListings(page: Integer, size: Integer, category: String): PageResult~ListingView~
+        +search(query: ListingQuery): PageResult~ListingView~
+        +getListingDetail(productId: UUID): ListingDetailView
+    }
+    class GroupDealQueryService {
+        <<interface, Dist>>
+        +findBestOpenDealsByProductIds(productIds: Collection~UUID~): Map~UUID,OpenDealOffer~
+    }
+    class ListingQuery {
+        <<record>>
+        +keyword: String
+        +category: String
+        +page: PageQuery
+        +aiRerank: boolean
+        +of(keyword: String, category: String, page: Integer, size: Integer, aiRerank: boolean): ListingQuery «static»
+        +keywordTokens(): List~String~
+    }
+    class ProductAppServiceImpl {
+        <<application service, Pers>>
+        -rerank(query: ListingQuery, products: List~Product~): List~Product~
+        -toPageResult(products: PageResult~Product~, query: PageQuery): PageResult~ListingView~
+    }
+    class ListingSearchReranker {
+        <<interface, gateway, Ext>>
+        +rerank(keyword: String, candidates: List~ListingSearchReranker.Candidate~): List~UUID~
+    }
+    class ProductRepository {
+        <<interface, repository, Pers>>
+        +pageOnSale(page: PageQuery, category: String): PageResult~Product~
+        +searchOnSale(page: PageQuery, category: String, keywordTokens: List~String~): PageResult~Product~
+        +findById(id: UUID): Optional~Product~
+    }
+    class Product {
+        <<aggregate root, Pers>>
+        -status: ProductStatus
+        -pricingMode: PricingMode
+        +isOnSale(): boolean
+    }
+    class TypeSafeJevListingSearchReranker {
+        <<adapter, Ext>>
+        +rerank(keyword: String, candidates: List~ListingSearchReranker.Candidate~): List~UUID~
+    }
+    class ProductRepositoryImpl {
+        <<adapter, Pers>>
+        +searchOnSale(page: PageQuery, category: String, keywordTokens: List~String~): PageResult~Product~
+        -toLikePattern(token: String): String «static»
+    }
+    class BizProductMapper {
+        <<interface, mapper, Pers>>
+        +selectVisibleSearchPage(category: String, patterns: List~String~, limit: int, offset: long): List~BizProductDO~
+        +countVisibleSearch(category: String, patterns: List~String~): long
+    }
+%% at ProductController 0,0
+%% at ProductAppService 1,0
+%% at GroupDealQueryService 2,0
+%% at ListingQuery 0,1
+%% at ProductAppServiceImpl 1,1
+%% at ListingSearchReranker 2,1
+%% at ProductRepository 0,2
+%% at Product 1,2
+%% at TypeSafeJevListingSearchReranker 2,2
+%% at ProductRepositoryImpl 0,3
+%% at BizProductMapper 1,3
+    ProductController "1" --> "1" ProductAppService
+    ProductController ..> ListingQuery : «create»
+    ProductAppServiceImpl ..|> ProductAppService
+    ProductAppServiceImpl "1" --> "1" GroupDealQueryService
+    ProductAppServiceImpl "1" --> "1" ListingSearchReranker
+    ProductAppServiceImpl "1" --> "1" ProductRepository
+    TypeSafeJevListingSearchReranker ..|> ListingSearchReranker
+    ProductRepositoryImpl ..|> ProductRepository
+    ProductRepositoryImpl "1" --> "1" BizProductMapper
+    ProductRepositoryImpl ..> Product : «create»

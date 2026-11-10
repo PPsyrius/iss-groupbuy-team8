@@ -239,13 +239,14 @@
     // the source, on a white ground. Each sits its own (estimated) half width plus 3 pt from its
     // end, plus the length of the end's mark (diamond, triangle, arrowhead), so it never
     // reaches into the box or onto the mark, however short the edge.
-    let mult(t, pos) = edge(..args, "-", bend: bend, stroke: none, layer: 1, label: box(fill: white, inset: 0.5pt, text(size: uml-size, t)), label-pos: pos, label-side: right, label-sep: 3pt, label-fill: none)
+    // An end may be moved to the left (sfrom / sto) where a diagonal edge reaches a box corner.
+    let mult(t, pos, side: right) = edge(..args, "-", bend: bend, stroke: none, layer: 1, label: box(fill: white, inset: 0.5pt, text(size: uml-size, t)), label-pos: pos, label-side: side, label-sep: 3pt, label-fill: none)
     // (On a vertical edge a multiplicity sits beside the line, so its half height counts.)
     let off(t) = if r.at("vert", default: false) { 0.6 * uml-size + 3pt } else { t.clusters().len() * 0.3 * uml-size + 3pt }
     let mark-from = if r.kind in ("compose", "aggregate") { 13pt } else { 0pt }
     let mark-to = if r.kind in ("inherit", "realize") { 11pt } else if r.kind in ("nav", "dep") { 5pt } else { 0pt }
-    if mfrom != none { out.push(mult(mfrom, 0% + off(mfrom) + mark-from)) }
-    if mto != none { out.push(mult(mto, 100% - off(mto) - mark-to)) }
+    if mfrom != none { out.push(mult(mfrom, 0% + off(mfrom) + mark-from, side: r.at("sfrom", default: right))) }
+    if mto != none { out.push(mult(mto, 100% - off(mto) - mark-to, side: r.at("sto", default: right))) }
     out
   }).flatten()
   uml-frame("class", frame, host: host, sp => {
@@ -538,7 +539,10 @@
         let span = calc.abs(x2 - x1) - 8pt
         let lx = calc.min(x1, x2) + 4pt
         let natural = measure(label-box(lab)).width
-        let (a, b) = if natural <= span { (lx, lx + span) } else { (lx, calc.min(W, lx + calc.max(span, cw * 2.4))) }
+        // A «create» label stops at the created head, which sits on the arrow: it wraps inside
+        // the span whenever the span can hold a word or two.
+        let fit = natural <= span or (s.at("create", default: false) and span >= 60pt)
+        let (a, b) = if fit { (lx, lx + span) } else { (lx, calc.min(W, lx + calc.max(span, cw * 2.4))) }
         if b - a < natural and b == W { a = calc.max(0pt, W - calc.max(span, cw * 2.4)) }
         let lb = box(width: b - a, align(if natural <= span { center } else { left }, label-box(lab)))
         let lh = measure(lb).height
