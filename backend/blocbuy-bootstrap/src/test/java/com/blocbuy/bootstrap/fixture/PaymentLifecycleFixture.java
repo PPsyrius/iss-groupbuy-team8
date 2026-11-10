@@ -56,21 +56,20 @@ public final class PaymentLifecycleFixture {
     }
 
     public void expireTeam(UUID deal) {
-        tx.executeWithoutResult(
-                status -> {
-                    teams.lockTeam(deal);
-                    jdbc.update(
-                            "UPDATE biz_group_deal SET status='expired',version=version+1,update_time=clock_timestamp() WHERE id=? AND status='open' AND expire_time<=clock_timestamp() AND current_size<target_size",
-                            deal);
-                    if ("expired"
-                            .equals(
-                                    jdbc.queryForObject(
-                                            "SELECT status FROM biz_group_deal WHERE id=?",
-                                            String.class,
-                                            deal))) {
-                        refunds.recordExpiredTeam(deal);
-                    }
-                });
+        tx.executeWithoutResult(status -> {
+            teams.lockTeam(deal);
+            jdbc.update(
+                    "UPDATE biz_group_deal SET status='expired',version=version+1,update_time=clock_timestamp() WHERE id=? AND status='open' AND expire_time<=clock_timestamp() AND current_size<target_size",
+                    deal);
+            if ("expired"
+                    .equals(
+                            jdbc.queryForObject(
+                                    "SELECT status FROM biz_group_deal WHERE id=?",
+                                    String.class,
+                                    deal))) {
+                refunds.recordExpiredTeam(deal);
+            }
+        });
     }
 
     /** Durable pending requests survive process restarts; failures retry individually after 60s. */

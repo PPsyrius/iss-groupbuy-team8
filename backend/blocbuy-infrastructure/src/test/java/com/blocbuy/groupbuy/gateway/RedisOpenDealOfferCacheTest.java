@@ -125,18 +125,14 @@ class RedisOpenDealOfferCacheTest {
         assertThat(found.hits()).isEmpty();
         when(redis.execute(any(RedisScript.class), anyList(), any(Object[].class)))
                 .thenThrow(new RedisConnectionFailureException("private detail"));
-        assertThatCode(
-                        () ->
-                                cache.putAll(
-                                        Map.of(
-                                                PRODUCT,
-                                                Optional.of(
-                                                        offer(
-                                                                PRODUCT,
-                                                                Instant.now().plusSeconds(3600),
-                                                                1)),
-                                                OTHER,
-                                                Optional.empty())))
+        assertThatCode(() ->
+                        cache.putAll(
+                                Map.of(
+                                        PRODUCT,
+                                        Optional.of(
+                                                offer(PRODUCT, Instant.now().plusSeconds(3600), 1)),
+                                        OTHER,
+                                        Optional.empty())))
                 .doesNotThrowAnyException();
         doThrow(new RedisConnectionFailureException("private detail"))
                 .when(redis)
@@ -182,16 +178,15 @@ class RedisOpenDealOfferCacheTest {
         ObjectMapper broken = mock(ObjectMapper.class);
         when(broken.writeValueAsString(any())).thenThrow(mock(JacksonException.class));
         var unavailableCodec = new RedisOpenDealOfferCache(redis, new MockEnvironment(), broken);
-        assertThatCode(
-                        () ->
-                                unavailableCodec.putAll(
-                                        Map.of(
-                                                PRODUCT,
-                                                Optional.of(
-                                                        offer(
-                                                                PRODUCT,
-                                                                Instant.now().plusSeconds(3600),
-                                                                1)))))
+        assertThatCode(() ->
+                        unavailableCodec.putAll(
+                                Map.of(
+                                        PRODUCT,
+                                        Optional.of(
+                                                offer(
+                                                        PRODUCT,
+                                                        Instant.now().plusSeconds(3600),
+                                                        1)))))
                 .doesNotThrowAnyException();
         verifyNoInteractions(redis);
     }

@@ -133,25 +133,24 @@ class BestOpenDealCacheIT {
     void committedEventsEvictOnlyAfterTheTransaction(Change change) {
         query.findBestOpenDealsByProductIds(List.of(product));
         new TransactionTemplate(transactions)
-                .executeWithoutResult(
-                        status -> {
-                            switch (change) {
-                                case JOINED ->
-                                        jdbc.update(
-                                                "UPDATE biz_group_deal SET current_size = 2 WHERE id = ?",
-                                                deal);
-                                case SUCCEEDED ->
-                                        jdbc.update(
-                                                "UPDATE biz_group_deal SET current_size = 5, status = 'succeeded' WHERE id = ?",
-                                                deal);
-                                case EXPIRED ->
-                                        jdbc.update(
-                                                "UPDATE biz_group_deal SET status = 'expired' WHERE id = ?",
-                                                deal);
-                            }
-                            events.publishEvent(event(change));
-                            assertThat(redis.hasKey(key())).isTrue();
-                        });
+                .executeWithoutResult(status -> {
+                    switch (change) {
+                        case JOINED ->
+                                jdbc.update(
+                                        "UPDATE biz_group_deal SET current_size = 2 WHERE id = ?",
+                                        deal);
+                        case SUCCEEDED ->
+                                jdbc.update(
+                                        "UPDATE biz_group_deal SET current_size = 5, status = 'succeeded' WHERE id = ?",
+                                        deal);
+                        case EXPIRED ->
+                                jdbc.update(
+                                        "UPDATE biz_group_deal SET status = 'expired' WHERE id = ?",
+                                        deal);
+                    }
+                    events.publishEvent(event(change));
+                    assertThat(redis.hasKey(key())).isTrue();
+                });
         assertThat(redis.hasKey(key())).isFalse();
         var refreshed = query.findBestOpenDealsByProductIds(List.of(product));
         if (change == Change.JOINED) {
@@ -166,11 +165,10 @@ class BestOpenDealCacheIT {
     void rolledBackEventsDoNotEvict(Change change) {
         var first = query.findBestOpenDealsByProductIds(List.of(product));
         new TransactionTemplate(transactions)
-                .executeWithoutResult(
-                        status -> {
-                            events.publishEvent(event(change));
-                            status.setRollbackOnly();
-                        });
+                .executeWithoutResult(status -> {
+                    events.publishEvent(event(change));
+                    status.setRollbackOnly();
+                });
         assertThat(redis.hasKey(key())).isTrue();
         assertThat(query.findBestOpenDealsByProductIds(List.of(product))).isEqualTo(first);
     }
@@ -192,13 +190,10 @@ class BestOpenDealCacheIT {
                 .isEqualTo(1);
         assertThat(redis.hasKey(key())).isTrue();
         new TransactionTemplate(transactions)
-                .executeWithoutResult(
-                        status -> {
-                            jdbc.update(
-                                    "UPDATE biz_group_deal SET current_size = 2 WHERE id = ?",
-                                    deal);
-                            events.publishEvent(event(Change.JOINED));
-                        });
+                .executeWithoutResult(status -> {
+                    jdbc.update("UPDATE biz_group_deal SET current_size = 2 WHERE id = ?", deal);
+                    events.publishEvent(event(Change.JOINED));
+                });
         assertThat(redis.hasKey(key())).isFalse();
         var card = products.pageListings(1, 20, category).items().get(0);
         assertThat(card.deal().dealId()).isEqualTo(deal);
@@ -252,13 +247,11 @@ class BestOpenDealCacheIT {
             redis.setConnectionFactory(unavailable);
             assertThat(query.findBestOpenDealsByProductIds(List.of(product))).isEqualTo(expected);
             new TransactionTemplate(transactions)
-                    .executeWithoutResult(
-                            status -> {
-                                jdbc.update(
-                                        "UPDATE biz_group_deal SET deal_price = 100.00 WHERE id = ?",
-                                        deal);
-                                events.publishEvent(event(Change.JOINED));
-                            });
+                    .executeWithoutResult(status -> {
+                        jdbc.update(
+                                "UPDATE biz_group_deal SET deal_price = 100.00 WHERE id = ?", deal);
+                        events.publishEvent(event(Change.JOINED));
+                    });
             assertThat(
                             jdbc.queryForObject(
                                     "SELECT deal_price FROM biz_group_deal WHERE id = ?",

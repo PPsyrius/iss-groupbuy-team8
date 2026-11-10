@@ -54,6 +54,16 @@ class StripeCheckoutGatewayTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"2026-09-30.endive", "2026-10-28.endive"})
+    void acceptsSignedCheckoutEventsFromTheSameEndiveReleaseTrain(String apiVersion)
+            throws Exception {
+        String body = event("checkout.session.completed").replace(Stripe.API_VERSION, apiVersion);
+        var result =
+                gateway.verifyCheckoutWebhook(body, sign(body, Instant.now().getEpochSecond()));
+        assertThat(result.orElseThrow().sessionId()).isEqualTo("cs_test_example");
+    }
+
+    @ParameterizedTest
     @ValueSource(
             strings = {
                 "checkout.session.completed",
@@ -194,22 +204,19 @@ class StripeCheckoutGatewayTest {
             when(client.checkout()
                             .sessions()
                             .create(any(SessionCreateParams.class), any(RequestOptions.class)))
-                    .thenAnswer(
-                            call -> {
-                                RequestOptions options = call.getArgument(1);
-                                assertThat(options.getIdempotencyKey())
-                                        .isEqualTo(payment.providerKey());
-                                return session;
-                            });
+                    .thenAnswer(call -> {
+                        RequestOptions options = call.getArgument(1);
+                        assertThat(options.getIdempotencyKey()).isEqualTo(payment.providerKey());
+                        return session;
+                    });
             when(client.checkout()
                             .sessions()
                             .retrieve(eq("cs_test_fixture"), any(SessionRetrieveParams.class)))
-                    .thenAnswer(
-                            call -> {
-                                SessionRetrieveParams params = call.getArgument(1);
-                                assertThat(params.getExpand()).contains("payment_intent");
-                                return session;
-                            });
+                    .thenAnswer(call -> {
+                        SessionRetrieveParams params = call.getArgument(1);
+                        assertThat(params.getExpand()).contains("payment_intent");
+                        return session;
+                    });
             assertThat(adapter.createCheckoutSession(payment).amountMinor()).isEqualTo(1025L);
             assertThat(adapter.retrieveCheckoutSession("cs_test_fixture").paymentIntentStatus())
                     .isNull();

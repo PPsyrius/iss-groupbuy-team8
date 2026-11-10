@@ -141,29 +141,28 @@ class V4ExpiryPipelineIT {
         // deadline, scheduled sweeper, transaction subscribers and relay must do the work.
         await().atMost(Duration.ofSeconds(240))
                 .pollInterval(Duration.ofSeconds(1))
-                .untilAsserted(
-                        () -> {
-                            assertThat(
-                                            count(
-                                                    "SELECT count(*) FROM biz_group_deal WHERE deal_no LIKE 'V4-EXPIRY-pipeline-%' AND status='expired'"))
-                                    .isEqualTo(2000);
-                            assertThat(
-                                            count(
-                                                    "SELECT count(*) FROM sys_outbox WHERE event_type='TeamExpired' AND published_at IS NOT NULL AND failed_at IS NULL"))
-                                    .isEqualTo(2000);
-                            assertThat(
-                                            count(
-                                                    "SELECT count(*) FROM biz_notification WHERE notification_type='TeamExpired' AND user_id='"
-                                                            + RECIPIENT
-                                                            + "'::uuid"))
-                                    .isEqualTo(2000);
-                            assertThat(
-                                            count(
-                                                    "SELECT count(*) FROM sys_consumed_message WHERE consumer='notification'"))
-                                    .isEqualTo(2000);
-                            assertEmpty(queue());
-                            assertEmpty(queue() + "-dlq");
-                        });
+                .untilAsserted(() -> {
+                    assertThat(
+                                    count(
+                                            "SELECT count(*) FROM biz_group_deal WHERE deal_no LIKE 'V4-EXPIRY-pipeline-%' AND status='expired'"))
+                            .isEqualTo(2000);
+                    assertThat(
+                                    count(
+                                            "SELECT count(*) FROM sys_outbox WHERE event_type='TeamExpired' AND published_at IS NOT NULL AND failed_at IS NULL"))
+                            .isEqualTo(2000);
+                    assertThat(
+                                    count(
+                                            "SELECT count(*) FROM biz_notification WHERE notification_type='TeamExpired' AND user_id='"
+                                                    + RECIPIENT
+                                                    + "'::uuid"))
+                            .isEqualTo(2000);
+                    assertThat(
+                                    count(
+                                            "SELECT count(*) FROM sys_consumed_message WHERE consumer='notification'"))
+                            .isEqualTo(2000);
+                    assertEmpty(queue());
+                    assertEmpty(queue() + "-dlq");
+                });
         assertThat(count("SELECT count(*) FROM sys_outbox")).isEqualTo(2000);
         assertThat(count("SELECT count(*) FROM biz_notification")).isEqualTo(2000);
         assertThat(count("SELECT count(*) FROM biz_payment")).isZero();
@@ -176,16 +175,14 @@ class V4ExpiryPipelineIT {
 
     private static void assertEmpty(String url) {
         var attributes =
-                sqs.getQueueAttributes(
-                                request ->
-                                        request.queueUrl(url)
-                                                .attributeNames(
-                                                        QueueAttributeName
-                                                                .APPROXIMATE_NUMBER_OF_MESSAGES,
-                                                        QueueAttributeName
-                                                                .APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE,
-                                                        QueueAttributeName
-                                                                .APPROXIMATE_NUMBER_OF_MESSAGES_DELAYED))
+                sqs.getQueueAttributes(request ->
+                                request.queueUrl(url)
+                                        .attributeNames(
+                                                QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES,
+                                                QueueAttributeName
+                                                        .APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE,
+                                                QueueAttributeName
+                                                        .APPROXIMATE_NUMBER_OF_MESSAGES_DELAYED))
                         .attributes();
         assertThat(attributes).hasSize(3);
         assertThat(attributes.values()).containsOnly("0");

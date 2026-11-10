@@ -116,26 +116,22 @@ class StripeRefundGatewayTest {
 
     @Test
     void rejectsLiveAndAbsentKeysBeforeNetwork() {
-        assertThatThrownBy(
-                        () ->
-                                new StripeRefundGateway(
-                                                new StripeClientProvider(
-                                                        new StripeProperties("sk_live_test", "x")))
-                                        .createRefund(work))
+        assertThatThrownBy(() ->
+                        new StripeRefundGateway(
+                                        new StripeClientProvider(
+                                                new StripeProperties("sk_live_test", "x")))
+                                .createRefund(work))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(
-                        () ->
-                                new StripeRefundGateway(
-                                                new StripeClientProvider(
-                                                        new StripeProperties("", "x")))
-                                        .retrieveRefund("re_test"))
+        assertThatThrownBy(() ->
+                        new StripeRefundGateway(
+                                        new StripeClientProvider(new StripeProperties("", "x")))
+                                .retrieveRefund("re_test"))
                 .isInstanceOf(BizException.class);
-        assertThatThrownBy(
-                        () ->
-                                new StripeRefundGateway(
-                                                new StripeClientProvider(
-                                                        new StripeProperties("sk_live_test", "x")))
-                                        .findRefund(work))
+        assertThatThrownBy(() ->
+                        new StripeRefundGateway(
+                                        new StripeClientProvider(
+                                                new StripeProperties("sk_live_test", "x")))
+                                .findRefund(work))
                 .isInstanceOf(BizException.class);
     }
 
@@ -153,23 +149,21 @@ class StripeRefundGatewayTest {
             payment.setAmountReceived(1000L);
             when(client.paymentIntents().retrieve("pi_test")).thenReturn(payment);
             when(client.refunds().create(any(RefundCreateParams.class), any(RequestOptions.class)))
-                    .thenAnswer(
-                            call -> {
-                                RefundCreateParams params = call.getArgument(0);
-                                RequestOptions options = call.getArgument(1);
-                                assertThat(params.getAmount()).isEqualTo(1000L);
-                                assertThat(params.getPaymentIntent()).isEqualTo("pi_test");
-                                assertThat(params.getMetadata())
-                                        .isEqualTo(
-                                                Map.of(
-                                                        "obligation_id",
-                                                        work.id().toString(),
-                                                        "payment_id",
-                                                        work.paymentId().toString()));
-                                assertThat(options.getIdempotencyKey())
-                                        .isEqualTo(work.providerKey());
-                                return refund();
-                            });
+                    .thenAnswer(call -> {
+                        RefundCreateParams params = call.getArgument(0);
+                        RequestOptions options = call.getArgument(1);
+                        assertThat(params.getAmount()).isEqualTo(1000L);
+                        assertThat(params.getPaymentIntent()).isEqualTo("pi_test");
+                        assertThat(params.getMetadata())
+                                .isEqualTo(
+                                        Map.of(
+                                                "obligation_id",
+                                                work.id().toString(),
+                                                "payment_id",
+                                                work.paymentId().toString()));
+                        assertThat(options.getIdempotencyKey()).isEqualTo(work.providerKey());
+                        return refund();
+                    });
             assertThat(gateway.createRefund(work).status()).isEqualTo("succeeded");
             when(client.refunds().retrieve("re_test")).thenReturn(refund());
             assertThat(gateway.retrieveRefund("re_test").amountMinor()).isEqualTo(1000);

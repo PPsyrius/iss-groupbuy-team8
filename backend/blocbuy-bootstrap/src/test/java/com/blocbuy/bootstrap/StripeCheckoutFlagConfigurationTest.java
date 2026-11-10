@@ -69,47 +69,38 @@ class StripeCheckoutFlagConfigurationTest {
 
     @Test
     void missingAndFalseFlagsSelectOnlyTheDisabledFacade() {
-        runner.run(
-                context -> {
+        runner.run(context -> {
+            assertThat(context).hasNotFailed();
+            assertThat(context.getBeansOfType(PaymentAppService.class)).hasSize(1);
+            assertThat(context.getBean(PaymentAppService.class))
+                    .isInstanceOf(DisabledStripePaymentAppService.class);
+            assertThat(context.getBeansOfType(StripePaymentAppService.class)).isEmpty();
+            assertThat(context.getBeansOfType(StripeCheckoutService.class)).isEmpty();
+            assertThat(context.getBean(StripeFeatureSwitch.class).enabled()).isFalse();
+        });
+        runner.withPropertyValues("blocbuy.payment.stripe.checkout-enabled=false")
+                .run(context -> {
                     assertThat(context).hasNotFailed();
-                    assertThat(context.getBeansOfType(PaymentAppService.class)).hasSize(1);
                     assertThat(context.getBean(PaymentAppService.class))
                             .isInstanceOf(DisabledStripePaymentAppService.class);
-                    assertThat(context.getBeansOfType(StripePaymentAppService.class)).isEmpty();
-                    assertThat(context.getBeansOfType(StripeCheckoutService.class)).isEmpty();
                     assertThat(context.getBean(StripeFeatureSwitch.class).enabled()).isFalse();
                 });
-        runner.withPropertyValues("blocbuy.payment.stripe.checkout-enabled=false")
-                .run(
-                        context -> {
-                            assertThat(context).hasNotFailed();
-                            assertThat(context.getBean(PaymentAppService.class))
-                                    .isInstanceOf(DisabledStripePaymentAppService.class);
-                            assertThat(context.getBean(StripeFeatureSwitch.class).enabled())
-                                    .isFalse();
-                        });
     }
 
     @Test
     void enabledFlagSelectsOnlyCheckout() {
         runner.withPropertyValues(VALID)
-                .run(
-                        context -> {
-                            assertThat(context).hasNotFailed();
-                            assertThat(context.getBeansOfType(PaymentAppService.class)).hasSize(1);
-                            assertThat(context.getBean(PaymentAppService.class))
-                                    .isInstanceOf(StripePaymentAppService.class);
-                            assertThat(context.getBeansOfType(StripePaymentAppService.class))
-                                    .hasSize(1);
-                            assertThat(
-                                            context.getBeansOfType(
-                                                    DisabledStripePaymentAppService.class))
-                                    .isEmpty();
-                            assertThat(context.getBeansOfType(StripeCheckoutService.class))
-                                    .hasSize(1);
-                            assertThat(context.getBean(StripeFeatureSwitch.class).enabled())
-                                    .isTrue();
-                        });
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context.getBeansOfType(PaymentAppService.class)).hasSize(1);
+                    assertThat(context.getBean(PaymentAppService.class))
+                            .isInstanceOf(StripePaymentAppService.class);
+                    assertThat(context.getBeansOfType(StripePaymentAppService.class)).hasSize(1);
+                    assertThat(context.getBeansOfType(DisabledStripePaymentAppService.class))
+                            .isEmpty();
+                    assertThat(context.getBeansOfType(StripeCheckoutService.class)).hasSize(1);
+                    assertThat(context.getBean(StripeFeatureSwitch.class).enabled()).isTrue();
+                });
     }
 
     @Test
@@ -132,22 +123,21 @@ class StripeCheckoutFlagConfigurationTest {
     void rejectedLiveKeyIsNeverEchoedByTheStartupFailure() {
         runner.withPropertyValues(VALID)
                 .withPropertyValues("blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE)
-                .run(
-                        context -> {
-                            assertThat(context).hasFailed();
-                            Throwable failure = context.getStartupFailure();
-                            assertThat(causeMessages(failure)).contains(NOT_TEST_KEY);
-                            FailureAnalysis analysis = analyze(failure);
-                            assertThat(analysis).isNotNull();
-                            assertThat(analysis.getDescription()).contains(NOT_TEST_KEY);
-                            assertThat(causeMessages(failure)).doesNotContain(LIVE_FIXTURE);
-                            assertThat(analysis.getDescription()).doesNotContain(LIVE_FIXTURE);
-                            assertThat(analysis.getAction()).doesNotContain(LIVE_FIXTURE);
-                            assertThat(stackTrace(failure)).doesNotContain(LIVE_FIXTURE);
-                            assertThat(reportedFailure(analysis))
-                                    .contains(NOT_TEST_KEY)
-                                    .doesNotContain(LIVE_FIXTURE, WEBHOOK_FIXTURE);
-                        });
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    Throwable failure = context.getStartupFailure();
+                    assertThat(causeMessages(failure)).contains(NOT_TEST_KEY);
+                    FailureAnalysis analysis = analyze(failure);
+                    assertThat(analysis).isNotNull();
+                    assertThat(analysis.getDescription()).contains(NOT_TEST_KEY);
+                    assertThat(causeMessages(failure)).doesNotContain(LIVE_FIXTURE);
+                    assertThat(analysis.getDescription()).doesNotContain(LIVE_FIXTURE);
+                    assertThat(analysis.getAction()).doesNotContain(LIVE_FIXTURE);
+                    assertThat(stackTrace(failure)).doesNotContain(LIVE_FIXTURE);
+                    assertThat(reportedFailure(analysis))
+                            .contains(NOT_TEST_KEY)
+                            .doesNotContain(LIVE_FIXTURE, WEBHOOK_FIXTURE);
+                });
     }
 
     @Test
@@ -156,17 +146,16 @@ class StripeCheckoutFlagConfigurationTest {
                 .withPropertyValues(
                         "blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE,
                         "blocbuy.payment.stripe.webhook-secret=")
-                .run(
-                        context -> {
-                            assertThat(context).hasFailed();
-                            FailureAnalysis analysis = analyze(context.getStartupFailure());
-                            assertThat(analysis).isNotNull();
-                            assertThat(reportedFailure(analysis))
-                                    .contains(NOT_TEST_KEY, "STRIPE_WEBHOOK_SECRET must be set")
-                                    .doesNotContain(LIVE_FIXTURE);
-                            assertThat(stackTrace(context.getStartupFailure()))
-                                    .doesNotContain(LIVE_FIXTURE);
-                        });
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    FailureAnalysis analysis = analyze(context.getStartupFailure());
+                    assertThat(analysis).isNotNull();
+                    assertThat(reportedFailure(analysis))
+                            .contains(NOT_TEST_KEY, "STRIPE_WEBHOOK_SECRET must be set")
+                            .doesNotContain(LIVE_FIXTURE);
+                    assertThat(stackTrace(context.getStartupFailure()))
+                            .doesNotContain(LIVE_FIXTURE);
+                });
     }
 
     @Test
@@ -175,13 +164,12 @@ class StripeCheckoutFlagConfigurationTest {
                 .withPropertyValues(
                         "blocbuy.payment.stripe.api-key=" + LIVE_FIXTURE,
                         "blocbuy.payment.stripe.sandbox-key=true")
-                .run(
-                        context -> {
-                            assertThat(context).hasFailed();
-                            assertThat(causeMessages(context.getStartupFailure()))
-                                    .contains(NOT_TEST_KEY)
-                                    .doesNotContain(LIVE_FIXTURE);
-                        });
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(causeMessages(context.getStartupFailure()))
+                            .contains(NOT_TEST_KEY)
+                            .doesNotContain(LIVE_FIXTURE);
+                });
     }
 
     @Test
@@ -216,23 +204,19 @@ class StripeCheckoutFlagConfigurationTest {
         runner.withInitializer(new ConfigDataApplicationContextInitializer())
                 .withPropertyValues(Arrays.copyOfRange(VALID, 1, VALID.length))
                 .withPropertyValues("spring.profiles.active=stripe-sprint2")
-                .run(
-                        context -> {
-                            assertThat(context).hasNotFailed();
-                            assertThat(context.getBean(StripeFeatureSwitch.class).enabled())
-                                    .isTrue();
-                        });
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context.getBean(StripeFeatureSwitch.class).enabled()).isTrue();
+                });
     }
 
     private void assertBadSetting(String override, String expected) {
         runner.withPropertyValues(VALID)
                 .withPropertyValues(override)
-                .run(
-                        context -> {
-                            assertThat(context).hasFailed();
-                            assertThat(causeMessages(context.getStartupFailure()))
-                                    .contains(expected);
-                        });
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(causeMessages(context.getStartupFailure())).contains(expected);
+                });
     }
 
     /** Runs the analyzers Spring Boot registers, as it does when the application fails to start. */
@@ -268,13 +252,12 @@ class StripeCheckoutFlagConfigurationTest {
             new LoggingFailureAnalysisReporter().report(analysis);
             assertThat(events.list).extracting(ILoggingEvent::getLevel).contains(Level.ERROR);
             return events.list.stream()
-                    .map(
-                            event ->
-                                    event.getFormattedMessage()
-                                            + (event.getThrowableProxy() == null
-                                                    ? ""
-                                                    : ThrowableProxyUtil.asString(
-                                                            event.getThrowableProxy())))
+                    .map(event ->
+                            event.getFormattedMessage()
+                                    + (event.getThrowableProxy() == null
+                                            ? ""
+                                            : ThrowableProxyUtil.asString(
+                                                    event.getThrowableProxy())))
                     .collect(Collectors.joining("\n"));
         } finally {
             logger.detachAppender(events);

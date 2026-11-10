@@ -194,21 +194,17 @@ class NotificationConsumerElasticMqIT {
         awaitUntil(() -> notifications(expiredId) == 1 && notifications(paymentId) == 1);
         String dlq = endpoint() + QUEUE_PATH + "-dlq";
         Message[] dead = new Message[1];
-        awaitUntil(
-                () -> {
-                    var received =
-                            sqs.receiveMessage(
-                                            request ->
-                                                    request.queueUrl(dlq)
-                                                            .waitTimeSeconds(1)
-                                                            .maxNumberOfMessages(1))
-                                    .messages();
-                    if (received.isEmpty()) {
-                        return false;
-                    }
-                    dead[0] = received.get(0);
-                    return true;
-                });
+        awaitUntil(() -> {
+            var received =
+                    sqs.receiveMessage(request ->
+                                    request.queueUrl(dlq).waitTimeSeconds(1).maxNumberOfMessages(1))
+                            .messages();
+            if (received.isEmpty()) {
+                return false;
+            }
+            dead[0] = received.get(0);
+            return true;
+        });
 
         assertThat(dead[0].body()).isEqualTo(poison);
         sqs.deleteMessage(request -> request.queueUrl(dlq).receiptHandle(dead[0].receiptHandle()));
@@ -259,15 +255,14 @@ class NotificationConsumerElasticMqIT {
     }
 
     private static void send(String body, String type, String version) {
-        sqs.sendMessage(
-                request ->
-                        request.queueUrl(endpoint() + QUEUE_PATH)
-                                .messageBody(body)
-                                .messageAttributes(
-                                        Map.of(
-                                                "eventType", attribute(type),
-                                                "version", attribute(version),
-                                                "traceId", attribute("it-446-trace"))));
+        sqs.sendMessage(request ->
+                request.queueUrl(endpoint() + QUEUE_PATH)
+                        .messageBody(body)
+                        .messageAttributes(
+                                Map.of(
+                                        "eventType", attribute(type),
+                                        "version", attribute(version),
+                                        "traceId", attribute("it-446-trace"))));
     }
 
     private static MessageAttributeValue attribute(String value) {
@@ -276,14 +271,12 @@ class NotificationConsumerElasticMqIT {
 
     private boolean queueDrained() {
         Map<QueueAttributeName, String> counts =
-                sqs.getQueueAttributes(
-                                request ->
-                                        request.queueUrl(endpoint() + QUEUE_PATH)
-                                                .attributeNames(
-                                                        QueueAttributeName
-                                                                .APPROXIMATE_NUMBER_OF_MESSAGES,
-                                                        QueueAttributeName
-                                                                .APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE))
+                sqs.getQueueAttributes(request ->
+                                request.queueUrl(endpoint() + QUEUE_PATH)
+                                        .attributeNames(
+                                                QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES,
+                                                QueueAttributeName
+                                                        .APPROXIMATE_NUMBER_OF_MESSAGES_NOT_VISIBLE))
                         .attributes();
         return "0".equals(counts.get(QueueAttributeName.APPROXIMATE_NUMBER_OF_MESSAGES))
                 && "0"

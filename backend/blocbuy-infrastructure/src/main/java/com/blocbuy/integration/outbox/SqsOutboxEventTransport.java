@@ -25,14 +25,13 @@ public class SqsOutboxEventTransport
     protected SendMessageBatchRequestEntry entry(OutboxEvent event) {
         var attributes = new HashMap<String, MessageAttributeValue>();
         OutboxMessageFactory.attributes(event)
-                .forEach(
-                        (name, value) ->
-                                attributes.put(
-                                        name,
-                                        MessageAttributeValue.builder()
-                                                .dataType("String")
-                                                .stringValue(value)
-                                                .build()));
+                .forEach((name, value) ->
+                        attributes.put(
+                                name,
+                                MessageAttributeValue.builder()
+                                        .dataType("String")
+                                        .stringValue(value)
+                                        .build()));
         return SendMessageBatchRequestEntry.builder()
                 .id(event.id().toString())
                 .messageBody(OutboxMessageFactory.body(event, json))

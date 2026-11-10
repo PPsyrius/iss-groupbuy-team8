@@ -29,11 +29,10 @@ public final class TeamExpiryRefundService {
 
     /** Joins the caller's team-expiry transaction when invoked by the event subscriber. */
     public void recordExpiredTeam(UUID dealId) {
-        tx.executeWithoutResult(
-                status -> {
-                    business.lockExpiredTeam(dealId);
-                    repository.requireRefundsForExpiredTeam(
-                            dealId, "TEAM_EXPIRED", "team-expired-" + dealId);
-                });
+        tx.executeWithoutResult(status -> {
+            business.lockExpiredTeam(dealId);
+            repository.requireRefundsForExpiredTeam(
+                    dealId, "TEAM_EXPIRED", "team-expired-" + dealId);
+        });
     }
 }

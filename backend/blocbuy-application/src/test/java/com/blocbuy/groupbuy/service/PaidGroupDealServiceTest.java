@@ -153,9 +153,8 @@ class PaidGroupDealServiceTest {
     void replayReturnsOriginalSnapshotWithoutReadingDeal() {
         var original = new ParticipationResult("applied", terms.id(), "open", 1, null);
         when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
-                .thenAnswer(
-                        invocation ->
-                                new ParticipationReceipt(invocation.getArgument(1), original));
+                .thenAnswer(invocation ->
+                        new ParticipationReceipt(invocation.getArgument(1), original));
         assertThat(service.startConfirmed(terms, paid)).isEqualTo(original);
         verify(repository, never()).currentTime();
         verify(repository, never()).insertStartedDeal(any(), any(), any());
@@ -300,9 +299,8 @@ class PaidGroupDealServiceTest {
     void joinReplayReturnsOriginalSnapshotWithoutLockingDeal() {
         var original = new ParticipationResult("applied", terms.id(), "open", 2, null);
         when(repository.reserveAndLock(eq(paid.paymentId()), any(), eq(paid.userId())))
-                .thenAnswer(
-                        invocation ->
-                                new ParticipationReceipt(invocation.getArgument(1), original));
+                .thenAnswer(invocation ->
+                        new ParticipationReceipt(invocation.getArgument(1), original));
 
         assertThat(service.joinConfirmed(terms.id(), paid, UUID.randomUUID())).isEqualTo(original);
         verify(repository, never()).lockDeal(any());

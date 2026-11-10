@@ -28,12 +28,11 @@ public class StripeOperationsConfiguration {
             switch (command) {
                 case "scan" -> {
                     var pending = service.scan();
-                    pending.forEach(
-                            payment ->
-                                    LOG.warn(
-                                            "CheckoutPayment needs inspection: id={}, status={}",
-                                            payment.id(),
-                                            payment.status()));
+                    pending.forEach(payment ->
+                            LOG.warn(
+                                    "CheckoutPayment needs inspection: id={}, status={}",
+                                    payment.id(),
+                                    payment.status()));
                     LOG.info(
                             "CheckoutPayment scan: {} candidate(s), limit 100; use cases for paginated review work items",
                             pending.size());
@@ -88,22 +87,21 @@ public class StripeOperationsConfiguration {
                         ? UUID.fromString(value(args, "after-case-id"))
                         : null;
         var cases = service.reviewCases(after);
-        cases.forEach(
-                review -> {
-                    boolean alert =
-                            review.owner() == null
-                                    || !review.nextCheckAt().isAfter(Instant.now())
-                                    || "RECOVERY_FAILED".equals(review.reason());
-                    LOG.warn(
-                            "payment_review caseId={} paymentId={} owner={} reason={}"
-                                    + " nextCheckAt={} alert={}",
-                            review.caseId(),
-                            review.paymentId(),
-                            review.owner(),
-                            review.reason(),
-                            review.nextCheckAt(),
-                            alert);
-                });
+        cases.forEach(review -> {
+            boolean alert =
+                    review.owner() == null
+                            || !review.nextCheckAt().isAfter(Instant.now())
+                            || "RECOVERY_FAILED".equals(review.reason());
+            LOG.warn(
+                    "payment_review caseId={} paymentId={} owner={} reason={}"
+                            + " nextCheckAt={} alert={}",
+                    review.caseId(),
+                    review.paymentId(),
+                    review.owner(),
+                    review.reason(),
+                    review.nextCheckAt(),
+                    alert);
+        });
         if (!cases.isEmpty()) {
             LOG.warn(
                     "Review work remains: count={}, nextPageAfter={};"

@@ -257,37 +257,31 @@ class LocalIdentityOutageRehearsalIT {
 
     private void providerSubstitute() {
         when(gateway.createCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            CheckoutPayment payment = call.getArgument(0);
-                            var session =
-                                    new CheckoutGateway.Session(
-                                            "cs_test_local_" + payment.id(),
-                                            payment.id().toString(),
-                                            payment.quote().intentId().toString(),
-                                            null,
-                                            payment.quote()
-                                                    .amount()
-                                                    .movePointRight(2)
-                                                    .longValueExact(),
-                                            payment.quote().currency(),
-                                            "open",
-                                            "unpaid",
-                                            false,
-                                            "https://checkout.stripe.com/c/pay/local-rehearsal-fixture",
-                                            payment.sessionExpiresAt());
-                            sessions.put(session.id(), session);
-                            return session;
-                        });
+                .thenAnswer(call -> {
+                    CheckoutPayment payment = call.getArgument(0);
+                    var session =
+                            new CheckoutGateway.Session(
+                                    "cs_test_local_" + payment.id(),
+                                    payment.id().toString(),
+                                    payment.quote().intentId().toString(),
+                                    null,
+                                    payment.quote().amount().movePointRight(2).longValueExact(),
+                                    payment.quote().currency(),
+                                    "open",
+                                    "unpaid",
+                                    false,
+                                    "https://checkout.stripe.com/c/pay/local-rehearsal-fixture",
+                                    payment.sessionExpiresAt());
+                    sessions.put(session.id(), session);
+                    return session;
+                });
         when(gateway.retrieveCheckoutSession(any()))
                 .thenAnswer(call -> sessions.get(call.getArgument(0)));
         var properties = new StripeProperties("", SIGNING);
         var verifier = new StripeCheckoutGateway(properties, new StripeClientProvider(properties));
         when(gateway.verifyCheckoutWebhook(any(), any()))
-                .thenAnswer(
-                        call ->
-                                verifier.verifyCheckoutWebhook(
-                                        call.getArgument(0), call.getArgument(1)));
+                .thenAnswer(call ->
+                        verifier.verifyCheckoutWebhook(call.getArgument(0), call.getArgument(1)));
     }
 
     private HttpResponse<String> call(

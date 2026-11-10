@@ -41,161 +41,150 @@ class PaidGroupDealTest {
         BigDecimal price = new BigDecimal("10.00");
         Instant expiry = NOW.plusSeconds(60);
 
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                null,
-                                "TEST-1",
-                                productId,
-                                LEADER,
-                                price,
-                                "sgd",
-                                2,
-                                1,
-                                DealStatus.OPEN,
-                                NOW,
-                                expiry,
-                                null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id,
-                                "TEST-1",
-                                null,
-                                LEADER,
-                                price,
-                                "sgd",
-                                2,
-                                1,
-                                DealStatus.OPEN,
-                                NOW,
-                                expiry,
-                                null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id,
-                                "TEST-1",
-                                productId,
-                                null,
-                                price,
-                                "sgd",
-                                2,
-                                1,
-                                DealStatus.OPEN,
-                                NOW,
-                                expiry,
-                                null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id,
-                                "TEST-1",
-                                productId,
-                                LEADER,
-                                null,
-                                "sgd",
-                                2,
-                                1,
-                                DealStatus.OPEN,
-                                NOW,
-                                expiry,
-                                null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id,
-                                "TEST-1",
-                                productId,
-                                LEADER,
-                                BigDecimal.ONE.negate(),
-                                "sgd",
-                                2,
-                                1,
-                                DealStatus.OPEN,
-                                NOW,
-                                expiry,
-                                null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id,
-                                "TEST-1",
-                                productId,
-                                LEADER,
-                                price,
-                                null,
-                                2,
-                                1,
-                                DealStatus.OPEN,
-                                NOW,
-                                expiry,
-                                null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id,
-                                "TEST-1",
-                                productId,
-                                LEADER,
-                                price,
-                                " ",
-                                2,
-                                1,
-                                DealStatus.OPEN,
-                                NOW,
-                                expiry,
-                                null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id,
-                                "TEST-1",
-                                productId,
-                                LEADER,
-                                price,
-                                "sgd",
-                                1,
-                                1,
-                                DealStatus.OPEN,
-                                NOW,
-                                expiry,
-                                null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id, "TEST-1", productId, LEADER, price, "sgd", 2, 1, null, NOW,
-                                expiry, null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id,
-                                "TEST-1",
-                                productId,
-                                LEADER,
-                                price,
-                                "sgd",
-                                2,
-                                1,
-                                DealStatus.OPEN,
-                                null,
-                                expiry,
-                                null));
-        assertMalformed(
-                () ->
-                        GroupDeal.reconstitute(
-                                id,
-                                "TEST-1",
-                                productId,
-                                LEADER,
-                                price,
-                                "sgd",
-                                2,
-                                1,
-                                DealStatus.OPEN,
-                                NOW,
-                                null,
-                                null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        null,
+                        "TEST-1",
+                        productId,
+                        LEADER,
+                        price,
+                        "sgd",
+                        2,
+                        1,
+                        DealStatus.OPEN,
+                        NOW,
+                        expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id,
+                        "TEST-1",
+                        null,
+                        LEADER,
+                        price,
+                        "sgd",
+                        2,
+                        1,
+                        DealStatus.OPEN,
+                        NOW,
+                        expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id,
+                        "TEST-1",
+                        productId,
+                        null,
+                        price,
+                        "sgd",
+                        2,
+                        1,
+                        DealStatus.OPEN,
+                        NOW,
+                        expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id,
+                        "TEST-1",
+                        productId,
+                        LEADER,
+                        null,
+                        "sgd",
+                        2,
+                        1,
+                        DealStatus.OPEN,
+                        NOW,
+                        expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id,
+                        "TEST-1",
+                        productId,
+                        LEADER,
+                        BigDecimal.ONE.negate(),
+                        "sgd",
+                        2,
+                        1,
+                        DealStatus.OPEN,
+                        NOW,
+                        expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id,
+                        "TEST-1",
+                        productId,
+                        LEADER,
+                        price,
+                        null,
+                        2,
+                        1,
+                        DealStatus.OPEN,
+                        NOW,
+                        expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id,
+                        "TEST-1",
+                        productId,
+                        LEADER,
+                        price,
+                        " ",
+                        2,
+                        1,
+                        DealStatus.OPEN,
+                        NOW,
+                        expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id,
+                        "TEST-1",
+                        productId,
+                        LEADER,
+                        price,
+                        "sgd",
+                        1,
+                        1,
+                        DealStatus.OPEN,
+                        NOW,
+                        expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id, "TEST-1", productId, LEADER, price, "sgd", 2, 1, null, NOW, expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id,
+                        "TEST-1",
+                        productId,
+                        LEADER,
+                        price,
+                        "sgd",
+                        2,
+                        1,
+                        DealStatus.OPEN,
+                        null,
+                        expiry,
+                        null));
+        assertMalformed(() ->
+                GroupDeal.reconstitute(
+                        id,
+                        "TEST-1",
+                        productId,
+                        LEADER,
+                        price,
+                        "sgd",
+                        2,
+                        1,
+                        DealStatus.OPEN,
+                        NOW,
+                        null,
+                        null));
     }
 
     /**
@@ -589,10 +578,9 @@ class PaidGroupDealTest {
 
         assertThatThrownBy(() -> deal.expire(due))
                 .isInstanceOf(BizException.class)
-                .satisfies(
-                        failure ->
-                                assertThat(((BizException) failure).errorCode())
-                                        .isEqualTo(GroupbuyErrorCode.DEAL_CLOSED));
+                .satisfies(failure ->
+                        assertThat(((BizException) failure).errorCode())
+                                .isEqualTo(GroupbuyErrorCode.DEAL_CLOSED));
     }
 
     @Test

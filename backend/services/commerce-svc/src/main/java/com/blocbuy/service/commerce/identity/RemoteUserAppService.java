@@ -158,13 +158,11 @@ public class RemoteUserAppService implements UserAppService {
         long started = System.nanoTime();
         try {
             return call.get()
-                    .exchange(
-                            (request, response) -> {
-                                int status = response.getStatusCode().value();
-                                Result<T> body =
-                                        answersOnPurpose(status) ? response.bodyTo(type) : null;
-                                return new Reply<>(status, body, elapsedMillis(started));
-                            });
+                    .exchange((request, response) -> {
+                        int status = response.getStatusCode().value();
+                        Result<T> body = answersOnPurpose(status) ? response.bodyTo(type) : null;
+                        return new Reply<>(status, body, elapsedMillis(started));
+                    });
         } catch (RestClientException | HttpMessageConversionException failure) {
             throw new IdentityUnavailableException(
                     "identity "

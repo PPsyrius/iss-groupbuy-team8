@@ -158,15 +158,13 @@ class ConsumedMessageRepositoryIT {
                 var first = sessions.openSession()) {
             assertThat(repository(first).markConsumed(event, CONSUMER)).isTrue();
             Future<Boolean> second =
-                    executor.submit(
-                            () -> {
-                                try (var session = sessions.openSession()) {
-                                    boolean inserted =
-                                            repository(session).markConsumed(event, CONSUMER);
-                                    session.commit();
-                                    return inserted;
-                                }
-                            });
+                    executor.submit(() -> {
+                        try (var session = sessions.openSession()) {
+                            boolean inserted = repository(session).markConsumed(event, CONSUMER);
+                            session.commit();
+                            return inserted;
+                        }
+                    });
             assertThatThrownBy(() -> second.get(1, TimeUnit.SECONDS))
                     .isInstanceOf(TimeoutException.class);
             if (commitFirst) {

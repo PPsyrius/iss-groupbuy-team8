@@ -127,10 +127,8 @@ class PaidGroupDealRepositoryIT {
             UUID userId = UuidV7.next();
             Instant now = repo.currentTime();
 
-            assertThatThrownBy(
-                            () ->
-                                    mapper.insertMember(
-                                            memberId, paymentId, userId, "member", null, now))
+            assertThatThrownBy(() ->
+                            mapper.insertMember(memberId, paymentId, userId, "member", null, now))
                     .isInstanceOf(PersistenceException.class);
             session.rollback();
         }
@@ -187,17 +185,14 @@ class PaidGroupDealRepositoryIT {
             var result = ParticipationResult.applied(deal);
             var started = new CountDownLatch(1);
             var waiting =
-                    executor.submit(
-                            () -> {
-                                try (SqlSession reader = sessions.openSession()) {
-                                    started.countDown();
-                                    return repo(reader)
-                                            .reserveAndLock(
-                                                    paid.paymentId(),
-                                                    "other-content",
-                                                    paid.userId());
-                                }
-                            });
+                    executor.submit(() -> {
+                        try (SqlSession reader = sessions.openSession()) {
+                            started.countDown();
+                            return repo(reader)
+                                    .reserveAndLock(
+                                            paid.paymentId(), "other-content", paid.userId());
+                        }
+                    });
             assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
             assertThatThrownBy(() -> waiting.get(200, TimeUnit.MILLISECONDS))
                     .isInstanceOf(TimeoutException.class);
@@ -220,33 +215,26 @@ class PaidGroupDealRepositoryIT {
             repo(writer).lockDeal(dealId).orElseThrow();
             var started = new CountDownLatch(1);
             var waiting =
-                    executor.submit(
-                            () -> {
-                                try (SqlSession reader = sessions.openSession()) {
-                                    var repo = repo(reader);
-                                    repo.reserveAndLock(
-                                            joiner.paymentId(), "join", joiner.userId());
-                                    Instant beforeLock = repo.currentTime();
-                                    started.countDown();
-                                    var deal = repo.lockDeal(dealId).orElseThrow();
-                                    Instant afterLock = repo.currentTime();
-                                    assertThat(beforeLock).isBefore(deal.expireTime());
-                                    assertThat(afterLock).isAfterOrEqualTo(deal.expireTime());
+                    executor.submit(() -> {
+                        try (SqlSession reader = sessions.openSession()) {
+                            var repo = repo(reader);
+                            repo.reserveAndLock(joiner.paymentId(), "join", joiner.userId());
+                            Instant beforeLock = repo.currentTime();
+                            started.countDown();
+                            var deal = repo.lockDeal(dealId).orElseThrow();
+                            Instant afterLock = repo.currentTime();
+                            assertThat(beforeLock).isBefore(deal.expireTime());
+                            assertThat(afterLock).isAfterOrEqualTo(deal.expireTime());
 
-                                    boolean hasActiveMember =
-                                            repo.hasActiveMember(dealId, joiner.userId());
+                            boolean hasActiveMember = repo.hasActiveMember(dealId, joiner.userId());
 
-                                    assertThatThrownBy(
-                                                    () ->
-                                                            deal.joinPaid(
-                                                                    joiner,
-                                                                    hasActiveMember,
-                                                                    afterLock))
-                                            .isInstanceOf(BizException.class);
-                                    reader.rollback();
-                                    return afterLock;
-                                }
-                            });
+                            assertThatThrownBy(
+                                            () -> deal.joinPaid(joiner, hasActiveMember, afterLock))
+                                    .isInstanceOf(BizException.class);
+                            reader.rollback();
+                            return afterLock;
+                        }
+                    });
             assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
             assertThatThrownBy(() -> waiting.get(200, TimeUnit.MILLISECONDS))
                     .isInstanceOf(TimeoutException.class);

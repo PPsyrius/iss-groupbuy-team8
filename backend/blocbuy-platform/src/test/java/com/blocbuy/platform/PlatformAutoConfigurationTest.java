@@ -17,33 +17,30 @@ class PlatformAutoConfigurationTest {
     @Test
     void startsWhenDistributed() {
         runner.withPropertyValues("blocbuy.topology=distributed")
-                .run(
-                        context -> {
-                            assertThat(context).hasNotFailed();
-                            assertThat(context.getBean(TopologyProperties.class).topology())
-                                    .isEqualTo(TopologyProperties.Mode.DISTRIBUTED);
-                            assertThat(context).hasSingleBean(RestClientCustomizer.class);
-                        });
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context.getBean(TopologyProperties.class).topology())
+                            .isEqualTo(TopologyProperties.Mode.DISTRIBUTED);
+                    assertThat(context).hasSingleBean(RestClientCustomizer.class);
+                });
     }
 
     @Test
     void refusesTheDefaultMonolithTopology() {
-        runner.run(
-                context ->
-                        assertThat(context)
-                                .getFailure()
-                                .rootCause()
-                                .hasMessageContaining(
-                                        "must run with blocbuy.topology=distributed, not monolith"));
+        runner.run(context ->
+                assertThat(context)
+                        .getFailure()
+                        .rootCause()
+                        .hasMessageContaining(
+                                "must run with blocbuy.topology=distributed, not monolith"));
     }
 
     @Test
     void refusesAMisspelledTopology() {
         runner.withPropertyValues("blocbuy.topology=distrbuted")
-                .run(
-                        context ->
-                                assertThat(context)
-                                        .getFailure()
-                                        .hasStackTraceContaining("blocbuy.topology"));
+                .run(context ->
+                        assertThat(context)
+                                .getFailure()
+                                .hasStackTraceContaining("blocbuy.topology"));
     }
 }

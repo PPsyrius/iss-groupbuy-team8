@@ -204,10 +204,9 @@ final class ArchitectureTest {
                         }
                         boolean constrained =
                                 param.getAnnotations().stream()
-                                        .anyMatch(
-                                                annotation ->
-                                                        RANGE_CONSTRAINTS.contains(
-                                                                annotation.getRawType().getName()));
+                                        .anyMatch(annotation ->
+                                                RANGE_CONSTRAINTS.contains(
+                                                        annotation.getRawType().getName()));
                         if (!constrained) {
                             events.add(
                                     SimpleConditionEvent.violated(

@@ -98,11 +98,8 @@ class StripeOperationsConfigurationTest {
                 "--confirm-recovery=true",
                 "--session-id=cs_test");
         verify(service).recover(ID, "yorick", true, "cs_test");
-        assertThatThrownBy(
-                        () ->
-                                run(
-                                        "--payment-command=expire-open-sessions",
-                                        "--confirm-expiry=false"))
+        assertThatThrownBy(() ->
+                        run("--payment-command=expire-open-sessions", "--confirm-expiry=false"))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(service, never()).expireDueSessions();
         run("--payment-command=expire-open-sessions", "--confirm-expiry=true");

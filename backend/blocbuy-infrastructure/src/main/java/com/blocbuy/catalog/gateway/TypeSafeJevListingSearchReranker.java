@@ -55,15 +55,14 @@ public class TypeSafeJevListingSearchReranker implements ListingSearchReranker {
 
         List<Candidate> shortlist = candidates.stream().limit(MAX_CANDIDATES).toList();
         Map<String, Object> criteria = new LinkedHashMap<>();
-        shortlist.forEach(
-                candidate ->
-                        criteria.put(
-                                candidate.id().toString(),
-                                new CandidateState(
-                                        candidate.title(),
-                                        candidate.subtitle(),
-                                        truncate(candidate.description()),
-                                        candidate.category())));
+        shortlist.forEach(candidate ->
+                criteria.put(
+                        candidate.id().toString(),
+                        new CandidateState(
+                                candidate.title(),
+                                candidate.subtitle(),
+                                truncate(candidate.description()),
+                                candidate.category())));
         SystemOneRequest request =
                 new SystemOneRequest(
                         Map.of("shopper_query", keyword),

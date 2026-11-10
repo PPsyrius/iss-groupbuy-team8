@@ -28,12 +28,11 @@ class MyBatisConfigTest {
 
     @Test
     void scansEveryMapperWhenTheTopologyIsUnset() {
-        runner.run(
-                context -> {
-                    assertThat(context).hasSingleBean(MyBatisConfig.class);
-                    assertThat(context.containsBeanDefinition(IDENTITY_MAPPER)).isTrue();
-                    assertThat(context.containsBeanDefinition(COMMERCE_MAPPER)).isTrue();
-                });
+        runner.run(context -> {
+            assertThat(context).hasSingleBean(MyBatisConfig.class);
+            assertThat(context.containsBeanDefinition(IDENTITY_MAPPER)).isTrue();
+            assertThat(context.containsBeanDefinition(COMMERCE_MAPPER)).isTrue();
+        });
     }
 
     @Test
@@ -45,24 +44,22 @@ class MyBatisConfigTest {
     @Test
     void leavesMapperScanningToTheServiceAssemblies() {
         runner.withPropertyValues("blocbuy.topology=distributed")
-                .run(
-                        context -> {
-                            assertThat(context).doesNotHaveBean(MyBatisConfig.class);
-                            assertThat(context.containsBeanDefinition(IDENTITY_MAPPER)).isFalse();
-                        });
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean(MyBatisConfig.class);
+                    assertThat(context.containsBeanDefinition(IDENTITY_MAPPER)).isFalse();
+                });
     }
 
     @Test
     void refusesToStartWithAMisspelledTopology() {
         runner.withPropertyValues("blocbuy.topology=monolit")
-                .run(
-                        context ->
-                                assertThat(context)
-                                        .getFailure()
-                                        .isInstanceOf(IllegalStateException.class)
-                                        .hasMessage(
-                                                "blocbuy.topology must be monolith or distributed,"
-                                                        + " not 'monolit'"));
+                .run(context ->
+                        assertThat(context)
+                                .getFailure()
+                                .isInstanceOf(IllegalStateException.class)
+                                .hasMessage(
+                                        "blocbuy.topology must be monolith or distributed,"
+                                                + " not 'monolit'"));
     }
 
     @Test

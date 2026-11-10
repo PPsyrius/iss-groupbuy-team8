@@ -50,10 +50,8 @@ abstract class BatchingOutboxEventTransport<E> implements OutboxEventTransport {
             publishBatch(sendable, entries, results);
         }
         return events.stream()
-                .map(
-                        event ->
-                                results.getOrDefault(
-                                        event.id(), OutboxPublishResult.skipped(event.id())))
+                .map(event ->
+                        results.getOrDefault(event.id(), OutboxPublishResult.skipped(event.id())))
                 .toList();
     }
 
@@ -83,14 +81,13 @@ abstract class BatchingOutboxEventTransport<E> implements OutboxEventTransport {
             Map<String, String> failures,
             String missingReason) {
         return events.stream()
-                .map(
-                        event ->
-                                succeeded.contains(event.id().toString())
-                                        ? OutboxPublishResult.published(event.id())
-                                        : OutboxPublishResult.failed(
-                                                event.id(),
-                                                failures.getOrDefault(
-                                                        event.id().toString(), missingReason)))
+                .map(event ->
+                        succeeded.contains(event.id().toString())
+                                ? OutboxPublishResult.published(event.id())
+                                : OutboxPublishResult.failed(
+                                        event.id(),
+                                        failures.getOrDefault(
+                                                event.id().toString(), missingReason)))
                 .toList();
     }
 }

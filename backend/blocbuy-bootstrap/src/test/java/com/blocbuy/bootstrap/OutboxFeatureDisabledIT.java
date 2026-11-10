@@ -97,13 +97,12 @@ class OutboxFeatureDisabledIT {
                 admin,
                 admin);
         when(gateway.createCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            CheckoutPayment payment = call.getArgument(0);
-                            var session = session(payment, "open", "unpaid");
-                            sessions.put(session.id(), session);
-                            return session;
-                        });
+                .thenAnswer(call -> {
+                    CheckoutPayment payment = call.getArgument(0);
+                    var session = session(payment, "open", "unpaid");
+                    sessions.put(session.id(), session);
+                    return session;
+                });
         when(gateway.retrieveCheckoutSession(any()))
                 .thenAnswer(call -> sessions.get(call.getArgument(0)));
     }

@@ -144,23 +144,21 @@ class PaidGroupDealServiceIT {
         var start = new CountDownLatch(1);
         try (var executor = Executors.newFixedThreadPool(2)) {
             var a =
-                    executor.submit(
-                            () -> {
-                                ready.countDown();
-                                if (!start.await(10, TimeUnit.SECONDS)) {
-                                    throw new IllegalStateException("start timed out");
-                                }
-                                return service.joinConfirmed(terms.id(), first, null);
-                            });
+                    executor.submit(() -> {
+                        ready.countDown();
+                        if (!start.await(10, TimeUnit.SECONDS)) {
+                            throw new IllegalStateException("start timed out");
+                        }
+                        return service.joinConfirmed(terms.id(), first, null);
+                    });
             var b =
-                    executor.submit(
-                            () -> {
-                                ready.countDown();
-                                if (!start.await(10, TimeUnit.SECONDS)) {
-                                    throw new IllegalStateException("start timed out");
-                                }
-                                return service.joinConfirmed(terms.id(), second, null);
-                            });
+                    executor.submit(() -> {
+                        ready.countDown();
+                        if (!start.await(10, TimeUnit.SECONDS)) {
+                            throw new IllegalStateException("start timed out");
+                        }
+                        return service.joinConfirmed(terms.id(), second, null);
+                    });
             assertThat(ready.await(10, TimeUnit.SECONDS)).isTrue();
             start.countDown();
             var resultA = a.get(20, TimeUnit.SECONDS);
@@ -206,26 +204,24 @@ class PaidGroupDealServiceIT {
             }
             try (var executor = Executors.newSingleThreadExecutor()) {
                 var waiting =
-                        executor.submit(
-                                () ->
-                                        receiptLock
-                                                ? service.startConfirmed(terms, leader)
-                                                : service.joinConfirmed(terms.id(), joiner, null));
+                        executor.submit(() ->
+                                receiptLock
+                                        ? service.startConfirmed(terms, leader)
+                                        : service.joinConfirmed(terms.id(), joiner, null));
                 try {
                     // Must be database cancellation, not this test's Future timeout.
                     assertThatThrownBy(() -> waiting.get(20, TimeUnit.SECONDS))
                             .isInstanceOf(ExecutionException.class)
                             .hasRootCauseInstanceOf(PSQLException.class)
-                            .satisfies(
-                                    error ->
-                                            assertThat(
-                                                            ((PSQLException)
-                                                                            org.springframework.core
-                                                                                    .NestedExceptionUtils
-                                                                                    .getMostSpecificCause(
-                                                                                            error))
-                                                                    .getSQLState())
-                                                    .isEqualTo("57014"));
+                            .satisfies(error ->
+                                    assertThat(
+                                                    ((PSQLException)
+                                                                    org.springframework.core
+                                                                            .NestedExceptionUtils
+                                                                            .getMostSpecificCause(
+                                                                                    error))
+                                                            .getSQLState())
+                                            .isEqualTo("57014"));
                 } finally {
                     // Release before ExecutorService.close(), including when the assertion fails.
                     holder.rollback();

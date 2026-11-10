@@ -113,13 +113,12 @@ class TeamExpirySchedulingIT {
                 admin,
                 admin);
         when(gateway.createCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            CheckoutPayment p = call.getArgument(0);
-                            var session = session(p, "open", "unpaid");
-                            sessions.put(session.id(), session);
-                            return session;
-                        });
+                .thenAnswer(call -> {
+                    CheckoutPayment p = call.getArgument(0);
+                    var session = session(p, "open", "unpaid");
+                    sessions.put(session.id(), session);
+                    return session;
+                });
         when(gateway.retrieveCheckoutSession(any()))
                 .thenAnswer(call -> sessions.get(call.getArgument(0)));
     }
@@ -189,18 +188,13 @@ class TeamExpirySchedulingIT {
         UUID deal = UUID.randomUUID();
         TransactionTemplate transaction = new TransactionTemplate(transactions);
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(
-                        () ->
-                                transaction.executeWithoutResult(
-                                        status -> {
-                                            events.publishEvent(
-                                                    new TeamSucceeded(
-                                                            deal,
-                                                            UUID.randomUUID(),
-                                                            2,
-                                                            java.time.Instant.now()));
-                                            throw new IllegalStateException("force rollback");
-                                        }))
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                        transaction.executeWithoutResult(status -> {
+                            events.publishEvent(
+                                    new TeamSucceeded(
+                                            deal, UUID.randomUUID(), 2, java.time.Instant.now()));
+                            throw new IllegalStateException("force rollback");
+                        }))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("force rollback");
 
@@ -384,29 +378,27 @@ class TeamExpirySchedulingIT {
         assertThat(browser.receipt(buyer, payment).refundStatus()).isEqualTo("PENDING");
         AtomicReference<String> firstKey = new AtomicReference<>();
         when(refundGateway.createRefund(any()))
-                .thenAnswer(
-                        call -> {
-                            assertThat(
-                                            org.springframework.transaction.support
-                                                    .TransactionSynchronizationManager
-                                                    .isActualTransactionActive())
-                                    .isFalse();
-                            RefundWork work = call.getArgument(0);
-                            firstKey.set(work.providerKey());
-                            throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
-                        })
-                .thenAnswer(
-                        call -> {
-                            RefundWork work = call.getArgument(0);
-                            assertThat(work.providerKey()).isEqualTo(firstKey.get());
-                            return new RefundGateway.Snapshot(
-                                    "re_expired_team",
-                                    work.providerIntentId(),
-                                    work.id().toString(),
-                                    work.amount().movePointRight(2).longValueExact(),
-                                    work.currency(),
-                                    "succeeded");
-                        });
+                .thenAnswer(call -> {
+                    assertThat(
+                                    org.springframework.transaction.support
+                                            .TransactionSynchronizationManager
+                                            .isActualTransactionActive())
+                            .isFalse();
+                    RefundWork work = call.getArgument(0);
+                    firstKey.set(work.providerKey());
+                    throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
+                })
+                .thenAnswer(call -> {
+                    RefundWork work = call.getArgument(0);
+                    assertThat(work.providerKey()).isEqualTo(firstKey.get());
+                    return new RefundGateway.Snapshot(
+                            "re_expired_team",
+                            work.providerIntentId(),
+                            work.id().toString(),
+                            work.amount().movePointRight(2).longValueExact(),
+                            work.currency(),
+                            "succeeded");
+                });
 
         refundWorker.run();
         assertThat(refundStatus(deal)).isEqualTo("processing");

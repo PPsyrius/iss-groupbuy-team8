@@ -77,14 +77,13 @@ public class ProductAppServiceImpl implements ProductAppService {
         }
         List<Candidate> candidates =
                 products.stream()
-                        .map(
-                                product ->
-                                        new Candidate(
-                                                product.id(),
-                                                product.title(),
-                                                product.subtitle(),
-                                                product.description(),
-                                                product.category()))
+                        .map(product ->
+                                new Candidate(
+                                        product.id(),
+                                        product.title(),
+                                        product.subtitle(),
+                                        product.description(),
+                                        product.category()))
                         .toList();
         List<UUID> rankedIds = listingSearchReranker.rerank(query.keyword(), candidates);
         if (rankedIds == null) {

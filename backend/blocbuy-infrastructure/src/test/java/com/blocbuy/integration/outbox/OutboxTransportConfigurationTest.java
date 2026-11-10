@@ -28,16 +28,15 @@ class OutboxTransportConfigurationTest {
                         "blocbuy.events.region=us-east-1",
                         "blocbuy.events.sqs.endpoint=http://localhost:9324",
                         "blocbuy.events.sqs.queue-url=http://localhost:9324/queue")
-                .run(
-                        context -> {
-                            assertThat(context).hasSingleBean(SqsClient.class);
-                            assertThat(context).hasSingleBean(SqsOutboxEventTransport.class);
-                            assertThat(context).doesNotHaveBean(SnsClient.class);
-                            assertTimeouts(
-                                    context.getBean(SqsClient.class)
-                                            .serviceClientConfiguration()
-                                            .overrideConfiguration());
-                        });
+                .run(context -> {
+                    assertThat(context).hasSingleBean(SqsClient.class);
+                    assertThat(context).hasSingleBean(SqsOutboxEventTransport.class);
+                    assertThat(context).doesNotHaveBean(SnsClient.class);
+                    assertTimeouts(
+                            context.getBean(SqsClient.class)
+                                    .serviceClientConfiguration()
+                                    .overrideConfiguration());
+                });
     }
 
     @Test
@@ -60,16 +59,15 @@ class OutboxTransportConfigurationTest {
                         "blocbuy.events.transport=sns",
                         "blocbuy.events.region=us-east-1",
                         "blocbuy.events.sns.topic-arn=arn:aws:sns:us-east-1:000000000000:events")
-                .run(
-                        context -> {
-                            assertThat(context).hasSingleBean(SnsClient.class);
-                            assertThat(context).hasSingleBean(SnsOutboxEventTransport.class);
-                            assertThat(context).doesNotHaveBean(SqsClient.class);
-                            assertTimeouts(
-                                    context.getBean(SnsClient.class)
-                                            .serviceClientConfiguration()
-                                            .overrideConfiguration());
-                        });
+                .run(context -> {
+                    assertThat(context).hasSingleBean(SnsClient.class);
+                    assertThat(context).hasSingleBean(SnsOutboxEventTransport.class);
+                    assertThat(context).doesNotHaveBean(SqsClient.class);
+                    assertTimeouts(
+                            context.getBean(SnsClient.class)
+                                    .serviceClientConfiguration()
+                                    .overrideConfiguration());
+                });
     }
 
     @Test
@@ -78,11 +76,10 @@ class OutboxTransportConfigurationTest {
                         "blocbuy.events.enabled=true",
                         "blocbuy.events.relay.enabled=false",
                         "blocbuy.events.transport=sqs")
-                .run(
-                        context -> {
-                            assertThat(context).doesNotHaveBean(SqsClient.class);
-                            assertThat(context).doesNotHaveBean(SnsClient.class);
-                        });
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean(SqsClient.class);
+                    assertThat(context).doesNotHaveBean(SnsClient.class);
+                });
     }
 
     @Test
@@ -96,13 +93,12 @@ class OutboxTransportConfigurationTest {
                             "blocbuy.events.transport=sns",
                             "blocbuy.events.region=",
                             "blocbuy.events.sns.topic-arn=arn:aws:sns:ap-southeast-1:000000000000:e")
-                    .run(
-                            context ->
-                                    assertThat(
-                                                    context.getBean(SnsClient.class)
-                                                            .serviceClientConfiguration()
-                                                            .region())
-                                            .isEqualTo(Region.AP_SOUTHEAST_1));
+                    .run(context ->
+                            assertThat(
+                                            context.getBean(SnsClient.class)
+                                                    .serviceClientConfiguration()
+                                                    .region())
+                                    .isEqualTo(Region.AP_SOUTHEAST_1));
         } finally {
             if (previous == null) {
                 System.clearProperty("aws.region");
@@ -120,13 +116,12 @@ class OutboxTransportConfigurationTest {
                         "blocbuy.events.transport=sns",
                         "blocbuy.events.region=ap-southeast-1",
                         "blocbuy.events.sns.topic-arn=")
-                .run(
-                        context ->
-                                assertThat(context)
-                                        .getFailure()
-                                        .hasRootCauseMessage(
-                                                "blocbuy.events.sns.topic-arn must be set when the"
-                                                        + " outbox relay is enabled"));
+                .run(context ->
+                        assertThat(context)
+                                .getFailure()
+                                .hasRootCauseMessage(
+                                        "blocbuy.events.sns.topic-arn must be set when the"
+                                                + " outbox relay is enabled"));
     }
 
     @Test
@@ -136,13 +131,12 @@ class OutboxTransportConfigurationTest {
                         "blocbuy.events.relay.enabled=true",
                         "blocbuy.events.transport=sqs",
                         "blocbuy.events.region=us-east-1")
-                .run(
-                        context ->
-                                assertThat(context)
-                                        .getFailure()
-                                        .hasRootCauseMessage(
-                                                "blocbuy.events.sqs.queue-url must be set when the"
-                                                        + " outbox relay is enabled"));
+                .run(context ->
+                        assertThat(context)
+                                .getFailure()
+                                .hasRootCauseMessage(
+                                        "blocbuy.events.sqs.queue-url must be set when the"
+                                                + " outbox relay is enabled"));
     }
 
     @Test
@@ -151,14 +145,13 @@ class OutboxTransportConfigurationTest {
                         "blocbuy.events.enabled=true",
                         "blocbuy.events.relay.enabled=true",
                         "blocbuy.events.transport=kafka")
-                .run(
-                        context ->
-                                assertThat(context)
-                                        .getFailure()
-                                        .hasRootCauseMessage(
-                                                "blocbuy.events.transport must be sqs or sns when"
-                                                        + " the outbox relay is enabled, not"
-                                                        + " 'kafka'"));
+                .run(context ->
+                        assertThat(context)
+                                .getFailure()
+                                .hasRootCauseMessage(
+                                        "blocbuy.events.transport must be sqs or sns when"
+                                                + " the outbox relay is enabled, not"
+                                                + " 'kafka'"));
     }
 
     private static void assertTimeouts(

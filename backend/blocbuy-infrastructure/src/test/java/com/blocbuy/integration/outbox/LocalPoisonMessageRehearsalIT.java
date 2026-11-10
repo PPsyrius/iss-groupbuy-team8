@@ -67,20 +67,16 @@ class LocalPoisonMessageRehearsalIT {
                             .findFirst()
                             .orElseThrow();
             String policy =
-                    sqs.getQueueAttributes(
-                                    request ->
-                                            request.queueUrl(queue)
-                                                    .attributeNames(
-                                                            QueueAttributeName.REDRIVE_POLICY))
+                    sqs.getQueueAttributes(request ->
+                                    request.queueUrl(queue)
+                                            .attributeNames(QueueAttributeName.REDRIVE_POLICY))
                             .attributes()
                             .get(QueueAttributeName.REDRIVE_POLICY);
             assertThat(json.readTree(policy).get("maxReceiveCount").asInt()).isEqualTo(5);
             // Accelerate only the local timing; retain the repository's maxReceiveCount=5 policy.
-            sqs.setQueueAttributes(
-                    request ->
-                            request.queueUrl(queue)
-                                    .attributes(
-                                            Map.of(QueueAttributeName.VISIBILITY_TIMEOUT, "1")));
+            sqs.setQueueAttributes(request ->
+                    request.queueUrl(queue)
+                            .attributes(Map.of(QueueAttributeName.VISIBILITY_TIMEOUT, "1")));
             String poison = "{\"eventType\":\"PaymentSucceeded\",\"version\":1}";
             String poisonId =
                     sqs.sendMessage(request -> request.queueUrl(queue).messageBody(poison))
@@ -107,17 +103,14 @@ class LocalPoisonMessageRehearsalIT {
                                         .get(MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT));
                 assertThat(count).isEqualTo(expected);
                 receives.add(count);
-                assertThatThrownBy(
-                                () ->
-                                        json.readValue(
-                                                message.body(), IntegrationEventEnvelope.class))
+                assertThatThrownBy(() ->
+                                json.readValue(message.body(), IntegrationEventEnvelope.class))
                         .hasRootCauseInstanceOf(NullPointerException.class);
                 // Simulated failed decode: do not acknowledge/delete the message.
-                sqs.changeMessageVisibility(
-                        request ->
-                                request.queueUrl(queue)
-                                        .receiptHandle(message.receiptHandle())
-                                        .visibilityTimeout(0));
+                sqs.changeMessageVisibility(request ->
+                        request.queueUrl(queue)
+                                .receiptHandle(message.receiptHandle())
+                                .visibilityTimeout(0));
             }
             assertThat(
                             sqs.receiveMessage(
@@ -151,10 +144,8 @@ class LocalPoisonMessageRehearsalIT {
             var decoded =
                     json.readValue(goodDelivery.get(0).body(), IntegrationEventEnvelope.class);
             assertThat(decoded.eventId()).isEqualTo(good.id());
-            sqs.deleteMessage(
-                    request ->
-                            request.queueUrl(queue)
-                                    .receiptHandle(goodDelivery.get(0).receiptHandle()));
+            sqs.deleteMessage(request ->
+                    request.queueUrl(queue).receiptHandle(goodDelivery.get(0).receiptHandle()));
             var result =
                     Map.of(
                             "issue",

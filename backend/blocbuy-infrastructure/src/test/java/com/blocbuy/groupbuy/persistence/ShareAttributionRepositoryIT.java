@@ -124,14 +124,13 @@ class ShareAttributionRepositoryIT {
         try (SqlSession holder = sessions.openSession()) {
             assertThat(invites(holder).insertIfAbsent(first)).isTrue();
             var racer =
-                    executor.submit(
-                            () -> {
-                                try (SqlSession session = sessions.openSession()) {
-                                    boolean inserted = invites(session).insertIfAbsent(second);
-                                    session.commit();
-                                    return inserted;
-                                }
-                            });
+                    executor.submit(() -> {
+                        try (SqlSession session = sessions.openSession()) {
+                            boolean inserted = invites(session).insertIfAbsent(second);
+                            session.commit();
+                            return inserted;
+                        }
+                    });
             // Still blocked on the holder's uncommitted row, not finished early.
             assertThatThrownBy(() -> racer.get(300, TimeUnit.MILLISECONDS))
                     .isInstanceOf(TimeoutException.class);

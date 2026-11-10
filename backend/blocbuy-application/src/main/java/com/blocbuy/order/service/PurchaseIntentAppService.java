@@ -73,10 +73,8 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
         }
         PurchaseOperation kind =
                 PurchaseOperation.parse(operation)
-                        .orElseThrow(
-                                () ->
-                                        new BizException(
-                                                OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID));
+                        .orElseThrow(() ->
+                                new BizException(OrderErrorCode.PURCHASE_INTENT_TERMS_INVALID));
         // A JOIN pays the team's frozen price, so a quote there is a client bug. Unlike an invite
         // reference on a START, a money term is refused rather than ignored.
         if (kind == PurchaseOperation.JOIN && quoteId != null) {
