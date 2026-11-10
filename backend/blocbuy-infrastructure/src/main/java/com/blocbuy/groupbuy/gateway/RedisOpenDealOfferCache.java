@@ -185,11 +185,10 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
     private void storeFailed() {
         RetryWindow failed = new RetryWindow(ticker.getAsLong() + RETRY_DELAY_NANOS, false);
         // Preserve newer failures and their probes, including across monotonic wraparound.
-        retryWindow.getAndUpdate(
-                current ->
-                        current == null || failed.retryAtNanos - current.retryAtNanos > 0
-                                ? failed
-                                : current);
+        retryWindow.getAndUpdate(current ->
+                current == null || failed.retryAtNanos - current.retryAtNanos > 0
+                        ? failed
+                        : current);
     }
 
     private void storeSucceeded(RetryWindow call) {

@@ -219,34 +219,30 @@ class RedisOpenDealOfferCacheTest {
         if (decoding) {
             when(values.multiGet(anyList())).thenReturn(List.of(absent));
             when(codec.readValue(anyString(), eq(RedisOpenDealOfferCache.Entry.class)))
-                    .thenAnswer(
-                            invocation -> {
-                                awaitCodec(entered, release, codecCalls, limit);
-                                return new RedisOpenDealOfferCache.Entry(1, null);
-                            });
+                    .thenAnswer(invocation -> {
+                        awaitCodec(entered, release, codecCalls, limit);
+                        return new RedisOpenDealOfferCache.Entry(1, null);
+                    });
         } else {
             when(values.multiGet(anyList())).thenReturn(Collections.singletonList(null));
             when(codec.writeValueAsString(any()))
-                    .thenAnswer(
-                            invocation -> {
-                                awaitCodec(entered, release, codecCalls, limit);
-                                return absent;
-                            });
+                    .thenAnswer(invocation -> {
+                        awaitCodec(entered, release, codecCalls, limit);
+                        return absent;
+                    });
         }
         try (var workers = Executors.newFixedThreadPool(limit)) {
             var pending = new ArrayList<java.util.concurrent.Future<?>>();
             try {
                 for (int i = 0; i < limit; i++) {
                     pending.add(
-                            workers.submit(
-                                    () -> {
-                                        if (decoding) {
-                                            protectedCache.findByProductIds(List.of(PRODUCT));
-                                        } else {
-                                            protectedCache.putAll(
-                                                    Map.of(PRODUCT, Optional.empty()));
-                                        }
-                                    }));
+                            workers.submit(() -> {
+                                if (decoding) {
+                                    protectedCache.findByProductIds(List.of(PRODUCT));
+                                } else {
+                                    protectedCache.putAll(Map.of(PRODUCT, Optional.empty()));
+                                }
+                            }));
                 }
                 assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
                 assertThat(protectedCache.findByProductIds(List.of(PRODUCT)).available()).isTrue();
@@ -275,12 +271,11 @@ class RedisOpenDealOfferCacheTest {
         var entered = new CountDownLatch(concurrentReads);
         var release = new CountDownLatch(1);
         when(values.multiGet(anyList()))
-                .thenAnswer(
-                        invocation -> {
-                            entered.countDown();
-                            assertThat(release.await(30, TimeUnit.SECONDS)).isTrue();
-                            return Collections.singletonList(null);
-                        });
+                .thenAnswer(invocation -> {
+                    entered.countDown();
+                    assertThat(release.await(30, TimeUnit.SECONDS)).isTrue();
+                    return Collections.singletonList(null);
+                });
         try (var workers = Executors.newFixedThreadPool(concurrentReads)) {
             var pending = new ArrayList<java.util.concurrent.Future<OpenDealOfferCache.Lookup>>();
             try {
@@ -386,36 +381,33 @@ class RedisOpenDealOfferCacheTest {
         var release = new CountDownLatch(1);
         var reads = new AtomicInteger();
         when(values.multiGet(anyList()))
-                .thenAnswer(
-                        invocation -> {
-                            if (reads.incrementAndGet() == 1) {
-                                throw new RedisConnectionFailureException("private detail");
-                            }
-                            if (!population) {
-                                entered.countDown();
-                                assertThat(release.await(30, TimeUnit.SECONDS)).isTrue();
-                            }
-                            return Collections.singletonList(null);
-                        });
+                .thenAnswer(invocation -> {
+                    if (reads.incrementAndGet() == 1) {
+                        throw new RedisConnectionFailureException("private detail");
+                    }
+                    if (!population) {
+                        entered.countDown();
+                        assertThat(release.await(30, TimeUnit.SECONDS)).isTrue();
+                    }
+                    return Collections.singletonList(null);
+                });
         when(redis.execute(any(RedisScript.class), anyList(), any(Object[].class)))
-                .thenAnswer(
-                        invocation -> {
-                            entered.countDown();
-                            assertThat(release.await(30, TimeUnit.SECONDS)).isTrue();
-                            return 1L;
-                        });
+                .thenAnswer(invocation -> {
+                    entered.countDown();
+                    assertThat(release.await(30, TimeUnit.SECONDS)).isTrue();
+                    return 1L;
+                });
         assertThat(guarded.findByProductIds(List.of(PRODUCT)).available()).isFalse();
         now.addAndGet(TimeUnit.SECONDS.toNanos(1));
         try (var worker = Executors.newSingleThreadExecutor()) {
             var probe =
-                    worker.submit(
-                            () -> {
-                                if (population) {
-                                    guarded.putAll(Map.of(PRODUCT, Optional.empty()));
-                                    return null;
-                                }
-                                return guarded.findByProductIds(List.of(PRODUCT));
-                            });
+                    worker.submit(() -> {
+                        if (population) {
+                            guarded.putAll(Map.of(PRODUCT, Optional.empty()));
+                            return null;
+                        }
+                        return guarded.findByProductIds(List.of(PRODUCT));
+                    });
             try {
                 assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
                 assertThat(guarded.findByProductIds(List.of(PRODUCT)).available()).isFalse();
@@ -543,18 +535,17 @@ class RedisOpenDealOfferCacheTest {
                         });
         var reads = new AtomicInteger();
         when(values.multiGet(anyList()))
-                .thenAnswer(
-                        invocation -> {
-                            int call = reads.incrementAndGet();
-                            if (call <= 2) {
-                                throw new RedisConnectionFailureException("private detail");
-                            }
-                            if (newerProbe && call == 3) {
-                                probeEntered.countDown();
-                                assertThat(finishProbe.await(30, TimeUnit.SECONDS)).isTrue();
-                            }
-                            return Collections.singletonList(null);
-                        });
+                .thenAnswer(invocation -> {
+                    int call = reads.incrementAndGet();
+                    if (call <= 2) {
+                        throw new RedisConnectionFailureException("private detail");
+                    }
+                    if (newerProbe && call == 3) {
+                        probeEntered.countDown();
+                        assertThat(finishProbe.await(30, TimeUnit.SECONDS)).isTrue();
+                    }
+                    return Collections.singletonList(null);
+                });
         try (var workers = Executors.newFixedThreadPool(2)) {
             try {
                 var old = workers.submit(() -> guarded.findByProductIds(List.of(PRODUCT)));
@@ -566,11 +557,8 @@ class RedisOpenDealOfferCacheTest {
                     now.addAndGet(500_000_000L);
                 }
                 var probe =
-                        workers.submit(
-                                () ->
-                                        newerProbe
-                                                ? guarded.findByProductIds(List.of(PRODUCT))
-                                                : null);
+                        workers.submit(() ->
+                                newerProbe ? guarded.findByProductIds(List.of(PRODUCT)) : null);
                 if (newerProbe) {
                     assertThat(probeEntered.await(10, TimeUnit.SECONDS)).isTrue();
                 }
@@ -605,21 +593,20 @@ class RedisOpenDealOfferCacheTest {
         var finishProbe = new CountDownLatch(1);
         var reads = new AtomicInteger();
         when(values.multiGet(anyList()))
-                .thenAnswer(
-                        invocation -> {
-                            int call = reads.incrementAndGet();
-                            if (call == 1) {
-                                oldEntered.countDown();
-                                assertThat(failOld.await(30, TimeUnit.SECONDS)).isTrue();
-                                throw new RedisConnectionFailureException("private detail");
-                            }
-                            if (call == 2) {
-                                throw new RedisConnectionFailureException("private detail");
-                            }
-                            probeEntered.countDown();
-                            assertThat(finishProbe.await(30, TimeUnit.SECONDS)).isTrue();
-                            return Collections.singletonList(null);
-                        });
+                .thenAnswer(invocation -> {
+                    int call = reads.incrementAndGet();
+                    if (call == 1) {
+                        oldEntered.countDown();
+                        assertThat(failOld.await(30, TimeUnit.SECONDS)).isTrue();
+                        throw new RedisConnectionFailureException("private detail");
+                    }
+                    if (call == 2) {
+                        throw new RedisConnectionFailureException("private detail");
+                    }
+                    probeEntered.countDown();
+                    assertThat(finishProbe.await(30, TimeUnit.SECONDS)).isTrue();
+                    return Collections.singletonList(null);
+                });
         try (var workers = Executors.newFixedThreadPool(2)) {
             try {
                 var old = workers.submit(() -> guarded.findByProductIds(List.of(PRODUCT)));
