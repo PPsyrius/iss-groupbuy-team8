@@ -35,7 +35,15 @@ aws() {
     'ecs list-tasks') if [ "$FAULT" = extra_task ]; then printf '["task:1","task:2"]\n'; else printf '["task:1"]\n'; fi ;;
     'ecs describe-tasks') printf '{"tasks":[],"failures":[]}\n' ;;
     'application-autoscaling describe-scalable-targets') printf '{"ScalableTargets":[]}\n' ;;
-    'application-autoscaling describe-scaling-policies') printf '{"ScalingPolicies":[]}\n' ;;
+    'application-autoscaling describe-scaling-policies')
+      if [ "$FAULT" = cpu_headroom ] || [ "$FAULT" = cpu_alarm_denied ]; then
+        printf '{"ScalingPolicies":[{"PolicyName":"blocbuy-swe5001-commerce-cpu-headroom","PolicyType":"StepScaling"}]}\n'
+      else
+        printf '{"ScalingPolicies":[]}\n'
+      fi ;;
+    'cloudwatch describe-alarms')
+      [ "$FAULT" != cpu_alarm_denied ] || return 1
+      printf '[{"name":"blocbuy-swe5001-commerce-cpu-headroom","actionsEnabled":true,"threshold":70}]\n' ;;
     'elbv2 describe-target-groups') jq -nc --arg group "$group" --arg alb "$ALB" '[{arn:$group,loadBalancerArns:[$alb],port:8589,protocol:"HTTP"}]' ;;
     'elbv2 describe-load-balancers') jq -nc --arg alb "$ALB" '[{arn:$alb,dnsName:"runtime.elb.amazonaws.com",type:"application",state:"active"}]' ;;
     'elbv2 describe-listeners') jq -nc --arg alb "$ALB" --arg listener "$LISTENER" '[{arn:$listener,loadBalancerArn:$alb,port:80,protocol:"HTTP"}]' ;;
@@ -58,6 +66,9 @@ printf 'PASS V2 captures the monolith, not distributed commerce\n'
 bash "$dir/http-preflight.sh" v3 > "$work/report.json"
 grep -q -- '--services commerce-svc' "$CALLS"
 printf 'PASS V3 captures distributed commerce\n'
+FAULT=cpu_headroom bash "$dir/http-preflight.sh" v3 > "$work/report.json"
+jq -e '.cpuHeadroom.alarms[0].name == "blocbuy-swe5001-commerce-cpu-headroom" and .cpuHeadroom.alarms[0].actionsEnabled == true and .cpuHeadroom.alarms[0].threshold == 70' "$work/report.json" > /dev/null
+printf 'PASS opt-in CPU policy includes independent alarm binding evidence\n'
 jq -e '.routing.rules[0].originHeaderMatches == true and .routing.rules[0].pathPatterns == ["/api/*"] and .routing.rulesListenerArn == .routing.listeners[0].arn' "$work/report.json" > /dev/null
 printf 'PASS capture binds origin listener and compares protected header conditions\n'
 if grep -Fq "$SECRET_SENTINEL" "$work/report.json"; then exit 1; fi
@@ -69,7 +80,7 @@ printf 'PASS changed origin-header condition is recorded as a mismatch\n'
 printf 'PASS private route inputs are removed after capture\n'
 if grep -Eq 'update-|register-|run-task|publish|send-message|put-' "$CALLS"; then exit 1; fi
 printf 'PASS capture issues no mutation or task-start requests\n'
-for fault in dirty denied extra_task route_read_denied; do
+for fault in dirty denied extra_task route_read_denied cpu_alarm_denied; do
   if FAULT=$fault bash "$dir/http-preflight.sh" v2 > "$work/fault.json" 2> "$work/error"; then
     printf 'FAIL preflight accepted %s\n' "$fault" >&2
     exit 1

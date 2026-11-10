@@ -35,6 +35,53 @@ resource "aws_appautoscaling_policy" "commerce_requests" {
   }
 }
 
+# The November V3 saturated commerce before the delayed three-point ALB alarm.
+# This opt-in guard requests one task from an earlier CPU signal; it never scales in
+# or replaces/calibrates the existing request policy. Defaults leave live policy unchanged.
+resource "aws_appautoscaling_policy" "commerce_cpu_headroom" {
+  count = var.topology == "distributed" && var.commerce_cpu_scale_out_enabled ? 1 : 0
+
+  name               = "${local.name_prefix}-commerce-cpu-headroom"
+  policy_type        = "StepScaling"
+  service_namespace  = aws_appautoscaling_target.commerce[0].service_namespace
+  scalable_dimension = aws_appautoscaling_target.commerce[0].scalable_dimension
+  resource_id        = aws_appautoscaling_target.commerce[0].resource_id
+
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown                = 60
+    metric_aggregation_type = "Average"
+
+    step_adjustment {
+      metric_interval_lower_bound = 0
+      scaling_adjustment          = 1
+    }
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "commerce_cpu_headroom" {
+  count = var.topology == "distributed" && var.commerce_cpu_scale_out_enabled ? 1 : 0
+
+  alarm_name          = "${local.name_prefix}-commerce-cpu-headroom"
+  alarm_description   = "Optional early commerce CPU scale-out; not a performance acceptance alarm"
+  namespace           = "AWS/ECS"
+  metric_name         = "CPUUtilization"
+  statistic           = "Average"
+  period              = 60
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = var.commerce_cpu_scale_out_threshold
+  treat_missing_data  = "notBreaching"
+  actions_enabled     = var.services_enabled
+  alarm_actions       = [aws_appautoscaling_policy.commerce_cpu_headroom[0].arn]
+
+  dimensions = {
+    ClusterName = module.cluster.cluster_name
+    ServiceName = module.client_service["commerce-svc"].service_name
+  }
+}
+
 module "observability" {
   source = "../modules/observability"
   count  = var.topology == "distributed" ? 1 : 0
