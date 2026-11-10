@@ -4,7 +4,8 @@ import { OK_CODE } from "@/api/envelope";
 import { adminSeed, createAdminStore } from "@/test/admin-msw";
 import { serveAdmin, serveNonAdmin } from "@/test/render-route";
 
-const base = "http://localhost/api/v1";
+// Keep the mock API same-origin, like the application; happy-dom's port is significant.
+const base = `${window.location.origin}/api/v1`;
 
 async function call(method: string, path: string, body?: unknown) {
   const res = await fetch(`${base}${path}`, {

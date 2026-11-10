@@ -8,6 +8,8 @@ export default defineConfig({
     environment: "happy-dom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    // Keep Vitest's module cache inside the browser image's existing writable cache boundary.
+    fsModuleCachePath: fileURLToPath(new URL("./node_modules/.vite/vitest", import.meta.url)),
     include: ["src/**/*.test.{ts,tsx}"],
     coverage: {
       provider: "v8",
