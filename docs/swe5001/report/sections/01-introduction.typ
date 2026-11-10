@@ -70,7 +70,7 @@ The project was self-initiated and has no company sponsor. Its stakeholders are 
     [AWS organisation administrator (Lim Jiechao)], [Owns the AWS Organization, its service control policies (SCPs) and IAM Identity Center; teammates work only in the member account. #src("docs/deploy/aws-account-governance/README.md")[Governance record]],
     [External providers], [Google (sign-in) and Stripe (payments, in test mode), each behind an anti-corruption layer (§3.1.4)],
     [Future service teams], [Consume the published events and the public API without changing the producers (§4.4)],
-    [Module lecturers (Heng Boon Kui, Lee Chiang)], [Assess the architecture, the design and the delivered system; their remarks of 21 October are answered in §6.1],
+    [Module lecturers (Heng Boon Kui, Tan Lee Chiang)], [Assess the architecture, the design and the delivered system; their remarks of 21 October are answered in §6.1],
   ),
   kind: table,
   caption: [Business and IT stakeholders.],
@@ -138,7 +138,7 @@ Every use case keeps its SWE5006 behaviour in the monolith and has one owning se
     [UC12], [Credit the sharer of a referred join (extends UC4)], [commerce], [Unchanged; stays an in-process subscriber after the join commits], [#src("docs/swe5006/report/sections/03-3-08-uc7-lim.md")[§3.3.8]],
   ),
   kind: table,
-  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], where notification was unnumbered and UC7 also covered referral credit; this report numbers every use case in @fig-d2-use-cases and splits the credit into UC12.],
+  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], where notification was unnumbered and UC7 also covered referral credit; this report numbers every use case in @fig-d2-use-cases and splits the credit into UC12. UC10 to UC12 are numbered for this report: the #src("docs/sprint2-progress-report.typ")[Sprint 2 progress report] used UC10 for the payment and order system of record, which this UC10 covers from the buyer's side.],
 ) <tbl-scope-uc>
 
 #figure(
