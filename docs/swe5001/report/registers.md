@@ -60,7 +60,7 @@ Base: the six items on backup slide B2 keep their numbers. Items found since the
 | AISS-10 | Shared session store in Valkey | Valkey loss signs everyone out | Short-lived tokens with refresh at the edge | Eric | Open | study AISS-04 |
 | AISS-11 | Events are eventually consistent (about 2 s) | A notification can lag the action | UI states that it is updating; the API is the source of truth | Eric | Open: by design | study AISS-05 |
 | AISS-12 | V3 linear scaling not proven: the load generator saturated at about 455 req/s with three tasks | Capacity above three tasks is projected, not measured | Distributed load generator; rerun V3 to four tasks | Pan | Open | 19 Oct evidence |
-| AISS-13 | V4 burst, V5 self-healing, V7 poison message and the identity outage were run locally only | Availability claims rest on local evidence | Run the drills on AWS | Yu Qianshuo | Open | AGENTS.md claims table |
+| AISS-13 | The identity outage and a poison message were tested locally only; V4 burst and V5 self-healing were not run | Availability claims rest on local evidence | Run the drills on AWS | Yu Qianshuo | Open | AGENTS.md claims table |
 | AISS-14 | An interrupted-bootstrap retry can restore scaling suspension (the SCP that denied a CloudFront metric read was fixed on 16 Oct 2026) | Scaling may stay paused after a retry | Retry regression and fix | Liu Jin | Open | HANDOFF known gaps |
 | AISS-15 | `CloudWatchFullAccessV2` on the apply role is not fenced to SWE5001 | Could change non-SWE5001 alarms or dashboards | Narrow to SWE5001 names | Pan | Open: accepted | HANDOFF decisions |
 
