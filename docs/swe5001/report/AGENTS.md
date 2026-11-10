@@ -71,7 +71,7 @@ Initially checked against the repository on 21 October 2026; the lock-order clar
 | Data tier | One `db.t4g.micro`, single zone, no backups; one Valkey node; each service has its own database and roles |
 | Table ownership | Every service database runs the full Flyway migration stream; the runtime role gets data access only to its service's tables (`afterMigrate__service_grants.sql`). Do not write "each database contains only its service's tables" |
 | Referential integrity | No foreign keys or CHECK constraints by team convention; relationships are kept by the application |
-| Not run on AWS | V4 burst, V5 self-healing, V7 poison message, identity outage; local results only |
+| Not run on AWS | V4 burst, V5 self-healing, V7 poison message, identity outage; local results for the identity outage and a poison message only; V4 and V5 not run |
 
 ## Diagram rules
 
