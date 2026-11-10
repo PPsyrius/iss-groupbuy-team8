@@ -6,7 +6,8 @@
 //   --base  commit to compare against (default: the merge base of HEAD and origin/dev)
 //   --ppi   page resolution (default 100)
 //   --keep  keep the two builds and their pages (printed path) instead of deleting them
-// Exits 0 when both builds have the same pages, 1 when any page differs, 2 when a build fails.
+// Exits 0 when both builds have the same pages, 1 when any page differs, 2 when the base cannot be
+// resolved or a build fails.
 // The working tree includes uncommitted and untracked files under docs/ (ignored files excepted).
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -22,7 +23,13 @@ const arg = (name, fallback) => {
   return i > -1 ? process.argv[i + 1] : fallback;
 };
 const git = (...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' }).trim();
-const base = arg('--base', null) ?? git('merge-base', 'HEAD', 'origin/dev');
+let base;
+try {
+  base = git('rev-parse', '--verify', `${arg('--base', null) ?? git('merge-base', 'HEAD', 'origin/dev')}^{commit}`);
+} catch {
+  console.error('render-compare: cannot resolve the base commit; pass --base <ref> or run `git fetch origin dev`.');
+  process.exit(2);
+}
 const ppi = arg('--ppi', '100');
 const keep = process.argv.includes('--keep');
 const work = mkdtempSync(join(tmpdir(), 'swe5006-render-'));

@@ -2,7 +2,7 @@
 
 == UC8 View My Orders and Teams <sec-a-uc08>
 
-UC8 is the buyer's account page, "My blocs". A signed-in buyer sees every team they lead or joined, with its stored state, and one page of their orders, each with its status. The use case only reads. Its design questions are ownership (a buyer must never see another buyer's rows), a consistent snapshot (a page and its total must agree), and a read that crosses from the group-buy module into the catalog module without a dependency cycle. Every class, method and error code named here exists in the code on this branch. UC8 is designed and built; the evidence for each flow is listed in section 2.2.
+UC8 is the buyer's account page, "My blocs". A signed-in buyer sees every team they lead or joined, with its stored state, and one page of their orders, each with its status. The use case only reads. Its design questions are ownership (a buyer must never see another buyer's rows), a consistent snapshot (a teams page and its total must agree; the orders list accepts a count from a separate snapshot), and a read that crosses from the group-buy module into the catalog module without a dependency cycle. Every class, method and error code named here exists in the code on this branch. UC8 is designed and built; the evidence for each flow is listed in section 2.2.
 
 === Use Case and Flows of Events <sec-a-uc08-flows>
 
@@ -132,7 +132,7 @@ UC8 changes no state, so it has no statechart. It displays two lifecycles drawn 
   [B2], [`listMyTeams`, `Account.memberships`, `Membership.describe`, `Team.summary`, `Product.displayFieldsOf`], [`GroupDealAppServiceImpl.pageMyTeams` → `GroupDealRepositoryImpl.pageMembershipsByUserId` → `BizGroupDealMapper.selectMembershipPageByUserId`, `countMembershipsByUserId`; `GroupbuyListingDisplayAdapter.findByProductIds` → `ProductRepository.findDisplaysByIds`, `toDisplay`; `toView`], [@fig-a-uc08-ds-teams],
   [B3], [`listMyOrders`, `Account.orders`, `Order.summary`], [`OrderAppServiceImpl.pageMyOrders` → `OrderRepository.pageByUserId`; `toView`], [@fig-a-uc08-ds-orders],
   [B4], [`showTeams`, `showOrders`], [`Result` of `MyTeamResponse` and `OrderSummaryResponse` pages; labels by the account page (S2)], [@fig-a-uc08-ds-teams, @fig-a-uc08-ds-orders],
-  [B5], [— (page only)], [Account page only (S2); no backend call], [—],
+  [B5], [— (page only)], [Switching the chip: account page only (S2), no backend call. Paging the orders: `OrderController.myOrders` again, as in B3], [@fig-a-uc08-ds-orders],
   [A1], [—], [`SaInterceptor.preHandle` → `StpUtil.checkLogin` throws `NotLoginException`; `UNAUTHENTICATED` (`COMMON_401_001`). The controller's `StpUtil.checkLogin` is a second check], [@fig-a-uc08-ds-teams, @fig-a-uc08-ds-orders],
   [A2], [— (page only)], [`pageMyTeams` returns an empty page without the product read; the card is chosen by the account page (S2)], [@fig-a-uc08-ds-teams],
   [A3], [`displayFieldsOf` without the product], [`findDisplaysByIds` omits inactive products; `toView` sets a null title and image], [@fig-a-uc08-ds-teams],

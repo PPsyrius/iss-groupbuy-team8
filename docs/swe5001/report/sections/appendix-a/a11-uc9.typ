@@ -10,7 +10,7 @@ UC9 is the administrator's use case. An administrator prepares a listing, publis
 - *Trigger.* The admin opens the admin console and chooses to create, edit, publish, delist or delete a listing, or to set its team terms or team price.
 - *Services.* commerce-svc owns every step (its catalog module, which reads the group-buy module's teams for the delete check). identity-svc answers one question: is this admin's account still active?
 - *Preconditions.* The admin is signed in (UC2, @sec-a-uc02), and an operator has granted the account the admin role. For an existing listing, the admin has read its current version.
-- *Postconditions on success.* Each accepted change records exactly one new version of the listing. Buyers see a listing only while it is on sale. Team terms and a team price set together are both stored, and the terms change is recorded with its author.
+- *Postconditions on success.* Each accepted change to the listing records exactly one new version of it; a team price set alone (A5) records one new version of the price policy instead. Buyers see a listing only while it is on sale. Team terms and a team price set together are both stored, and the terms change is recorded with its author.
 - *Postconditions on refusal.* The listing, its terms and its price history are unchanged. No published listing, and no listing that history refers to, is ever deleted.
 
 @tbl-a-uc09-flows numbers every step. The diagrams below repeat these numbers, and @tbl-a-uc09-trace maps each step to the design operations that realise it.
