@@ -53,70 +53,20 @@ class ListingDetailsTest {
     void rejectsInvalidTitle() {
         assertInvalid(() -> details(null, null, null, null, List.of(), null, price(), "sgd", 0));
         assertInvalid(() -> details(" ", null, null, null, List.of(), null, price(), "sgd", 0));
-        assertInvalid(
-                () ->
-                        details(
-                                "t".repeat(257),
-                                null,
-                                null,
-                                null,
-                                List.of(),
-                                null,
-                                price(),
-                                "sgd",
-                                0));
+        assertInvalid(() ->
+                details("t".repeat(257), null, null, null, List.of(), null, price(), "sgd", 0));
     }
 
     @Test
     void rejectsOversizedOptionalText() {
-        assertInvalid(
-                () ->
-                        details(
-                                "Tea",
-                                "s".repeat(257),
-                                null,
-                                null,
-                                List.of(),
-                                null,
-                                price(),
-                                "sgd",
-                                0));
-        assertInvalid(
-                () ->
-                        details(
-                                "Tea",
-                                null,
-                                "d".repeat(10001),
-                                null,
-                                List.of(),
-                                null,
-                                price(),
-                                "sgd",
-                                0));
-        assertInvalid(
-                () ->
-                        details(
-                                "Tea",
-                                null,
-                                null,
-                                "c".repeat(1025),
-                                List.of(),
-                                null,
-                                price(),
-                                "sgd",
-                                0));
-        assertInvalid(
-                () ->
-                        details(
-                                "Tea",
-                                null,
-                                null,
-                                null,
-                                List.of(),
-                                "c".repeat(65),
-                                price(),
-                                "sgd",
-                                0));
+        assertInvalid(() ->
+                details("Tea", "s".repeat(257), null, null, List.of(), null, price(), "sgd", 0));
+        assertInvalid(() ->
+                details("Tea", null, "d".repeat(10001), null, List.of(), null, price(), "sgd", 0));
+        assertInvalid(() ->
+                details("Tea", null, null, "c".repeat(1025), List.of(), null, price(), "sgd", 0));
+        assertInvalid(() ->
+                details("Tea", null, null, null, List.of(), "c".repeat(65), price(), "sgd", 0));
     }
 
     @Test
@@ -124,78 +74,73 @@ class ListingDetailsTest {
         assertInvalid(() -> details("Tea", null, null, null, List.of(), null, null, "sgd", 0));
         assertInvalid(
                 () -> details("Tea", null, null, null, List.of(), null, BigDecimal.ZERO, "sgd", 0));
-        assertInvalid(
-                () ->
-                        details(
-                                "Tea",
-                                null,
-                                null,
-                                null,
-                                List.of(),
-                                null,
-                                new BigDecimal("10000000000000000.00"),
-                                "sgd",
-                                0));
+        assertInvalid(() ->
+                details(
+                        "Tea",
+                        null,
+                        null,
+                        null,
+                        List.of(),
+                        null,
+                        new BigDecimal("10000000000000000.00"),
+                        "sgd",
+                        0));
         assertInvalid(() -> details("Tea", null, null, null, List.of(), null, price(), "usd", 0));
         assertInvalid(() -> details("Tea", null, null, null, List.of(), null, price(), "sgd", -1));
     }
 
     @Test
     void rejectsPriceThatRequiresRounding() {
-        assertInvalid(
-                () ->
-                        details(
-                                "Tea",
-                                null,
-                                null,
-                                null,
-                                List.of(),
-                                null,
-                                new BigDecimal("12.345"),
-                                "sgd",
-                                0));
+        assertInvalid(() ->
+                details(
+                        "Tea",
+                        null,
+                        null,
+                        null,
+                        List.of(),
+                        null,
+                        new BigDecimal("12.345"),
+                        "sgd",
+                        0));
     }
 
     @Test
     void rejectsInvalidImageCollection() {
-        assertInvalid(
-                () ->
-                        details(
-                                "Tea",
-                                null,
-                                null,
-                                null,
-                                java.util.Collections.nCopies(21, "image"),
-                                null,
-                                price(),
-                                "sgd",
-                                0));
-        assertInvalid(
-                () ->
-                        details(
-                                "Tea",
-                                null,
-                                null,
-                                null,
-                                java.util.Collections.singletonList(null),
-                                null,
-                                price(),
-                                "sgd",
-                                0));
+        assertInvalid(() ->
+                details(
+                        "Tea",
+                        null,
+                        null,
+                        null,
+                        java.util.Collections.nCopies(21, "image"),
+                        null,
+                        price(),
+                        "sgd",
+                        0));
+        assertInvalid(() ->
+                details(
+                        "Tea",
+                        null,
+                        null,
+                        null,
+                        java.util.Collections.singletonList(null),
+                        null,
+                        price(),
+                        "sgd",
+                        0));
         assertInvalid(
                 () -> details("Tea", null, null, null, List.of(" "), null, price(), "sgd", 0));
-        assertInvalid(
-                () ->
-                        details(
-                                "Tea",
-                                null,
-                                null,
-                                null,
-                                List.of("i".repeat(1025)),
-                                null,
-                                price(),
-                                "sgd",
-                                0));
+        assertInvalid(() ->
+                details(
+                        "Tea",
+                        null,
+                        null,
+                        null,
+                        List.of("i".repeat(1025)),
+                        null,
+                        price(),
+                        "sgd",
+                        0));
     }
 
     private static ListingDetails validDetails(List<String> images) {

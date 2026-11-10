@@ -120,10 +120,9 @@ class SchedulingPropertiesTest {
 
     private static void assertInvalid(
             Duration interval, Duration initialDelay, Duration lease, int batchSize) {
-        assertThatThrownBy(
-                        () ->
-                                new SchedulingProperties.ExpirySweep(
-                                        interval, initialDelay, lease, batchSize))
+        assertThatThrownBy(() ->
+                        new SchedulingProperties.ExpirySweep(
+                                interval, initialDelay, lease, batchSize))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

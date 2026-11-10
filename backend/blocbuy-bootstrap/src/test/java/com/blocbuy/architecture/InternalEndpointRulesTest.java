@@ -58,23 +58,18 @@ class InternalEndpointRulesTest {
     void rulesMatchSpringBehaviour() throws Exception {
         new ApplicationContextRunner()
                 .withUserConfiguration(DistributedOnlyInternalController.class)
-                .run(
-                        monolith ->
-                                assertThat(monolith)
-                                        .doesNotHaveBean(DistributedOnlyInternalController.class));
+                .run(monolith ->
+                        assertThat(monolith)
+                                .doesNotHaveBean(DistributedOnlyInternalController.class));
         new ApplicationContextRunner()
                 .withUserConfiguration(DistributedOnlyInternalController.class)
                 .withPropertyValues("blocbuy.topology=distributed")
-                .run(
-                        service ->
-                                assertThat(service)
-                                        .hasSingleBean(DistributedOnlyInternalController.class));
+                .run(service ->
+                        assertThat(service).hasSingleBean(DistributedOnlyInternalController.class));
         new ApplicationContextRunner()
                 .withUserConfiguration(MatchIfMissingInternalController.class)
-                .run(
-                        monolith ->
-                                assertThat(monolith)
-                                        .hasSingleBean(MatchIfMissingInternalController.class));
+                .run(monolith ->
+                        assertThat(monolith).hasSingleBean(MatchIfMissingInternalController.class));
 
         MockMvcBuilders.standaloneSetup(new SlashlessClassMappingController())
                 .build()

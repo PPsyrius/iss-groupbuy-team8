@@ -79,11 +79,10 @@ class SqsNotificationEventConsumerTest {
     void appliedEventIsDeletedAfterTheHandlerReturnsWithTheTraceIdRestored() {
         AtomicReference<String> traceDuringHandling = new AtomicReference<>();
         when(handler.handle(eq("notification"), any()))
-                .thenAnswer(
-                        call -> {
-                            traceDuringHandling.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY));
-                            return ConsumeOutcome.APPLIED;
-                        });
+                .thenAnswer(call -> {
+                    traceDuringHandling.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY));
+                    return ConsumeOutcome.APPLIED;
+                });
 
         consumer.process(message("m-1", "r-1", valid(), "attr-trace.1"));
 
@@ -100,11 +99,10 @@ class SqsNotificationEventConsumerTest {
     void duplicateIsDeletedAndInvalidTraceAttributeFallsBackToTheEnvelope() {
         AtomicReference<String> trace = new AtomicReference<>();
         when(handler.handle(any(), any()))
-                .thenAnswer(
-                        call -> {
-                            trace.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY));
-                            return ConsumeOutcome.DUPLICATE;
-                        });
+                .thenAnswer(call -> {
+                    trace.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY));
+                    return ConsumeOutcome.DUPLICATE;
+                });
 
         consumer.process(message("m-2", "r-2", valid(), "bad trace\n"));
 
@@ -116,11 +114,10 @@ class SqsNotificationEventConsumerTest {
     void missingTracesGetAFreshOne() {
         AtomicReference<String> trace = new AtomicReference<>();
         when(handler.handle(any(), any()))
-                .thenAnswer(
-                        call -> {
-                            trace.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY));
-                            return ConsumeOutcome.APPLIED;
-                        });
+                .thenAnswer(call -> {
+                    trace.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY));
+                    return ConsumeOutcome.APPLIED;
+                });
         var root = (tools.jackson.databind.node.ObjectNode) JSON.readTree(valid());
         root.put("traceId", "has space");
 
@@ -200,16 +197,15 @@ class SqsNotificationEventConsumerTest {
         when(handler.handle(any(), any())).thenReturn(ConsumeOutcome.APPLIED);
         AtomicInteger calls = new AtomicInteger();
         when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            if (calls.incrementAndGet() == 1) {
-                                throw SdkClientException.create("broker unavailable");
-                            }
-                            if (calls.get() == 2) {
-                                return response(message("m-8", "r-8", valid(), "t"));
-                            }
-                            return emptyLongPoll();
-                        });
+                .thenAnswer(call -> {
+                    if (calls.incrementAndGet() == 1) {
+                        throw SdkClientException.create("broker unavailable");
+                    }
+                    if (calls.get() == 2) {
+                        return response(message("m-8", "r-8", valid(), "t"));
+                    }
+                    return emptyLongPoll();
+                });
 
         consumer.start();
         consumer.start(); // idempotent
@@ -239,25 +235,23 @@ class SqsNotificationEventConsumerTest {
         CountDownLatch handling = new CountDownLatch(1);
         CountDownLatch blocker = new CountDownLatch(1);
         when(handler.handle(any(), any()))
-                .thenAnswer(
-                        call -> {
-                            handling.countDown();
-                            try {
-                                blocker.await(10, TimeUnit.SECONDS);
-                            } catch (InterruptedException interrupted) {
-                                Thread.currentThread().interrupt();
-                            }
-                            throw new IllegalStateException("interrupted mid-transaction");
-                        });
+                .thenAnswer(call -> {
+                    handling.countDown();
+                    try {
+                        blocker.await(10, TimeUnit.SECONDS);
+                    } catch (InterruptedException interrupted) {
+                        Thread.currentThread().interrupt();
+                    }
+                    throw new IllegalStateException("interrupted mid-transaction");
+                });
         AtomicInteger calls = new AtomicInteger();
         when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            if (calls.incrementAndGet() == 1) {
-                                return response(message("m-9", "r-9", valid(), "t"));
-                            }
-                            return emptyLongPoll();
-                        });
+                .thenAnswer(call -> {
+                    if (calls.incrementAndGet() == 1) {
+                        return response(message("m-9", "r-9", valid(), "t"));
+                    }
+                    return emptyLongPoll();
+                });
         consumer.start();
         assertThat(handling.await(5, TimeUnit.SECONDS)).isTrue();
 
@@ -268,11 +262,10 @@ class SqsNotificationEventConsumerTest {
         verify(sqs).changeMessageVisibilityBatch(release.capture());
         assertThat(release.getValue().entries())
                 .singleElement()
-                .satisfies(
-                        entry -> {
-                            assertThat(entry.receiptHandle()).isEqualTo("r-9");
-                            assertThat(entry.visibilityTimeout()).isZero();
-                        });
+                .satisfies(entry -> {
+                    assertThat(entry.receiptHandle()).isEqualTo("r-9");
+                    assertThat(entry.visibilityTimeout()).isZero();
+                });
         verify(sqs, never()).deleteMessage(any(DeleteMessageRequest.class));
     }
 
@@ -318,15 +311,14 @@ class SqsNotificationEventConsumerTest {
         CountDownLatch stopped = new CountDownLatch(1);
         AtomicBoolean interrupted = new AtomicBoolean();
         when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            polling.countDown();
-                            if (!stopped.await(5, TimeUnit.SECONDS)) {
-                                throw new IllegalStateException("stop never happened");
-                            }
-                            interrupted.set(Thread.currentThread().isInterrupted());
-                            return response(messages);
-                        });
+                .thenAnswer(call -> {
+                    polling.countDown();
+                    if (!stopped.await(5, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("stop never happened");
+                    }
+                    interrupted.set(Thread.currentThread().isInterrupted());
+                    return response(messages);
+                });
         consumer.start();
         assertThat(polling.await(5, TimeUnit.SECONDS)).isTrue();
         consumer.stop(); // returns while the long poll is still open
@@ -368,12 +360,11 @@ class SqsNotificationEventConsumerTest {
         CountDownLatch receiving = new CountDownLatch(1);
         AtomicReference<Thread> pollingThread = new AtomicReference<>();
         when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            pollingThread.set(Thread.currentThread());
-                            receiving.countDown();
-                            throw SdkClientException.create("receive failed");
-                        });
+                .thenAnswer(call -> {
+                    pollingThread.set(Thread.currentThread());
+                    receiving.countDown();
+                    throw SdkClientException.create("receive failed");
+                });
         try {
             consumer.start();
             assertThat(receiving.await(5, TimeUnit.SECONDS)).isTrue();
@@ -408,11 +399,10 @@ class SqsNotificationEventConsumerTest {
                 verify(sqs, timeout(5000)).changeMessageVisibilityBatch(release.capture());
                 assertThat(release.getValue().entries())
                         .singleElement()
-                        .satisfies(
-                                entry -> {
-                                    assertThat(entry.receiptHandle()).isEqualTo("rejected-handle");
-                                    assertThat(entry.visibilityTimeout()).isZero();
-                                });
+                        .satisfies(entry -> {
+                            assertThat(entry.receiptHandle()).isEqualTo("rejected-handle");
+                            assertThat(entry.visibilityTimeout()).isZero();
+                        });
                 ArgumentCaptor<ReceiveMessageRequest> requests =
                         ArgumentCaptor.forClass(ReceiveMessageRequest.class);
                 verify(sqs, timeout(5000).atLeast(2)).receiveMessage(requests.capture());
@@ -433,16 +423,15 @@ class SqsNotificationEventConsumerTest {
         CountDownLatch finish = new CountDownLatch(1);
         CountDownLatch exited = new CountDownLatch(1);
         when(handler.handle(any(), any()))
-                .thenAnswer(
-                        call -> {
-                            handling.countDown();
-                            try {
-                                awaitDespiteInterrupt(finish);
-                                throw new IllegalStateException("unfinished transaction");
-                            } finally {
-                                exited.countDown();
-                            }
-                        });
+                .thenAnswer(call -> {
+                    handling.countDown();
+                    try {
+                        awaitDespiteInterrupt(finish);
+                        throw new IllegalStateException("unfinished transaction");
+                    } finally {
+                        exited.countDown();
+                    }
+                });
         when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
                 .thenReturn(response(message("stuck", "stuck-handle", valid(), "t")))
                 .thenAnswer(call -> emptyLongPoll());
@@ -471,38 +460,34 @@ class SqsNotificationEventConsumerTest {
         AtomicBoolean pollReleased = new AtomicBoolean();
         AtomicInteger receives = new AtomicInteger();
         when(handler.handle(any(), any()))
-                .thenAnswer(
-                        call -> {
-                            handling.countDown();
-                            try {
-                                if (!finish.await(5, TimeUnit.SECONDS)) {
-                                    throw new IllegalStateException("test did not release worker");
-                                }
-                            } catch (InterruptedException exception) {
-                                Thread.currentThread().interrupt();
-                                throw new IllegalStateException(
-                                        "interrupted transaction", exception);
-                            }
-                            return ConsumeOutcome.APPLIED;
-                        });
+                .thenAnswer(call -> {
+                    handling.countDown();
+                    try {
+                        if (!finish.await(5, TimeUnit.SECONDS)) {
+                            throw new IllegalStateException("test did not release worker");
+                        }
+                    } catch (InterruptedException exception) {
+                        Thread.currentThread().interrupt();
+                        throw new IllegalStateException("interrupted transaction", exception);
+                    }
+                    return ConsumeOutcome.APPLIED;
+                });
         when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            if (receives.incrementAndGet() == 1) {
-                                return response(message("closing", "closing-handle", valid(), "t"));
-                            }
-                            polling.countDown();
-                            pollReleased.set(returnPoll.await(5, TimeUnit.SECONDS));
-                            return response();
-                        });
+                .thenAnswer(call -> {
+                    if (receives.incrementAndGet() == 1) {
+                        return response(message("closing", "closing-handle", valid(), "t"));
+                    }
+                    polling.countDown();
+                    pollReleased.set(returnPoll.await(5, TimeUnit.SECONDS));
+                    return response();
+                });
         AtomicBoolean interrupted = new AtomicBoolean();
         Thread closer =
-                new Thread(
-                        () -> {
-                            Thread.currentThread().interrupt();
-                            consumer.destroy();
-                            interrupted.set(Thread.currentThread().isInterrupted());
-                        });
+                new Thread(() -> {
+                    Thread.currentThread().interrupt();
+                    consumer.destroy();
+                    interrupted.set(Thread.currentThread().isInterrupted());
+                });
         try {
             consumer.start();
             assertThat(handling.await(5, TimeUnit.SECONDS)).isTrue();
@@ -591,23 +576,21 @@ class SqsNotificationEventConsumerTest {
         CountDownLatch nextReceive = new CountDownLatch(1);
         AtomicInteger receives = new AtomicInteger();
         when(handler.handle(any(), any()))
-                .thenAnswer(
-                        call -> {
-                            handling.countDown();
-                            if (!finish.await(5, TimeUnit.SECONDS)) {
-                                throw new IllegalStateException("test did not release worker");
-                            }
-                            return ConsumeOutcome.APPLIED;
-                        });
+                .thenAnswer(call -> {
+                    handling.countDown();
+                    if (!finish.await(5, TimeUnit.SECONDS)) {
+                        throw new IllegalStateException("test did not release worker");
+                    }
+                    return ConsumeOutcome.APPLIED;
+                });
         when(sqs.receiveMessage(any(ReceiveMessageRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            if (receives.incrementAndGet() == 1) {
-                                return response(message("busy", "busy-handle", valid(), "t"));
-                            }
-                            nextReceive.countDown();
-                            return emptyLongPoll();
-                        });
+                .thenAnswer(call -> {
+                    if (receives.incrementAndGet() == 1) {
+                        return response(message("busy", "busy-handle", valid(), "t"));
+                    }
+                    nextReceive.countDown();
+                    return emptyLongPoll();
+                });
         try {
             consumer.start();
             assertThat(handling.await(5, TimeUnit.SECONDS)).isTrue();

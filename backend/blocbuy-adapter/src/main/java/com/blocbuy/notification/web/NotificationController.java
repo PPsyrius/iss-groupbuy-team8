@@ -49,15 +49,14 @@ public class NotificationController {
                         PageQuery.of(page, size), UUID.fromString(StpUtil.getLoginIdAsString()));
         var items =
                 result.items().stream()
-                        .map(
-                                item ->
-                                        new NotificationResponse(
-                                                item.id(),
-                                                item.type().code(),
-                                                item.referenceId(),
-                                                item.title(),
-                                                item.content(),
-                                                item.createTime()))
+                        .map(item ->
+                                new NotificationResponse(
+                                        item.id(),
+                                        item.type().code(),
+                                        item.referenceId(),
+                                        item.title(),
+                                        item.content(),
+                                        item.createTime()))
                         .toList();
         return Result.ok(
                 new PageResult<>(

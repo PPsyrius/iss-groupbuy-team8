@@ -155,48 +155,39 @@ class OutboxBatchFailureTest {
         if (provider == Provider.SQS) {
             var client = mock(SqsClient.class);
             when(client.sendMessageBatch(any(SendMessageBatchRequest.class)))
-                    .thenAnswer(
-                            call -> {
-                                SendMessageBatchRequest request = call.getArgument(0);
-                                send.accept(
+                    .thenAnswer(call -> {
+                        SendMessageBatchRequest request = call.getArgument(0);
+                        send.accept(request.entries().stream().map(entry -> entry.id()).toList());
+                        return SendMessageBatchResponse.builder()
+                                .successful(
                                         request.entries().stream()
-                                                .map(entry -> entry.id())
-                                                .toList());
-                                return SendMessageBatchResponse.builder()
-                                        .successful(
-                                                request.entries().stream()
-                                                        .map(
-                                                                entry ->
-                                                                        SendMessageBatchResultEntry
-                                                                                .builder()
-                                                                                .id(entry.id())
-                                                                                .build())
-                                                        .toList())
-                                        .build();
-                            });
+                                                .map(entry ->
+                                                        SendMessageBatchResultEntry.builder()
+                                                                .id(entry.id())
+                                                                .build())
+                                                .toList())
+                                .build();
+                    });
             return new SqsOutboxEventTransport(client, "http://queue", json);
         }
         var client = mock(SnsClient.class);
         when(client.publishBatch(any(PublishBatchRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            PublishBatchRequest request = call.getArgument(0);
-                            send.accept(
+                .thenAnswer(call -> {
+                    PublishBatchRequest request = call.getArgument(0);
+                    send.accept(
+                            request.publishBatchRequestEntries().stream()
+                                    .map(entry -> entry.id())
+                                    .toList());
+                    return PublishBatchResponse.builder()
+                            .successful(
                                     request.publishBatchRequestEntries().stream()
-                                            .map(entry -> entry.id())
-                                            .toList());
-                            return PublishBatchResponse.builder()
-                                    .successful(
-                                            request.publishBatchRequestEntries().stream()
-                                                    .map(
-                                                            entry ->
-                                                                    PublishBatchResultEntry
-                                                                            .builder()
-                                                                            .id(entry.id())
-                                                                            .build())
-                                                    .toList())
-                                    .build();
-                        });
+                                            .map(entry ->
+                                                    PublishBatchResultEntry.builder()
+                                                            .id(entry.id())
+                                                            .build())
+                                            .toList())
+                            .build();
+                });
         return new SnsOutboxEventTransport(
                 client, "arn:aws:sns:us-east-1:000000000000:events", json);
     }

@@ -128,27 +128,22 @@ class StripeRolloutAcceptanceIT {
                 admin,
                 admin);
         when(checkout.createCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            assertThat(
-                                            TransactionSynchronizationManager
-                                                    .isActualTransactionActive())
-                                    .isFalse();
-                            CheckoutPayment payment = call.getArgument(0);
-                            var session = session(payment, false);
-                            sessions.put(session.id(), session);
-                            return session;
-                        });
+                .thenAnswer(call -> {
+                    assertThat(TransactionSynchronizationManager.isActualTransactionActive())
+                            .isFalse();
+                    CheckoutPayment payment = call.getArgument(0);
+                    var session = session(payment, false);
+                    sessions.put(session.id(), session);
+                    return session;
+                });
         when(checkout.retrieveCheckoutSession(any()))
                 .thenAnswer(call -> sessions.get(call.getArgument(0)));
         var properties = new StripeProperties("", SIGNING_FIXTURE);
         var signatures =
                 new StripeCheckoutGateway(properties, new StripeClientProvider(properties));
         when(checkout.verifyCheckoutWebhook(any(), any()))
-                .thenAnswer(
-                        call ->
-                                signatures.verifyCheckoutWebhook(
-                                        call.getArgument(0), call.getArgument(1)));
+                .thenAnswer(call ->
+                        signatures.verifyCheckoutWebhook(call.getArgument(0), call.getArgument(1)));
         when(refunds.createRefund(any())).thenAnswer(call -> succeeded(call.getArgument(0)));
     }
 
@@ -213,12 +208,11 @@ class StripeRolloutAcceptanceIT {
                             keys.put(work.id(), work.providerKey());
                             throw new BizException(PaymentErrorCode.PAYMENT_PROVIDER_ERROR);
                         })
-                .doAnswer(
-                        call -> {
-                            RefundWork work = call.getArgument(0);
-                            assertThat(work.providerKey()).isEqualTo(keys.get(work.id()));
-                            return succeeded(work);
-                        })
+                .doAnswer(call -> {
+                    RefundWork work = call.getArgument(0);
+                    assertThat(work.providerKey()).isEqualTo(keys.get(work.id()));
+                    return succeeded(work);
+                })
                 .when(refunds)
                 .createRefund(any());
         worker.run();

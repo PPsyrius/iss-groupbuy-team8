@@ -86,14 +86,13 @@ class OutboxRelayElasticMqIT {
                             .messages();
             assertThat(messages).hasSize(3);
             assertThat(messages)
-                    .allSatisfy(
-                            message -> {
-                                assertThat(message.messageAttributes())
-                                        .containsKeys("eventType", "version", "traceId");
-                                assertThat(message.body())
-                                        .contains("\"eventId\"")
-                                        .contains("\"eventType\":\"TeamExpired\"");
-                            });
+                    .allSatisfy(message -> {
+                        assertThat(message.messageAttributes())
+                                .containsKeys("eventType", "version", "traceId");
+                        assertThat(message.body())
+                                .contains("\"eventId\"")
+                                .contains("\"eventType\":\"TeamExpired\"");
+                    });
         }
     }
 

@@ -106,11 +106,10 @@ class NotificationPersistenceIT {
     void batchJoinsTheCallerTransactionAndCanBeRetriedAfterRollback() {
         var item = notification(UuidV7.next());
         new TransactionTemplate(transactions)
-                .executeWithoutResult(
-                        status -> {
-                            assertThat(service.recordBatch(List.of(item))).isEqualTo(1);
-                            status.setRollbackOnly();
-                        });
+                .executeWithoutResult(status -> {
+                    assertThat(service.recordBatch(List.of(item))).isEqualTo(1);
+                    status.setRollbackOnly();
+                });
         assertThat(service.pageMine(new PageQuery(1, 20), item.userId()).total()).isZero();
         assertThat(service.recordBatch(List.of(item))).isEqualTo(1);
         assertThat(service.pageMine(new PageQuery(1, 20), item.userId()).items())
@@ -151,19 +150,15 @@ class NotificationPersistenceIT {
         try (var executor = Executors.newSingleThreadExecutor()) {
             // Only intercept the boundary between real SQL calls; both reads and the writer are
             // real.
-            snapshotBarrier.afterPage.set(
-                    () -> {
-                        assertThat(jdbc.queryForObject("SHOW transaction_isolation", String.class))
-                                .isEqualTo("repeatable read");
-                        assertThat(
-                                        executor.submit(
-                                                        () ->
-                                                                service.recordBatch(
-                                                                        List.of(arriving)))
-                                                .get(10, TimeUnit.SECONDS))
-                                .isEqualTo(1);
-                        return null;
-                    });
+            snapshotBarrier.afterPage.set(() -> {
+                assertThat(jdbc.queryForObject("SHOW transaction_isolation", String.class))
+                        .isEqualTo("repeatable read");
+                assertThat(
+                                executor.submit(() -> service.recordBatch(List.of(arriving)))
+                                        .get(10, TimeUnit.SECONDS))
+                        .isEqualTo(1);
+                return null;
+            });
             var page = service.pageMine(new PageQuery(1, 20), user);
             assertThat(page.items()).containsExactly(first);
             assertThat(page.total()).isEqualTo(1);

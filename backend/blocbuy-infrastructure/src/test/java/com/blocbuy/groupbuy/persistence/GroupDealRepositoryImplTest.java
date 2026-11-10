@@ -91,18 +91,17 @@ class GroupDealRepositoryImplTest {
         assertThat(result.size()).isEqualTo(5);
         assertThat(result.items())
                 .singleElement()
-                .satisfies(
-                        membership -> {
-                            assertThat(membership.dealId()).isEqualTo(DEAL_ID);
-                            assertThat(membership.productId()).isEqualTo(PRODUCT_ID);
-                            assertThat(membership.dealPrice()).isEqualByComparingTo("10.00");
-                            assertThat(membership.currency()).isEqualTo("sgd");
-                            assertThat(membership.targetSize()).isEqualTo(3);
-                            assertThat(membership.currentSize()).isEqualTo(3);
-                            assertThat(membership.status()).isEqualTo(DealStatus.SUCCEEDED);
-                            assertThat(membership.role()).isEqualTo(MemberRole.LEADER);
-                            assertThat(membership.orderId()).isNull();
-                        });
+                .satisfies(membership -> {
+                    assertThat(membership.dealId()).isEqualTo(DEAL_ID);
+                    assertThat(membership.productId()).isEqualTo(PRODUCT_ID);
+                    assertThat(membership.dealPrice()).isEqualByComparingTo("10.00");
+                    assertThat(membership.currency()).isEqualTo("sgd");
+                    assertThat(membership.targetSize()).isEqualTo(3);
+                    assertThat(membership.currentSize()).isEqualTo(3);
+                    assertThat(membership.status()).isEqualTo(DealStatus.SUCCEEDED);
+                    assertThat(membership.role()).isEqualTo(MemberRole.LEADER);
+                    assertThat(membership.orderId()).isNull();
+                });
     }
 
     @Test

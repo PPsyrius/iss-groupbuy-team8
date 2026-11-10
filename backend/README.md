@@ -64,7 +64,7 @@ Notification events (#446) are consumed from SQS by an opt-in long-poll consumer
 ## Build gates
 
 - Maven Enforcer: Java [21,22), Maven [3.9,), dependency convergence.
-- Spotless (`spotless-maven-plugin`): google-java-format **AOSP** (4-space indent) — the single source of truth for formatting; checked at `validate`, fixed with `./mvnw spotless:apply`.
+- Spotless 3.11.0: google-java-format 2.0.0 **AOSP** (4-space indent), with non-whitespace cleanups disabled — the single source of truth for formatting; checked at `validate`, fixed with `./mvnw spotless:apply`. Keep formatter-only changes in a separate `style:` commit; [release review](../docs/quality/backend-dependency-review-2026-11-10.md).
 - Checkstyle: Google checks, 120-column line length, AOSP indentation values (`checkstyle.xml`); enforces only what the formatter does not own (naming, imports, Javadoc, blocks).
 - SpotBugs: effort Max, threshold Medium, exclusions with written reasons in `spotbugs-excludes.xml`.
 - JaCoCo: aggregate report at `blocbuy-bootstrap/target/site/jacoco-aggregate/` plus per-module reports for `blocbuy-platform` and `services/*`, which the monolith does not depend on; coverage gate (≥80% on new code) lives in the SonarQube quality gate, not Maven.

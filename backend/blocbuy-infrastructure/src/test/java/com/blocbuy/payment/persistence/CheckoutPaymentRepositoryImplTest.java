@@ -207,13 +207,11 @@ class CheckoutPaymentRepositoryImplTest {
         UUID cursorId = UUID.randomUUID();
         List<BizPaymentDO> oldest =
                 IntStream.range(0, 100)
-                        .mapToObj(
-                                index -> {
-                                    BizPaymentDO payment = row();
-                                    payment.setCreateTime(
-                                            payment.getCreateTime().plusSeconds(index));
-                                    return payment;
-                                })
+                        .mapToObj(index -> {
+                            BizPaymentDO payment = row();
+                            payment.setCreateTime(payment.getCreateTime().plusSeconds(index));
+                            return payment;
+                        })
                         .toList();
         BizPaymentDO younger = row();
         younger.setCreateTime(younger.getCreateTime().plusSeconds(100));
@@ -277,10 +275,8 @@ class CheckoutPaymentRepositoryImplTest {
                 .thenReturn(List.of(UUID.randomUUID(), UUID.randomUUID()));
         when(mapper.refundExpiredTeam(dealId, "TEAM_EXPIRED", "event")).thenReturn(1);
 
-        assertThatThrownBy(
-                        () ->
-                                repository.requireRefundsForExpiredTeam(
-                                        dealId, "TEAM_EXPIRED", "event"))
+        assertThatThrownBy(() ->
+                        repository.requireRefundsForExpiredTeam(dealId, "TEAM_EXPIRED", "event"))
                 .isInstanceOf(IllegalStateException.class);
     }
 

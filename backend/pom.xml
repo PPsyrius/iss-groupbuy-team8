@@ -43,20 +43,20 @@
     <mybatis-spring-boot.version>4.1.0</mybatis-spring-boot.version>
     <sa-token.version>1.46.0</sa-token.version>
     <springdoc.version>3.2.0</springdoc.version>
-    <springdoc-maven-plugin.version>1.5</springdoc-maven-plugin.version>
+    <springdoc-maven-plugin.version>1.6</springdoc-maven-plugin.version>
     <archunit.version>1.5.1</archunit.version>
     <!-- HTTP stub for the commerce-svc identity client tests; the standalone artifact shades its Jetty and Jackson -->
     <wiremock.version>3.13.2</wiremock.version>
-    <stripe-java.version>34.0.0</stripe-java.version>
-    <aws-sdk.version>2.57.3</aws-sdk.version>
+    <stripe-java.version>34.1.0</stripe-java.version>
+    <aws-sdk.version>2.57.12</aws-sdk.version>
     <!-- Google OIDC client (id_token verification); verified against Maven Central 2026-09-07 -->
     <google-api-client.version>2.9.2</google-api-client.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-    <checkstyle.version>14.3.0</checkstyle.version>
-    <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
+    <checkstyle.version>14.4.0</checkstyle.version>
+    <maven-enforcer-plugin.version>3.7.0</maven-enforcer-plugin.version>
     <!-- quality gates: versions verified against Maven Central 2026-08-31 -->
-    <spotless-maven-plugin.version>3.10.4</spotless-maven-plugin.version>
-    <google-java-format.version>1.36.1</google-java-format.version>
+    <spotless-maven-plugin.version>3.11.0</spotless-maven-plugin.version>
+    <google-java-format.version>2.0.0</google-java-format.version>
     <!-- Verified on Maven Central 2026-10-21; upgrade together for the matching BCEL/ASM runtime (#559). -->
     <spotbugs-maven-plugin.version>4.10.5.0</spotbugs-maven-plugin.version>
     <spotbugs.version>4.10.5</spotbugs.version>
@@ -179,7 +179,7 @@
       <dependency>
         <groupId>com.google.errorprone</groupId>
         <artifactId>error_prone_annotations</artifactId>
-        <version>2.51.0</version>
+        <version>2.52.0</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
@@ -273,6 +273,8 @@
                 <version>${google-java-format.version}</version>
                 <!-- AOSP: 4-space indent, 8-space continuation (decision in checkstyle.xml header) -->
                 <style>AOSP</style>
+                <!-- Keep the formatter upgrade layout-only; do not enable 2.x source cleanups. -->
+                <cleanup>false</cleanup>
               </googleJavaFormat>
               <!-- static block, blank line, then everything alphabetical: matches Checkstyle CustomImportOrder -->
               <importOrder>

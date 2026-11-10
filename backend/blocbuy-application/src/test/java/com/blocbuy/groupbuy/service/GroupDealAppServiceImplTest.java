@@ -96,13 +96,12 @@ class GroupDealAppServiceImplTest {
         assertThat(result.total()).isEqualTo(4);
         assertThat(result.items())
                 .singleElement()
-                .satisfies(
-                        view -> {
-                            assertThat(view.productId()).isEqualTo(GONE);
-                            assertThat(view.productTitle()).isNull();
-                            assertThat(view.productImage()).isNull();
-                            assertThat(view.status()).isEqualTo("expired");
-                        });
+                .satisfies(view -> {
+                    assertThat(view.productId()).isEqualTo(GONE);
+                    assertThat(view.productTitle()).isNull();
+                    assertThat(view.productImage()).isNull();
+                    assertThat(view.status()).isEqualTo("expired");
+                });
     }
 
     @Test

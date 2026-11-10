@@ -77,10 +77,9 @@ class StripeDisabledHttpTest {
                         mappings.stream()
                                 .flatMap(handler -> handler.getHandlerMethods().keySet().stream()))
                 .isNotEmpty()
-                .allSatisfy(
-                        mapping ->
-                                assertThat(mapping.getPatternValues())
-                                        .noneMatch(path -> path.startsWith("/local/stripe")));
+                .allSatisfy(mapping ->
+                        assertThat(mapping.getPatternValues())
+                                .noneMatch(path -> path.startsWith("/local/stripe")));
     }
 
     @Test
@@ -216,10 +215,10 @@ class StripeDisabledHttpTest {
     @SuppressWarnings("deprecation")
     private static String event(String type, String objectType) {
         return """
-                {"id":"evt_disabled","object":"event","api_version":"%s",\
-                "livemode":false,"type":"%s","data":{"object":{"id":"cs_test_disabled",\
-                "object":"%s"}}}
-                """
+        {"id":"evt_disabled","object":"event","api_version":"%s",\
+        "livemode":false,"type":"%s","data":{"object":{"id":"cs_test_disabled",\
+        "object":"%s"}}}
+        """
                 .formatted(Stripe.API_VERSION, type, objectType);
     }
 

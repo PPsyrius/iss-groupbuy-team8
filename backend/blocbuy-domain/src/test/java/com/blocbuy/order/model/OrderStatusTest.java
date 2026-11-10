@@ -33,13 +33,10 @@ class OrderStatusTest {
 
     static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> matrix() {
         return java.util.Arrays.stream(OrderStatus.values())
-                .flatMap(
-                        from ->
-                                java.util.Arrays.stream(OrderStatus.values())
-                                        .map(
-                                                to ->
-                                                        org.junit.jupiter.params.provider.Arguments
-                                                                .of(from, to)));
+                .flatMap(from ->
+                        java.util.Arrays.stream(OrderStatus.values())
+                                .map(to ->
+                                        org.junit.jupiter.params.provider.Arguments.of(from, to)));
     }
 
     @Test

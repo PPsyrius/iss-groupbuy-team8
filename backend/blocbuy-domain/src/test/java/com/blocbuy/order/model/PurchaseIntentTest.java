@@ -300,10 +300,9 @@ class PurchaseIntentTest {
         PurchaseIntent.Terms terms = terms();
         Instant quoteValidUntil = NOW.plusSeconds(2400);
 
-        assertThatThrownBy(
-                        () ->
-                                PurchaseIntent.reconstitute(
-                                        id, terms, quoteValidUntil, null, null, null, null, NOW, 0))
+        assertThatThrownBy(() ->
+                        PurchaseIntent.reconstitute(
+                                id, terms, quoteValidUntil, null, null, null, null, NOW, 0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -392,44 +391,41 @@ class PurchaseIntentTest {
         UUID invalidVersionId = UUID.randomUUID();
         UUID missingQuoteId = UUID.randomUUID();
 
-        assertThatThrownBy(
-                        () ->
-                                PurchaseIntent.reconstitute(
-                                        null,
-                                        terms,
-                                        quoteValidUntil,
-                                        businessDeadline,
-                                        null,
-                                        null,
-                                        null,
-                                        NOW,
-                                        0))
+        assertThatThrownBy(() ->
+                        PurchaseIntent.reconstitute(
+                                null,
+                                terms,
+                                quoteValidUntil,
+                                businessDeadline,
+                                null,
+                                null,
+                                null,
+                                NOW,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                PurchaseIntent.reconstitute(
-                                        invalidVersionId,
-                                        terms,
-                                        quoteValidUntil,
-                                        businessDeadline,
-                                        null,
-                                        null,
-                                        null,
-                                        NOW,
-                                        -1))
+        assertThatThrownBy(() ->
+                        PurchaseIntent.reconstitute(
+                                invalidVersionId,
+                                terms,
+                                quoteValidUntil,
+                                businessDeadline,
+                                null,
+                                null,
+                                null,
+                                NOW,
+                                -1))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                PurchaseIntent.reconstitute(
-                                        missingQuoteId,
-                                        terms,
-                                        null,
-                                        businessDeadline,
-                                        null,
-                                        null,
-                                        null,
-                                        NOW,
-                                        0))
+        assertThatThrownBy(() ->
+                        PurchaseIntent.reconstitute(
+                                missingQuoteId,
+                                terms,
+                                null,
+                                businessDeadline,
+                                null,
+                                null,
+                                null,
+                                NOW,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

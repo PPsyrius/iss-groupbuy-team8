@@ -45,10 +45,9 @@ class ShareCreditSubscriberTest {
         verify(credits).recordIfAbsent(new ShareCredit(DEAL, PAYMENT, SHARER, MEMBER, AT));
         verify(transactions)
                 .getTransaction(
-                        org.mockito.ArgumentMatchers.argThat(
-                                (TransactionDefinition definition) ->
-                                        definition.getPropagationBehavior()
-                                                == TransactionDefinition.PROPAGATION_REQUIRES_NEW));
+                        org.mockito.ArgumentMatchers.argThat((TransactionDefinition definition) ->
+                                definition.getPropagationBehavior()
+                                        == TransactionDefinition.PROPAGATION_REQUIRES_NEW));
         verify(transactions).commit(status);
     }
 
@@ -64,11 +63,9 @@ class ShareCreditSubscriberTest {
         when(transactions.getTransaction(any())).thenReturn(status);
         when(credits.recordIfAbsent(any())).thenReturn(false);
 
-        assertThatCode(
-                        () ->
-                                subscriber.onMemberJoined(
-                                        new MemberJoined(
-                                                DEAL, PRODUCT, MEMBER, PAYMENT, SHARER, AT)))
+        assertThatCode(() ->
+                        subscriber.onMemberJoined(
+                                new MemberJoined(DEAL, PRODUCT, MEMBER, PAYMENT, SHARER, AT)))
                 .doesNotThrowAnyException();
     }
 
@@ -78,11 +75,9 @@ class ShareCreditSubscriberTest {
         when(transactions.getTransaction(any())).thenReturn(status);
         when(credits.recordIfAbsent(any())).thenThrow(new IllegalStateException("database down"));
 
-        assertThatCode(
-                        () ->
-                                subscriber.onMemberJoined(
-                                        new MemberJoined(
-                                                DEAL, PRODUCT, MEMBER, PAYMENT, SHARER, AT)))
+        assertThatCode(() ->
+                        subscriber.onMemberJoined(
+                                new MemberJoined(DEAL, PRODUCT, MEMBER, PAYMENT, SHARER, AT)))
                 .doesNotThrowAnyException();
         verify(transactions).rollback(status);
     }
@@ -93,11 +88,9 @@ class ShareCreditSubscriberTest {
         when(credits.recordIfAbsent(any())).thenReturn(true);
         doThrow(new TransactionSystemException("commit failed")).when(transactions).commit(status);
 
-        assertThatCode(
-                        () ->
-                                subscriber.onMemberJoined(
-                                        new MemberJoined(
-                                                DEAL, PRODUCT, MEMBER, PAYMENT, SHARER, AT)))
+        assertThatCode(() ->
+                        subscriber.onMemberJoined(
+                                new MemberJoined(DEAL, PRODUCT, MEMBER, PAYMENT, SHARER, AT)))
                 .doesNotThrowAnyException();
     }
 }

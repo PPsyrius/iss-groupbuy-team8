@@ -159,16 +159,15 @@ class TeamTermsFlowIT {
                         jdbc.queryForList(
                                 "SELECT * FROM log_product_team_terms WHERE product_id = ?", id))
                 .singleElement()
-                .satisfies(
-                        row -> {
-                            assertThat(row).containsEntry("product_version", 1);
-                            assertThat(row).containsEntry("old_target_size", null);
-                            assertThat(row).containsEntry("old_lifetime_seconds", null);
-                            assertThat(row).containsEntry("new_target_size", 3);
-                            assertThat(row).containsEntry("new_lifetime_seconds", 7200);
-                            assertThat(row).containsEntry("team_price_version", null);
-                            assertThat(row).containsEntry("create_by", admin);
-                        });
+                .satisfies(row -> {
+                    assertThat(row).containsEntry("product_version", 1);
+                    assertThat(row).containsEntry("old_target_size", null);
+                    assertThat(row).containsEntry("old_lifetime_seconds", null);
+                    assertThat(row).containsEntry("new_target_size", 3);
+                    assertThat(row).containsEntry("new_lifetime_seconds", 7200);
+                    assertThat(row).containsEntry("team_price_version", null);
+                    assertThat(row).containsEntry("create_by", admin);
+                });
         mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.teamTerms.targetSize").value(3))
@@ -477,12 +476,12 @@ class TeamTermsFlowIT {
         assertThat(
                         jdbc.update(
                                 """
-                UPDATE rel_role_permission SET deleted = true
-                WHERE role_id = (SELECT id FROM sys_role WHERE role_code = 'admin' AND deleted = false)
-                  AND permission_id = (SELECT id FROM sys_permission
-                      WHERE perm_code = 'catalog:product:write' AND deleted = false)
-                  AND deleted = false
-                """))
+                                UPDATE rel_role_permission SET deleted = true
+                                WHERE role_id = (SELECT id FROM sys_role WHERE role_code = 'admin' AND deleted = false)
+                                  AND permission_id = (SELECT id FROM sys_permission
+                                      WHERE perm_code = 'catalog:product:write' AND deleted = false)
+                                  AND deleted = false
+                                """))
                 .isEqualTo(1);
 
         write(id, adminToken, body(0, 3, 7200, null)).andExpect(status().isForbidden());

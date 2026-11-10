@@ -15,10 +15,8 @@ public enum PurchaseOperation {
     /** Parses a stored or quoted operation; unknown values are a programming error, not input. */
     public static PurchaseOperation fromCode(String code) {
         return parse(code)
-                .orElseThrow(
-                        () ->
-                                new IllegalArgumentException(
-                                        "unknown purchase operation code: " + code));
+                .orElseThrow(() ->
+                        new IllegalArgumentException("unknown purchase operation code: " + code));
     }
 
     /**

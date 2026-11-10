@@ -449,20 +449,19 @@ class StripeCheckoutServiceTest {
     @ParameterizedTest
     @ValueSource(strings = {"http://checkout.stripe.com/test", "https://evil.example/test"})
     void checkoutUrlMustBeHostedByStripeOverHttps(String url) {
-        doAnswer(
-                        call ->
-                                new CheckoutGateway.Session(
-                                        "cs_test_fixture",
-                                        saved.id().toString(),
-                                        INTENT.toString(),
-                                        null,
-                                        1000,
-                                        "sgd",
-                                        "open",
-                                        "unpaid",
-                                        false,
-                                        url,
-                                        saved.sessionExpiresAt()))
+        doAnswer(call ->
+                        new CheckoutGateway.Session(
+                                "cs_test_fixture",
+                                saved.id().toString(),
+                                INTENT.toString(),
+                                null,
+                                1000,
+                                "sgd",
+                                "open",
+                                "unpaid",
+                                false,
+                                url,
+                                saved.sessionExpiresAt()))
                 .when(gateway)
                 .createCheckoutSession(any());
         assertThatThrownBy(() -> service.prepare(BUYER, INTENT, "key"))
@@ -773,57 +772,51 @@ class StripeCheckoutServiceTest {
         when(repository.now()).thenReturn(NOW.plusSeconds(8000));
         when(repository.nextExpiryPage(any(), anyInt())).thenReturn(List.of(first, second, third));
         when(repository.findById(any()))
-                .thenAnswer(
-                        call -> {
-                            UUID id = call.getArgument(0);
-                            return List.of(first, second, third).stream()
-                                    .filter(p -> p.id().equals(id))
-                                    .findFirst();
-                        });
+                .thenAnswer(call -> {
+                    UUID id = call.getArgument(0);
+                    return List.of(first, second, third).stream()
+                            .filter(p -> p.id().equals(id))
+                            .findFirst();
+                });
         when(repository.lock(any()))
-                .thenAnswer(
-                        call -> {
-                            UUID id = call.getArgument(0);
-                            return List.of(first, second, third).stream()
-                                    .filter(p -> p.id().equals(id))
-                                    .findFirst()
-                                    .orElseThrow();
-                        });
+                .thenAnswer(call -> {
+                    UUID id = call.getArgument(0);
+                    return List.of(first, second, third).stream()
+                            .filter(p -> p.id().equals(id))
+                            .findFirst()
+                            .orElseThrow();
+                });
         when(gateway.retrieveCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            String sessionId = call.getArgument(0);
-                            if (sessionId.equals(second.sessionId())) {
-                                switch (failureType) {
-                                    case "provider" ->
-                                            throw new BizException(
-                                                    com.blocbuy.payment.exception.PaymentErrorCode
-                                                            .PAYMENT_PROVIDER_ERROR);
-                                    case "null" -> {
-                                        return null;
-                                    }
-                                    case "arithmetic" ->
-                                            throw new ArithmeticException("bad amount");
-                                    case "argument" ->
-                                            throw new IllegalArgumentException("bad state");
-                                    default -> throw new AssertionError("Unexpected failure type");
-                                }
+                .thenAnswer(call -> {
+                    String sessionId = call.getArgument(0);
+                    if (sessionId.equals(second.sessionId())) {
+                        switch (failureType) {
+                            case "provider" ->
+                                    throw new BizException(
+                                            com.blocbuy.payment.exception.PaymentErrorCode
+                                                    .PAYMENT_PROVIDER_ERROR);
+                            case "null" -> {
+                                return null;
                             }
-                            CheckoutPayment payment =
-                                    sessionId.equals(first.sessionId()) ? first : third;
-                            return new CheckoutGateway.Session(
-                                    sessionId,
-                                    payment.id().toString(),
-                                    INTENT.toString(),
-                                    null,
-                                    1000,
-                                    "sgd",
-                                    "expired",
-                                    "unpaid",
-                                    false,
-                                    null,
-                                    payment.sessionExpiresAt());
-                        });
+                            case "arithmetic" -> throw new ArithmeticException("bad amount");
+                            case "argument" -> throw new IllegalArgumentException("bad state");
+                            default -> throw new AssertionError("Unexpected failure type");
+                        }
+                    }
+                    CheckoutPayment payment = sessionId.equals(first.sessionId()) ? first : third;
+                    return new CheckoutGateway.Session(
+                            sessionId,
+                            payment.id().toString(),
+                            INTENT.toString(),
+                            null,
+                            1000,
+                            "sgd",
+                            "expired",
+                            "unpaid",
+                            false,
+                            null,
+                            payment.sessionExpiresAt());
+                });
         if (reviewWriteFails) {
             doThrow(new IllegalArgumentException("review unavailable"))
                     .when(repository)

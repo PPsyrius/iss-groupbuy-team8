@@ -160,11 +160,10 @@ class BestOpenDealRepositoryIT {
         try (SqlSession session = sessions.openSession()) {
             assertThat(repository(session).findBestOpenDealsByProductIds(List.of(PRODUCT)))
                     .singleElement()
-                    .satisfies(
-                            deal -> {
-                                assertThat(deal.id()).isEqualTo(LOW_ID);
-                                assertThat(deal.currentSize()).isEqualTo(deal.targetSize());
-                            });
+                    .satisfies(deal -> {
+                        assertThat(deal.id()).isEqualTo(LOW_ID);
+                        assertThat(deal.currentSize()).isEqualTo(deal.targetSize());
+                    });
         }
     }
 

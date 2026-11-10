@@ -22,18 +22,18 @@ public class RedisLoginSnapshotGateway implements LoginSnapshotGateway {
     private static final DefaultRedisScript<Long> PUBLISH =
             new DefaultRedisScript<>(
                     """
-            if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
-            local ttl = tonumber(ARGV[3])
-            if ttl == -1 then
-                redis.call('SET', KEYS[2], ARGV[2])
-            elseif ttl > 0 then
-                redis.call('SET', KEYS[2], ARGV[2], 'EX', ttl)
-            else
-                return 0
-            end
-            redis.call('DEL', KEYS[1])
-            return 1
-            """,
+                    if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
+                    local ttl = tonumber(ARGV[3])
+                    if ttl == -1 then
+                        redis.call('SET', KEYS[2], ARGV[2])
+                    elseif ttl > 0 then
+                        redis.call('SET', KEYS[2], ARGV[2], 'EX', ttl)
+                    else
+                        return 0
+                    end
+                    redis.call('DEL', KEYS[1])
+                    return 1
+                    """,
                     Long.class);
 
     private final StringRedisTemplate redis;

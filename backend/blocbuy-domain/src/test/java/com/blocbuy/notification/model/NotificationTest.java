@@ -59,10 +59,8 @@ class NotificationTest {
             String title,
             String content,
             Instant time) {
-        assertThatThrownBy(
-                        () ->
-                                new Notification(
-                                        id, event, user, type, reference, title, content, time))
+        assertThatThrownBy(() ->
+                        new Notification(id, event, user, type, reference, title, content, time))
                 .isInstanceOf(BizException.class)
                 .hasMessage("NOTIFICATION_400_001: Invalid notification");
     }

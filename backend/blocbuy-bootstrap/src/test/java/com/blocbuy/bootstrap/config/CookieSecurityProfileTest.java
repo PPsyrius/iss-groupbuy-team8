@@ -20,24 +20,18 @@ class CookieSecurityProfileTest {
         new ApplicationContextRunner()
                 .withInitializer(new ConfigDataApplicationContextInitializer())
                 .withPropertyValues("spring.profiles.active=" + profile)
-                .run(
-                        context -> {
-                            var environment = context.getEnvironment();
-                            assertThat(
-                                            environment.getProperty(
-                                                    "sa-token.cookie.http-only", Boolean.class))
-                                    .isTrue();
-                            assertThat(environment.getProperty("sa-token.cookie.same-site"))
-                                    .isEqualTo("Lax");
-                            assertThat(
-                                            environment.getProperty(
-                                                    "sa-token.cookie.secure", Boolean.class))
-                                    .isEqualTo(expected);
-                            assertThat(
-                                            environment.getProperty(
-                                                    "blocbuy.frontend.state-cookie-secure",
-                                                    Boolean.class))
-                                    .isEqualTo(expected);
-                        });
+                .run(context -> {
+                    var environment = context.getEnvironment();
+                    assertThat(environment.getProperty("sa-token.cookie.http-only", Boolean.class))
+                            .isTrue();
+                    assertThat(environment.getProperty("sa-token.cookie.same-site"))
+                            .isEqualTo("Lax");
+                    assertThat(environment.getProperty("sa-token.cookie.secure", Boolean.class))
+                            .isEqualTo(expected);
+                    assertThat(
+                                    environment.getProperty(
+                                            "blocbuy.frontend.state-cookie-secure", Boolean.class))
+                            .isEqualTo(expected);
+                });
     }
 }

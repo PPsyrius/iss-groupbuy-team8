@@ -107,36 +107,30 @@ public class LeasedJobRunner {
         var finished = new CompletableFuture<Void>();
         Thread.ofVirtual()
                 .name("lease-renewal-" + job)
-                .start(
-                        () -> {
-                            try {
-                                MDC.put(ApiConstants.TRACE_ID_MDC_KEY, traceId);
-                                while (leaseValid.get()
-                                        && !stop.await(
-                                                renewalInterval.toMillis(),
-                                                TimeUnit.MILLISECONDS)) {
-                                    if (!leases.renew(job, owner, lease)) {
-                                        leaseValid.set(false);
-                                        log.warn(
-                                                "Job {} lease could not be renewed; stopping its batch",
-                                                job);
-                                    }
-                                }
-                            } catch (InterruptedException stopped) {
+                .start(() -> {
+                    try {
+                        MDC.put(ApiConstants.TRACE_ID_MDC_KEY, traceId);
+                        while (leaseValid.get()
+                                && !stop.await(renewalInterval.toMillis(), TimeUnit.MILLISECONDS)) {
+                            if (!leases.renew(job, owner, lease)) {
                                 leaseValid.set(false);
-                                Thread.currentThread().interrupt();
                                 log.warn(
-                                        "Job {} lease renewal interrupted; stopping its batch",
+                                        "Job {} lease could not be renewed; stopping its batch",
                                         job);
-                            } catch (RuntimeException e) {
-                                leaseValid.set(false);
-                                log.error(
-                                        "Job {} lease renewal failed; stopping its batch", job, e);
-                            } finally {
-                                MDC.remove(ApiConstants.TRACE_ID_MDC_KEY);
-                                finished.complete(null);
                             }
-                        });
+                        }
+                    } catch (InterruptedException stopped) {
+                        leaseValid.set(false);
+                        Thread.currentThread().interrupt();
+                        log.warn("Job {} lease renewal interrupted; stopping its batch", job);
+                    } catch (RuntimeException e) {
+                        leaseValid.set(false);
+                        log.error("Job {} lease renewal failed; stopping its batch", job, e);
+                    } finally {
+                        MDC.remove(ApiConstants.TRACE_ID_MDC_KEY);
+                        finished.complete(null);
+                    }
+                });
         return finished;
     }
 

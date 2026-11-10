@@ -62,10 +62,8 @@ public class CatalogPurchaseSupportImpl implements CatalogPurchaseSupport {
                 teamPrices
                         .findQuoteForOwner(quoteId, buyerId)
                         .filter(found -> found.productId().equals(productId))
-                        .orElseThrow(
-                                () ->
-                                        new BizException(
-                                                CatalogErrorCode.TEAM_PRICE_QUOTE_NOT_FOUND));
+                        .orElseThrow(() ->
+                                new BizException(CatalogErrorCode.TEAM_PRICE_QUOTE_NOT_FOUND));
         if (!now.isBefore(quote.expiresAt())) {
             throw new BizException(CatalogErrorCode.TEAM_PRICE_QUOTE_EXPIRED);
         }

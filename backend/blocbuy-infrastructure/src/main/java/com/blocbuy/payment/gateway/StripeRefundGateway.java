@@ -75,11 +75,8 @@ public class StripeRefundGateway implements RefundGateway {
             if (Boolean.TRUE.equals(results.getHasMore())) return null;
             var matches =
                     results.getData().stream()
-                            .filter(
-                                    r ->
-                                            work.id()
-                                                    .toString()
-                                                    .equals(r.getMetadata().get(OBLIGATION_ID)))
+                            .filter(r ->
+                                    work.id().toString().equals(r.getMetadata().get(OBLIGATION_ID)))
                             .toList();
             return matches.size() == 1 ? snapshot(matches.getFirst()) : null;
         } catch (StripeException failure) {

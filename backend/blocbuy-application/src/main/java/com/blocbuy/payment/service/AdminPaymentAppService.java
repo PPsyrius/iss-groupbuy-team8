@@ -43,12 +43,9 @@ public class AdminPaymentAppService {
         Map<UUID, String> nicknames = users.publicNicknames(buyers);
         List<AttentionItem> items =
                 rows.items().stream()
-                        .map(
-                                row ->
-                                        AttentionItem.of(
-                                                row,
-                                                nicknames.getOrDefault(
-                                                        row.buyerId(), UNKNOWN_BUYER)))
+                        .map(row ->
+                                AttentionItem.of(
+                                        row, nicknames.getOrDefault(row.buyerId(), UNKNOWN_BUYER)))
                         .toList();
         return new PageResult<>(items, rows.total(), rows.page(), rows.size(), rows.nextCursor());
     }

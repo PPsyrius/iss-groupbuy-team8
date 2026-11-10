@@ -38,8 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Authentication entry points (Sa-Token). Protocol adaptation only — credential verification
- * belongs to the identity application service. Google OAuth2 is the sole login channel: the Sa-
- * Token session opens with the local user id only after the application service has verified the
+ * belongs to the identity application service. Google OAuth2 is the sole login channel: the
+ * Sa-Token session opens with the local user id only after the application service has verified the
  * provider identity; provider tokens never appear here.
  *
  * <p>The OAuth endpoints are browser handshakes, not JSON resources: both end in a 302 (to Google,
@@ -67,10 +67,10 @@ public class AuthController {
     private static final String OAUTH_STATE_COOKIE = "blocbuy-oauth-state";
 
     /**
-     * Starts the Google consent flow: 302 to the provider authorization URL, plus the browser-
-     * session binding cookie. Public path. Envelope-exempt: a redirect is a protocol handshake
-     * (Location + Set-Cookie headers), not a JSON resource response. A provider-side failure still
-     * honors the browser contract — the user lands on the frontend failure page.
+     * Starts the Google consent flow: 302 to the provider authorization URL, plus the
+     * browser-session binding cookie. Public path. Envelope-exempt: a redirect is a protocol
+     * handshake (Location + Set-Cookie headers), not a JSON resource response. A provider-side
+     * failure still honors the browser contract — the user lands on the frontend failure page.
      */
     @Operation(summary = "Redirect to Google login")
     @ApiResponse(

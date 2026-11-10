@@ -275,15 +275,14 @@ public class SqsNotificationEventConsumer implements SmartLifecycle, DisposableB
         inFlight.add(message);
         try {
             workers.get()
-                    .execute(
-                            () -> {
-                                try {
-                                    process(message);
-                                } finally {
-                                    inFlight.remove(message);
-                                    freeWorkers.release();
-                                }
-                            });
+                    .execute(() -> {
+                        try {
+                            process(message);
+                        } finally {
+                            inFlight.remove(message);
+                            freeWorkers.release();
+                        }
+                    });
             return true;
         } catch (RejectedExecutionException exception) {
             inFlight.remove(message);

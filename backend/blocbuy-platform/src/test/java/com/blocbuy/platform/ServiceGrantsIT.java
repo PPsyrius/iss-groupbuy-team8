@@ -178,11 +178,10 @@ class ServiceGrantsIT {
     private static void assertDenied(String service, String query) {
         assertThatThrownBy(() -> asApp(service, query))
                 .isInstanceOf(SQLException.class)
-                .satisfies(
-                        failure ->
-                                assertThat(((SQLException) failure).getSQLState())
-                                        .as("%s: %s", app(service), query)
-                                        .isEqualTo(INSUFFICIENT_PRIVILEGE));
+                .satisfies(failure ->
+                        assertThat(((SQLException) failure).getSQLState())
+                                .as("%s: %s", app(service), query)
+                                .isEqualTo(INSUFFICIENT_PRIVILEGE));
     }
 
     private static void asApp(String service, String query) throws SQLException {

@@ -35,17 +35,16 @@ public class SaTokenConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(
-                        new SaInterceptor(
-                                handler -> {
-                                    // anonymous catalog browse and invite resolve: GET only;
-                                    // every other method/path under /api/v1 requires it
-                                    if (SaRouter.isMatchCurrURI(ANONYMOUS_GET_PATHS)
-                                            && SaRouter.isMatchCurrMethod(
-                                                    new SaHttpMethod[] {SaHttpMethod.GET})) {
-                                        return;
-                                    }
-                                    StpUtil.checkLogin();
-                                }))
+                        new SaInterceptor(handler -> {
+                            // anonymous catalog browse and invite resolve: GET only;
+                            // every other method/path under /api/v1 requires it
+                            if (SaRouter.isMatchCurrURI(ANONYMOUS_GET_PATHS)
+                                    && SaRouter.isMatchCurrMethod(
+                                            new SaHttpMethod[] {SaHttpMethod.GET})) {
+                                return;
+                            }
+                            StpUtil.checkLogin();
+                        }))
                 .addPathPatterns(ApiConstants.API_V1 + "/**")
                 .excludePathPatterns(PUBLIC_PATHS);
     }

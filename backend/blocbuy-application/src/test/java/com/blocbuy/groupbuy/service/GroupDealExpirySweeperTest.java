@@ -85,11 +85,10 @@ class GroupDealExpirySweeperTest {
         when(deals.dueForExpiry(DB_NOW, 2)).thenReturn(List.of(FIRST, SECOND));
         var leaseValid = new AtomicBoolean(true);
         when(expiry.expireOne(FIRST))
-                .thenAnswer(
-                        ignored -> {
-                            leaseValid.set(false);
-                            return true;
-                        });
+                .thenAnswer(ignored -> {
+                    leaseValid.set(false);
+                    return true;
+                });
 
         assertThat(sweeper.sweep(2, leaseValid::get))
                 .isEqualTo(new GroupDealExpirySweeper.Result(2, 1, 0, 0));

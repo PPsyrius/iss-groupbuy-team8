@@ -27,22 +27,20 @@ class TypeSafeJevListingSearchRerankerTest {
         AtomicReference<MockClientHttpRequest> captured = new AtomicReference<>();
         RestClient client =
                 RestClient.builder()
-                        .requestFactory(
-                                (uri, method) -> {
-                                    MockClientHttpRequest request =
-                                            new MockClientHttpRequest(method, uri);
-                                    captured.set(request);
-                                    request.setResponse(
-                                            response(
-                                                    """
-                                                    {"answers":{"best_match":{"type":"choice",
-                                                    "choice":"%s","probabilities":{"%s":0.2,
-                                                    "%s":0.8},"confidence":0.7}}}
-                                                    """
-                                                            .formatted(SECOND, FIRST, SECOND),
-                                                    HttpStatus.OK));
-                                    return request;
-                                })
+                        .requestFactory((uri, method) -> {
+                            MockClientHttpRequest request = new MockClientHttpRequest(method, uri);
+                            captured.set(request);
+                            request.setResponse(
+                                    response(
+                                            """
+                                            {"answers":{"best_match":{"type":"choice",
+                                            "choice":"%s","probabilities":{"%s":0.2,
+                                            "%s":0.8},"confidence":0.7}}}
+                                            """
+                                                    .formatted(SECOND, FIRST, SECOND),
+                                            HttpStatus.OK));
+                            return request;
+                        })
                         .build();
         TypeSafeJevListingSearchReranker reranker = reranker(true, client);
 
@@ -79,10 +77,9 @@ class TypeSafeJevListingSearchRerankerTest {
     void providerFailureReturnsOriginalOrder() {
         RestClient client =
                 RestClient.builder()
-                        .requestFactory(
-                                (uri, method) -> {
-                                    throw new IOException("offline");
-                                })
+                        .requestFactory((uri, method) -> {
+                            throw new IOException("offline");
+                        })
                         .build();
 
         assertThat(reranker(true, client).rerank("keyboard", candidates()))
@@ -159,14 +156,13 @@ class TypeSafeJevListingSearchRerankerTest {
         java.util.Map<String, Double> probabilities = new java.util.LinkedHashMap<>();
         java.util.List<Candidate> many =
                 java.util.stream.IntStream.rangeClosed(1, 21)
-                        .mapToObj(
-                                index ->
-                                        new Candidate(
-                                                new UUID(0, index),
-                                                "Product " + index,
-                                                null,
-                                                "short description",
-                                                "test"))
+                        .mapToObj(index ->
+                                new Candidate(
+                                        new UUID(0, index),
+                                        "Product " + index,
+                                        null,
+                                        "short description",
+                                        "test"))
                         .toList();
 
         // A valid distribution whose scores increase with the candidate index.
@@ -176,13 +172,12 @@ class TypeSafeJevListingSearchRerankerTest {
         }
 
         StringBuilder scores = new StringBuilder();
-        probabilities.forEach(
-                (id, score) -> {
-                    if (!scores.isEmpty()) {
-                        scores.append(',');
-                    }
-                    scores.append('"').append(id).append("\":").append(score);
-                });
+        probabilities.forEach((id, score) -> {
+            if (!scores.isEmpty()) {
+                scores.append(',');
+            }
+            scores.append('"').append(id).append("\":").append(score);
+        });
         RestClient client =
                 stub(
                         "{\"answers\":{\"best_match\":{\"type\":\"choice\","
@@ -254,12 +249,11 @@ class TypeSafeJevListingSearchRerankerTest {
     /** Builds a RestClient backed by a deterministic in-memory response. */
     private static RestClient stub(String json, HttpStatus status) {
         return RestClient.builder()
-                .requestFactory(
-                        (uri, method) -> {
-                            MockClientHttpRequest request = new MockClientHttpRequest(method, uri);
-                            request.setResponse(response(json, status));
-                            return request;
-                        })
+                .requestFactory((uri, method) -> {
+                    MockClientHttpRequest request = new MockClientHttpRequest(method, uri);
+                    request.setResponse(response(json, status));
+                    return request;
+                })
                 .build();
     }
 

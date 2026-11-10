@@ -227,20 +227,19 @@ class EndpointAuthSurfaceTest {
     void noProjectControllerIsMappedOutsideTheGuardedPrefix() {
         List<String> offenders = new ArrayList<>();
         mappings.getHandlerMethods()
-                .forEach(
-                        (info, handler) -> {
-                            String type = handler.getBeanType().getName();
-                            for (String pattern : patterns(info)) {
-                                boolean inPrefix = pattern.startsWith(API_V1);
-                                boolean framework =
-                                        type.startsWith("org.springdoc.")
-                                                || type.startsWith("org.springframework.boot.");
-                                boolean project = type.startsWith("com.blocbuy.");
-                                if (project ? !inPrefix : !(framework || inPrefix)) {
-                                    offenders.add(pattern + " (" + type + ")");
-                                }
-                            }
-                        });
+                .forEach((info, handler) -> {
+                    String type = handler.getBeanType().getName();
+                    for (String pattern : patterns(info)) {
+                        boolean inPrefix = pattern.startsWith(API_V1);
+                        boolean framework =
+                                type.startsWith("org.springdoc.")
+                                        || type.startsWith("org.springframework.boot.");
+                        boolean project = type.startsWith("com.blocbuy.");
+                        if (project ? !inPrefix : !(framework || inPrefix)) {
+                            offenders.add(pattern + " (" + type + ")");
+                        }
+                    }
+                });
         assertThat(offenders)
                 .as("controllers outside /api/v1, which the Sa-Token interceptor does not cover")
                 .isEmpty();
@@ -299,25 +298,21 @@ class EndpointAuthSurfaceTest {
     private List<Endpoint> apiV1Endpoints() {
         List<Endpoint> endpoints = new ArrayList<>();
         mappings.getHandlerMethods()
-                .forEach(
-                        (info, handler) -> {
-                            Set<String> methods = new TreeSet<>();
-                            info.getMethodsCondition()
-                                    .getMethods()
-                                    .forEach(method -> methods.add(method.name()));
-                            if (methods.isEmpty()) {
-                                methods.add("GET");
-                            }
-                            for (String pattern : patterns(info)) {
-                                if (pattern.startsWith(API_V1)) {
-                                    methods.forEach(
-                                            method ->
-                                                    endpoints.add(
-                                                            new Endpoint(
-                                                                    method, pattern, handler)));
-                                }
-                            }
-                        });
+                .forEach((info, handler) -> {
+                    Set<String> methods = new TreeSet<>();
+                    info.getMethodsCondition()
+                            .getMethods()
+                            .forEach(method -> methods.add(method.name()));
+                    if (methods.isEmpty()) {
+                        methods.add("GET");
+                    }
+                    for (String pattern : patterns(info)) {
+                        if (pattern.startsWith(API_V1)) {
+                            methods.forEach(method ->
+                                    endpoints.add(new Endpoint(method, pattern, handler)));
+                        }
+                    }
+                });
         endpoints.forEach(endpoint -> assertThat(endpoint.path()).doesNotContain("{"));
         return endpoints;
     }

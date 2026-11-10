@@ -192,14 +192,13 @@ class OutboxRelayFlowIT {
                                 .messages();
                 assertThat(messages).hasSize(3);
                 assertThat(messages)
-                        .allSatisfy(
-                                message -> {
-                                    assertThat(message.messageAttributes())
-                                            .containsKeys("eventType", "version", "traceId");
-                                    assertThat(message.body())
-                                            .contains("\"eventId\"")
-                                            .contains("\"eventType\":\"TeamExpired\"");
-                                });
+                        .allSatisfy(message -> {
+                            assertThat(message.messageAttributes())
+                                    .containsKeys("eventType", "version", "traceId");
+                            assertThat(message.body())
+                                    .contains("\"eventId\"")
+                                    .contains("\"eventType\":\"TeamExpired\"");
+                        });
                 assertThat(
                                 jdbc.queryForObject(
                                         "SELECT count(*) FROM sys_outbox WHERE published_at IS NOT NULL AND failed_at IS NULL",

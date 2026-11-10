@@ -50,12 +50,8 @@ public class UserAppServiceImpl implements UserAppService {
             return Map.of();
         }
         return users.findAllById(userIds).stream()
-                .flatMap(
-                        user ->
-                                user
-                                        .publicNickname()
-                                        .map(name -> Map.entry(user.id(), name))
-                                        .stream())
+                .flatMap(user ->
+                        user.publicNickname().map(name -> Map.entry(user.id(), name)).stream())
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

@@ -57,20 +57,11 @@ class NewDealTermsTest {
 
     @Test
     void rejectsInvalidPriceOrCurrency() {
-        assertInvalid(
-                () ->
-                        new NewDealTerms(
-                                ID, "DEAL-1", PRODUCT_ID, BigDecimal.ZERO, "sgd", 2, EXPIRY));
-        assertInvalid(
-                () ->
-                        new NewDealTerms(
-                                ID,
-                                "DEAL-1",
-                                PRODUCT_ID,
-                                new BigDecimal("10.00"),
-                                "usd",
-                                2,
-                                EXPIRY));
+        assertInvalid(() ->
+                new NewDealTerms(ID, "DEAL-1", PRODUCT_ID, BigDecimal.ZERO, "sgd", 2, EXPIRY));
+        assertInvalid(() ->
+                new NewDealTerms(
+                        ID, "DEAL-1", PRODUCT_ID, new BigDecimal("10.00"), "usd", 2, EXPIRY));
     }
 
     private static NewDealTerms terms(

@@ -35,11 +35,11 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
     private static final RedisScript<Long> POPULATE =
             RedisScript.of(
                     """
-            for i = 1, #KEYS do
-                redis.call('SET', KEYS[i], ARGV[2*i-1], 'PX', ARGV[2*i])
-            end
-            return #KEYS
-            """,
+                    for i = 1, #KEYS do
+                        redis.call('SET', KEYS[i], ARGV[2*i-1], 'PX', ARGV[2*i])
+                    end
+                    return #KEYS
+                    """,
                     Long.class);
     private final StringRedisTemplate redis;
     private final Environment environment;

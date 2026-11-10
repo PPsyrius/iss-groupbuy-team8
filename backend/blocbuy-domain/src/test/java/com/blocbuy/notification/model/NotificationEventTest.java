@@ -53,10 +53,9 @@ class NotificationEventTest {
                         () -> new NotificationEvent.PaymentSucceeded(null, REF, A, false),
                         () -> new NotificationEvent.PaymentSucceeded(EVENT, null, A, false),
                         () -> new NotificationEvent.PaymentSucceeded(EVENT, REF, null, false));
-        invalid.forEach(
-                construct ->
-                        assertThatThrownBy(construct::run)
-                                .isInstanceOf(BizException.class)
-                                .hasMessageContaining("NOTIFICATION_400_001"));
+        invalid.forEach(construct ->
+                assertThatThrownBy(construct::run)
+                        .isInstanceOf(BizException.class)
+                        .hasMessageContaining("NOTIFICATION_400_001"));
     }
 }

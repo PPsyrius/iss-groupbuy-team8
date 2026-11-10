@@ -39,43 +39,20 @@ class OAuthIdentityTest {
     void bindRejectsBlankIdentity() {
         UUID userId = UUID.randomUUID();
 
-        assertThatThrownBy(
-                        () ->
-                                OAuthIdentity.bind(
-                                        null,
-                                        OAuthProvider.GOOGLE,
-                                        "sub-123",
-                                        "a@b.c",
-                                        "Ada",
-                                        null,
-                                        "{}"))
+        assertThatThrownBy(() ->
+                        OAuthIdentity.bind(
+                                null, OAuthProvider.GOOGLE, "sub-123", "a@b.c", "Ada", null, "{}"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                OAuthIdentity.bind(
-                                        userId, null, "sub-123", "a@b.c", "Ada", null, "{}"))
+        assertThatThrownBy(() ->
+                        OAuthIdentity.bind(userId, null, "sub-123", "a@b.c", "Ada", null, "{}"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                OAuthIdentity.bind(
-                                        userId,
-                                        OAuthProvider.GOOGLE,
-                                        null,
-                                        "a@b.c",
-                                        "Ada",
-                                        null,
-                                        "{}"))
+        assertThatThrownBy(() ->
+                        OAuthIdentity.bind(
+                                userId, OAuthProvider.GOOGLE, null, "a@b.c", "Ada", null, "{}"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                OAuthIdentity.bind(
-                                        userId,
-                                        OAuthProvider.GOOGLE,
-                                        "  ",
-                                        "a@b.c",
-                                        "Ada",
-                                        null,
-                                        "{}"))
+        assertThatThrownBy(() ->
+                        OAuthIdentity.bind(
+                                userId, OAuthProvider.GOOGLE, "  ", "a@b.c", "Ada", null, "{}"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -128,18 +105,17 @@ class OAuthIdentityTest {
     void reconstituteRejectsNullId() {
         UUID userId = UUID.randomUUID();
 
-        assertThatThrownBy(
-                        () ->
-                                OAuthIdentity.reconstitute(
-                                        null,
-                                        userId,
-                                        OAuthProvider.GOOGLE,
-                                        "sub-123",
-                                        "ada@example.com",
-                                        "Ada",
-                                        "https://pic",
-                                        "{}",
-                                        null))
+        assertThatThrownBy(() ->
+                        OAuthIdentity.reconstitute(
+                                null,
+                                userId,
+                                OAuthProvider.GOOGLE,
+                                "sub-123",
+                                "ada@example.com",
+                                "Ada",
+                                "https://pic",
+                                "{}",
+                                null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

@@ -160,11 +160,8 @@ class OrderRepositoryIT {
         save(order);
         UUID orderId = order.id();
 
-        assertThatThrownBy(
-                        () ->
-                                jdbc.update(
-                                        "UPDATE biz_order SET paid_time = NULL WHERE id = ?",
-                                        orderId))
+        assertThatThrownBy(() ->
+                        jdbc.update("UPDATE biz_order SET paid_time = NULL WHERE id = ?", orderId))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 

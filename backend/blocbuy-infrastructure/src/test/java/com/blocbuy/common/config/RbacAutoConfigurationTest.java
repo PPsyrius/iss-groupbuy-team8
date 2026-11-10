@@ -18,32 +18,29 @@ class RbacAutoConfigurationTest {
     @Test
     void monolithUsesIdentityRepository() {
         runner.withBean(RoleRepository.class, () -> mock(RoleRepository.class))
-                .run(
-                        context -> {
-                            assertThat(context).hasSingleBean(StpInterfaceImpl.class);
-                            assertThat(context).doesNotHaveBean(SessionStpInterface.class);
-                        });
+                .run(context -> {
+                    assertThat(context).hasSingleBean(StpInterfaceImpl.class);
+                    assertThat(context).doesNotHaveBean(SessionStpInterface.class);
+                });
     }
 
     @Test
     void distributedIdentityStillUsesItsRepository() {
         runner.withPropertyValues("blocbuy.topology=distributed")
                 .withBean(RoleRepository.class, () -> mock(RoleRepository.class))
-                .run(
-                        context -> {
-                            assertThat(context).hasSingleBean(StpInterfaceImpl.class);
-                            assertThat(context).doesNotHaveBean(SessionStpInterface.class);
-                        });
+                .run(context -> {
+                    assertThat(context).hasSingleBean(StpInterfaceImpl.class);
+                    assertThat(context).doesNotHaveBean(SessionStpInterface.class);
+                });
     }
 
     @Test
     void distributedServiceWithoutIdentityUsesSessionOnly() {
         runner.withPropertyValues("blocbuy.topology=distributed")
-                .run(
-                        context -> {
-                            assertThat(context).hasSingleBean(SessionStpInterface.class);
-                            assertThat(context).doesNotHaveBean(StpInterfaceImpl.class);
-                        });
+                .run(context -> {
+                    assertThat(context).hasSingleBean(SessionStpInterface.class);
+                    assertThat(context).doesNotHaveBean(StpInterfaceImpl.class);
+                });
     }
 
     @Test

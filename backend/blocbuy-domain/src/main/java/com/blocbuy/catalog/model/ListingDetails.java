@@ -44,11 +44,10 @@ public record ListingDetails(
         if (images != null
                 && (images.size() > 20
                         || images.stream()
-                                .anyMatch(
-                                        image ->
-                                                image == null
-                                                        || image.isBlank()
-                                                        || image.length() > 1024))) {
+                                .anyMatch(image ->
+                                        image == null
+                                                || image.isBlank()
+                                                || image.length() > 1024))) {
             throw invalid(
                     "images",
                     "Must contain at most 20 nonblank image URLs of at most 1024 characters each");

@@ -38,15 +38,14 @@ class OutboxRelayLeaseTest {
         var allowFirstRelayToFinish = new CountDownLatch(1);
         var invocations = new AtomicInteger();
         when(relay.relayBatch(org.mockito.ArgumentMatchers.any()))
-                .thenAnswer(
-                        ignored -> {
-                            invocations.incrementAndGet();
-                            firstEnteredRelay.countDown();
-                            if (!allowFirstRelayToFinish.await(2, TimeUnit.SECONDS)) {
-                                throw new AssertionError("first relay did not get released");
-                            }
-                            return 1;
-                        });
+                .thenAnswer(ignored -> {
+                    invocations.incrementAndGet();
+                    firstEnteredRelay.countDown();
+                    if (!allowFirstRelayToFinish.await(2, TimeUnit.SECONDS)) {
+                        throw new AssertionError("first relay did not get released");
+                    }
+                    return 1;
+                });
         var first = job(lock, "host/first", relay);
         var second = job(lock, "host/second", relay);
 
@@ -101,17 +100,16 @@ class OutboxRelayLeaseTest {
         var repository = mock(OutboxRelayRepository.class);
         var events =
                 java.util.stream.IntStream.range(0, 20)
-                        .mapToObj(
-                                index ->
-                                        new OutboxEvent(
-                                                UUID.randomUUID(),
-                                                "TeamExpired",
-                                                1,
-                                                UUID.randomUUID(),
-                                                "{}",
-                                                "lease-test",
-                                                Instant.now(),
-                                                0))
+                        .mapToObj(index ->
+                                new OutboxEvent(
+                                        UUID.randomUUID(),
+                                        "TeamExpired",
+                                        1,
+                                        UUID.randomUUID(),
+                                        "{}",
+                                        "lease-test",
+                                        Instant.now(),
+                                        0))
                         .toList();
         when(repository.findDue(100)).thenReturn(events);
         when(repository.recordResults(
@@ -121,28 +119,25 @@ class OutboxRelayLeaseTest {
         var client = mock(SqsClient.class);
         when(client.sendMessageBatch(
                         org.mockito.ArgumentMatchers.any(SendMessageBatchRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            if (Thread.currentThread() == firstThread.get()) {
-                                firstCalls.incrementAndGet();
-                                firstSendEntered.countDown();
-                                assertThat(releaseFirstSend.await(5, TimeUnit.SECONDS)).isTrue();
-                            } else {
-                                secondCalls.incrementAndGet();
-                            }
-                            SendMessageBatchRequest request = call.getArgument(0);
-                            return SendMessageBatchResponse.builder()
-                                    .successful(
-                                            request.entries().stream()
-                                                    .map(
-                                                            entry ->
-                                                                    SendMessageBatchResultEntry
-                                                                            .builder()
-                                                                            .id(entry.id())
-                                                                            .build())
-                                                    .toList())
-                                    .build();
-                        });
+                .thenAnswer(call -> {
+                    if (Thread.currentThread() == firstThread.get()) {
+                        firstCalls.incrementAndGet();
+                        firstSendEntered.countDown();
+                        assertThat(releaseFirstSend.await(5, TimeUnit.SECONDS)).isTrue();
+                    } else {
+                        secondCalls.incrementAndGet();
+                    }
+                    SendMessageBatchRequest request = call.getArgument(0);
+                    return SendMessageBatchResponse.builder()
+                            .successful(
+                                    request.entries().stream()
+                                            .map(entry ->
+                                                    SendMessageBatchResultEntry.builder()
+                                                            .id(entry.id())
+                                                            .build())
+                                            .toList())
+                            .build();
+                });
         var relay =
                 new OutboxRelayService(
                         repository,
@@ -152,14 +147,10 @@ class OutboxRelayLeaseTest {
         var second = new LeasedJobRunner(leases, new SimpleMeterRegistry(), "second");
         try (var pool = Executors.newVirtualThreadPerTaskExecutor()) {
             var firstRun =
-                    pool.submit(
-                            () -> {
-                                firstThread.set(Thread.currentThread());
-                                first.run(
-                                        OutboxRelayJob.JOB,
-                                        Duration.ofMillis(600),
-                                        relay::relayBatch);
-                            });
+                    pool.submit(() -> {
+                        firstThread.set(Thread.currentThread());
+                        first.run(OutboxRelayJob.JOB, Duration.ofMillis(600), relay::relayBatch);
+                    });
             try {
                 assertThat(firstSendEntered.await(5, TimeUnit.SECONDS)).isTrue();
                 assertThat(renewalFailed.await(5, TimeUnit.SECONDS)).isTrue();
