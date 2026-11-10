@@ -60,9 +60,12 @@ public class PurchaseIntentAppService implements PaymentIntentPort {
     /**
      * Issues one intent and returns its id.
      *
-     * <p>{@code MANDATORY}: the caller owns the transaction, because the row locks this takes must
-     * stay held until the intent is committed. A quote written in its own short transaction would
-     * release the team lock immediately and let two buyers quote the last seat.
+     * <p>{@code MANDATORY}: the caller owns the transaction, because the row locks this takes (the
+     * product row for a start, the team row for a join) must stay held until the intent is
+     * committed, so its terms are checked against rows no concurrent writer can change first, and
+     * checks on one team run one at a time. An intent reserves no seat: once it commits, another
+     * buyer can be issued an intent for the same last seat. The seat is decided after payment, when
+     * settlement locks the team again and admits one buyer; the other is refunded.
      */
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
