@@ -39,7 +39,7 @@ UC8 is the buyer's account page, "My blocs". A signed-in buyer sees the teams th
 
 === Analysis Sequence Diagrams <sec-a-uc08-as>
 
-UC8 has two major flows, one per list. They read different entities and page on their own; the page starts both when it opens. @fig-a-uc08-as-teams is B1–B4 with A3; @fig-a-uc08-as-orders is B3–B4 with A6. A1 needs the design concept of a session and is drawn in the design sequences only. B5 (except sharing, which is UC7), A2, A4, A5 and E1 happen in the page alone (S2): they choose a card, a label or a page number from rows already read, or show an error, and involve no entity, so no sequence draws them.
+UC8 has two major flows, one per list. They read different entities and page on their own; the page starts both when it opens. @fig-a-uc08-as-teams is B1–B4 with A3; @fig-a-uc08-as-orders is B3–B4 with A6. A1 needs the design concept of a session and is drawn in the design sequences only. B5's chip switch, A2, A4 and E1 happen in the page alone (S2): they choose a card or a label from rows already read, or show an error, and involve no entity, so no sequence draws them. B5's paging and A5 read the orders again, as in @fig-a-uc08-as-orders; B5's sharing is UC7.
 
 #afig("a-uc08-as-teams", [UC8 analysis sequence diagram, view my teams (B1–B4, A3). The control reads one page of memberships, then all listing titles of that page in one batch.])
 
@@ -137,7 +137,7 @@ UC8 changes no state, so it has no statechart. It displays two lifecycles drawn 
   [A2], [— (page only)], [`pageMyTeams` returns an empty page without the product read; the card is chosen by the account page (S2)], [@fig-a-uc08-ds-teams],
   [A3], [`displayFieldsOf` without the product], [`findDisplaysByIds` omits inactive products; `toView` sets a null title and image], [@fig-a-uc08-ds-teams],
   [A4], [—], [Status read as stored (`TeamMembership.status`); label by the account page (S2)], [—],
-  [A5], [— (page only)], [Account page requests `myOrders` again for the last page (S2)], [—],
+  [A5], [`listMyOrders` (last page)], [Account page requests `OrderController.myOrders` again for the last page, as in B3], [@fig-a-uc08-ds-orders],
   [A6], [`findMyOrder`, `Order.belongsTo`, `showNotFound`], [`OrderController.myOrder` → `OrderAppServiceImpl.findMine` → `OrderRepository.findById`, `Order.userId`; empty → `ORDER_NOT_FOUND` (`ORDER_404_001`)], [@fig-a-uc08-ds-orders],
   [E1], [—], [Any exception propagates as an error `Result`; the account page shows "Try again" (S2)], [—],
 )

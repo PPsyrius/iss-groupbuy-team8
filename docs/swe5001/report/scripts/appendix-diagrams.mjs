@@ -248,7 +248,8 @@ function linkRefs(call) {
 function generate(id) {
   const file = join(srcDir, `${id}.mmd`);
   if (!existsSync(file)) throw new DiagramError(`no source ${relative(repo, file)}`);
-  const src = readFileSync(file, 'utf8');
+  // A Windows checkout with core.autocrlf=true has CRLF; the generator works in LF.
+  const src = readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
   const info = validate(src);
   checkRefs(src);
   // Activation bars run unbroken through the fragments that close and reopen them (UML).
@@ -284,7 +285,7 @@ for (const id of ids) {
     if (!ID.test(id)) throw new DiagramError('id must be lowercase kebab-case starting with "a-" (e.g. a-uc04-ac)');
     const { typ, info } = generate(id);
     const out = join(genDir, `${id}.typ`);
-    const old = existsSync(out) ? readFileSync(out, 'utf8') : null;
+    const old = existsSync(out) ? readFileSync(out, 'utf8').replace(/\r\n/g, '\n') : null;
     if (check) {
       if (old !== typ) {
         stale++;
