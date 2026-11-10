@@ -78,8 +78,10 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
         List<UUID> ids = productIds.stream().distinct().toList();
         try {
             String profile = environment.getProperty(ACTIVE_PROFILE_PROPERTY, DEFAULT_PROFILE);
-            List<String> values = readValues(ids.stream().map(id -> key(profile, id)).toList());
-            if (values == null) return new Lookup(Map.of(), false);
+            Optional<List<String>> cached =
+                    readValues(ids.stream().map(id -> key(profile, id)).toList());
+            if (cached.isEmpty()) return new Lookup(Map.of(), false);
+            List<String> values = cached.orElseThrow();
             Map<UUID, Optional<OpenDealOffer>> hits = new HashMap<>();
             Instant now = Instant.now();
             for (int i = 0; i < ids.size(); i++) {
@@ -95,9 +97,9 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
         }
     }
 
-    private List<String> readValues(List<String> keys) {
+    private Optional<List<String>> readValues(List<String> keys) {
         RetryWindow call = beginStoreCall();
-        if (call == null) return null;
+        if (call == null) return Optional.empty();
         try {
             List<String> values = redis.opsForValue().multiGet(keys);
             if (values == null) {
@@ -105,7 +107,7 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
             } else {
                 storeSucceeded(call);
             }
-            return values;
+            return Optional.ofNullable(values);
         } catch (DataAccessException unavailable) {
             storeFailed();
             throw unavailable;

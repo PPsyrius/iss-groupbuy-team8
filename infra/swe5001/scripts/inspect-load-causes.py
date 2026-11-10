@@ -61,6 +61,20 @@ def metric_queries(alb, group):
         "Period": 60, "Stat": stat}} for index, (namespace, name, stat, dimensions) in enumerate(specs)]
 
 
+def tracking_alarms(policies):
+    """Select the exact commerce request policy independently of AWS response order."""
+    matches = [policy for policy in policies
+               if policy.get("PolicyName") == "blocbuy-swe5001-commerce-requests-per-target"
+               and policy.get("PolicyType") == "TargetTrackingScaling"
+               and policy.get("ResourceId") == "service/blocbuy-swe5001/commerce-svc"]
+    CAP["require"](len(matches) == 1, "Expected exactly one commerce request-tracking policy")
+    alarms = matches[0].get("Alarms", [])
+    CAP["require"](len(alarms) == 2 and len({alarm["AlarmName"] for alarm in alarms}) == 2
+                   and all(alarm["AlarmName"].startswith("TargetTracking-service/blocbuy-swe5001/commerce-svc-") for alarm in alarms),
+                   "Unexpected alarm scope")
+    return alarms
+
+
 def main():
     CAP["require"](aws("sts", "get-caller-identity")["Account"] == CAP["ACCOUNT"], "Wrong AWS account")
     original = Path.home() / "swe5001-v3-b84uhoj0"
@@ -73,8 +87,7 @@ def main():
                    and group["loadBalancerArns"][0].startswith(prefix + "loadbalancer/app/blocbuy-swe5001/"), "Unexpected load-balancer scope")
     alb = group["loadBalancerArns"][0].split(":loadbalancer/")[1]
     tg = group["arn"].split(":")[-1]
-    alarms = preflight["policies"]["ScalingPolicies"][0]["Alarms"]
-    CAP["require"](len(alarms) == 2 and all(a["AlarmName"].startswith("TargetTracking-service/blocbuy-swe5001/commerce-svc-") for a in alarms), "Unexpected alarm scope")
+    alarms = tracking_alarms(preflight["policies"]["ScalingPolicies"])
     directory = Path(tempfile.mkdtemp(prefix="swe5001-v3-causes-", dir=Path.home()))
     directory.chmod(0o700)
     problems = []

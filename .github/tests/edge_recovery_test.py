@@ -275,6 +275,7 @@ class EdgeRecoveryTest(unittest.TestCase):
         self.addCleanup(directory.cleanup)
         work = Path(directory.name)
         calls = []
+        self.calls = calls
         scope_reads = 0
         canonical = {"SecurityHeadersConfig": {}, "CustomHeadersConfig": {"Quantity": 0, "Items": []},
                      "RemoveHeadersConfig": {"Quantity": 0, "Items": []}}
@@ -300,10 +301,12 @@ class EdgeRecoveryTest(unittest.TestCase):
 
         with patch.object(recovery.shutil, "which", return_value="tool"), \
                 patch.object(recovery, "check_workflows") as workflow_check, \
-                patch.object(recovery, "install_terraform", return_value=work / "terraform"), \
+                patch.object(recovery, "install_terraform", return_value=work / "terraform") as install, \
                 patch.object(recovery, "Runner") as runner_type, \
                 patch("builtins.input", return_value=confirmation), patch("builtins.print"):
             runner = runner_type.return_value
+            self.install = install
+            self.workflow_check = workflow_check
             runner.run.side_effect = fake_run
             runner.aws.side_effect = [
                 {"Account": account, "Arn": "arn:aws:sts::402178232802:assumed-role/operator/test"},
@@ -327,6 +330,9 @@ class EdgeRecoveryTest(unittest.TestCase):
     def test_wrong_account_stops_before_checkout_or_install(self):
         with self.assertRaisesRegex(ValueError, "Wrong AWS account"):
             self.exercise_recovery(True, account="000000000000")
+        self.assertEqual(self.calls, [])
+        self.install.assert_not_called()
+        self.workflow_check.assert_not_called()
 
     def test_confirmed_apply_uses_saved_plan_then_verifies(self):
         calls, work, checks = self.exercise_recovery(True)

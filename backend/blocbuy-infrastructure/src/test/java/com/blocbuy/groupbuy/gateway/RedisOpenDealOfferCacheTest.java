@@ -460,14 +460,16 @@ class RedisOpenDealOfferCacheTest {
             when(redis.execute(any(RedisScript.class), anyList(), any(Object[].class)))
                     .thenThrow(new IllegalStateException("private detail"))
                     .thenReturn(1L);
-            assertThatThrownBy(() -> guarded.putAll(Map.of(PRODUCT, Optional.empty())))
+            Map<UUID, Optional<OpenDealOffer>> offers = Map.of(PRODUCT, Optional.empty());
+            assertThatThrownBy(() -> guarded.putAll(offers))
                     .isInstanceOf(IllegalStateException.class);
-            guarded.putAll(Map.of(PRODUCT, Optional.empty()));
+            guarded.putAll(offers);
         } else {
             when(values.multiGet(anyList()))
                     .thenThrow(new IllegalStateException("private detail"))
                     .thenReturn(Collections.singletonList(null));
-            assertThatThrownBy(() -> guarded.findByProductIds(List.of(PRODUCT)))
+            List<UUID> productIds = List.of(PRODUCT);
+            assertThatThrownBy(() -> guarded.findByProductIds(productIds))
                     .isInstanceOf(IllegalStateException.class);
         }
         assertThat(guarded.findByProductIds(List.of(PRODUCT)).available()).isTrue();

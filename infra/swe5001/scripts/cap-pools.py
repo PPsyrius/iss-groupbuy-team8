@@ -125,8 +125,14 @@ def main():
         directory = Path(tempfile.mkdtemp(prefix="swe5001-pool-cap-", dir=Path.home()))
     directory.chmod(0o700)
     print(f"Private recovery/receipt directory: {directory}", flush=True)
-    def save(filename, value):
-        with (directory / filename).open("x", encoding="utf-8") as stream:
+    def save(filename, value, reuse=False):
+        path = directory / filename
+        if reuse and path.exists():
+            require(not path.is_symlink() and path.is_file(), "Saved registration payload is not a regular file")
+            require(json.loads(path.read_text()) == value,
+                    "Saved registration payload differs; retain receipts and inspect before retrying")
+            return
+        with path.open("x", encoding="utf-8") as stream:
             os.chmod(stream.name, 0o600)
             json.dump(value, stream, indent=2)
     if not args.resume:
@@ -146,6 +152,12 @@ def main():
             for container in actual["containerDefinitions"]:
                 container["environment"] = sorted(container.get("environment", []), key=lambda item: item["name"])
             require(actual == prepared[name], "Recorded task revision differs from approved pool-only change")
+            current = aws("ecs", "describe-services", "--cluster", CLUSTER, "--services", name)
+            require(not current.get("failures") and len(current.get("services", [])) == 1,
+                    "Missing service while reconciling the registered revision")
+            require(current["services"][0]["taskDefinition"] == registered["new"],
+                    f"{name}: registered revision is not current; inspect update-service outcome and rollback/service events "
+                    "before an explicit reviewed update. No deployment was retried; retain receipts")
             wait_completed(name, registered["new"])
             expected[name] = recorded[name] = registered["new"]
     for name in COUNTS:
@@ -156,7 +168,7 @@ def main():
             print(f"{name}: retaining completed {new_arn}; no repeat rollout", flush=True)
         else:
             payload = {**prepared[name], "tags": definitions[name].get("tags", [])}
-            save(f"{name}-register-private.json", payload)
+            save(f"{name}-register-private.json", payload, reuse=True)
             registered = aws("ecs", "register-task-definition", "--cli-input-json", f"file://{directory / (name + '-register-private.json')}")
             new_arn = registered["taskDefinition"]["taskDefinitionArn"]
             save(f"{name}-registered.json", {"old": expected[name], "new": new_arn})
@@ -187,5 +199,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (ValueError, KeyError, subprocess.TimeoutExpired) as error:
-        raise SystemExit(f"STOP: {error}. Retain private receipts; no automatic retry or teardown.") from None
+    except (ValueError, KeyError, OSError, subprocess.TimeoutExpired) as error:
+        reason = type(error).__name__ if isinstance(error, OSError) else str(error)
+        raise SystemExit(f"STOP: {reason}. Retain private receipts; no automatic retry or teardown.") from None

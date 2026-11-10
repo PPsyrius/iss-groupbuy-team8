@@ -39,7 +39,7 @@ $common = @('--rm', '--entrypoint', 'python3', '--mount', "type=bind,source=$rep
    docker run @common -e AWS_PROFILE=swe5001-operator $image /repo/infra/swe5001/scripts/load-capture.py prepare /results/v3-new
    ```
 
-3. Check the heartbeat again, then use the [k6 guide](../../perf/k6/README.md) with the new preflight, original summary/raw JSONL, named generator and native resource monitor. Start within five minutes. Monitor both processes; preserve failures rather than restarting. Normalize **all** real successful scale-out activities, including CPU-guard activities when explicitly enabled, without treating unhealthy-task replacement as target-policy scale-out.
+3. Check the heartbeat again, then use the [k6 guide](../../perf/k6/README.md) with the new preflight, original summary/raw JSONL, named generator and native resource monitor. Start within five minutes. Monitor both processes; preserve failures rather than restarting. Normalize **all** actual successful scale-out activities, including CPU-guard activities when explicitly enabled, without treating unhealthy-task replacement as target-policy scale-out.
 4. After the measurement and full observer window finish, independently restore/verify the normal floor. Reauthenticate normally if the operator profile expired; do not rerun the collector or load. The command preserves existing scaled counts above two, verifies minimum two/maximum six, writes a separate receipt and creates a new archive. It does not prove settled count, health or two-AZ placement.
 
    ```powershell

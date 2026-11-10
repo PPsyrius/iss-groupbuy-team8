@@ -79,6 +79,8 @@ class PoolCapTests(unittest.TestCase):
                     return {"Account": CAP.ACCOUNT}
                 if operation == ("ecs", "describe-task-definition"):
                     return {"taskDefinition": CAP.replacement(definition(), "identity-svc")}
+                if operation == ("ecs", "describe-services"):
+                    return {"failures": [], "services": [copy.deepcopy(current[args[-1]])]}
                 if operation == ("ecs", "register-task-definition"):
                     payload = json.loads(Path(args[-1].removeprefix("file://")).read_text())
                     name = payload["containerDefinitions"][0]["name"]
@@ -105,6 +107,57 @@ class PoolCapTests(unittest.TestCase):
             self.assertEqual(updates, registrations)
             self.assertEqual(current["identity-svc"]["taskDefinition"], identity_arn)
             self.assertTrue(all((directory / f"{name}-verified.json").exists() for name in CAP.COUNTS))
+
+    def test_resume_reuses_matching_payload_and_preserves_conflicting_payload(self):
+        for matching in (True, False):
+            with self.subTest(matching=matching), tempfile.TemporaryDirectory() as temporary:
+                directory = Path(temporary)
+                before = {item["serviceName"]: {**item, "taskDefinition": "old-" + item["serviceName"]}
+                          for item in self.stable_services()}
+                definitions = {name: {"taskDefinition": definition(name)} for name in CAP.COUNTS}
+                (directory / "before-private.json").write_text(json.dumps({"services": before, "definitions": definitions}))
+                payload = {**CAP.replacement(definition(), "identity-svc"), "tags": []} if matching else {"unexpected": True}
+                saved = directory / "identity-svc-register-private.json"
+                original = json.dumps(payload, indent=3)
+                saved.write_text(original)
+                def aws(*args):
+                    if args[:2] == ("sts", "get-caller-identity"):
+                        return {"Account": CAP.ACCOUNT}
+                    self.assertEqual(args[:2], ("ecs", "register-task-definition"))
+                    raise ValueError("simulated registration failure")
+                expected = "simulated registration failure" if matching else "Saved registration payload differs"
+                with patch("sys.argv", ["cap-pools.py", "--resume", str(directory)]), \
+                        patch.object(CAP, "services", return_value=before), patch.object(CAP, "aws", side_effect=aws) as call, \
+                        contextlib.redirect_stdout(io.StringIO()), self.assertRaisesRegex(ValueError, expected):
+                    CAP.main()
+                self.assertEqual(saved.read_text(), original)
+                self.assertEqual(call.call_count, 2 if matching else 1)
+
+    def test_resume_stops_actionably_before_retrying_unapplied_or_rolled_back_revision(self):
+        for current_revision in ("old-identity-svc", "unreviewed-revision"):
+            with self.subTest(revision=current_revision), tempfile.TemporaryDirectory() as temporary:
+                directory = Path(temporary)
+                before = {item["serviceName"]: {**item, "taskDefinition": "old-" + item["serviceName"]}
+                          for item in self.stable_services()}
+                definitions = {name: {"taskDefinition": definition(name)} for name in CAP.COUNTS}
+                (directory / "before-private.json").write_text(json.dumps({"services": before, "definitions": definitions}))
+                revision = f"arn:aws:ecs:{CAP.REGION}:{CAP.ACCOUNT}:task-definition/{CAP.CLUSTER}-identity-svc:18"
+                receipt = directory / "identity-svc-registered.json"
+                original = json.dumps({"old": "old-identity-svc", "new": revision})
+                receipt.write_text(original)
+                def aws(*args):
+                    if args[:2] == ("sts", "get-caller-identity"):
+                        return {"Account": CAP.ACCOUNT}
+                    if args[:2] == ("ecs", "describe-task-definition"):
+                        return {"taskDefinition": CAP.replacement(definition(), "identity-svc")}
+                    self.assertEqual(args[:2], ("ecs", "describe-services"))
+                    return {"failures": [], "services": [{"taskDefinition": current_revision}]}
+                with patch("sys.argv", ["cap-pools.py", "--resume", str(directory)]), patch.object(CAP, "aws", side_effect=aws), \
+                        patch.object(CAP, "wait_completed") as wait, contextlib.redirect_stdout(io.StringIO()), \
+                        self.assertRaisesRegex(ValueError, "inspect update-service outcome and rollback/service events"):
+                    CAP.main()
+                wait.assert_not_called()
+                self.assertEqual(receipt.read_text(), original)
 
     def test_only_pool_changes_for_each_service(self):
         for name in CAP.COUNTS:

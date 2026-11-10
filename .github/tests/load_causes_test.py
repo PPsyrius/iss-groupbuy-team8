@@ -1,6 +1,7 @@
 """Safety and data-minimisation checks for historical read-only diagnosis."""
 
 import contextlib
+import copy
 import importlib.util
 import io
 import json
@@ -17,6 +18,31 @@ SPEC.loader.exec_module(CAUSES)
 
 
 class LoadCausesTests(unittest.TestCase):
+    def tracking_policy(self):
+        return {"PolicyName": "blocbuy-swe5001-commerce-requests-per-target", "PolicyType": "TargetTrackingScaling",
+                "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+                "Alarms": [{"AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-" + name}
+                           for name in ("AlarmHigh", "AlarmLow")]}
+
+    def test_selects_tracking_alarms_independently_of_cpu_policy_order(self):
+        tracking = self.tracking_policy()
+        cpu = {"PolicyName": "blocbuy-swe5001-commerce-cpu-headroom", "PolicyType": "StepScaling", "Alarms": []}
+        for policies in ([tracking, cpu], [cpu, tracking], [tracking]):
+            self.assertEqual(CAUSES.tracking_alarms(policies), tracking["Alarms"])
+
+    def test_refuses_missing_duplicate_or_mismatched_tracking_policy_and_alarms(self):
+        tracking = self.tracking_policy()
+        invalid = [[], [tracking, tracking]]
+        for key, value in (("PolicyName", "other"), ("PolicyType", "StepScaling"), ("ResourceId", "other"),
+                           ("Alarms", []), ("Alarms", [tracking["Alarms"][0]] * 2),
+                           ("Alarms", [{"AlarmName": "unreviewed"}] * 2)):
+            changed = copy.deepcopy(tracking)
+            changed[key] = value
+            invalid.append([changed])
+        for policies in invalid:
+            with self.subTest(policies=policies), self.assertRaises(ValueError):
+                CAUSES.tracking_alarms(policies)
+
     def test_refuses_mutations_before_calling_cli(self):
         with patch.dict(CAUSES.CAP, {"aws": lambda *args: self.fail("CLI must not be called")}):
             for command in [("ecs", "update-service"), ("ecs", "run-task"), ("application-autoscaling", "register-scalable-target"), ("ecs", "delete-service")]:
@@ -54,7 +80,7 @@ class LoadCausesTests(unittest.TestCase):
                 preflight = {"account": CAUSES.CAP["ACCOUNT"], "region": CAUSES.CAP["REGION"],
                     "routing": {"targetGroups": [{"arn": prefix + "targetgroup/blocbuy-swe5001-commerce-svc/group",
                                                  "loadBalancerArns": [prefix + "loadbalancer/app/blocbuy-swe5001/alb"]}]},
-                    "policies": {"ScalingPolicies": [{"Alarms": [{"AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-" + name} for name in ("AlarmHigh", "AlarmLow")]}]}}
+                    "policies": {"ScalingPolicies": [self.tracking_policy()]}}
                 (original / "preflight.json").write_text(json.dumps(preflight))
                 calls = []
 
