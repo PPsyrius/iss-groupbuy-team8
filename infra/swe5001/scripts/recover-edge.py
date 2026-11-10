@@ -399,14 +399,15 @@ def recover_with_runner(work, apply, resume, runner):
         runner.run("Fetching the merged repository (sparse checkout)", ["git", "clone", "--filter=blob:none", "--sparse",
                                                     "--branch", "prod", "--single-branch",
                                                     f"https://github.com/{REPO}.git", str(checkout)])
-        runner.run("Selecting only recovery source directories", ["git", "-C", str(checkout), "sparse-checkout", "set",
-                                                                "infra/swe5001", "deployment/frontend/cloudfront"])
         runner.run("Selecting exact promotion source", ["git", "-C", str(checkout), "checkout", "--detach", SHA])
     actual_sha = runner.run("Checking source SHA", ["git", "-C", str(checkout), "rev-parse", "HEAD"], True).stdout.strip()
     require(actual_sha == SHA, "Unexpected checkout SHA")
     source_status = runner.run("Checking checkout is unchanged", ["git", "-C", str(checkout), "status",
                               "--porcelain", "--untracked-files=all"], True)
     require(not source_status.stdout.strip(), "Recovery checkout was edited; preserve it and stop for review")
+    # Repair an interrupted sparse selection only after validating the existing source.
+    runner.run("Selecting only recovery source directories", ["git", "-C", str(checkout), "sparse-checkout", "set",
+                                                            "infra/swe5001", "deployment/frontend/cloudfront"])
     status = checkout / "infra/swe5001/scripts/env-status.sh"
     runner.run("Verifying runtime is absent (read-only)", ["bash", str(status)])
     edge = checkout / "infra/swe5001/edge"

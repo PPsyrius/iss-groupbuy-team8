@@ -145,7 +145,7 @@ class PoolCapTests(unittest.TestCase):
                 receipt = directory / "identity-svc-registered.json"
                 original = json.dumps({"old": "old-identity-svc", "new": revision})
                 receipt.write_text(original)
-                def aws(*args):
+                def aws(*args, current_revision=current_revision):
                     if args[:2] == ("sts", "get-caller-identity"):
                         return {"Account": CAP.ACCOUNT}
                     if args[:2] == ("ecs", "describe-task-definition"):

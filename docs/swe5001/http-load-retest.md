@@ -6,7 +6,7 @@ Refs #458/#591 and NFR-64. Prepared on 9 November 2026; reconciled after the 10 
 
 ## Start gate: merge and release first
 
-Do not start a billable session or send load while preparing this document. The rebased fixes/tooling on `fix/swe5001-load-rerun` are uncommitted and not certified by the pre-rebase verification or historical release. Testing an old release would not validate these changes.
+Do not start a billable session or send load while preparing this document. Require passing gates for the selected post-rebase revision, review, merge and the intended release before a session. Historical verification or an older release does not validate later fixes/tooling.
 
 - [x] Historical release: #769 fixed the immutable tag collision; #770 at `93984f61` completed scans, publication, startup, smoke, release and teardown in run 42653347818 ([record](evidence/20261109-promotion-770/README.md)). #757 and its failed retry remain failed evidence, not current blockers requiring the same fix again.
 - [ ] The intended application fixes and tooling have passed fresh gates after rebase, been reviewed/merged and, where applicable, released. Record the actual tooling `TEST_SHA`, released `IMAGE_SHA`, promotion URL and every service digest; the historical #770 release does not contain this branch's fixes.

@@ -270,7 +270,8 @@ class EdgeRecoveryTest(unittest.TestCase):
                 self.assertNotIn(key, runner.env)
             self.assertEqual(runner.env["AWS_REGION"], recovery.REGION)
 
-    def exercise_recovery(self, apply, confirmation="APPLY SWE5001 EDGE", account=recovery.ACCOUNT, resume=False):
+    def exercise_recovery(self, apply, confirmation="APPLY SWE5001 EDGE", account=recovery.ACCOUNT, resume=False,
+                          partial_checkout=False, source_dirty=False, checkout_sha=recovery.SHA):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         work = Path(directory.name)
@@ -287,7 +288,15 @@ class EdgeRecoveryTest(unittest.TestCase):
             nonlocal scope_reads
             calls.append(command)
             if "Checking source SHA" == phase:
-                return SimpleNamespace(stdout=recovery.SHA + "\n", returncode=0)
+                return SimpleNamespace(stdout=checkout_sha + "\n", returncode=0)
+            if "Checking checkout is unchanged" == phase and source_dirty:
+                return SimpleNamespace(stdout=" M retained-user-edit\n", returncode=0)
+            if "Selecting only recovery source directories" == phase and partial_checkout:
+                status = work / "repo/infra/swe5001/scripts/env-status.sh"
+                status.parent.mkdir(parents=True)
+                status.write_text("fixture", encoding="utf-8")
+            if "Verifying runtime is absent (read-only)" == phase and partial_checkout:
+                self.assertTrue((work / "repo/infra/swe5001/scripts/env-status.sh").is_file())
             if "Checking existing private Terraform version" == phase:
                 return SimpleNamespace(stdout=json.dumps({"terraform_version": recovery.VERSION}), returncode=0)
             if "Checking private plan scope" == phase:
@@ -352,6 +361,23 @@ class EdgeRecoveryTest(unittest.TestCase):
         self.assertFalse(any("clone" in command or "checkout" in command for command in calls))
         self.assertTrue(any("--porcelain" in command for command in calls))
         self.assertTrue((work / "receipt.json").exists())
+
+    def test_partial_checkout_is_repaired_only_after_source_guards(self):
+        calls, _, _ = self.exercise_recovery(False, resume=True, partial_checkout=True)
+        sha = next(index for index, command in enumerate(calls) if "rev-parse" in command)
+        clean = next(index for index, command in enumerate(calls) if "--porcelain" in command)
+        selection = next(index for index, command in enumerate(calls) if "sparse-checkout" in command)
+        status = next(index for index, command in enumerate(calls) if command[0] == "bash")
+        self.assertLess(sha, clean)
+        self.assertLess(clean, selection)
+        self.assertLess(selection, status)
+
+    def test_resume_preserves_dirty_or_unexpected_revision_before_sparse_selection(self):
+        for options, message in (({"source_dirty": True}, "Recovery checkout was edited"),
+                                 ({"checkout_sha": "unexpected"}, "Unexpected checkout SHA")):
+            with self.subTest(options=options), self.assertRaisesRegex(ValueError, message):
+                self.exercise_recovery(False, resume=True, partial_checkout=True, **options)
+            self.assertFalse(any("sparse-checkout" in command or "checkout" in command for command in self.calls))
 
     def test_dependency_recovery_applies_cf_only_then_requires_full_convergence(self):
         self.add_bucket_dependency()

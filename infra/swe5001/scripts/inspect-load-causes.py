@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import runpy
+import subprocess
 import tarfile
 import tempfile
 
@@ -100,8 +101,9 @@ def main():
     def collect(name, operation):
         try:
             save(name, operation())
-        except (ValueError, KeyError) as error:
-            problems.append({"file": name, "error": str(error)})
+        except (ValueError, KeyError, subprocess.TimeoutExpired) as error:
+            reason = "AWS CLI read timed out" if isinstance(error, subprocess.TimeoutExpired) else str(error)
+            problems.append({"file": name, "error": reason})
 
     collect("alarm-config.json", lambda: aws("cloudwatch", "describe-alarms", "--alarm-names", *[a["AlarmName"] for a in alarms],
         "--query", "MetricAlarms[].{name:AlarmName,namespace:Namespace,metric:MetricName,statistic:Statistic,period:Period,evaluationPeriods:EvaluationPeriods,datapointsToAlarm:DatapointsToAlarm,threshold:Threshold,comparison:ComparisonOperator,treatMissingData:TreatMissingData,dimensions:Dimensions}"))

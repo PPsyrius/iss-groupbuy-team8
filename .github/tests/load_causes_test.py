@@ -5,6 +5,7 @@ import copy
 import importlib.util
 import io
 import json
+import subprocess
 from pathlib import Path
 import tarfile
 import tempfile
@@ -71,7 +72,7 @@ class LoadCausesTests(unittest.TestCase):
                 self.assertEqual(len(metric["Dimensions"]), 2)
 
     def test_main_archives_read_only_results_and_records_partial_read_failure(self):
-        for deny_metrics in (False, True):
+        for failure in (None, "denied", "timeout"):
             with tempfile.TemporaryDirectory() as temporary:
                 home = Path(temporary)
                 original = home / "swe5001-v3-b84uhoj0"
@@ -84,12 +85,15 @@ class LoadCausesTests(unittest.TestCase):
                 (original / "preflight.json").write_text(json.dumps(preflight))
                 calls = []
 
-                def aws(*args):
+                def aws(*args, failure=failure):
                     calls.append(args[:2])
                     if args[:2] == ("sts", "get-caller-identity"):
                         return {"Account": CAUSES.CAP["ACCOUNT"]}
-                    if args[:2] == ("cloudwatch", "get-metric-data") and deny_metrics:
-                        raise ValueError("Read permission denied")
+                    if args[:2] == ("cloudwatch", "get-metric-data"):
+                        if failure == "denied":
+                            raise ValueError("Read permission denied")
+                        if failure == "timeout":
+                            raise subprocess.TimeoutExpired(["aws", "private-value"], 900, output="private-value", stderr="private-value")
                     if args[:2] == ("logs", "filter-log-events"):
                         return {"events": [{"timestamp": 1, "eventId": "one", "logStreamName": "stream", "message": "private-value: Connection is not available"}]}
                     return {"fixture": True}
@@ -102,7 +106,9 @@ class LoadCausesTests(unittest.TestCase):
                 with tarfile.open(archives[0]) as archive:
                     contexts = [item for item in archive.getmembers() if item.name.endswith("/context.json")]
                     context = json.load(archive.extractfile(contexts[0]))
-                    self.assertEqual(len(context["problems"]), int(deny_metrics))
+                    self.assertEqual(len(context["problems"]), int(failure is not None))
+                    if failure == "timeout":
+                        self.assertEqual(context["problems"][0]["error"], "AWS CLI read timed out")
                     for member in archive.getmembers():
                         if member.isfile():
                             self.assertNotIn(b"private-value", archive.extractfile(member).read())

@@ -47,6 +47,39 @@ class ObserverTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     OBS.read_aws(*args)
 
+    def test_longer_window_requires_the_same_fifteen_minute_credential_margin(self):
+        for minutes in (60, 76):
+            expiry = (datetime.now(timezone.utc) + timedelta(minutes=minutes)).isoformat()
+            with patch.object(OBS, "read_aws", return_value={"Expiration": expiry}):
+                if minutes == 60:
+                    with self.assertRaises(ValueError):
+                        OBS.credential_expiry(3600)
+                else:
+                    self.assertEqual(OBS.credential_expiry(3600), expiry)
+
+    def test_invalid_window_stops_before_aws_or_directory_creation(self):
+        for seconds in (2399, 7201):
+            with self.subTest(seconds=seconds), tempfile.TemporaryDirectory() as temporary:
+                output = Path(temporary) / "new"
+                with patch("sys.argv", ["observe-load.py", str(output), "--persistent-host", "--seconds", str(seconds)]), \
+                        patch.object(OBS, "read_aws") as aws, self.assertRaises(ValueError):
+                    OBS.main()
+                aws.assert_not_called()
+                self.assertFalse(output.exists())
+
+    def test_selected_window_is_passed_to_capture_and_credential_receipt(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "new"
+            expiry = (datetime.now(timezone.utc) + timedelta(minutes=76)).isoformat()
+            with patch("sys.argv", ["observe-load.py", str(output), "--persistent-host", "--seconds", "3600"]), \
+                    patch.dict(os.environ, {}, clear=True), patch.object(OBS, "read_aws", side_effect=[
+                        {"Account": OBS.LOAD["CAP"]["ACCOUNT"]}, {"Expiration": expiry}]), \
+                    patch.object(OBS, "capture", return_value={"collectionComplete": True}) as capture, \
+                    patch.object(OBS.signal, "signal"):
+                OBS.main()
+            capture.assert_called_once_with(output.resolve(), seconds=3600)
+            self.assertEqual(json.loads((output / "credential-window.json").read_text(encoding="utf-8"))["requiredSeconds"], 4500)
+
     def test_main_rejects_cloudshell_before_aws_or_directory_creation(self):
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "new"
@@ -67,7 +100,7 @@ class ObserverTests(unittest.TestCase):
                     patch.dict(os.environ, {}, clear=True), patch.object(OBS, "read_aws", side_effect=values), \
                     patch.object(OBS, "capture", return_value={"collectionComplete": True}), patch.object(OBS.signal, "signal"):
                 OBS.main()
-            saved = (output / "credential-window.json").read_text()
+            saved = (output / "credential-window.json").read_text(encoding="utf-8")
             self.assertEqual(json.loads(saved)["observedExpiration"], expiry)
             self.assertNotIn("private-", saved)
 
@@ -76,7 +109,7 @@ class ObserverTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         directory = Path(temporary.name) / "result.with-dot"
         directory.mkdir()
-        (directory / "preflight.json").write_text("{}")
+        (directory / "preflight.json").write_text("{}", encoding="utf-8")
         clock = [0.0]
         calls = []
         base = datetime.now(timezone.utc)
@@ -104,7 +137,7 @@ class ObserverTests(unittest.TestCase):
         with tarfile.open(Path(str(directory) + ".tar.gz")) as archive:
             self.assertTrue(any(item.name.endswith("/observer-result.json") for item in archive.getmembers()))
         self.assertTrue(set(calls).issubset(OBS.READS))
-        self.assertEqual(json.loads((directory / "observer-heartbeat.json").read_text())["state"], "finished")
+        self.assertEqual(json.loads((directory / "observer-heartbeat.json").read_text(encoding="utf-8"))["state"], "finished")
         self.assertFalse(result["restorationPerformed"])
         return result, directory
 
@@ -112,7 +145,7 @@ class ObserverTests(unittest.TestCase):
         result, directory = self.run_capture()
         self.assertTrue(result["timerCompleted"])
         self.assertTrue(result["collectionComplete"])
-        rows = (directory / "observations.jsonl").read_text().strip().splitlines()
+        rows = (directory / "observations.jsonl").read_text(encoding="utf-8").strip().splitlines()
         self.assertEqual(len(rows), result["samples"])
 
     def test_transient_read_failure_is_retained_not_replaced_by_fake_observation(self):
@@ -120,7 +153,7 @@ class ObserverTests(unittest.TestCase):
         self.assertTrue(result["timerCompleted"])
         self.assertFalse(result["collectionComplete"])
         self.assertEqual(len(result["errors"]), 1)
-        self.assertEqual(len((directory / "observations.jsonl").read_text().strip().splitlines()), result["samples"])
+        self.assertEqual(len((directory / "observations.jsonl").read_text(encoding="utf-8").strip().splitlines()), result["samples"])
 
     def test_finish_failure_still_preserves_archive_and_marks_incomplete(self):
         result, _ = self.run_capture(fail_finish=True)
@@ -134,7 +167,9 @@ class ObserverTests(unittest.TestCase):
         self.assertFalse(result["collectionComplete"])
 
     def test_first_failed_read_never_publishes_recording_heartbeat(self):
-        result, directory = self.run_capture(initial_failure=True)
+        with patch.object(OBS, "heartbeat", wraps=OBS.heartbeat) as heartbeat:
+            result, _ = self.run_capture(initial_failure=True)
+        self.assertEqual([call.args[3] for call in heartbeat.call_args_list], ["finished"])
         self.assertEqual(result["samples"], 0)
         self.assertFalse(result["collectionComplete"])
         self.assertFalse(result["timerCompleted"])

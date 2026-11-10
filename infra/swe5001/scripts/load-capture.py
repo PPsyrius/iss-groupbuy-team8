@@ -59,8 +59,8 @@ def require_observer(directory):
     directory = Path(directory)
     require((directory / "observer-context.json").is_file() and (directory / "observer-heartbeat.json").is_file(),
             "Persistent observer context/heartbeat is missing; no runtime change permitted")
-    context = json.loads((directory / "observer-context.json").read_text())
-    heartbeat = json.loads((directory / "observer-heartbeat.json").read_text())
+    context = json.loads((directory / "observer-context.json").read_text(encoding="utf-8"))
+    heartbeat = json.loads((directory / "observer-heartbeat.json").read_text(encoding="utf-8"))
     require(context.get("account") == CAP["ACCOUNT"] and context.get("region") == CAP["REGION"]
             and context.get("cluster") == CLUSTER and context.get("persistentHostConfirmed") is True,
             "Observer identity/host confirmation mismatch")
@@ -212,7 +212,7 @@ def finish(directory, start, read=None):
     activities = read("application-autoscaling", "describe-scaling-activities", "--service-namespace", "ecs", "--resource-id", RESOURCE)
     write(directory, "scaling-activities.json", activities)
     query_start = start - timedelta(minutes=2)
-    group = json.loads((directory / "preflight.json").read_text())["routing"]["targetGroups"][0]
+    group = json.loads((directory / "preflight.json").read_text(encoding="utf-8"))["routing"]["targetGroups"][0]
     alb_suffix = group["loadBalancerArns"][0].split(":loadbalancer/")[1]
     group_suffix = group["arn"].split(":")[-1]
     dimensions = [{"Name": "LoadBalancer", "Value": alb_suffix}, {"Name": "TargetGroup", "Value": group_suffix}]

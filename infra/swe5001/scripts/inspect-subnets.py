@@ -50,6 +50,19 @@ def require(condition, message):
         raise ValueError(message)
 
 
+def task_eni_owners(tasks, role):
+    """Bind each observed task to exactly one ENI without inferring operator approval."""
+    owners = {}
+    for task in tasks:
+        enis = [detail["value"] for attachment in task["attachments"]
+                if attachment["type"] == "ElasticNetworkInterface" for detail in attachment["details"]
+                if detail["name"] == "networkInterfaceId"]
+        require(len(enis) == 1 and re.fullmatch(r"eni-[0-9a-f]+", enis[0]) and enis[0] not in owners,
+                "Expected one unique ENI per observed task")
+        owners[enis[0]] = {"taskArn": task["arn"], "role": role}
+    return owners
+
+
 def collect(directory, call=aws):
     directory = Path(directory)
     directory.mkdir(mode=0o700, parents=True, exist_ok=False)
@@ -114,19 +127,47 @@ def collect(directory, call=aws):
             require(len(arns) == running[service], f"Task count changed for {service}; repeat collection")
             tasks.extend(arns)
         require(len(set(tasks)) == len(tasks) <= 100, "Unexpected task count; no truncated batch is accepted")
+        task_projection = "{failures:failures,tasks:tasks[].{arn:taskArn,definition:taskDefinitionArn,status:lastStatus,attachments:attachments,containers:containers[].{name:name,image:image,digest:imageDigest}}}"
         task_data = capture("task-details.json", "ecs", "describe-tasks", "--cluster", NAME, "--tasks", *tasks,
-                            "--query", "{failures:failures,tasks:tasks[].{arn:taskArn,definition:taskDefinitionArn,status:lastStatus,attachments:attachments,containers:containers[].{name:name,image:image,digest:imageDigest}}}")
+                            "--query", task_projection)
         require(not task_data["failures"] and len(task_data["tasks"]) == len(tasks)
+                and {task["arn"] for task in task_data["tasks"]} == set(tasks)
                 and all(t["status"] == "RUNNING" for t in task_data["tasks"]),
                 "Tasks changed or lookup failed; collection is inconclusive")
-        enis = [d["value"] for t in task_data["tasks"] for a in t["attachments"]
-                if a["type"] == "ElasticNetworkInterface" for d in a["details"] if d["name"] == "networkInterfaceId"]
-        require(len(set(enis)) == len(tasks) and all(re.fullmatch(r"eni-[0-9a-f]+", e) for e in enis),
-                "Expected one task ENI per running task")
+        owners = task_eni_owners(task_data["tasks"], "service")
+        enis = list(owners)
         projection = "NetworkInterfaces[].{id:NetworkInterfaceId,vpc:VpcId,subnet:SubnetId,az:AvailabilityZone,status:Status,description:Description,managed:RequesterManaged,groups:Groups,public_ip:Association.PublicIp}"
         task_enis = capture("task-enis.json", "ec2", "describe-network-interfaces",
-                            "--network-interface-ids", *enis, "--query", projection)
+                             "--network-interface-ids", *enis, "--query", projection)
         require(len(task_enis) == len(enis) and all(e["vpc"] == vpc for e in task_enis), "Task ENI inventory is incomplete or in another VPC")
+        dbinit = capture("tasks-db-init.json", "ecs", "list-tasks", "--cluster", NAME,
+                         "--family", NAME + "-db-init", "--desired-status", "RUNNING", "--query", "taskArns")
+        require(len(set(dbinit)) == len(dbinit) <= 100 and not set(dbinit) & set(tasks)
+                and all(arn.startswith(f"arn:aws:ecs:{REGION}:{ACCOUNT}:task/{NAME}/") for arn in dbinit),
+                "Unexpected db-init task inventory; do not accept truncated or foreign tasks")
+        init_data = (capture("db-init-task-details.json", "ecs", "describe-tasks", "--cluster", NAME,
+                             "--tasks", *dbinit, "--query", task_projection) if dbinit else
+                     save("db-init-task-details.json", {"failures": [], "tasks": []}))
+        require(not init_data["failures"] and len(init_data["tasks"]) == len(dbinit)
+                and {task["arn"] for task in init_data["tasks"]} == set(dbinit)
+                and all(task["status"] == "RUNNING" and task["definition"].startswith(
+                    f"arn:aws:ecs:{REGION}:{ACCOUNT}:task-definition/{NAME}-db-init:") for task in init_data["tasks"]),
+                "Db-init tasks changed or use an unexpected family; repeat collection")
+        init_owners = task_eni_owners(init_data["tasks"], "db-init")
+        require(not owners.keys() & init_owners.keys(), "Service and db-init tasks cannot share an ENI")
+        owners.update(init_owners)
+        source_enis = capture("source-enis.json", "ec2", "describe-network-interfaces", "--filters",
+                              f"Name=vpc-id,Values={vpc}",
+                              f"Name=group-id,Values={by_name[NAME + '-svc']},{by_name[NAME + '-dbinit']}", "--query", projection)
+        source_ids = {eni["id"] for eni in source_enis}
+        save("source-reconciliation.json", {"taskEniOwners": owners,
+             "unmatchedEniIds": sorted(source_ids - owners.keys()),
+             "missingEniIds": sorted(owners.keys() - source_ids), "operatorApproval": "not assessed"})
+        require(len(source_ids) == len(source_enis) and source_ids == owners.keys(),
+                "Source security-group ENIs do not reconcile with observed tasks; inspect source-reconciliation.json")
+        require(all(eni["vpc"] == vpc and {group["GroupId"] for group in eni["groups"]} == {
+                    by_name[NAME + ("-svc" if owners[eni["id"]]["role"] == "service" else "-dbinit")]}
+                    for eni in source_enis), "Source ENI has an unexpected VPC or security-group set")
         rds = capture("rds.json", "rds", "describe-db-instances", "--db-instance-identifier", NAME, "--query",
                       "DBInstances[].{id:DBInstanceIdentifier,status:DBInstanceStatus,az:AvailabilityZone,public:PubliclyAccessible,subnet_group:DBSubnetGroup,groups:VpcSecurityGroups}")
         require(len(rds) == 1 and rds[0]["id"] == NAME, "Expected the runtime RDS instance")
@@ -147,7 +188,11 @@ def collect(directory, call=aws):
                                  "metadata_collection": "complete", "acceptance": "not assessed",
                                  "connectivity": "not tested"})
     except Exception:
-        save("incomplete.json", {"metadata_collection": "incomplete", "acceptance": "not verified"})
+        try:
+            save("incomplete.json", {"metadata_collection": "incomplete", "acceptance": "not verified"})
+        except OSError:
+            # Preserve the original collection error if storage cannot retain the receipt.
+            pass
         raise
 
 

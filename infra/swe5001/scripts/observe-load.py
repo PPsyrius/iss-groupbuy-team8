@@ -34,15 +34,16 @@ def guard_host(confirmed):
     LOAD["require"](confirmed and not shell, "Use a confirmed persistent host outside CloudShell; background processes do not prevent its idle shutdown")
 
 
-def credential_expiry():
+def credential_expiry(seconds=2400):
     credentials = read_aws("configure", "export-credentials", "--format", "process")
     # Never write or print access keys, session tokens or the credential response.
     expiry = credentials.get("Expiration")
     del credentials
     LOAD["require"](isinstance(expiry, str), "Credential expiration is unknown; use a reviewed temporary profile with observed expiry")
     at = datetime.fromisoformat(expiry.replace("Z", "+00:00"))
-    LOAD["require"](at.tzinfo is not None and (at - datetime.now(timezone.utc)).total_seconds() >= 3300,
-                    "Need at least 55 minutes of observed credential validity before the 40-minute capture/preparation/collection window")
+    required = seconds + 900
+    LOAD["require"](at.tzinfo is not None and (at - datetime.now(timezone.utc)).total_seconds() >= required,
+                    f"Need at least {required} seconds of observed credential validity for capture plus the 15-minute margin")
     return expiry
 
 
@@ -120,20 +121,22 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path, help="New private results directory shared with prepare/runner")
     parser.add_argument("--persistent-host", action="store_true")
+    parser.add_argument("--seconds", type=int, default=2400, help="Observation window, 2400–7200 seconds; credentials need 15 minutes more")
     args = parser.parse_args()
+    LOAD["require"](2400 <= args.seconds <= 7200, "Observation window must be 2400–7200 seconds")
     guard_host(args.persistent_host)
     LOAD["require"](read_aws("sts", "get-caller-identity")["Account"] == LOAD["CAP"]["ACCOUNT"], "Wrong AWS account")
-    expiry = credential_expiry()
+    expiry = credential_expiry(args.seconds)
     directory = args.directory.resolve()
     repo = Path(__file__).resolve().parents[3]
     LOAD["require"](not directory.exists() and directory != repo and repo not in directory.parents, "Use a new results directory outside the checkout; no overwrite/repeat")
     directory.mkdir(parents=True, mode=0o700)
-    LOAD["write"](directory, "credential-window.json", {"observedExpiration": expiry, "requiredSeconds": 3300})
+    LOAD["write"](directory, "credential-window.json", {"observedExpiration": expiry, "requiredSeconds": args.seconds + 900})
     os.environ["AWS_MAX_ATTEMPTS"] = "1"
     def stop(_signal, _frame):
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, stop)
-    result = capture(directory)
+    result = capture(directory, seconds=args.seconds)
     if not result["collectionComplete"]:
         raise SystemExit(1)
 

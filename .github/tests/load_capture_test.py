@@ -43,8 +43,8 @@ class LoadCaptureTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 LOAD.require_observer(directory)
             def save(c, h):
-                (directory / "observer-context.json").write_text(json.dumps(c))
-                (directory / "observer-heartbeat.json").write_text(json.dumps(h))
+                (directory / "observer-context.json").write_text(json.dumps(c), encoding="utf-8")
+                (directory / "observer-heartbeat.json").write_text(json.dumps(h), encoding="utf-8")
             save(context, heartbeat)
             self.assertEqual(LOAD.require_observer(directory), directory)
             for key, value in [("state", "finished"), ("session", "other"), ("samples", 0),
@@ -55,6 +55,8 @@ class LoadCaptureTests(unittest.TestCase):
             save({**context, "startedAt": (now - timedelta(minutes=5)).isoformat()}, heartbeat)
             with self.assertRaises(ValueError):
                 LOAD.require_observer(directory)
+            save({**context, "startedAt": (now - timedelta(minutes=5)).isoformat(), "seconds": 3600}, heartbeat)
+            self.assertEqual(LOAD.require_observer(directory), directory)
 
     def test_lost_observer_during_prepare_restores_floor_and_never_publishes_preflight(self):
         with tempfile.TemporaryDirectory() as temporary:

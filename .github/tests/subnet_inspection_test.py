@@ -24,6 +24,9 @@ class SubnetInspectionTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.directory = Path(self.temp.name) / "evidence"
         self.calls = []
+        self.dbinit_arns = []
+        self.dbinit_details = {"failures": [], "tasks": []}
+        self.source_enis = [{"id": f"eni-00{i}", "vpc": "vpc-001", "groups": [{"GroupId": "sg-000"}]} for i in range(3)]
         self.responses = {
             ("sts", "get-caller-identity"): inspection.ACCOUNT,
             ("ec2", "describe-vpcs"): [{"id": "vpc-001", "state": "available", "cidr": "10.50.0.0/16"}],
@@ -63,11 +66,19 @@ class SubnetInspectionTest(unittest.TestCase):
         self.assertIn(key, inspection.READ_CALLS)
         self.assertIn("--query", args)
         if key == ("ecs", "list-tasks"):
+            if "--family" in args:
+                self.assertIn(inspection.NAME + "-db-init", args)
+                return copy.deepcopy(self.dbinit_arns)
             service = args[args.index("--service-name") + 1]
             return [self.arn(inspection.SERVICES.index(service))]
+        if key == ("ecs", "describe-tasks") and any(arn in args for arn in self.dbinit_arns):
+            return copy.deepcopy(self.dbinit_details)
         if key == ("ec2", "describe-network-interfaces"):
             if "--network-interface-ids" in args:
                 return [{"id": f"eni-00{i}", "vpc": "vpc-001"} for i in range(3)]
+            if "Name=group-id,Values=sg-000,sg-003" in args:
+                self.assertIn("Name=vpc-id,Values=vpc-001", args)
+                return copy.deepcopy(self.source_enis)
             return [{"groups": [{"GroupId": "sg-001"}]}, {"groups": [{"GroupId": "sg-002"}]}]
         result = self.responses[key]
         if isinstance(result, Exception):
@@ -89,7 +100,56 @@ class SubnetInspectionTest(unittest.TestCase):
         self.assertEqual(result["connectivity"], "not tested")
         # Empty placement/routes fixtures can be captured, but never labelled a pass.
         self.assertEqual(json.loads((self.directory / "subnets.json").read_text()), [])
-        self.assertEqual(len(self.calls), 17)
+        self.assertEqual(len(self.calls), 19)
+
+    def test_source_group_inventory_rejects_unknown_missing_and_extra_groups(self):
+        original = copy.deepcopy(self.source_enis)
+        extra_group = copy.deepcopy(original)
+        extra_group[0]["groups"].append({"GroupId": "sg-unreviewed"})
+        for inventory in (original + [{"id": "eni-999", "vpc": "vpc-001", "groups": [{"GroupId": "sg-000"}]}],
+                          original[:-1], extra_group):
+            with self.subTest(inventory=inventory), tempfile.TemporaryDirectory() as temporary:
+                self.directory = Path(temporary) / "evidence"
+                self.source_enis = inventory
+                with self.assertRaisesRegex(ValueError, "Source"):
+                    self.collect()
+                self.assert_incomplete()
+                self.assertTrue((self.directory / "source-reconciliation.json").is_file())
+
+    def test_dbinit_eni_is_bound_to_task_metadata_but_not_operator_approval(self):
+        self.dbinit_arns = [self.arn(3)]
+        self.dbinit_details = {"failures": [], "tasks": [{"arn": self.arn(3), "status": "RUNNING",
+            "definition": f"arn:aws:ecs:{inspection.REGION}:{inspection.ACCOUNT}:task-definition/{inspection.NAME}-db-init:7",
+            "containers": [{"name": "db-init", "digest": "sha256:fixture"}],
+            "attachments": [{"type": "ElasticNetworkInterface", "details": [{"name": "networkInterfaceId", "value": "eni-003"}]}]}]}
+        self.source_enis.append({"id": "eni-003", "vpc": "vpc-001", "groups": [{"GroupId": "sg-003"}]})
+        self.collect()
+        result = json.loads((self.directory / "source-reconciliation.json").read_text(encoding="utf-8"))
+        self.assertEqual(result["taskEniOwners"]["eni-003"], {"taskArn": self.arn(3), "role": "db-init"})
+        self.assertEqual(result["operatorApproval"], "not assessed")
+        self.assertEqual(result["unmatchedEniIds"], [])
+
+    def test_missing_dbinit_details_do_not_pass_source_reconciliation(self):
+        self.dbinit_arns = [self.arn(3)]
+        with self.assertRaisesRegex(ValueError, "Db-init tasks changed"):
+            self.collect()
+        self.assert_incomplete()
+
+    def test_task_eni_mapping_requires_one_unique_interface_per_task(self):
+        tasks = copy.deepcopy(self.responses[("ecs", "describe-tasks")]["tasks"])
+        tasks[0]["attachments"] = []
+        with self.assertRaisesRegex(ValueError, "unique ENI"):
+            inspection.task_eni_owners(tasks, "service")
+
+    def test_failed_incomplete_receipt_preserves_original_error(self):
+        self.responses[("sts", "get-caller-identity")] = "wrong-account"
+        original_open = Path.open
+        def failing_receipt(path, *args, **kwargs):
+            if path.name == "incomplete.json":
+                raise OSError("simulated full disk")
+            return original_open(path, *args, **kwargs)
+        with patch.object(Path, "open", new=failing_receipt), self.assertRaisesRegex(ValueError, "Expected account"):
+            self.collect()
 
     def test_wrong_account_stops_before_resource_reads(self):
         self.responses[("sts", "get-caller-identity")] = "000000000000"
