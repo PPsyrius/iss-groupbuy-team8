@@ -9,6 +9,8 @@
 // Exits 0 when both builds have the same pages, 1 when any page differs, 2 when the base cannot be
 // resolved or a build fails.
 // The working tree includes uncommitted and untracked files under docs/ (ignored files excepted).
+// The header logo is drawn only when REPORT_TEMPLATE or REPORT_LOGO is set; both builds then use the
+// same file. Without either, neither build draws a logo, so a logo-only change goes unseen.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
@@ -47,8 +49,7 @@ for (const f of git('ls-files', '--cached', '--others', '--exclude-standard', 'd
 
 // The same build as `npm run build` (without the checks), from a clean environment, then pages.
 const env = { ...process.env };
-delete env.REPORT_TEMPLATE;
-delete env.REPORT_LOGO;
+for (const k of ['REPORT_TEMPLATE', 'REPORT_LOGO']) if (env[k]) env[k] = resolve(env[k]);
 delete env.REPORT_OUT;
 const render = (dir) => {
   execFileSync('node', [join(dir, 'docs/swe5006/report/scripts/build.mjs')], { cwd: dir, env, stdio: ['ignore', 'ignore', 'inherit'] });

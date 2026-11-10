@@ -2,7 +2,7 @@
 
 == UC8 View My Orders and Teams <sec-a-uc08>
 
-UC8 is the buyer's account page, "My blocs". A signed-in buyer sees every team they lead or joined, with its stored state, and one page of their orders, each with its status. The use case only reads. Its design questions are ownership (a buyer must never see another buyer's rows), a consistent snapshot (a teams page and its total must agree; the orders list accepts a count from a separate snapshot), and a read that crosses from the group-buy module into the catalog module without a dependency cycle. Every class, method and error code named here exists in the code on this branch. UC8 is designed and built; the evidence for each flow is listed in section 2.2.
+UC8 is the buyer's account page, "My blocs". A signed-in buyer sees the teams they lead or joined, the latest 100 of them (`MY_BLOCS_FETCH_SIZE`), with their stored state, and one page of their orders, each with its status. The use case only reads. Its design questions are ownership (a buyer must never see another buyer's rows), a consistent snapshot (a teams page and its total must agree; the orders list accepts a count from a separate snapshot), and a read that crosses from the group-buy module into the catalog module without a dependency cycle. Every class, method and error code named here exists in the code on this branch. UC8 is designed and built; the evidence for each flow is listed in section 2.2.
 
 === Use Case and Flows of Events <sec-a-uc08-flows>
 
@@ -39,7 +39,7 @@ UC8 is the buyer's account page, "My blocs". A signed-in buyer sees every team t
 
 === Analysis Sequence Diagrams <sec-a-uc08-as>
 
-UC8 has two major flows, one per list. They read different entities and page on their own; the page starts both when it opens. @fig-a-uc08-as-teams is B1–B4 with A3; @fig-a-uc08-as-orders is B3–B4 with A6. A1 needs the design concept of a session and is drawn in the design sequences only. B5, A2, A4, A5 and E1 happen in the page alone (S2): they choose a card, a label or a page number from rows already read, or show an error, and involve no entity, so no sequence draws them.
+UC8 has two major flows, one per list. They read different entities and page on their own; the page starts both when it opens. @fig-a-uc08-as-teams is B1–B4 with A3; @fig-a-uc08-as-orders is B3–B4 with A6. A1 needs the design concept of a session and is drawn in the design sequences only. B5 (except sharing, which is UC7), A2, A4, A5 and E1 happen in the page alone (S2): they choose a card, a label or a page number from rows already read, or show an error, and involve no entity, so no sequence draws them.
 
 #afig("a-uc08-as-teams", [UC8 analysis sequence diagram, view my teams (B1–B4, A3). The control reads one page of memberships, then all listing titles of that page in one batch.])
 
@@ -132,7 +132,7 @@ UC8 changes no state, so it has no statechart. It displays two lifecycles drawn 
   [B2], [`listMyTeams`, `Account.memberships`, `Membership.describe`, `Team.summary`, `Product.displayFieldsOf`], [`GroupDealAppServiceImpl.pageMyTeams` → `GroupDealRepositoryImpl.pageMembershipsByUserId` → `BizGroupDealMapper.selectMembershipPageByUserId`, `countMembershipsByUserId`; `GroupbuyListingDisplayAdapter.findByProductIds` → `ProductRepository.findDisplaysByIds`, `toDisplay`; `toView`], [@fig-a-uc08-ds-teams],
   [B3], [`listMyOrders`, `Account.orders`, `Order.summary`], [`OrderAppServiceImpl.pageMyOrders` → `OrderRepository.pageByUserId`; `toView`], [@fig-a-uc08-ds-orders],
   [B4], [`showTeams`, `showOrders`], [`Result` of `MyTeamResponse` and `OrderSummaryResponse` pages; labels by the account page (S2)], [@fig-a-uc08-ds-teams, @fig-a-uc08-ds-orders],
-  [B5], [— (page only)], [Switching the chip: account page only (S2), no backend call. Paging the orders: `OrderController.myOrders` again, as in B3], [@fig-a-uc08-ds-orders],
+  [B5], [— (page; sharing in UC7)], [Switching the chip: account page only (S2), no backend call. Paging the orders: `OrderController.myOrders` again, as in B3. Sharing a team: `RowShare` mints an invitation when its panel first opens (UC7)], [@fig-a-uc08-ds-orders, @sec-a-uc07],
   [A1], [—], [`SaInterceptor.preHandle` → `StpUtil.checkLogin` throws `NotLoginException`; `UNAUTHENTICATED` (`COMMON_401_001`). The controller's `StpUtil.checkLogin` is a second check], [@fig-a-uc08-ds-teams, @fig-a-uc08-ds-orders],
   [A2], [— (page only)], [`pageMyTeams` returns an empty page without the product read; the card is chosen by the account page (S2)], [@fig-a-uc08-ds-teams],
   [A3], [`displayFieldsOf` without the product], [`findDisplaysByIds` omits inactive products; `toView` sets a null title and image], [@fig-a-uc08-ds-teams],
