@@ -16,7 +16,7 @@ BlocBuy is a community group-buying platform: buyers form a team at a team price
 
 *What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They run on Amazon ECS Fargate, each with its own database, and exchange events through a transactional outbox, one Amazon SNS topic and one Amazon SQS queue per consumer. Terraform creates the runtime for each working session and destroys it afterwards. The logical design is in §3.1 and the physical design in §3.2.
 
-*Status on 9 November 2026.* The three-service release was promoted to `prod` and smoke-tested through CloudFront on 17, 19 and 20 October and on 9 November; the promotions of 17 October and 9 November built the runtime from zero on AWS (§2.2, §6.6). Apart from the two promotions of 9 November, only the two permanent stacks, `foundation` and `edge`, have existed since the presentation on 21 October; the runtime is destroyed. After the presentation the team answered the assessors' remarks (§6.1). The one infrastructure change among them, separate data subnets (AD-15), was created on AWS by both promotions of 9 November, but their placement was never read back (§2.2). Several availability drills have local results only (AISS-13). The evidence status of every capability is in §2.2, and every open limitation is in §3.4.
+*Status on 9 November 2026.* The three-service release was promoted to `prod` and smoke-tested through CloudFront on 17, 19 and 20 October and on 9 November; the promotions of 17 October and 9 November built the runtime from zero on AWS (§2.2, §6.6). Apart from the two promotions and one `swe5001-env` session of 9 November, only the two permanent stacks, `foundation` and `edge`, have existed since the presentation on 21 October; the runtime is destroyed. After the presentation the team answered the assessors' remarks (§6.1). The one infrastructure change among them, separate data subnets (AD-15), was created on AWS by all three runtimes of 9 November. During the session an operator reported reading their placement back (\#589), but that evidence is not yet in the repository, so the placement is not verified here (§2.2). Several availability drills have local results only (AISS-13). The evidence status of every capability is in §2.2, and every open limitation is in §3.4.
 
 == Business Needs
 
@@ -43,7 +43,7 @@ These properties give the architecture its drivers. @tbl-drivers only names each
     columns: (1fr, 2.6fr, 1fr),
     table.header([Driver], [What it demands], [Answered in]),
     [Scalability], [Browsing and payment or event bursts scale independently of each other], [§3.2, §4.1],
-    [Consistency], [Payment, admission and the order settle in one transaction, and an expiry records its refund obligations in the same transaction; nobody pays for a seat that does not exist], [§3.1.4, §3.2.3, §3.2.4],
+    [Consistency], [A successful settlement records the payment, the admission and the order in one transaction; a paid admission that is refused records a refund obligation instead, and an expiry records its refund obligations in the same transaction], [§3.1.4, §3.2.3, §3.2.4],
     [Availability], [A failed task or a broker outage loses no committed payment or event], [§4.2],
     [Security], [No stored cloud keys, least privilege, and a data tier unreachable from outside], [§3.2, §4.3],
     [Cost], [A demonstration-scale budget: the runtime exists only while it is used], [§3.2.1 (AD-12), §6.3],
