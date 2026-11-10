@@ -2,11 +2,11 @@
 
 == UC2 Sign In with Google <sec-a-uc02>
 
-UC2 lets a visitor sign in with a Google account. The first sign-in registers a local buyer account; later sign-ins reuse it. Every sign-in opens one session that all three services read, because the roles and permissions are copied into it at sign-in. Google is the only sign-in channel, so BlocBuy stores no passwords. In the SWE5001 design, identity-svc owns the whole use case and its tables; commerce-svc and notification-svc never ask identity-svc for roles, they read the session (AD-05). This part traces UC2 from its flows of events to the code. UC2 is designed and built; the evidence for each flow is listed in section 2.2.
+UC2 lets a visitor sign in with a Google account. The first sign-in registers a local buyer account; later sign-ins reuse it. Every sign-in opens one session that all three services read, because the roles and permissions are copied into it at sign-in. Google is the only sign-in channel, so BlocBuy stores no passwords. In the SWE5001 design, identity-svc owns the whole use case and its tables; commerce-svc and notification-svc never ask identity-svc for roles, they read the session (AD-05). This part traces UC2 from its flows of events to the code. UC2 is designed and built; its status on AWS is given by capability in @tbl-status.
 
 === Use Case and Flows of Events <sec-a-uc02-flows>
 
-- *Actors.* Buyer or Admin (primary: a visitor not yet signed in). Google (secondary: verifies the identity).
+- *Actors.* Buyer or platform administrator (primary: a visitor not yet signed in). Google (secondary: verifies the identity).
 - *Trigger.* The visitor presses "Continue with Google", or tries an action that needs a session (start or join a team, the account page, the admin console).
 - *Services.* identity-svc owns B1–B9, A1–A3 and B9's current-user read. Every service checks the session on later requests (A4, A5); in commerce-svc that check reads only the session.
 - *Preconditions.* The visitor has a Google account; BlocBuy is registered with Google as a sign-in client.

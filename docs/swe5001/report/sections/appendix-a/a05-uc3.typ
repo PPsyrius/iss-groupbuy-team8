@@ -1,8 +1,8 @@
 #import "lib-a.typ": *
 
-== UC3 Initiate a Team by Paying <sec-a-uc03>
+== UC3 Initiate a Team by Paying for the First Membership <sec-a-uc03>
 
-UC3 opens a new team for a listing. A signed-in buyer is shown a team price quote of their own and pays it first; only after Stripe confirms the payment does commerce create the team, with the payer as leader and first paid member, and the buyer's pending order. The team does not exist while the buyer pays, so the design reserves its identity when it freezes the terms. Payment, webhook verification and the payment side of the settlement belong to the included use case Pay upfront (@sec-a-pay-upfront) and are referenced, not redrawn. This part draws what is specific to a start: the quote, the listing lock, the reserved team, team creation by Factory Method and the purchase intent's lifecycle. Every name here exists in the code on this branch. UC3 is designed and built; the evidence for each flow is listed in section 2.2.
+UC3 opens a new team for a listing. A signed-in buyer is shown a team price quote of their own and pays it first; only after Stripe confirms the payment does commerce create the team, with the payer as leader and first paid member, and the buyer's pending order. The team does not exist while the buyer pays, so the design reserves its identity when it freezes the terms. Payment, webhook verification and the payment side of the settlement belong to the included use case Pay upfront (@sec-a-pay-upfront) and are referenced, not redrawn. This part draws what is specific to a start: the quote, the listing lock, the reserved team, team creation by Factory Method and the purchase intent's lifecycle. Every name here exists in the code on this branch. UC3 is designed and built; its status on AWS is given by capability in @tbl-status.
 
 === Use Case and Flows of Events <sec-a-uc03-flows>
 

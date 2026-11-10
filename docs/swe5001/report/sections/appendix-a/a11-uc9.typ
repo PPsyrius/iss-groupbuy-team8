@@ -2,11 +2,11 @@
 
 == UC9 Administer Product Listings <sec-a-uc09>
 
-UC9 is the administrator's use case. An administrator prepares a listing, publishes it, corrects it, withdraws it, deletes a draft and sets the team terms and team price that let buyers start teams on it (UC3, @sec-a-uc03). It moves no money, but it protects money: a published listing's price and stock are the basis of quotes and teams that buyers pay into, so they must not change behind those buyers' backs. Two administrators must not silently overwrite each other either. This part follows UC9 from its flows of events through the analysis model and the transition to the design classes, operations, the listing statechart and the patterns. Every class, method and error code named here exists in the code on this branch. UC9 is designed and built; the evidence for each flow is listed in section 2.2.
+UC9 is the administrator's use case. An administrator prepares a listing, publishes it, corrects it, withdraws it, deletes a draft and sets the team terms and team price that let buyers start teams on it (UC3, @sec-a-uc03). It moves no money, but it protects money: a published listing's price and stock are the basis of quotes and teams that buyers pay into, so they must not change behind those buyers' backs. Two administrators must not silently overwrite each other either. This part follows UC9 from its flows of events through the analysis model and the transition to the design classes, operations, the listing statechart and the patterns. Every class, method and error code named here exists in the code on this branch. UC9 is designed and built; its status on AWS is given by capability in @tbl-status.
 
 === Use Case and Flows of Events <sec-a-uc09-flows>
 
-- *Actor.* Admin (primary): a signed-in account that holds the admin role and the permission to change listings.
+- *Actor.* Platform administrator (primary; Admin in the diagrams): a signed-in account that holds the admin role and the permission to change listings.
 - *Trigger.* The admin opens the admin console and chooses to create, edit, publish, delist or delete a listing, or to set its team terms or team price.
 - *Services.* commerce-svc owns every step (its catalog module, which reads the group-buy module's teams for the delete check). identity-svc answers one question: is this admin's account still active?
 - *Preconditions.* The admin is signed in (UC2, @sec-a-uc02), and an operator has granted the account the admin role. For an existing listing, the admin has read its current version.

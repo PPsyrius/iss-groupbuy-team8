@@ -1,8 +1,8 @@
 #import "lib-a.typ": *
 
-== Pay Upfront via Stripe Checkout <sec-a-pay-upfront>
+== UC10 Pay for a Membership Upfront <sec-a-pay-upfront>
 
-Pay upfront is the included use case that turns a frozen purchase intent into money that BlocBuy can trust. UC3 (@sec-a-uc03) and UC4 (@sec-a-uc04) include it at their payment step. It owns three things that no other part designs: the preparation of a Stripe Checkout payment page, the arrival and verification of Stripe's webhook, and the payment side of the settlement transaction, which ends with exactly one recorded outcome. It never creates a team, a membership or an order itself. It hands the confirmed payment to the base use case through one operation, `paymentConfirmed`, and records what the base use case answers. Pay upfront is designed and built; every payment uses a test card in the Stripe Sandbox, and section 2.2 lists the evidence.
+UC10 (Pay upfront for short) is the included use case that turns a frozen purchase intent into money that BlocBuy can trust. UC3 (@sec-a-uc03) and UC4 (@sec-a-uc04) include it at their payment step. It owns three things that no other part designs: the preparation of a Stripe Checkout payment page, the arrival and verification of Stripe's webhook, and the payment side of the settlement transaction, which ends with exactly one recorded outcome. It never creates a team, a membership or an order itself. It hands the confirmed payment to the base use case through one operation, `paymentConfirmed`, and records what the base use case answers. Pay upfront is designed and built; every payment uses a test card in the Stripe Sandbox, and no payment on AWS is recorded (@tbl-status).
 
 === Use Case and Flows of Events <sec-a-pay-flows>
 

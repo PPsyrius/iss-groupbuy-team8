@@ -6,7 +6,7 @@ This appendix gives the detailed object design of every BlocBuy use case. For ea
 
 === How the Parts Are Laid Out <sec-a-reading-layout>
 
-A.1 and A.2 are shared. A.1 is this guide: notation, analysis rules and the system-level analysis model. A.2 holds the nine transition strategies, S1 to S9, that every use case applies, with the mapping rule from analysis stereotypes to design elements and the subsystem view. A.3 to A.13 hold one use case each, and A.14 traces all of them side by side. Every use-case part has the same ten subsections, in this order:
+A.1 and A.2 are shared. A.1 is this guide: notation, analysis rules and the system-level analysis model. A.2 holds the nine transition strategies, S1 to S9, that every use case applies, with the mapping rule from analysis stereotypes to design elements and the subsystem view. A.3 to A.13 hold one use case each (UC12 is designed with UC7), and A.14 traces all of them side by side. Every use-case part has the same ten subsections, in this order:
 
 + *Use case and flows of events.* Actors, trigger, owning service, pre- and postconditions, and numbered steps: basic flow `B1…Bn`, alternate flows `A1…` and exception flows `E1…`, each with the step it branches from.
 + *Analysis class diagram.* «boundary», «control» and «entity» only, with one control named after the use case.
@@ -97,28 +97,29 @@ Every part uses the names of @fig-a-sys-entities: `Account`, `Role`, `OAuthBindi
 
 === Evidence Status and the SWE5006 Report <sec-a-reading-evidence>
 
-Everything in this appendix is designed and built. Every class, method, field, error code and table it names exists in the code of the report baseline and was checked against it. Which flows were verified on AWS, and which only locally or in automated tests, is stated once in section 2.2 and not repeated here. A diagram shows how the code is built; it is not evidence that a flow ran in a given environment.
+Everything in this appendix is designed and built. Every class, method, field, error code and table it names exists in the code of the report baseline and was checked against it. Whether a capability was verified on AWS, only locally or in automated tests is stated once, in @tbl-status, and not repeated here. A diagram shows how the code is built; it is not evidence that a flow ran in a given environment.
 
 The appendix is self-contained. It reuses the analysis model of the SWE5006 report (its section 3.4) and updates it in two ways. First, the names are unified across use cases, as above. Second, the design moves from the SWE5006 modular monolith to the three-service topology of backend ADR 0008: commerce asks identity over HTTP (S3), roles travel in the login session (S6), scheduled jobs run in commerce-svc only (S7), each service has its own database (S4), and events reach notification-svc through an outbox, SNS and SQS (S9). The business rules themselves did not change.
 
 === Reading Path <sec-a-reading-path>
 
-Read A.2 first, because every part cites its strategies by number. Then read A.6 (UC4), the most complete part, which uses every convention, and the parts it includes or triggers: Pay upfront (A.12), UC5 (A.7) and UC6 (A.8). The other parts can be read in any order. A.14 closes with the cross-use-case trace. @tbl-a-parts lists the parts.
+Read A.2 first, because every part cites its strategies by number. Then read A.6 (UC4), the most complete part, which uses every convention, and the parts it includes or triggers: UC10 Pay upfront (A.12), UC5 (A.7) and UC6 (A.8). The other parts can be read in any order. A.14 closes with the cross-use-case trace. @tbl-a-parts lists the parts.
 
 #atable(
   [Use cases and their parts. The primary actor starts the use case; the service owns its steps.],
   <tbl-a-parts>,
   columns: (auto, 1fr, auto, auto, auto),
   header: ([Use case], [Name], [Primary actor], [Service], [Part]),
-  [UC1], [Browse and search listings], [Buyer (anonymous)], [commerce-svc], [@sec-a-uc01],
-  [UC2], [Sign in with Google], [Buyer, Admin], [identity-svc], [@sec-a-uc02],
-  [UC3], [Initiate a team by paying], [Buyer], [commerce-svc], [@sec-a-uc03],
+  [UC1], [Browse and search team-priced products], [Buyer (anonymous)], [commerce-svc], [@sec-a-uc01],
+  [UC2], [Sign in with Google], [Buyer, platform administrator], [identity-svc], [@sec-a-uc02],
+  [UC3], [Initiate a team by paying for the first membership], [Buyer], [commerce-svc], [@sec-a-uc03],
   [UC4], [Join an existing team by paying], [Buyer], [commerce-svc], [@sec-a-uc04],
   [UC5], [Resolve a team], [Scheduler], [commerce-svc], [@sec-a-uc05],
   [UC6], [Refund members of an expired team], [Scheduler], [commerce-svc], [@sec-a-uc06],
   [UC7], [Share an invitation], [Buyer], [commerce-svc], [@sec-a-uc07],
-  [UC8], [View my orders and teams], [Buyer], [commerce-svc], [@sec-a-uc08],
-  [UC9], [Administer product listings], [Admin], [commerce-svc], [@sec-a-uc09],
-  [«include»], [Pay upfront via Stripe Checkout], [Buyer], [commerce-svc], [@sec-a-pay-upfront],
-  [—], [Receive notifications], [Buyer], [notification-svc], [@sec-a-notifications],
+  [UC8], [View my orders and my teams], [Buyer], [commerce-svc], [@sec-a-uc08],
+  [UC9], [Administer product listings], [Platform administrator], [commerce-svc], [@sec-a-uc09],
+  [UC10], [Pay for a membership upfront («include» of UC3 and UC4)], [Buyer], [commerce-svc], [@sec-a-pay-upfront],
+  [UC11], [Receive notifications of team and payment events], [Buyer], [notification-svc], [@sec-a-notifications],
+  [UC12], [Credit the sharer of a referred join («extend» of UC4)], [Buyer (sharer)], [commerce-svc], [@sec-a-uc07],
 )

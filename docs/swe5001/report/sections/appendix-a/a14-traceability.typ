@@ -12,7 +12,7 @@
 
 == Cross-Use-Case Traceability <sec-a-trace>
 
-The tables below prove two things. First, every use case is realised by named design elements in one of BlocBuy's three services: each analysis control lands on an entry point (controller, job or event subscriber), application services, aggregates and tables, under named strategies. Second, a class shared by several parts is the same class everywhere, with one stereotype and one responsibility. Use @tbl-a-trace-uc to go from a use case to its code; @tbl-a-trace-strategy to see which strategies shaped it; @tbl-a-trace-shared to find every figure that draws a shared class; @tbl-a-trace-life to find who owns a lifecycle and who moves it; and @tbl-a-trace-ad to go from an architecture decision (§3.1.1) to the parts that realise it. Each row points to the part that holds the detail, whose mapping table (for example @tbl-a-uc04-map) names every class.
+The tables below prove two things. First, every use case is realised by named design elements in one of BlocBuy's three services: each analysis control lands on an entry point (controller, job or event subscriber), application services, aggregates and tables, under named strategies. Second, a class shared by several parts is the same class everywhere, with one stereotype and one responsibility. Use @tbl-a-trace-uc to go from a use case to its code; @tbl-a-trace-strategy to see which strategies shaped it; @tbl-a-trace-shared to find every figure that draws a shared class; @tbl-a-trace-life to find who owns a lifecycle and who moves it; and @tbl-a-trace-ad to go from an architecture decision (§3.1.1, @tbl-ad-physical, @tbl-ad-other) to the parts that realise it. Each row points to the part that holds the detail, whose mapping table (for example @tbl-a-uc04-map) names every class.
 
 #[
 #show table: set text(8pt)
@@ -30,15 +30,15 @@ The tables below prove two things. First, every use case is realised by named de
   [UC7], [`ShareInvitationControl`, `ReferralCreditControl`], [`GroupDealController`: `POST /api/v1/group-deals/{dealId}/invites`; `InviteController`: `GET /api/v1/invites/{ref}`; `ShareCreditSubscriber`], [`ShareInviteAppService`; attribution in `GroupDealPurchaseSupport`], [`ShareInvite`, `ShareCredit`], [`biz_share_invite`, `biz_share_credit`, `biz_group_member`, `biz_purchase_intent`], [Consumes `MemberJoined`], [S1–S4, S6, S8, S9], [commerce, #rr(<sec-a-uc07>)],
   [UC8], [`ViewMyTeamsControl`, `ViewMyOrdersControl`], [`GroupDealController`: `GET /api/v1/group-deals/me`; `OrderController`: `GET /api/v1/orders/me`, `GET …/orders/{orderId}`], [`GroupDealAppService`, `OrderAppService`], [`Order`; `TeamMembership`, `ProductDisplay`], [`biz_group_member`, `biz_group_deal`, `biz_product`, `biz_order`], [None], [S1–S4, S6, S8], [commerce, #rr(<sec-a-uc08>)],
   [UC9], [`AdministerListingControl`], [`AdminListingController`: `POST`, `PUT`, `DELETE` on `/api/v1/admin/products` and its `/status`, `/team-terms`; `TeamPriceController`: `PUT /api/v1/products/{productId}/team-price-policy` (A5, its own transaction, #rr(<fig-a-uc09-ds-price>))], [`AdminListingAppService`, `TeamTermsAppService`, `TeamPriceAppService`], [`Product`, `TeamPricePolicy`; `TeamTermsChange`], [`biz_product`, `log_product_team_terms`, `biz_team_price_policy`], [None], [S1–S4, S6, S8], [commerce, #rr(<sec-a-uc09>)],
-  [Pay], [`PayUpfrontControl`, `BaseUseCaseControl` (the abstract role that `StartTeamControl` and `JoinTeamControl` realise)], [`StripeCheckoutController`: `POST /api/v1/payments/checkout-sessions`, `GET …/payments/{id}`; `StripeWebhookController`: `POST /api/v1/webhooks/stripe`], [`PaymentBrowserService`, `StripeCheckoutService`; port `PaymentBusinessPort`], [`CheckoutPayment`; `CheckoutQuote`], [`biz_payment`, `log_payment_webhook_event`, `biz_payment_review_case`, `biz_refund`], [`PaymentSucceeded` → `IntegrationOutboxWriter`], [S1–S6, S8, S9], [commerce, #rr(<sec-a-pay-upfront>)],
-  [Notif.], [`ReceiveNotificationsControl` (the relay is S9 design, with no analysis control)], [`IntegrationOutboxWriter`; `OutboxRelayJob.run` (every 2 s); `SqsNotificationEventConsumer`; `NotificationController`: `GET /api/v1/notifications`], [`OutboxRelayService`, `NotificationEventAppService`, `NotificationAppService`], [`Notification`; `OutboxEvent`], [commerce `sys_outbox`; notification `sys_consumed_message`, `biz_notification`], [Consumes the three integration-bound events; sends their `V1` contracts over SNS → SQS], [S1–S9], [commerce and notification, #rr(<sec-a-notifications>)],
+  [UC10], [`PayUpfrontControl`, `BaseUseCaseControl` (the abstract role that `StartTeamControl` and `JoinTeamControl` realise)], [`StripeCheckoutController`: `POST /api/v1/payments/checkout-sessions`, `GET …/payments/{id}`; `StripeWebhookController`: `POST /api/v1/webhooks/stripe`], [`PaymentBrowserService`, `StripeCheckoutService`; port `PaymentBusinessPort`], [`CheckoutPayment`; `CheckoutQuote`], [`biz_payment`, `log_payment_webhook_event`, `biz_payment_review_case`, `biz_refund`], [`PaymentSucceeded` → `IntegrationOutboxWriter`], [S1–S6, S8, S9], [commerce, #rr(<sec-a-pay-upfront>)],
+  [UC11], [`ReceiveNotificationsControl` (the relay is S9 design, with no analysis control)], [`IntegrationOutboxWriter`; `OutboxRelayJob.run` (every 2 s); `SqsNotificationEventConsumer`; `NotificationController`: `GET /api/v1/notifications`], [`OutboxRelayService`, `NotificationEventAppService`, `NotificationAppService`], [`Notification`; `OutboxEvent`], [commerce `sys_outbox`; notification `sys_consumed_message`, `biz_notification`], [Consumes the three integration-bound events; sends their `V1` contracts over SNS → SQS], [S1–S9], [commerce and notification, #rr(<sec-a-notifications>)],
 )
 ]
 ]
 
 === Strategies Across Use Cases <sec-a-trace-strategy>
 
-@tbl-a-trace-strategy crosses the nine strategies of @sec-a-strategies with the eleven use cases. It is the use-case view of the coverage matrix (@tbl-a-coverage), which crosses the strategies with analysis object types. S1 and S4 change every use case; S7 changes only the four that run on a timer. Each column equals the "Impacted use cases" row of that strategy in @sec-a-strategies.
+@tbl-a-trace-strategy crosses the nine strategies of @sec-a-strategies with UC1 to UC11 (UC12, the sharer's credit, is designed with UC7). It is the use-case view of the coverage matrix (@tbl-a-coverage), which crosses the strategies with analysis object types. S1 and S4 change every use case; S7 changes only the four that run on a timer. Each column equals the "Impacted use cases" row of that strategy in @sec-a-strategies.
 
 #atable(
   [Strategy × use case matrix. #sym.checkmark: the strategy changes the use case's design (its line in the part's transition section); "via A.n": applied, but designed in the included part; –: not applied, with the reason.],
@@ -55,8 +55,8 @@ The tables below prove two things. First, every use case is realised by named de
   [UC7 Share], yes, yes, yes, yes, no[no provider], yes, no[manual query], yes, yes,
   [UC8 View mine], yes, yes, yes, yes, no[no provider], yes, no[no timer], yes, no[no event],
   [UC9 Administer], yes, yes, yes, yes, no[no provider], yes, no[no timer], yes, no[no event],
-  [Pay upfront], yes, yes, yes, yes, yes, yes, no[no timed step], yes, yes,
-  [Notifications], yes, yes, yes, yes, yes, yes, yes, yes, yes,
+  [UC10 Pay upfront], yes, yes, yes, yes, yes, yes, no[no timed step], yes, yes,
+  [UC11 Notify], yes, yes, yes, yes, yes, yes, yes, yes, yes,
   [*Applied*], [*11*], [*10*], [*10*], [*11*], [*7*], [*10*], [*4*], [*10*], [*7*],
 )
 
@@ -135,7 +135,7 @@ Each lifecycle is drawn once, in the part that owns the entity (template rule 23
 
 === Decisions in the Appendix <sec-a-trace-ad>
 
-@tbl-a-trace-ad starts from the architecture decision register (§3.1.1, §3.2.1, §3.3) and shows where the appendix realises each decision. Ten of the nineteen decisions shape the design model. The other nine govern deployment and delivery and have no design class. S5 rests on backend ADRs rather than a chapter-3 decision, so it has its own row.
+@tbl-a-trace-ad starts from the architecture decision register (§3.1.1, @tbl-ad-physical, @tbl-ad-other) and shows where the appendix realises each decision. Ten of the nineteen decisions shape the design model. The other nine govern deployment and delivery and have no design class. S5 rests on backend ADRs rather than a chapter-3 decision, so it has its own row.
 
 #[
 #show table: set text(8pt)
@@ -155,6 +155,6 @@ Each lifecycle is drawn once, in the part that owns the entity (template rule 23
   [AD-11], [One RDS server, three databases], [S4], [The identity, commerce and notification databases of A.4, A.5–A.12 and A.13.], [05, 13],
   [AD-16], [Jobs stay with their data, under a lease], [S7], [`LeasedJobRunner`, `SchedulerLeaseRepository`; `PurchaseIntentExpiryJob` (A.5), `TeamExpirySweepJob` (A.7), `RefundWorkerJob` (A.8), `OutboxRelayJob` (A.13).], [15, 32, 61],
   [AD-18], [COLA layers enforced by ArchUnit], [S1], [The layer of every design class (controller, application service, domain, infrastructure) under the mapping rule (#rr(<sec-a-mapping-rule>)); every mapping table.], [05, 06, 26],
-  [AD-07, 08, 10, 12–15, 17, 19], [Compute, network, account, pipeline and release], [—], [No design class; see §3.2.1 and §3.3.], [—],
+  [AD-07, 08, 10, 12–15, 17, 19], [Compute, network, account, pipeline and release], [—], [No design class; see @tbl-ad-physical and @tbl-ad-other.], [—],
 )
 ]

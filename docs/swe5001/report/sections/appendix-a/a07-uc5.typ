@@ -2,7 +2,7 @@
 
 == UC5 Resolve a Team <sec-a-uc05>
 
-An open team ends in exactly one of two ways. It *succeeds* when a paid join fills its last seat, or it *expires* when its deadline passes first. Either way BlocBuy settles all the team's orders together with the outcome, and an expiry also records the refunds owed to its paid members (UC6 extends UC5). A resolved team never changes state again. UC5 is where time, a background job running on several servers, and two writers racing for one team meet. This part owns the two lifecycles that UC5 decides: the team (`DealStatus`) and the order (`OrderStatus`), in @sec-a-uc05-states. Every class, method and error code named here exists in the code on this branch. UC5 is designed and built; the evidence for each flow is listed in section 2.2.
+An open team ends in exactly one of two ways. It *succeeds* when a paid join fills its last seat, or it *expires* when its deadline passes first. Either way BlocBuy settles all the team's orders together with the outcome, and an expiry also records the refunds owed to its paid members (UC6 extends UC5). A resolved team never changes state again. UC5 is where time, a background job running on several servers, and two writers racing for one team meet. This part owns the two lifecycles that UC5 decides: the team (`DealStatus`) and the order (`OrderStatus`), in @sec-a-uc05-states. Every class, method and error code named here exists in the code on this branch. UC5 is designed and built; its status on AWS is given by capability in @tbl-status.
 
 === Use Case and Flows of Events <sec-a-uc05-flows>
 

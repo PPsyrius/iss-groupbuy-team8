@@ -1,8 +1,8 @@
 #import "lib-a.typ": *
 
-== UC8 View My Orders and Teams <sec-a-uc08>
+== UC8 View My Orders and My Teams <sec-a-uc08>
 
-UC8 is the buyer's account page, "My blocs". A signed-in buyer sees the teams they lead or joined, the latest 100 of them (`MY_BLOCS_FETCH_SIZE`), with their stored state, and one page of their orders, each with its status. The use case only reads. Its design questions are ownership (a buyer must never see another buyer's rows), a consistent snapshot (a teams page and its total must agree; the orders list accepts a count from a separate snapshot), and a read that crosses from the group-buy module into the catalog module without a dependency cycle. Every class, method and error code named here exists in the code on this branch. UC8 is designed and built; the evidence for each flow is listed in section 2.2.
+UC8 is the buyer's account page, "My blocs". A signed-in buyer sees the teams they lead or joined, the latest 100 of them (`MY_BLOCS_FETCH_SIZE`), with their stored state, and one page of their orders, each with its status. The use case only reads. Its design questions are ownership (a buyer must never see another buyer's rows), a consistent snapshot (a teams page and its total must agree; the orders list accepts a count from a separate snapshot), and a read that crosses from the group-buy module into the catalog module without a dependency cycle. Every class, method and error code named here exists in the code on this branch. UC8 is designed and built; its status on AWS is given by capability in @tbl-status.
 
 === Use Case and Flows of Events <sec-a-uc08-flows>
 
