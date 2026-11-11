@@ -9,6 +9,7 @@ sequenceDiagram
     participant Svc as svc : StripeCheckoutService
     participant Ofa as adapter : OrderFulfilmentAdapter
     participant Grp as groups : PaidGroupDealService
+    participant Pay as payments : CheckoutPaymentRepository
 
     Note over Leader,Api: UC3: a START intent at the team price
     Leader->>Api: intent(csrf, request)
@@ -20,8 +21,9 @@ sequenceDiagram
     App->>Svc: handleWebhook(rawBody, signature)
     critical settlement tx: REQUIRED, READ COMMITTED, 10 s
         Svc->>Svc: settle(session, eventId, type, operator, id)
-        Svc->>Ofa: lockForSettlement(quote): lock 1 (no team row yet), lock 2
-        Note over Svc,Ofa: lock(id): lock 4
+        Svc->>Pay: claimEvent(eventId, type)
+        Svc->>Ofa: lockForSettlement(quote): lock 1 (no team row yet), lock 2 intent
+        Svc->>Pay: lock(id): lock 3 payment
         Svc->>Ofa: fulfil(event)
         Ofa->>Grp: startConfirmed(terms, paid)
         Grp-->>Ofa: ParticipationResult: applied, team OPEN, 1 of 2

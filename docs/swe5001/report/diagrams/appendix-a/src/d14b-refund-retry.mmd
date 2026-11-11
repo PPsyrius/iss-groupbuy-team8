@@ -5,13 +5,14 @@ sequenceDiagram
     participant GW as :StripeRefundGateway
     actor Stripe as stripe : Stripe
     participant Repo as :RefundRepository
+    participant RJob as :OutboxRelayJob
     participant Relay as :OutboxRelayService
     participant T as :SnsOutboxEventTransport
     participant Topic as domain-events (topic)
     participant Q as notification queue (queue)
 
     par refund worker, PT30S after its previous run, under the lease "refund-worker"
-        loop while the obligation is pending or processing: finish sets next_attempt_at := now + 30 s
+        loop while the obligation is pending or processing
             Job->>Svc: processNext()
             critical claim, REQUIRED (new), READ COMMITTED, 5 s
                 Svc->>Repo: claimNext()
@@ -42,10 +43,12 @@ sequenceDiagram
             Svc-->>Job: true
         end
     and outbox relay, every 2 s, under the lease "outbox-relay"
+        RJob->>Relay: relayBatch(leaseValid)
         Note over Relay,Q: the TeamExpiredV1 row, readable only after the expiry committed
         Relay->>T: publish(events, leaseValid)
         T->>Topic: PublishBatch(topicArn, entries)
         Topic-->>T: successful ids, failed ids
         Topic-)Q: deliver(message), filter on eventType
         T-->>Relay: List of OutboxPublishResult
+        Relay-->>RJob: int updated
     end
