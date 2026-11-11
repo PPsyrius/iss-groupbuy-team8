@@ -1,0 +1,64 @@
+%% frame: BlocBuy SWE5001 distributed environment
+deploymentDiagram
+    device Browser["Buyer's browser"]
+    node Cdn["Amazon CloudFront"] <<global edge>>
+    node Stripe["Stripe"] <<external system>>
+    node Google["Google Sign-In"] <<external system>>
+    node Region["Region ap-southeast-1"] {
+        node Vpc["VPC 10.50.0.0/16"] {
+            node AzA["AZ ap-southeast-1a"] {
+                zone "Public 10.50.0.0/24" {
+                    node AlbA["ALB node"] : HTTP 80 listener
+                    node Nat["fck-nat"] : t4g.nano, Elastic IP
+                }
+                zone "Private 10.50.10.0/24" {
+                    environment FgA["ECS Fargate, Arm64"] : 0.5 vCPU, 1 GiB per task {
+                        artifact IdA["identity-svc"] : 1 task
+                        artifact CoA["commerce-svc"] : 2 to 6 tasks
+                        artifact NtA["notification-svc"] : 1 to 4 tasks
+                    }
+                }
+                zone "Data 10.50.20.0/24" {
+                    node Cache["ElastiCache Valkey 8.0"] : cache.t4g.micro, 1 node
+                }
+            }
+            node AzB["AZ ap-southeast-1b"] {
+                zone "Public 10.50.1.0/24" {
+                    node AlbB["ALB node"] : HTTP 80 listener
+                }
+                zone "Private 10.50.11.0/24" {
+                    environment FgB["ECS Fargate, Arm64"] : 0.5 vCPU, 1 GiB per task {
+                        artifact IdB["identity-svc"] : 1 task
+                        artifact CoB["commerce-svc"] : 2 to 6 tasks
+                        artifact NtB["notification-svc"] : 1 to 4 tasks
+                    }
+                }
+                zone "Data 10.50.21.0/24" {
+                    node Rds["RDS PostgreSQL 18"] : db.t4g.micro, single zone, 3 databases
+                }
+            }
+        }
+        node S3["Amazon S3"] <<bucket>> : SPA files
+        node Sns["domain-events"] <<SNS topic>> :::messaging
+        node QNt["notification"] <<SQS queue>> :::messaging : and its DLQ
+        node QAu["audit"] <<SQS queue>> :::messaging : and its DLQ
+    }
+%% at Browser 0,0
+%% at Cdn 1,0
+%% at S3 2,1
+%% at AlbA 0,1
+%% at AlbB 1,1
+%% at IdA 0,3
+%% at CoA 0,4
+%% at IdB 1,3
+%% at CoB 1,4
+%% at Cache 0,6
+%% at Rds 1,6
+%% at Sns 2,3
+%% at QNt 2,4
+%% at QAu 2,5
+%% at Stripe 1,7
+%% at Google 2,7
+%% at Nat 0,2
+%% at NtA 0,5
+%% at NtB 1,5

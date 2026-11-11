@@ -1,0 +1,19 @@
+%% frame: BlocBuy system context
+componentDiagram
+    actor Joiner["Buyer (joiner)"] <<consumer>>
+    actor Leader["Buyer (team leader, sharer)"] <<producer>>
+    actor Admin["Platform administrator"] <<producer>>
+    component Sys["BlocBuy"] <<system>> : community group-buying platform
+    component Google["Google (OAuth 2.0)"] <<external system>> : authenticates users
+    component Stripe["Stripe (test mode)"] <<external system>> : Checkout payments and refunds
+    Joiner --> Sys : pays to join, tracks teams
+    Leader --> Sys : starts and shares teams
+    Admin --> Sys : publishes listings
+    Sys --> Google : delegates sign-in (OIDC)
+    Sys -- Stripe : Checkout sessions, refunds, webhooks
+%% at Joiner 0,0
+%% at Leader 0,1
+%% at Admin 0,2
+%% at Google 1,0
+%% at Sys 1,1
+%% at Stripe 1,2

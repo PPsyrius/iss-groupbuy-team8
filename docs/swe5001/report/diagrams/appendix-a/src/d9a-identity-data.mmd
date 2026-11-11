@@ -1,0 +1,56 @@
+%% frame: Identity database (6 tables, no foreign keys)
+classDiagram
+    class sys_user_oauth {
+        <<table>>
+        id: uuid {PK}
+        user_id: uuid
+        provider: varchar
+        provider_user_id: varchar
+        raw_profile: jsonb
+        {partial UK: provider, provider_user_id}
+    }
+    class sys_user {
+        <<table>>
+        id: uuid {PK}
+        username: varchar {partial UK}
+        email: varchar {partial UK}
+        nickname: varchar
+        status: varchar
+    }
+    class rel_user_role {
+        <<table>>
+        id: uuid {PK}
+        user_id: uuid
+        role_id: uuid
+        {partial UK: user_id, role_id}
+    }
+    class sys_permission {
+        <<table>>
+        id: uuid {PK}
+        perm_code: varchar {partial UK}
+        perm_name: varchar
+    }
+    class rel_role_permission {
+        <<table>>
+        id: uuid {PK}
+        role_id: uuid
+        permission_id: uuid
+        {partial UK: role_id, permission_id}
+    }
+    class sys_role {
+        <<table>>
+        id: uuid {PK}
+        role_code: varchar {partial UK}
+        role_name: varchar
+    }
+%% at sys_user_oauth 0,0
+%% at sys_user 1,0
+%% at rel_user_role 2,0
+%% at sys_permission 0,1
+%% at rel_role_permission 1,1
+%% at sys_role 2,1
+    sys_user "1" .. "0..*" sys_user_oauth
+    sys_user "1" .. "0..*" rel_user_role
+    rel_user_role "0..*" .. "1" sys_role
+    sys_role "1" .. "0..*" rel_role_permission
+    rel_role_permission "0..*" .. "1" sys_permission

@@ -23,7 +23,8 @@ const repo = resolve(reportDir, '../../..');
 const srcDir = join(reportDir, 'diagrams/appendix-a/src');
 const genDir = join(reportDir, 'diagrams/appendix-a/gen');
 const UML = '/docs/swe5006/report/typst/uml.typ';
-const ID = /^a-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// Appendix A diagrams are a-…; main-body figures are dNN-… or dNNx-… (the README diagram list).
+const ID = /^(?:a|d[0-9]+[a-z]?)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 class DiagramError extends Error {}
 
@@ -56,7 +57,8 @@ function checkClass(lines, start) {
     if (!l || l.startsWith('%%')) continue;
     if (open) {
       if (l === '}') open = null;
-      else if (/[{}]/.test(l)) throw new DiagramError(`${at}: brace inside class body of ${open}`);
+      // One trailing UML property string is allowed (`id: uuid {PK}`, `{UK: a, b}`); any other brace is a nesting error.
+      else if (/[{}]/.test(l) && !/^[^{}]*\{[^{}]+\}$/.test(l)) throw new DiagramError(`${at}: brace inside class body of ${open}`);
       continue;
     }
     let m;
@@ -311,7 +313,7 @@ let failed = 0;
 let stale = 0;
 for (const id of ids) {
   try {
-    if (!ID.test(id)) throw new DiagramError('id must be lowercase kebab-case starting with "a-" (e.g. a-uc04-ac)');
+    if (!ID.test(id)) throw new DiagramError('id must be lowercase kebab-case starting with "a-" or "dNN-" (e.g. a-uc04-ac, d3-logical-view)');
     const { typ, info } = generate(id);
     const out = join(genDir, `${id}.typ`);
     const old = existsSync(out) ? readFileSync(out, 'utf8').replace(/\r\n/g, '\n') : null;

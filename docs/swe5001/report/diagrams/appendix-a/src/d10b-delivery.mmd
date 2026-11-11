@@ -1,0 +1,83 @@
+%% frame: Promotion into prod and the SWE5001 environment
+activityDiagram
+    lane "swe5001-release-gate.yml (PR into prod)" {
+        start S
+        action PR["Open the promotion PR, dev into prod"]
+        action PS["promotion-source: head is this repository's dev"]
+        fork FG
+        action SI["service-images: build and scan, no export"]
+        action IP["infra-plan: infra-swe5001 checks"]
+        join J
+        action Merge["Merge commit into prod"]
+        end E1
+    }
+    lane "swe5001-deploy.yml (swe5001-demo)" {
+        start S3
+        note NT["on: push to prod\n(the merge commit)"]
+        action Img["images: build, scan, export"]
+        action Pub["publish: push to ECR, record candidate digests"]
+        action Up["up:\nenv-up.sh --candidate,\nsmoke suite"]
+        decision Ok
+        action Rel["release: publish SPA, promote candidate to release digests"]
+        merge M
+        action Down["down (always):\nenv-down.sh,\nenv-status.sh"]
+        action Ev["evidence (always): merge stage receipts"]
+        end E
+    }
+    lane "swe5001-env.yml" {
+        start S2
+        action Cron["Nightly at 23:00 SGT (cron 0 15 * * *)"]
+        action Disp["dispatch (on dev): start down on prod"]
+        action Sess["session (on prod): env-down.sh"]
+        end E2
+    }
+    S --> PR
+    PR --> PS
+    PS --> FG
+    FG --> SI
+    FG --> IP
+    SI --> J
+    IP --> J
+    J --> Merge : [3 checks green, code-owner approval]
+    Merge --> E1
+    NT .. S3
+    S3 --> Img
+    Img --> Pub
+    Pub --> Up
+    Up --> Ok
+    Ok --> Rel : [up succeeded]
+    Ok --> M : [a job failed]
+    Rel --> M
+    M --> Down
+    Down --> Ev
+    Ev --> E
+    S2 --> Cron
+    Cron --> Disp
+    Disp --> Sess
+    Sess --> E2
+%% at S 0,0
+%% at PR 0,1
+%% at PS 0,2
+%% at FG 0,3
+%% at SI 0,4
+%% at IP 1,4
+%% at J 0,5
+%% at Merge 0,6
+%% at E1 0,7
+%% at S3 2,0
+%% at NT 3,0
+%% at Img 2,1
+%% at Pub 2,2
+%% at Up 2,3
+%% at Ok 2,4
+%% at Rel 3,4
+%% at M 2,5
+%% at Down 2,6
+%% at Ev 2,7
+%% at E 2,8
+%% at S2 4,0
+%% at Cron 4,1
+%% at Disp 4,2
+%% at Sess 4,3
+%% at E2 4,4
+%% route Rel M vh

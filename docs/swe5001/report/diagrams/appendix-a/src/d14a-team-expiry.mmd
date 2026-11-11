@@ -1,0 +1,44 @@
+%% frame: Team expiry: one team expires, with its subscribers at commit (design)
+sequenceDiagram
+    participant Job as :TeamExpirySweepJob
+    participant Sw as :GroupDealExpirySweeper
+    participant Px as proxy : GroupDealExpiryService
+    participant Repo as :PaidGroupDealRepository
+    participant Deal as before : GroupDeal
+    participant OLS as :OrderLifecycleSubscriber
+    participant Ref as :TeamExpiryRefundSubscriber
+    participant RSvc as :TeamExpiryRefundService
+    participant Out as :IntegrationOutboxWriter
+
+    Note over Job,Deal: every PT1M, LeasedJobRunner.run takes the lease "team-expiry-sweep" (PT2M) and calls sweepOnce(leaseValid); if another server holds it, nothing runs
+    Job->>Sw: sweep(100, leaseValid)
+    Sw->>Repo: currentTime()
+    Repo-->>Sw: Instant now
+    Sw->>Repo: dueForExpiry(now, limit)
+    Repo-->>Sw: List of UUID
+    loop each dealId, while leaseValid
+        Sw->>Px: expireOne(dealId)
+        critical expireOne, REQUIRED, default isolation, 10 s
+            Px->>Repo: lockDeal(dealId): lock 1
+            Repo-->>Px: Optional of GroupDeal
+            Px->>Repo: currentTime()
+            Repo-->>Px: Instant now
+            Px->>Deal: expire(now)
+            break DEAL_CLOSED: already resolved
+                Deal-->>Px: BizException, caught: return false
+            end
+            Deal-->>Px: after (EXPIRED)
+            Px->>Repo: expire(before, after, now)
+            Note over Px,Out: publishEvent(TeamExpired) on ApplicationEventPublisher only registers the event; at BEFORE_COMMIT the transaction owner calls each listener in @Order
+            Px->>OLS: onTeamExpired(event), @Order(10)
+            OLS-->>Px: orders cancelled
+            Px->>Ref: onTeamExpired(event), @Order(20)
+            Ref->>RSvc: recordExpiredTeam(dealId)
+            RSvc-->>Ref: one refund obligation per paid member
+            Ref-->>Px: void
+            Px->>Out: onTeamExpired(event), lowest precedence
+            Out-->>Px: TeamExpiredV1 row in sys_outbox
+        end
+        Px-->>Sw: true after COMMIT; an exception rolls all back (E1)
+    end
+    Sw-->>Job: Result(due, expired, alreadyResolved, failed)
