@@ -4,7 +4,7 @@
 == Performance
 <sec-performance>
 
-On AWS, one monolith task passed every plateau up to 200 requests per second (req/s) on 16 October 2026 and again on 11 November; this is a lower bound, not its capacity. Commerce scaled out in every distributed (V3) run, but all five V3 runs failed acceptance, so distributed capacity and 80% linear scaling remain unproven (AISS-12). The k6 client ran on a team machine over a local network in every run, and in the last run the load balancer answered at 9 ms p95 while the client failed (@tbl-performance-runs). The next server-side limit is the single RDS server, at 181 connections (AISS-05).
+On 11 November 2026 on AWS, the distributed (V3) run R4 delivered the whole 30 min browse schedule up to 600 requests per second (req/s), with no errors, no dropped iterations and a client p95 of 12 ms, while commerce scaled itself from one to six tasks. R4 is the V3 result this section argues from; the five earlier V3 runs, which all failed, stay in @tbl-performance-runs as history. Its k6 gates passed, but the unchanged analyser issued no verdict, because the canonical observer stopped before the workload ended. R4 shows that the tested peak was served, not the maximum capacity of any task count, and it has no controlled one-task and four-task pair, so 80% linear scaling remains unproven (AISS-12). One monolith task passed every plateau up to 200 req/s on 16 October and 11 November, a lower bound. The next server-side limit is the single RDS server, at 181 connections in the R4 size (AISS-05).
 
 === Workload and measurement boundary
 
@@ -38,19 +38,19 @@ The verification plan (#src("docs/swe5001/impl-verification-observability.md")[V
     columns: (0.75fr, 1.45fr, 1.3fr, 1fr, 0.9fr, 1.6fr),
     table.header([Run], [Server side], [k6 client], [Requests and errors], [Drops and client p95], [Verdict and what it shows]),
     [16 Oct: V2, two runs], [One monolith task. Image `6c7a99ab`.], [Team Windows workstation, Docker; location not recorded; 100–400 VUs], [57,600 and 0 each], [0; ≤ 57 ms per plateau], [Passed. 200 req/s was the highest rate tested: a lower bound, not capacity.],
-    [19 Oct: V3], [Three services; commerce one to six tasks of 0.5 vCPU, 1 GiB; `db.t4g.micro`; 12,000 requests per target per minute.], [Team macOS workstation, Docker; 100–400 VUs], [570,445 and 2 (0.0004%)], [155,554; 1,671 ms], [Failed: drops. Commerce 1 → 3 tasks. One task saturated at about 280 req/s; three served about 455 req/s.],
+    [19 Oct: V3], [Three services; commerce one to six tasks of 0.5 vCPU, 1 GiB; `db.t4g.micro`; 12,000 requests per target per minute.], [Team macOS workstation, Docker; 100–400 VUs], [570,445 and 2 (0.0004%)], [155,554; 1,671 ms], [Failed: drops. Commerce 1 → 3 tasks; the client side limited the run.],
     [10 Nov: V3], [As 19 Oct, with pools of five. Source `93984f61`.], [Team Windows workstation, Docker (8 CPUs, 8 GiB); 1,000 VUs], [636,824 and 15,423 (2.42%)], [89,175; 4,191 ms], [Failed: errors, drops. Commerce 1 → 4 tasks; capacity arrived about 4 min after failures began.],
     [11 Nov: V2], [One monolith task. Source `3a893036`.], [As 10 Nov], [57,600 and 0], [0; 30 ms], [Passed. Repeats the lower bound on the released image.],
     [11 Nov: V3 r1], [Committed sizing, as 10 Nov. Source `3a893036`.], [As 10 Nov], [687,083 and 11,841 (1.72%)], [38,916; 3,957 ms], [Failed: errors, drops, p95. Committed sizing fails as on 10 Nov.],
     [11 Nov: V3 r2], [Session settings, not merged: commerce 1 vCPU, 2 GiB; `db.t4g.small`; CPU guard on.], [As 10 Nov], [720,141 and 4,561 (0.63%)], [5,858; 851 ms], [Failed: drops, p95. 98.94% of drops fell in one minute.],
     [11 Nov: V3 r3], [As V3 r2, plus 6,000 requests per target per minute and a 120 s commerce slow start.], [Team Windows laptop, Docker (8 CPUs, 8 GiB), local Wi-Fi; 1,000 VUs], [725,924 and 8,429 (1.16%)], [75; 450 ms], [Failed: errors, drops. ALB target p95 9 ms; the client's network path was diagnosed.],
-    [R4], [As V3 r3.], [AWS-hosted generator (`t3a.2xlarge`, Singapore), bypassing the laptop], table.cell(colspan: 3)[#pending[Pan: R4 result]],
+    [11 Nov: V3 R4], [As V3 r3; pools of five. Source `3a893036`.], [AWS-hosted generator (`t3a.2xlarge`, Singapore), Docker (8 vCPUs, 8 GiB); 1,000 VUs], [726,000 and 0], [0; 12 ms], [k6 gates passed; the analyser gave no verdict (observer ended early). Commerce 1 → 6 tasks. The V3 result of this report.],
   ),
   kind: table,
-  caption: [Load-test runs on AWS, 16 October to 11 November. Source: dated records #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October], #src("docs/swe5001/evidence/20261019-v3-autoscaling/README.md")[19 October], #src("docs/swe5001/evidence/20261110-v3-autoscaling/README.md")[10 November], #src("docs/swe5001/evidence/20261111-load-reruns/README.md")[11 November reruns], #src("docs/swe5001/evidence/20261111-v3-r3/README.md")[V3 r3] and #src("docs/swe5001/evidence/20261111-v3-r3/AWS-GENERATOR.md")[AWS generator].],
+  caption: [Load-test runs on AWS, 16 October to 11 November. Source: dated records #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October], #src("docs/swe5001/evidence/20261019-v3-autoscaling/README.md")[19 October], #src("docs/swe5001/evidence/20261110-v3-autoscaling/README.md")[10 November], #src("docs/swe5001/evidence/20261111-load-reruns/README.md")[11 November reruns], #src("docs/swe5001/evidence/20261111-v3-r3/README.md")[V3 r3] and #src("docs/swe5001/evidence/20261111-v3-r4/README.md")[V3 R4].],
 ) <tbl-performance-runs>
 
-Calculated: the V3 schedule offers 36,000 + 240,000 + 360,000 + 90,000 = 726,000 arrivals. Only V3 r3 delivered almost all of them.
+Calculated: the V3 schedule offers 36,000 + 240,000 + 360,000 + 90,000 = 726,000 browse arrivals. R4 completed 725,999 of them, within the analyser's tolerance of one arrival, plus the setup GET; V3 r3 came closest before it but dropped 75.
 
 === What each run shows
 
@@ -77,26 +77,63 @@ Calculated: the V3 schedule offers 36,000 + 240,000 + 360,000 + 90,000 = 726,000
 
 *19 October scale-out.* Target tracking added a second commerce task at 15:55 SGT and a third at 15:58 SGT, each in about 65 s. With three tasks the ALB p50 was 5–7 ms while the client p50 stayed near 490 ms, so the client side limited the run (#src("docs/swe5001/evidence/20261019-v3-autoscaling/v3-alb-per-minute.tsv")[ALB intervals]).
 
-*10 November campaign.* Commerce CPU reached about 100% at 03:52 SGT and failures began at 03:53. The alarm decided at 03:56:38, and a second running task was first sampled at 03:57:43 (@fig-performance-v3-timeline, #src("docs/swe5001/evidence/20261110-v3-autoscaling/minute-correlation.csv")[minute correlation]). Later minutes near 600 req/s passed, but they cannot repair earlier failures; we did not isolate the cause (#src("docs/swe5001/evidence/20261110-v3-autoscaling/INVESTIGATION.md")[investigation]).
+*10 November campaign.* Commerce CPU reached about 100% at 03:52 SGT and failures began at 03:53. The alarm decided at 03:56:38, and a second running task was first sampled at 03:57:43 (#src("docs/swe5001/evidence/20261110-v3-autoscaling/minute-correlation.csv")[minute correlation]). Later minutes near 600 req/s passed, but they cannot repair earlier failures; we did not isolate the cause (#src("docs/swe5001/evidence/20261110-v3-autoscaling/INVESTIGATION.md")[investigation]).
+
+Tested locally, not on AWS: a Docker profile served 48,754 catalogue requests up to 400 req/s with no error, and a fault matrix showed that a failing Redis cache amplified load. We therefore added a failure-triggered backoff to the offer cache, released on 11 November (#src("docs/swe5001/evidence/20261110-catalogue-local-profile/README.md")[local profile]). Calculated: with pools of five the services need at most 55 database connections, and 55 + 3 owner + 1 operator + 15 safety = 74 free slots (#src("docs/swe5001/evidence/20261110-load-preflight/README.md")[preflight record]).
+
+*11 November reruns.* One promotion released the source for all five runs of that day, R4 included. For V3 r2, r3 and R4 we changed the session, not the committed configuration. In V3 r2 the service-average CPU read 58% while one new task ran at 92–100%, so the averaged metric hid hot new tasks (#src("docs/swe5001/evidence/20261111-v3-investigation/README.md")[V3 r2 investigation]). V3 r3 ran from 18:39 to 19:09 SGT. Commerce scaled to six tasks, and one Spot task was reclaimed (§4.2). The ALB logged 725,898 requests at a target p95 of 9 ms, while k6 recorded 8,417 timeouts (#src("docs/swe5001/evidence/20261111-v3-r3/README.md")[V3 r3 record]).
+
+Tested locally, not on AWS: static-only traffic from the same laptop reproduced the failures without commerce, and native Windows and Docker controls failed at the same time. The diagnosis points to the laptop's local Wi-Fi path, not the services; the same path may have affected the earlier V3 runs (#src("docs/swe5001/evidence/20261111-v3-r3/DIAGNOSIS.md")[diagnosis]). R4 therefore moved the client to an AWS-hosted generator.
+
+=== The distributed result
+
+On 11 November on AWS, R4 ran the unchanged V3 workload from 22:22:40 to 22:52:41 SGT against the V3 r3 server settings (#src("docs/swe5001/evidence/20261111-v3-r4/README.md")[R4 record]). The client was a load generator hosted on AWS: a `t3a.2xlarge` instance in Singapore running the pinned k6 1.6.1 container with 8 vCPUs and 8 GiB. It bypassed the laptop path diagnosed for V3 r3; it does not show that the services changed. We recounted the retained raw stream offline (2,483,971,025 bytes uncompressed) and reproduced every count and latency statistic of the k6 summary (#src("docs/swe5001/evidence/20261111-v3-r4/verification.json")[verification projection]). @tbl-performance-r4 gives the client-side results.
+
+#figure(
+  table(
+    columns: (1.1fr, 1.9fr, 1.6fr),
+    table.header([Measurement], [R4 result], [What it shows]),
+    [Requests], [726,000: one setup GET and 725,999 browse requests (508,200 list, 217,799 detail); every response HTTP 200], [The whole schedule was delivered],
+    [Errors and drops], [0 browse errors; all 725,999 body checks passed; 0 dropped iterations], [The error and drop gates passed],
+    [Client latency, whole run], [Mean 9.4 ms; p50 8 ms; p95 12 ms; p99 33 ms; maximum 728 ms], [Every sample was under the 800 ms gate; this is not the event-relative analyser result],
+    [Ten peak minutes], [360,000 browse completions, about 600 req/s; p95 ≤ 13 ms in each minute; no errors], [The 600 req/s plateau held],
+    [Process exits], [k6, monitor and raw stream: 0, 0 and 0], [The k6 thresholds passed: errors < 1%, drops = 0, p95 < 800 ms],
+  ),
+  kind: table,
+  caption: [V3 R4 client results on AWS, 11 November. Source: #src("docs/swe5001/evidence/20261111-v3-r4/README.md")[R4 record] and #src("docs/swe5001/evidence/20261111-v3-r4/browse-minutes.csv")[completion minutes].],
+) <tbl-performance-r4>
+
+The 1,000 VUs were preallocated, but at most 100 were active at once, so R4 does not show 1,000 simultaneous users. The generator container averaged 6.1% of its eight vCPUs (peak 12.7%) and used at most 796 MiB, with no throttling, so the client had headroom.
+
+Target tracking on requests made all four scaling changes (@tbl-performance-r4-scaling); no count of five occurred. Commerce service-average CPU peaked at 54.7% at 22:31, above the 50% CPU guard, but every recorded action cites the request policy. Six tasks were first sampled 973.6 s after the generator container started; that span includes the ramp, metric publication, alarm evaluation and task start-up, so it is not the autoscaler's reaction time. In the peak minutes 22:40–22:46 the ALB counted about 36,000 requests a minute, about 6,000 per target with six tasks: the policy converged on its target, which says nothing about saturation. RDS CPU peaked near 24% and connections at 40 (#src("docs/swe5001/evidence/20261111-v3-r4/server-minutes.csv")[server minutes]).
+
+#figure(
+  table(
+    columns: (0.8fr, 1fr, 1fr, 1.2fr),
+    table.header([Desired tasks], [Activity start], [Activity end], [First sample at new count]),
+    [1 → 2], [22:30:48], [22:31:58], [22:31:39],
+    [2 → 3], [22:32:48], [22:33:51], [22:33:39],
+    [3 → 4], [22:34:48], [22:35:54], [22:35:47],
+    [4 → 6], [22:37:48], [22:38:54], [22:38:54],
+  ),
+  kind: table,
+  caption: [Commerce scale-out in V3 R4, 11 November (SGT). A running sample does not prove target health or the end of the 120 s slow start. Source: #src("docs/swe5001/evidence/20261111-v3-r4/scaling-activities.csv")[scaling activities].],
+) <tbl-performance-r4-scaling>
 
 #import "../diagrams/performance-v3-timeline.typ": v3-timeline
 #figure(
   block(breakable: false, v3-timeline),
-  caption: [Scale-out timeline view (time-series chart), 10 November. Task capacity arrived after failures began; the shaded interval has no ECS observer samples.],
+  caption: [Scale-out timeline view (time-series chart), V3 R4, 11 November. Completed browse requests follow the offered schedule up to 600 req/s with no errors while commerce grows from one to six tasks; the shaded tail follows the end of the canonical observer.],
 ) <fig-performance-v3-timeline>
 
-Tested locally, not on AWS: a Docker profile served 48,754 catalogue requests up to 400 req/s with no error, and a fault matrix showed that a failing Redis cache amplified load. We therefore added a failure-triggered backoff to the offer cache, released on 11 November (#src("docs/swe5001/evidence/20261110-catalogue-local-profile/README.md")[local profile]). Calculated: with pools of five the services need at most 55 database connections, and 55 + 3 owner + 1 operator + 15 safety = 74 free slots (#src("docs/swe5001/evidence/20261110-load-preflight/README.md")[preflight record]).
+*Tool outcomes and limits.* R4 is not a clean acceptance run. The reviewed launcher refused to start, because the canonical observer had too little of its window left; we overrode the refusal, and a separate wrapper ran the unchanged workload and kept the refusal on record (§5.3). The canonical observer took its last sample at 22:49:32, before the workload ended, so the unchanged analyser exited 1 ("Observations must bracket execution") and issued no verdict. A supplementary observer covered the tail, and the derived union of both has 264 rows with a largest gap of 15.3 s; it was not fed to the analyser. CloudWatch lacks the partial last minute, and target 5XX has no data points, which is not a verified zero. No acceptance verdict on R4 is recorded.
 
-*11 November reruns.* One promotion released the source for all four reruns. For V3 r2 and r3 we changed the session, not the committed configuration. In V3 r2 the service-average CPU read 58% while one new task ran at 92–100%, so the averaged metric hid hot new tasks (#src("docs/swe5001/evidence/20261111-v3-investigation/README.md")[V3 r2 investigation]). V3 r3 ran from 18:39 to 19:09 SGT. Commerce scaled to six tasks, and one Spot task was reclaimed (§4.2). The ALB logged 725,898 requests at a target p95 of 9 ms, while k6 recorded 8,417 timeouts (#src("docs/swe5001/evidence/20261111-v3-r3/README.md")[V3 r3 record]).
-
-Tested locally, not on AWS: static-only traffic from the same laptop reproduced the failures without commerce, and native Windows and Docker controls failed at the same time. The diagnosis points to the laptop's local Wi-Fi path, not the services; the same path may have affected the earlier V3 runs (#src("docs/swe5001/evidence/20261111-v3-r3/DIAGNOSIS.md")[diagnosis]). R4 moves the client to an AWS-hosted generator.
-
-*What acceptance needs.* An accepted V3 delivers the whole schedule with complete observations and unchanged gates. Linear scaling also needs a controlled one-task and four-task pair: calculated efficiency is $T_4 / (4 T_1) >= 0.8$, where $T_1$ and $T_4$ are accepted throughputs. A ramp with changing task counts and dropped work supplies neither.
+*What acceptance needs.* An accepted V3 delivers the whole schedule with complete observations and unchanged gates; R4 met the first and the third. Linear scaling also needs a controlled one-task and four-task pair: calculated efficiency is $T_4 / (4 T_1) >= 0.8$, where $T_1$ and $T_4$ are accepted throughputs. A ramp with changing task counts supplies neither the pair nor the ratio.
 
 === Configured optimisations and capacity limits
 
-*Load balancing and scaling.* CloudFront forwards `/api/*` to the ALB, which routes to healthy ECS targets. Configured, not tested beyond the runs above: target tracking on `ALBRequestCountPerTarget` at 12,000 requests per target per minute, two to six commerce tasks and cooldowns of 60 s out and 180 s in (AD-20, #src("infra/swe5001/runtime/observability.tf")[policy source]). Calculated: 200 req/s × 60 s = 12,000, the V2 lower bound per task. A CPU guard is committed, off by default (`commerce_cpu_scale_out_enabled`), and enabled for the V3 r2 and r3 sessions. Only its code and variable are committed: the r3 session values (the guard at 50% instead of the default 70%, 6,000 requests per target and the 120 s slow start, with 1 vCPU and 2 GiB for commerce and `db.t4g.small`) were applied by local Terraform.
+*Load balancing and scaling.* CloudFront forwards `/api/*` to the ALB, which routes to healthy ECS targets. Configured, not tested beyond the runs above: target tracking on `ALBRequestCountPerTarget` at 12,000 requests per target per minute, two to six commerce tasks and cooldowns of 60 s out and 180 s in (AD-20, #src("infra/swe5001/runtime/observability.tf")[policy source]). Calculated: 200 req/s × 60 s = 12,000, the V2 lower bound per task. A CPU guard is committed, off by default (`commerce_cpu_scale_out_enabled`), and enabled for the V3 r2 and r3 sessions. Only its code and variable are committed: the session values of V3 r3 and R4 (the guard at 50% instead of the default 70%, 6,000 requests per target and the 120 s slow start, with 1 vCPU and 2 GiB for commerce and `db.t4g.small`) were applied by local Terraform. Calculated for that size: the five-connection pools need 75 of 181 connections at the steady maximum and 130 of 181 while every task is replaced; this is a budget, not a measured pool wait.
 
 *Caching on the read path.* CloudFront does not cache `/api/*` (#src("infra/swe5001/edge/cloudfront.tf")[edge policy]). Catalogue reads take display offers from `RedisOpenDealOfferCache` with one MGET; misses use one bounded PostgreSQL batch, entries live 15–25 s, and after-commit events evict changed keys. Settlement still checks the team under its lock, so the cache affects only display. We kept no cache-hit ratio on AWS, so the saving is designed, not measured.
 
-*Measured versus projected (briefing Q4).* On AWS, the highest accepted rate is 200 req/s on one task. Calculated: 6 tasks × 200 req/s = 1,200 req/s is the policy's arithmetic ceiling, not a forecast. One-to-four linearity and V4 queue drain remain unverified on AWS (AISS-12, NFR-64).
+*Measured versus projected (briefing Q4).* On AWS, R4 served 600 req/s, the highest rate tested, with one to six commerce tasks and every k6 gate met; one monolith task served 200 req/s. Neither is a maximum. Calculated: R4's target of 6,000 requests per target per minute gives 6 tasks × 100 req/s = 600 req/s, exactly the tested peak; the committed 12,000 gives 6 × 200 = 1,200 req/s, the policy's arithmetic ceiling, not a forecast. One-to-four linearity, the full NFR-15 mix and V4 queue drain remain unverified on AWS (AISS-12, NFR-64).
