@@ -11,7 +11,7 @@ The cloud-native design paid off in five properties, each with dated evidence (@
     table.header([Property], [Evidence], [Kind], [Limit]),
     [Disposable runtime], [Built from zero by the promotions of 17 Oct, 10 Nov and 11 Nov (115, 120 and 120 resources) and destroyed after each (§6.6)], [Verified on AWS], [Each rebuild loses runtime data and logs not retained beforehand],
     [Pay only while used], [About US\$11.6 for every session billed to 10 Nov, against about US\$125 a month always on (AD-12; @tbl-cost)], [Calculated], [The 11 Nov session was not yet billed],
-    [Elastic scale-out], [One to six commerce tasks under the V3 R4 browse workload up to 600 req/s, with no errors or drops (11 Nov, §4.1)], [Verified on AWS], [Analyser verdict missing; no maximum capacity, linearity or scale-in record (AISS-12)],
+    [Elastic scale-out], [One to six commerce tasks under the V3 r4 browse workload up to 600 req/s, with no errors or drops (11 Nov, §4.1)], [Verified on AWS], [Analyser verdict missing; no maximum capacity, linearity or scale-in record (AISS-12)],
     [Managed services, no servers to run], [ECS Fargate, RDS, ElastiCache, SNS and SQS (AD-07, AD-04, AD-11)], [Configured, not tested], [The NAT instance (fck-nat) is self-run (AD-10)],
     [Problems found only on the cloud], [Ten problems that local tests and plans missed (@tbl-findings)], [Verified on AWS], [Found, not all fixed (AISS-06, AISS-14)],
   ),
