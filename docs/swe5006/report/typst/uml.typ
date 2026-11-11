@@ -1032,15 +1032,18 @@
   }
   // Each gap: the insets of the groups that end before it and start after it, around a free
   // band (base spacing or what the labels need) where labels and middle runs go.
+  // ends and starts: per cell across the gap, the insets of the nested groups that end or start
+  // there; the gap takes the deepest stack, so side-by-side groups do not add up.
   let gap-of(n, i, ends, starts, base-edge, base-mid, need) = {
-    let e = ends.sum(default: 0.0)
-    let s = starts.sum(default: 0.0)
+    let e = calc.max(0.0, ..ends)
+    let s = calc.max(0.0, ..starts)
     let free = calc.max(if i == 0 or i == n { base-edge } else { base-mid }, need)
     (total: e + s + free, lo: e, hi: e + free)
   }
-  let gapX = range(ncol + 1).map(c => gap-of(ncol, c, groups.filter(g => g.c1 == c - 1).map(padR), groups.filter(g => g.c0 == c).map(padL),
+  let stack(gs, pad, a, b, m) = range(m).map(k => gs.filter(g => g.at(a) <= k and k <= g.at(b)).map(pad).sum(default: 0.0))
+  let gapX = range(ncol + 1).map(c => gap-of(ncol, c, stack(groups.filter(g => g.c1 == c - 1), padR, "r0", "r1", nrow), stack(groups.filter(g => g.c0 == c), padL, "r0", "r1", nrow),
     if not lr and lanes.len() > 0 { s-pad } else { 0.0 }, sp.gx + if not lr { lane-gap } else { 0.0 }, needX.at(c)))
-  let gapY = range(nrow + 1).map(r => gap-of(nrow, r, groups.filter(g => g.r1 == r - 1).map(padB), groups.filter(g => g.r0 == r).map(padT),
+  let gapY = range(nrow + 1).map(r => gap-of(nrow, r, stack(groups.filter(g => g.r1 == r - 1), padB, "c0", "c1", ncol), stack(groups.filter(g => g.r0 == r), padT, "c0", "c1", ncol),
     if lanes.len() > 0 { s-pad } else { 0.0 }, sp.gy + if lr { lane-gap } else { 0.0 }, needY.at(r)))
   let x0 = if lr { lane-head } else { 0.0 }
   let y0 = if lr { 0.0 } else { lane-head }
@@ -1075,10 +1078,11 @@
   let GB = (:)
   for g in groups {
     let inner = groups.filter(h => within(h, g))
-    let gl = X.at(g.c0) - inner.filter(h => h.c0 == g.c0).map(padL).sum(default: 0.0)
-    let gr = X.at(g.c1) + colW.at(g.c1) + inner.filter(h => h.c1 == g.c1).map(padR).sum(default: 0.0) - d3(g)
-    let gt = Y.at(g.r0) - inner.filter(h => h.r0 == g.r0).map(padT).sum(default: 0.0) + d3(g)
-    let gb = Y.at(g.r1) + rowH.at(g.r1) + inner.filter(h => h.r1 == g.r1).map(padB).sum(default: 0.0)
+    let deep(xs) = calc.max(0.0, ..xs)
+    let gl = X.at(g.c0) - deep(stack(inner.filter(h => h.c0 == g.c0), padL, "r0", "r1", nrow))
+    let gr = X.at(g.c1) + colW.at(g.c1) + deep(stack(inner.filter(h => h.c1 == g.c1), padR, "r0", "r1", nrow)) - d3(g)
+    let gt = Y.at(g.r0) - deep(stack(inner.filter(h => h.r0 == g.r0), padT, "c0", "c1", ncol)) + d3(g)
+    let gb = Y.at(g.r1) + rowH.at(g.r1) + deep(stack(inner.filter(h => h.r1 == g.r1), padB, "c0", "c1", ncol))
     GB.insert(g.id, (l: gl, r: gr, t: gt, b: gb))
     A.insert(g.id, (x: (gl + gr) / 2, y: (gt + gb) / 2, aw: (gr - gl) / 2, ah: (gb - gt) / 2, shape: "rect", group: true))
   }

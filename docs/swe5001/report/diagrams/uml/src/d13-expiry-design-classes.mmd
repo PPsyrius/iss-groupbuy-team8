@@ -1,0 +1,138 @@
+%% frame: Team expiry with refund, design classes (commerce-svc)
+classDiagram
+    class GroupDeal {
+        <<aggregate root, Pers>>
+        -expireTime: Instant
+        -status: DealStatus
+        +expire(now: Instant): GroupDeal
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers, Conc>>
+        +lockDeal(dealId: UUID): Optional~GroupDeal~
+        +currentTime(): Instant
+        +expire(before: GroupDeal, after: GroupDeal, now: Instant): void
+    }
+    class GroupDealExpirySweeper {
+        <<application service, Sched>>
+        ~RETRY_DELAY: Duration = PT5M
+        +sweep(limit: int, leaseValid: BooleanSupplier): GroupDealExpirySweeper.Result
+    }
+    class TeamExpirySweepJob {
+        <<scheduled job, Sched>>
+        +run(): void
+        -sweepOnce(leaseValid: BooleanSupplier): void
+    }
+    class LeasedJobRunner {
+        <<utility, Sched, Conc>>
+        +run(job: String, lease: Duration, work: LeasedJobRunner.LeaseAwareWork): void
+    }
+    class ApplicationEventPublisher {
+        <<interface, Evt>>
+        +publishEvent(event: Object): void
+    }
+    class GroupDealExpiryService {
+        <<application service, Conc, Evt>>
+        +expireOne(dealId: UUID): boolean
+    }
+    class TeamExpired {
+        <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +at: Instant
+    }
+    class IntegrationOutboxWriter {
+        <<subscriber, Evt, Dist>>
+        +onTeamExpired(event: TeamExpired): void
+    }
+    class RefundWorkerJob {
+        <<scheduled job, Sched>>
+        +run(): void
+        -attemptOne(leaseValid: BooleanSupplier): void
+    }
+    class OrderRepository {
+        <<interface, repository, Pers>>
+        +cancelByDealId(dealId: UUID, canceledAt: Instant): int
+    }
+    class OrderLifecycleSubscriber {
+        <<subscriber, Evt>>
+        +onTeamExpired(event: TeamExpired): void
+    }
+    class TeamExpiryRefundSubscriber {
+        <<subscriber, Evt>>
+        +onTeamExpired(event: TeamExpired): void
+    }
+    class RefundRepository {
+        <<interface, repository, Pers, Conc>>
+        +claimNext(): RefundWork
+        +now(): Instant
+        +finish(work: RefundWork, providerId: String, status: String, result: String): void
+    }
+    class RefundService {
+        <<application service, Ext, Conc>>
+        -tx: TransactionTemplate
+        +processNext(): boolean
+    }
+    class CheckoutPaymentRepository {
+        <<interface, repository, Pers, Conc>>
+        +requireRefundsForExpiredTeam(dealId: UUID, reason: String, eventId: String): void
+    }
+    class TeamExpiryRefundService {
+        <<application service, Conc>>
+        -tx: TransactionTemplate
+        +recordExpiredTeam(dealId: UUID): void
+    }
+    class RefundWork {
+        <<record, data object>>
+        +providerRefundId: String
+        +firstAttemptAt: Instant
+        +providerKey(): String
+        +valid(): boolean
+    }
+    class RefundGateway {
+        <<interface, gateway, Ext>>
+        +createRefund(work: RefundWork): Snapshot
+        +retrieveRefund(providerId: String): Snapshot
+        +findRefund(work: RefundWork): Snapshot
+    }
+%% at GroupDeal 0,0
+%% at PaidGroupDealRepository 1,0
+%% at GroupDealExpirySweeper 2,0
+%% at TeamExpirySweepJob 3,0
+%% at LeasedJobRunner 4,0
+%% at ApplicationEventPublisher 0,1
+%% at GroupDealExpiryService 1,1
+%% at TeamExpired 2,1
+%% at IntegrationOutboxWriter 3,1
+%% at RefundWorkerJob 4,1
+%% at OrderRepository 0,2
+%% at OrderLifecycleSubscriber 1,2
+%% at TeamExpiryRefundSubscriber 2,2
+%% at RefundRepository 3,2
+%% at RefundService 4,2
+%% at CheckoutPaymentRepository 1,3
+%% at TeamExpiryRefundService 2,3
+%% at RefundWork 3,3
+%% at RefundGateway 4,3
+%% mside GroupDealExpiryService PaidGroupDealRepository left right
+    TeamExpirySweepJob "1" --> "1" LeasedJobRunner
+    TeamExpirySweepJob "1" --> "1" GroupDealExpirySweeper
+    RefundWorkerJob "1" --> "1" LeasedJobRunner : runner
+    RefundWorkerJob "1" --> "1" RefundService
+    GroupDealExpirySweeper "1" --> "1" GroupDealExpiryService
+    GroupDealExpirySweeper "1" --> "1" PaidGroupDealRepository
+    GroupDealExpiryService "1" --> "1" PaidGroupDealRepository
+    GroupDealExpiryService "1" --> "1" ApplicationEventPublisher
+    GroupDealExpiryService ..> TeamExpired : «create»
+    GroupDealExpiryService ..> GroupDeal
+    PaidGroupDealRepository ..> GroupDeal
+    OrderLifecycleSubscriber ..> TeamExpired
+    TeamExpiryRefundSubscriber ..> TeamExpired
+    IntegrationOutboxWriter ..> TeamExpired
+    OrderLifecycleSubscriber "1" --> "1" OrderRepository
+    TeamExpiryRefundSubscriber "1" --> "1" TeamExpiryRefundService
+    TeamExpiryRefundService "1" --> "1" CheckoutPaymentRepository
+    RefundService "1" --> "1" RefundRepository
+    RefundService "1" --> "1" RefundGateway
+    RefundService ..> RefundWork
+    RefundRepository ..> RefundWork
+    RefundGateway ..> RefundWork

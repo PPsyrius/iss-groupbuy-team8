@@ -1,0 +1,22 @@
+%% frame: Notification database (2 tables, no foreign keys)
+classDiagram
+    class sys_consumed_message {
+        <<table>>
+        event_id: uuid
+        consumer: varchar
+        consumed_at: timestamptz
+        {PK: event_id, consumer}
+    }
+    class biz_notification {
+        <<table>>
+        id: uuid {PK}
+        event_id: uuid
+        user_id: uuid
+        reference_id: uuid
+        notification_type: varchar
+        create_time: timestamptz
+        {UK: event_id, user_id}
+    }
+%% at sys_consumed_message 0,0
+%% at biz_notification 1,0
+    sys_consumed_message "1" .. "0..*" biz_notification : event_id

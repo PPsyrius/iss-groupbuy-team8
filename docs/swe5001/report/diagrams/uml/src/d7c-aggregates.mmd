@@ -1,0 +1,111 @@
+%% frame: Aggregates of order and payment
+classDiagram
+    class PurchaseIntentTerms["PurchaseIntent.Terms"] {
+        <<value object, record>>
+        +userId: UUID
+        +operation: PurchaseOperation
+        +dealId: UUID
+        +productId: UUID
+        +amount: BigDecimal
+        +targetSize: int
+    }
+    class PurchaseIntent {
+        <<aggregate root>>
+        -id: UUID
+        -quoteValidUntil: Instant
+        -businessDeadline: Instant
+        -fulfilledPaymentId: UUID
+        -sharerUserId: UUID
+        -expiredAt: Instant
+        -version: int
+        +issue(terms: PurchaseIntent.Terms, quoteValidUntil: Instant, businessDeadline: Instant, now: Instant): PurchaseIntent «static»
+        +attributedTo(sharer: UUID): PurchaseIntent
+        +fulfilBy(paymentId: UUID): PurchaseIntent
+        +requireOwner(authenticatedUser: UUID): void
+        +expireAt(now: Instant): PurchaseIntent
+        +fulfilled(): boolean
+    }
+    class RefundWork {
+        <<record, data object>>
+        +id: UUID
+        +paymentId: UUID
+        +amount: BigDecimal
+        +providerRefundId: String
+        +firstAttemptAt: Instant
+        +version: int
+        +valid(): boolean
+    }
+    class CheckoutQuote {
+        <<value object, record>>
+        +intentId: UUID
+        +userId: UUID
+        +operation: String
+        +businessId: UUID
+        +amount: BigDecimal
+        +currency: String
+        +quoteValidUntil: Instant
+        +businessDeadline: Instant
+    }
+    class CheckoutPayment {
+        <<aggregate root, record>>
+        +id: UUID
+        +requestKey: String
+        +sessionId: String
+        +providerPaymentIntentId: String
+        +version: int
+        +bind(session: String, url: String, intent: String): CheckoutPayment
+        +succeed(): CheckoutPayment
+        +cancelUnpaid(): CheckoutPayment
+        +failTerminalUnpaid(): CheckoutPayment
+    }
+    class CheckoutPaymentStatus["CheckoutPayment.Status"] {
+        <<enumeration>>
+        CREATED
+        SUCCEEDED
+        FAILED
+        CANCELED
+    }
+    class OrderNewOrderTerms["Order.NewOrderTerms"] {
+        <<value object, record>>
+        +paymentId: UUID
+        +dealId: UUID
+        +userId: UUID
+        +productId: UUID
+        +quantity: int
+        +unitPrice: BigDecimal
+    }
+    class Order {
+        <<aggregate root>>
+        -id: UUID
+        -totalAmount: BigDecimal
+        -paidTime: Instant
+        -cancelTime: Instant
+        -version: int
+        +create(terms: Order.NewOrderTerms, paidAt: Instant): Order «static»
+        +confirm(): Order
+        +cancel(canceledAt: Instant): Order
+    }
+    class OrderStatus {
+        <<enumeration>>
+        PENDING
+        CONFIRMED
+        CANCELLED
+    }
+%% at PurchaseIntentTerms 0,0
+%% at PurchaseIntent 1,0
+%% at CheckoutQuote 0,1
+%% at CheckoutPayment 1,1
+%% at CheckoutPaymentStatus 2,0
+%% at RefundWork 0,2
+%% at OrderNewOrderTerms 1,2
+%% at Order 2,1
+%% at OrderStatus 2,2
+    PurchaseIntent *-- PurchaseIntentTerms : terms
+    CheckoutPayment *-- CheckoutQuote : quote
+    CheckoutPayment --> CheckoutPaymentStatus : status
+    Order *-- OrderNewOrderTerms : placement
+    Order --> OrderStatus : status
+    CheckoutQuote ..> PurchaseIntent : id
+    PurchaseIntent ..> CheckoutPayment : id
+    OrderNewOrderTerms ..> CheckoutPayment : id
+    RefundWork ..> CheckoutPayment : id

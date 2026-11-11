@@ -1,0 +1,44 @@
+%% frame: BlocBuy context map: bounded contexts in three services
+componentDiagram
+    component Google["Google Sign-In (OIDC)"] <<external system>>
+    component Ranker["TypeSafe JEV reranker"] <<external system>>
+    component IdSvc["identity-svc"] <<subsystem>> {
+        component Identity["Identity"] <<bounded context>> : generic subdomain
+    }
+    component CoSvc["commerce-svc"] <<subsystem>> {
+        component Catalog["Catalog"] <<bounded context>> : supporting subdomain
+        component GroupBuy["GroupBuy"] <<bounded context>> :::business : core subdomain
+        component Order["Order"] <<bounded context>> :::business : core subdomain
+        component Payment["Payment"] <<bounded context>> : supporting subdomain
+    }
+    component NtSvc["notification-svc"] <<subsystem>> {
+        component Notification["Notification"] <<bounded context>> : generic subdomain
+    }
+    component Stripe["Stripe"] <<external system>>
+    component Common["common"] <<shared kernel>>
+    Identity "D · ACL" ..> "U" Google
+    Catalog "D · ACL" ..> "U" Ranker : fail-open
+    Payment "D · ACL" ..> "U" Stripe
+    CoSvc "D" ..> "U · OHS" Identity : Customer–Supplier
+    Catalog "D" ..> "U" GroupBuy : Customer–Supplier
+    Order "D" ..> "U" Catalog : Customer–Supplier
+    GroupBuy -- Order : Partnership
+    Order "D" ..> "U" Payment : Separated Interface
+    Payment "D" ..> "U" GroupBuy : Published Language
+    NtSvc "D" ..> "U · OHS" CoSvc : Published Language
+    Common -- IdSvc : Shared Kernel
+    Common -- CoSvc : Shared Kernel
+    Common -- NtSvc : Shared Kernel
+%% route ortho
+%% route GroupBuy Order straight
+%% route NtSvc CoSvc hv
+%% at Google 0,0
+%% at Ranker 1,0
+%% at Identity 0,1
+%% at Catalog 1,1
+%% at GroupBuy 2,1
+%% at Common 0,2
+%% at Order 1,2
+%% at Payment 2,2
+%% at Notification 0,3
+%% at Stripe 2,3

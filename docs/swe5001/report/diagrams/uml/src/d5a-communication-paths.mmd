@@ -1,0 +1,58 @@
+%% frame: BlocBuy SWE5001 communication paths
+deploymentDiagram
+    device Browser["Buyer's browser"]
+    node Cdn["Amazon CloudFront"] <<global edge>>
+    node Stripe["Stripe"] <<external system>>
+    node Google["Google Sign-In"] <<external system>>
+    node S3["Amazon S3"] <<bucket>> : SPA files
+    zone "VPC 10.50.0.0/16" {
+        zone "Public subnets" {
+            node Alb["Application Load Balancer"]
+            node Nat["fck-nat"]
+        }
+        zone "Private application subnets" as Apps {
+            environment Id["identity-svc"] <<execution environment>>
+            environment Co["commerce-svc"] <<execution environment>>
+            environment Nt["notification-svc"] <<execution environment>>
+        }
+        zone "Data subnets" {
+            node Cache["ElastiCache Valkey"]
+            node Rds["RDS PostgreSQL"]
+        }
+    }
+    zone "Amazon SNS and SQS" as Msg {
+        node Sns["domain-events"] <<SNS topic>> :::messaging
+        node QNt["notification"] <<SQS queue>> :::messaging : and its DLQ
+        node QAu["audit"] <<SQS queue>> :::messaging : and its DLQ
+    }
+    Browser -- Cdn : HTTPS 443
+    Cdn --> S3 : HTTPS (OAC)
+    Stripe --> Cdn : HTTPS 443
+    Cdn --> Alb : HTTP 80, origin secret
+    Alb --> Apps : HTTP 8589
+    Co --> Id : HTTP 8589
+    Apps --> Cache : TLS 6379
+    Apps --> Rds : TLS 5432
+    Id --> Nat : HTTPS 443
+    Co --> Nat : HTTPS 443
+    Nt --> Nat : HTTPS 443
+    Nat --> Stripe : HTTPS 443
+    Nat --> Google : HTTPS 443
+    Nat --> Msg : HTTPS 443
+    Sns --> QNt
+    Sns --> QAu
+%% at Browser 0,0
+%% at Cdn 1,0
+%% at Stripe 2,0
+%% at Google 3,0
+%% at S3 0,1
+%% at Alb 1,1
+%% at Nat 2,1
+%% at Id 1,2
+%% at Co 2,2
+%% at Nt 3,2
+%% at Cache 1,3
+%% at Rds 2,3
+%% at Sns 4,1
+%% at QNt 4,0
+%% at QAu 4,2

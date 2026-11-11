@@ -1,0 +1,43 @@
+%% frame: BlocBuy logical view: published events and data stores by tier
+componentDiagram
+    package "Application tier" as AppT {
+        component IdSvc["identity-svc"] <<subsystem>>
+        component CoSvc["commerce-svc"] <<subsystem>> :::business
+        component NtSvc["notification-svc"] <<subsystem>>
+    }
+    interface IEv["PublishedEvents V1"]
+    package "Integration tier" {
+        component Broker["Message\nbroker"] :::messaging
+        component NQ["Event queue\n(notification)"] :::messaging
+        component AQ["Event queue\n(audit)"] :::messaging : no consumer
+    }
+    package "Data tier" {
+        database Sess["Session store"]
+        database IdDb["Identity\ndata store"]
+        database CoDb["Commerce\ndata store"]
+        database NtDb["Notification\ndata store"]
+    }
+    CoSvc -() IEv : async
+    Broker -( IEv : async
+    Broker --> NQ
+    Broker --> AQ
+    NtSvc ..> NQ : async
+    IdSvc ..> IdDb : sync
+    CoSvc ..> CoDb : sync
+    NtSvc ..> NtDb : sync
+    AppT ..> Sess : sync
+%% route ortho
+%% route NtSvc NtDb hv
+%% route AppT Sess hv
+%% at IdSvc 1,0
+%% at CoSvc 2,0
+%% at NtSvc 4,0
+%% at IEv 3,1
+%% at Broker 3,2
+%% at NQ 4,2
+%% at AQ 3,3
+%% at Sess 0,4
+%% at IdDb 1,4
+%% at CoDb 2,4
+%% at NtDb 5,4
+%% route CoSvc IEv straight
