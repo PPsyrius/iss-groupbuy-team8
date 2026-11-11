@@ -8,6 +8,7 @@ export AWS_REGION=ap-southeast-1 SWE5001_TF_STATE_BUCKET=test CALLS="$work/calls
 export FAULT=normal
 export ALB='arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:loadbalancer/app/blocbuy-swe5001/123'
 export LISTENER='arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:listener/app/blocbuy-swe5001/123/789'
+export CPU_POLICY='arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:11111111-1111-1111-1111-111111111111:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-cpu-headroom'
 export SECRET_SENTINEL='private-origin-header-fixture-do-not-emit'
 export TMPDIR=$work
 git() {
@@ -35,7 +36,23 @@ aws() {
     'ecs list-tasks') if [ "$FAULT" = extra_task ]; then printf '["task:1","task:2"]\n'; else printf '["task:1"]\n'; fi ;;
     'ecs describe-tasks') printf '{"tasks":[],"failures":[]}\n' ;;
     'application-autoscaling describe-scalable-targets') printf '{"ScalableTargets":[]}\n' ;;
-    'application-autoscaling describe-scaling-policies') printf '{"ScalingPolicies":[]}\n' ;;
+    'application-autoscaling describe-scaling-policies')
+      if [ "$FAULT" = cpu_headroom ] || [ "$FAULT" = cpu_alarm_denied ]; then
+        printf '{"ScalingPolicies":[{"PolicyName":"blocbuy-swe5001-commerce-cpu-headroom","PolicyType":"StepScaling"}]}\n'
+      else
+        printf '{"ScalingPolicies":[]}\n'
+      fi ;;
+    'cloudwatch describe-alarms')
+      [ "$FAULT" != cpu_alarm_denied ] || return 1
+      local query=""
+      while [ "$#" -gt 0 ]; do
+        if [ "$1" = --query ]; then query=$2; shift 2; else shift; fi
+      done
+      [ "$query" = 'MetricAlarms[].{name:AlarmName,namespace:Namespace,metric:MetricName,statistic:Statistic,period:Period,evaluationPeriods:EvaluationPeriods,datapointsToAlarm:DatapointsToAlarm,threshold:Threshold,comparison:ComparisonOperator,missingData:TreatMissingData,actionsEnabled:ActionsEnabled,actions:AlarmActions,dimensions:Dimensions}' ] || return 1
+      jq -nc --arg policy "$CPU_POLICY" '[{name:"blocbuy-swe5001-commerce-cpu-headroom",namespace:"AWS/ECS",
+        metric:"CPUUtilization",statistic:"Average",period:60,evaluationPeriods:1,datapointsToAlarm:1,threshold:70,
+        comparison:"GreaterThanOrEqualToThreshold",missingData:"notBreaching",actionsEnabled:true,actions:[$policy],
+        dimensions:[{Name:"ClusterName",Value:"blocbuy-swe5001"},{Name:"ServiceName",Value:"commerce-svc"}]}]' ;;
     'elbv2 describe-target-groups') jq -nc --arg group "$group" --arg alb "$ALB" '[{arn:$group,loadBalancerArns:[$alb],port:8589,protocol:"HTTP"}]' ;;
     'elbv2 describe-load-balancers') jq -nc --arg alb "$ALB" '[{arn:$alb,dnsName:"runtime.elb.amazonaws.com",type:"application",state:"active"}]' ;;
     'elbv2 describe-listeners') jq -nc --arg alb "$ALB" --arg listener "$LISTENER" '[{arn:$listener,loadBalancerArn:$alb,port:80,protocol:"HTTP"}]' ;;
@@ -58,6 +75,12 @@ printf 'PASS V2 captures the monolith, not distributed commerce\n'
 bash "$dir/http-preflight.sh" v3 > "$work/report.json"
 grep -q -- '--services commerce-svc' "$CALLS"
 printf 'PASS V3 captures distributed commerce\n'
+FAULT=cpu_headroom bash "$dir/http-preflight.sh" v3 > "$work/report.json"
+jq -e --arg policy "$CPU_POLICY" '.cpuHeadroom.alarms == [{name:"blocbuy-swe5001-commerce-cpu-headroom",namespace:"AWS/ECS",
+  metric:"CPUUtilization",statistic:"Average",period:60,evaluationPeriods:1,datapointsToAlarm:1,threshold:70,
+  comparison:"GreaterThanOrEqualToThreshold",missingData:"notBreaching",actionsEnabled:true,actions:[$policy],
+  dimensions:[{Name:"ClusterName",Value:"blocbuy-swe5001"},{Name:"ServiceName",Value:"commerce-svc"}]}]' "$work/report.json" > /dev/null
+printf 'PASS opt-in CPU policy includes independent alarm binding evidence\n'
 jq -e '.routing.rules[0].originHeaderMatches == true and .routing.rules[0].pathPatterns == ["/api/*"] and .routing.rulesListenerArn == .routing.listeners[0].arn' "$work/report.json" > /dev/null
 printf 'PASS capture binds origin listener and compares protected header conditions\n'
 if grep -Fq "$SECRET_SENTINEL" "$work/report.json"; then exit 1; fi
@@ -69,7 +92,7 @@ printf 'PASS changed origin-header condition is recorded as a mismatch\n'
 printf 'PASS private route inputs are removed after capture\n'
 if grep -Eq 'update-|register-|run-task|publish|send-message|put-' "$CALLS"; then exit 1; fi
 printf 'PASS capture issues no mutation or task-start requests\n'
-for fault in dirty denied extra_task route_read_denied; do
+for fault in dirty denied extra_task route_read_denied cpu_alarm_denied; do
   if FAULT=$fault bash "$dir/http-preflight.sh" v2 > "$work/fault.json" 2> "$work/error"; then
     printf 'FAIL preflight accepted %s\n' "$fault" >&2
     exit 1

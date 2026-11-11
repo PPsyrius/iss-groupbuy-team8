@@ -231,6 +231,7 @@ class BestOpenDealCacheIT {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     void unreachableRedisReturnsSourceOffersAndCannotUndoACommittedFact() {
         var expected = query.findBestOpenDealsByProductIds(List.of(product));
         RedisConnectionFactory original = redis.getConnectionFactory();

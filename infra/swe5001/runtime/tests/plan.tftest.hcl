@@ -126,6 +126,11 @@ run "monolith_topology" {
   }
 
   assert {
+    condition     = !contains(keys(local.service_environment["monolith"]), "SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE")
+    error_message = "The SWE5001 distributed pool cap must not change the monolith default."
+  }
+
+  assert {
     condition     = tolist(local.databases) == tolist(["monolith"])
     error_message = "Strangler step 0 uses one database, monolith."
   }
@@ -195,6 +200,16 @@ run "rejects_unpinned_image" {
 
 run "distributed_topology" {
   command = plan
+
+  assert {
+    condition     = alltrue([for env in values(local.service_environment) : env["SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE"] == "5"])
+    error_message = "Every distributed service must use the SWE5001-only five-connection pool cap."
+  }
+
+  assert {
+    condition     = length(aws_appautoscaling_policy.commerce_cpu_headroom) == 0 && length(aws_cloudwatch_metric_alarm.commerce_cpu_headroom) == 0
+    error_message = "The CPU guard must remain opt-in; ordinary distributed sessions keep their existing policy."
+  }
 
   override_resource {
     target          = aws_lb.this
@@ -537,4 +552,78 @@ run "requires_edge_distribution" {
     }
   }
   expect_failures = [var.cloudfront_distribution_id]
+}
+
+run "cpu_headroom_only_scales_out_without_changing_request_policy_or_bounds" {
+  command = plan
+  variables {
+    topology                       = "distributed"
+    services_enabled               = true
+    frontend_url                   = "https://d111111abcdef8.cloudfront.net"
+    commerce_requests_per_target   = 12000
+    commerce_cpu_scale_out_enabled = true
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  override_resource {
+    target          = aws_appautoscaling_policy.commerce_cpu_headroom[0]
+    override_during = plan
+    values          = { arn = "arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:test-headroom" }
+  }
+  assert {
+    condition     = aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].threshold == 70 && aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].period == 60 && aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].evaluation_periods == 1 && aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].datapoints_to_alarm == 1 && aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].actions_enabled
+    error_message = "The opt-in headroom guard uses one CPU minute, not the delayed three-point ALB decision."
+  }
+  assert {
+    condition     = aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].namespace == "AWS/ECS" && aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].metric_name == "CPUUtilization" && aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].dimensions.ServiceName == "commerce-svc" && aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].alarm_actions == toset(["arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:test-headroom"])
+    error_message = "Only commerce CPU may invoke the matching scale-out policy."
+  }
+  assert {
+    condition     = aws_appautoscaling_policy.commerce_cpu_headroom[0].step_scaling_policy_configuration[0].adjustment_type == "ChangeInCapacity" && aws_appautoscaling_policy.commerce_cpu_headroom[0].step_scaling_policy_configuration[0].cooldown == 60 && one(aws_appautoscaling_policy.commerce_cpu_headroom[0].step_scaling_policy_configuration[0].step_adjustment).scaling_adjustment == 1
+    error_message = "Headroom may add one task only; it must not supply a scale-in adjustment."
+  }
+  assert {
+    condition     = aws_appautoscaling_target.commerce[0].max_capacity == 6 && aws_appautoscaling_target.commerce[0].min_capacity == 2 && aws_appautoscaling_target.notification[0].max_capacity == 4 && aws_appautoscaling_policy.commerce_requests[0].target_tracking_scaling_policy_configuration[0].target_value == 12000
+    error_message = "Existing maxima, demo floor and calibrated request target must remain unchanged."
+  }
+}
+
+run "cpu_headroom_cannot_act_during_paused_startup" {
+  command = plan
+  variables {
+    topology                       = "distributed"
+    services_enabled               = false
+    frontend_url                   = "https://d111111abcdef8.cloudfront.net"
+    commerce_cpu_scale_out_enabled = true
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition     = !aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0].actions_enabled && aws_appautoscaling_target.commerce[0].suspended_state[0].dynamic_scaling_out_suspended
+    error_message = "The guard must not start tasks while the normal startup gate is paused."
+  }
+}
+
+run "reject_cpu_headroom_outside_distributed" {
+  command = plan
+  variables { commerce_cpu_scale_out_enabled = true }
+  expect_failures = [var.commerce_cpu_scale_out_enabled]
+}
+
+run "reject_cpu_headroom_without_safety_margin" {
+  command = plan
+  variables { commerce_cpu_scale_out_threshold = 100 }
+  expect_failures = [var.commerce_cpu_scale_out_threshold]
+}
+
+run "reject_fractional_cpu_headroom_threshold" {
+  command = plan
+  variables { commerce_cpu_scale_out_threshold = 70.5 }
+  expect_failures = [var.commerce_cpu_scale_out_threshold]
 }

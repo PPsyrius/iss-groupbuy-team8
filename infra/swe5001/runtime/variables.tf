@@ -153,6 +153,28 @@ variable "cloudfront_distribution_id" {
   }
 }
 
+variable "commerce_cpu_scale_out_enabled" {
+  description = "Opt-in early CPU scale-out guard for distributed commerce; requires a reviewed performance session"
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.commerce_cpu_scale_out_enabled || var.topology == "distributed"
+    error_message = "The commerce CPU scale-out guard requires distributed topology."
+  }
+}
+
+variable "commerce_cpu_scale_out_threshold" {
+  description = "Planning CPU headroom threshold (%), not a measured capacity or acceptance threshold"
+  type        = number
+  default     = 70
+
+  validation {
+    condition     = var.commerce_cpu_scale_out_threshold > 0 && var.commerce_cpu_scale_out_threshold < 100 && floor(var.commerce_cpu_scale_out_threshold) == var.commerce_cpu_scale_out_threshold
+    error_message = "CPU headroom threshold must be an integer strictly between zero and 100 percent."
+  }
+}
+
 variable "enable_exec" {
   description = "Allow ECS Exec into service tasks for debugging"
   type        = bool

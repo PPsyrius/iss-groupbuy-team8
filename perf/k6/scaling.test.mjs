@@ -218,6 +218,26 @@ test('AWS V3 requires the verified route/digest/revision and complete nominal ra
   }
 });
 
+test('V3 analysis retains explicit CPU guard confirmation without changing acceptance gates', () => {
+  const input = awsV3();
+  const arn = 'arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:cpu';
+  input.report.context.cpuHeadroom = { threshold: 70 };
+  input.report.preflight.policies.ScalingPolicies.push({ PolicyName: 'blocbuy-swe5001-commerce-cpu-headroom',
+    PolicyARN: arn, ResourceId: 'service/blocbuy-swe5001/commerce-svc', PolicyType: 'StepScaling',
+    StepScalingPolicyConfiguration: { AdjustmentType: 'ChangeInCapacity', Cooldown: 60, MetricAggregationType: 'Average',
+      StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }] } });
+  input.report.preflight.cpuHeadroom = { alarms: [{ name: 'blocbuy-swe5001-commerce-cpu-headroom', namespace: 'AWS/ECS',
+    metric: 'CPUUtilization', statistic: 'Average', period: 60, evaluationPeriods: 1, datapointsToAlarm: 1, threshold: 70,
+    comparison: 'GreaterThanOrEqualToThreshold', missingData: 'notBreaching', actionsEnabled: true, actions: [arn],
+    dimensions: [{ Name: 'ClusterName', Value: 'blocbuy-swe5001' }, { Name: 'ServiceName', Value: 'commerce-svc' }] }] };
+  assert.equal(analyze(input).latencyAndScaleOutGatesPassed, true);
+  assert.equal(analyze(input).acceptanceComplete, false);
+  input.report.context.cpuHeadroom = null;
+  assert.throws(() => analyze(input), /explicit CPU headroom confirmation/);
+  input.report.context.cpuHeadroom = { threshold: 65 };
+  assert.throws(() => analyze(input), /CPU headroom policy/);
+});
+
 test('analysis CLIs preserve all-run failures, reject fixture acceptance and report failed gates', () => {
   const dir = mkdtempSync(join(tmpdir(), 'blocbuy-analysis-'));
   const file = (name, value, jsonl = false) => {

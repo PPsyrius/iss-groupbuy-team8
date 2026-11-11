@@ -33,6 +33,12 @@ export function configure(env) {
   const preAllocatedVUs = integer(env.PREALLOCATED_VUS || 100, 'PREALLOCATED_VUS', 1, 1000);
   const maxVUs = integer(env.MAX_VUS || 400, 'MAX_VUS', preAllocatedVUs, 1000);
   const knee = mode === 'v3' ? integer(env.KNEE_RPS, 'KNEE_RPS', 1, 200) : null;
+  if (env.CONFIRM_CPU_HEADROOM !== undefined && !['true', 'false'].includes(env.CONFIRM_CPU_HEADROOM)) {
+    throw new Error('CONFIRM_CPU_HEADROOM must explicitly be true or false');
+  }
+  const cpuHeadroom = env.CONFIRM_CPU_HEADROOM === 'true'
+    ? { threshold: integer(env.CPU_HEADROOM_THRESHOLD || 70, 'CPU_HEADROOM_THRESHOLD', 1, 99) } : null;
+  if (cpuHeadroom && mode !== 'v3') throw new Error('CPU headroom confirmation belongs only to V3');
   const rate = mode === 'smoke' ? 2 : null;
   const remote = !local;
   if (remote && mode === 'smoke') throw new Error('Smoke mode is local-fixture-only; remote runs require a V2/V3 preflight');
@@ -73,7 +79,7 @@ export function configure(env) {
     thresholds.browse_requests = [`count>=${expected}`, `count<=${expected}`];
   }
   return { baseUrl, mode, topology, knee, remote, stageSeconds,
-    generator: { preAllocatedVUs, maxVUs },
+    generator: { preAllocatedVUs, maxVUs }, cpuHeadroom,
     evidenceKind: remote ? 'aws-preflight-required' : 'local-fixture', expectedImageDigest: env.EXPECTED_IMAGE_DIGEST || null,
     testSha: env.TEST_SHA, imageSha: env.IMAGE_SHA, runLabel: env.RUN_LABEL,
     options: { scenarios, thresholds, summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(95)', 'p(99)'],
@@ -216,15 +222,39 @@ export function validatePreflight(snapshot, config, now = Date.now()) {
       t.SuspendedState?.ScheduledScalingSuspended !== true)) throw new Error('V2 scaling must be absent or fully suspended');
   } else {
     const target = targets[0];
-    const policy = policies[0];
+    const trackingPolicies = policies.filter(p => p.PolicyType === 'TargetTrackingScaling');
+    const policy = trackingPolicies[0];
     const tracking = policy?.TargetTrackingScalingPolicyConfiguration;
     if (targets.length !== 1 || target.MinCapacity !== 1 || target.MaxCapacity !== 6 ||
         target.SuspendedState?.DynamicScalingInSuspended !== false || target.SuspendedState?.DynamicScalingOutSuspended !== false ||
-        target.SuspendedState?.ScheduledScalingSuspended !== false || policies.length !== 1 ||
+        target.SuspendedState?.ScheduledScalingSuspended !== false || trackingPolicies.length !== 1 ||
         policy.ResourceId !== resourceId || policy.PolicyType !== 'TargetTrackingScaling' ||
         tracking?.PredefinedMetricSpecification?.PredefinedMetricType !== 'ALBRequestCountPerTarget' ||
         tracking?.PredefinedMetricSpecification?.ResourceLabel !== routing.resourceLabel ||
         tracking?.TargetValue !== config.knee * 60) throw new Error('V3 requires active 1..6 HTTP scaling at the calibrated target');
+    const extra = policies.filter(p => p !== policy);
+    if (!config.cpuHeadroom && extra.length) throw new Error('Additional scaling policy requires explicit CPU headroom confirmation');
+    if (config.cpuHeadroom) {
+      const cpu = extra[0], step = cpu?.StepScalingPolicyConfiguration, adjustment = step?.StepAdjustments?.[0];
+      const alarms = snapshot.cpuHeadroom?.alarms, alarm = alarms?.[0];
+      const dimensions = alarm?.dimensions;
+      if (extra.length !== 1 || cpu.PolicyName !== 'blocbuy-swe5001-commerce-cpu-headroom' ||
+          cpu.ResourceId !== resourceId || cpu.PolicyType !== 'StepScaling' ||
+          typeof cpu.PolicyARN !== 'string' || !cpu.PolicyARN.startsWith('arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:') ||
+          step?.AdjustmentType !== 'ChangeInCapacity' || step.Cooldown !== 60 || step.MetricAggregationType !== 'Average' ||
+          step.StepAdjustments?.length !== 1 || adjustment?.ScalingAdjustment !== 1 ||
+          adjustment.MetricIntervalLowerBound !== 0 || adjustment.MetricIntervalUpperBound != null ||
+          alarms?.length !== 1 || alarm.name !== 'blocbuy-swe5001-commerce-cpu-headroom' ||
+          alarm.namespace !== 'AWS/ECS' || alarm.metric !== 'CPUUtilization' || alarm.statistic !== 'Average' ||
+          alarm.period !== 60 || alarm.evaluationPeriods !== 1 || alarm.datapointsToAlarm !== 1 ||
+          alarm.threshold !== config.cpuHeadroom.threshold || alarm.comparison !== 'GreaterThanOrEqualToThreshold' ||
+          alarm.missingData !== 'notBreaching' || alarm.actionsEnabled !== true ||
+          alarm.actions?.length !== 1 || alarm.actions[0] !== cpu.PolicyARN || dimensions?.length !== 2 ||
+          dimensions.filter(d => d.Name === 'ClusterName' && d.Value === 'blocbuy-swe5001').length !== 1 ||
+          dimensions.filter(d => d.Name === 'ServiceName' && d.Value === service).length !== 1) {
+        throw new Error('CPU headroom policy/alarm is not bound to the reviewed commerce-only scale-out guard');
+      }
+    }
   }
   return { service, taskArn: task.taskArn, imageDigest: containers[0].imageDigest, collectedAt: snapshot.collectedAt };
 }

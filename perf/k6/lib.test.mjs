@@ -216,6 +216,60 @@ test('V3 verifies the active bounds, metric and calibrated per-minute target', (
     assert.throws(() => validatePreflight(p, config));
   }
 });
+
+function cpuPreflight() {
+  const p = preflight('v3');
+  const arn = 'arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:cpu';
+  p.policies.ScalingPolicies.push({ PolicyName: 'blocbuy-swe5001-commerce-cpu-headroom',
+    PolicyARN: arn, ResourceId: 'service/blocbuy-swe5001/commerce-svc', PolicyType: 'StepScaling',
+    StepScalingPolicyConfiguration: { AdjustmentType: 'ChangeInCapacity', Cooldown: 60, MetricAggregationType: 'Average',
+      StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }] } });
+  p.cpuHeadroom = { alarms: [{ name: 'blocbuy-swe5001-commerce-cpu-headroom', namespace: 'AWS/ECS',
+    metric: 'CPUUtilization', statistic: 'Average', period: 60, evaluationPeriods: 1, datapointsToAlarm: 1,
+    threshold: 70, comparison: 'GreaterThanOrEqualToThreshold', missingData: 'notBreaching', actionsEnabled: true,
+    actions: [arn], dimensions: [{ Name: 'ClusterName', Value: 'blocbuy-swe5001' }, { Name: 'ServiceName', Value: 'commerce-svc' }] }] };
+  return p;
+}
+const cpuEnv = { ...remoteEnv, MODE: 'v3', TOPOLOGY: 'distributed', KNEE_RPS: '50', CONFIRM_CPU_HEADROOM: 'true' };
+test('CPU guard requires explicit V3 confirmation, not arbitrary extra scaling policies', () => {
+  assert.throws(() => configure({ ...remoteEnv, CONFIRM_CPU_HEADROOM: 'true' }), /only to V3/);
+  assert.throws(() => configure({ ...cpuEnv, CONFIRM_CPU_HEADROOM: 'yes' }), /true or false/);
+  assert.throws(() => configure({ ...cpuEnv, CPU_HEADROOM_THRESHOLD: '100' }), /1..99/);
+  assert.throws(() => validatePreflight(cpuPreflight(), configure({ ...cpuEnv, CONFIRM_CPU_HEADROOM: 'false' })), /explicit/);
+  assert.throws(() => validatePreflight(preflight('v3'), configure(cpuEnv)), /CPU headroom/);
+  validatePreflight(cpuPreflight(), configure(cpuEnv));
+});
+test('CPU guard binds the reviewed CPU alarm and only one positive adjustment to commerce', () => {
+  const mutations = [
+    p => p.policies.ScalingPolicies[1].PolicyName = 'unreviewed',
+    p => p.policies.ScalingPolicies[1].ResourceId = 'service/blocbuy-swe5001/identity-svc',
+    p => p.policies.ScalingPolicies[1].PolicyARN = 'arn:aws:autoscaling:other:999999999999:scalingPolicy:cpu',
+    p => p.policies.ScalingPolicies[1].StepScalingPolicyConfiguration.AdjustmentType = 'ExactCapacity',
+    p => p.policies.ScalingPolicies[1].StepScalingPolicyConfiguration.Cooldown = 0,
+    p => p.policies.ScalingPolicies[1].StepScalingPolicyConfiguration.StepAdjustments[0].ScalingAdjustment = -1,
+    p => p.policies.ScalingPolicies[1].StepScalingPolicyConfiguration.StepAdjustments[0].MetricIntervalUpperBound = 10,
+    p => p.policies.ScalingPolicies.push(structuredClone(p.policies.ScalingPolicies[1])),
+    p => p.cpuHeadroom = null,
+    p => p.cpuHeadroom.alarms[0].namespace = 'Other',
+    p => p.cpuHeadroom.alarms[0].threshold = 90,
+    p => p.cpuHeadroom.alarms[0].actionsEnabled = false,
+    p => p.cpuHeadroom.alarms[0].actions = ['other-policy'],
+    p => p.cpuHeadroom.alarms[0].period = 300,
+    p => p.cpuHeadroom.alarms[0].evaluationPeriods = 3,
+    p => p.cpuHeadroom.alarms[0].dimensions[1].Value = 'identity-svc',
+    p => p.cpuHeadroom.alarms[0].dimensions.push({ Name: 'Other', Value: 'unknown' }),
+    p => p.cpuHeadroom.alarms.push(structuredClone(p.cpuHeadroom.alarms[0])),
+  ];
+  for (const mutate of mutations) {
+    const p = cpuPreflight(); mutate(p);
+    assert.throws(() => validatePreflight(p, configure(cpuEnv)), /CPU headroom/);
+  }
+  const p = cpuPreflight();
+  p.policies.ScalingPolicies.reverse();
+  validatePreflight(p, configure(cpuEnv));
+  p.cpuHeadroom.alarms[0].threshold = 65;
+  validatePreflight(p, configure({ ...cpuEnv, CPU_HEADROOM_THRESHOLD: '65' }));
+});
 test('preflight binds CloudFront API origin, ALB listener and ECS target group', () => {
   for (const mutate of [p => delete p.routing,
     p => p.routing.edge.behaviors[0].targetOriginId = 'other-origin',

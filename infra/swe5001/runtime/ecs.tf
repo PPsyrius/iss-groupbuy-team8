@@ -28,6 +28,9 @@ locals {
       { for k, v in s.environment : k => replace(v, "{frontend_url}", var.frontend_url) },
       # This final map prevents any other service definition from enabling the outbox.
       { BLOCBUY_EVENTS_ENABLED = name == "commerce-svc" ? "true" : "false" },
+      # SWE5001 distributed maximum: (1 + 6 + 4) * 5 = 55 runtime connections.
+      # Keep the shared backend/monolith default unchanged; see load-preflight evidence.
+      var.topology == "distributed" ? { SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE = "5" } : {},
     )
   }
 
