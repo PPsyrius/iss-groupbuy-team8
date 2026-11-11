@@ -133,21 +133,21 @@ class TeamPriceRepositoryIT {
         assertThat(
                         jdbc.queryForList(
                                 """
-                SELECT r.role_code FROM sys_role r
-                JOIN rel_role_permission rp ON rp.role_id = r.id
-                JOIN sys_permission p ON p.id = rp.permission_id
-                WHERE p.perm_code = 'catalog:product:write' AND rp.deleted = false
-                """,
+                                SELECT r.role_code FROM sys_role r
+                                JOIN rel_role_permission rp ON rp.role_id = r.id
+                                JOIN sys_permission p ON p.id = rp.permission_id
+                                WHERE p.perm_code = 'catalog:product:write' AND rp.deleted = false
+                                """,
                                 String.class))
                 .containsExactly("admin");
         assertThat(
                         jdbc.queryForObject(
                                 """
-                SELECT count(*) FROM pg_constraint
-                WHERE conrelid IN ('domain.biz_team_price_policy'::regclass,
-                                   'domain.biz_team_price_quote'::regclass)
-                  AND contype IN ('f', 'c')
-                """,
+                                SELECT count(*) FROM pg_constraint
+                                WHERE conrelid IN ('domain.biz_team_price_policy'::regclass,
+                                                   'domain.biz_team_price_quote'::regclass)
+                                  AND contype IN ('f', 'c')
+                                """,
                                 Integer.class))
                 .isZero();
     }
@@ -246,18 +246,17 @@ class TeamPriceRepositoryIT {
             Instant beforeWait = prices(writer).currentTime();
             var started = new CountDownLatch(1);
             var pending =
-                    executor.submit(
-                            () -> {
-                                try (SqlSession reader = sessions.openSession()) {
-                                    started.countDown();
-                                    lock(reader);
-                                    var repo = prices(reader);
-                                    Instant afterLock = repo.currentTime();
-                                    var policy = repo.findLatestPolicy(productId).orElseThrow();
-                                    assertThat(afterLock).isAfterOrEqualTo(beforeWait);
-                                    return policy;
-                                }
-                            });
+                    executor.submit(() -> {
+                        try (SqlSession reader = sessions.openSession()) {
+                            started.countDown();
+                            lock(reader);
+                            var repo = prices(reader);
+                            Instant afterLock = repo.currentTime();
+                            var policy = repo.findLatestPolicy(productId).orElseThrow();
+                            assertThat(afterLock).isAfterOrEqualTo(beforeWait);
+                            return policy;
+                        }
+                    });
             assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
             assertThatThrownBy(() -> pending.get(200, TimeUnit.MILLISECONDS))
                     .isInstanceOf(TimeoutException.class);

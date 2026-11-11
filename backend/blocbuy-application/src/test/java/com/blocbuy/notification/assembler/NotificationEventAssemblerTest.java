@@ -24,18 +24,17 @@ class NotificationEventAssemblerTest {
                         new NotificationEvent.TeamSucceeded(EVENT, REF, 4, List.of(A, B)), NOW);
         assertThat(rows).extracting(Notification::userId).containsExactly(A, B);
         assertThat(rows)
-                .allSatisfy(
-                        row -> {
-                            assertThat(row.eventId()).isEqualTo(EVENT);
-                            assertThat(row.referenceId()).isEqualTo(REF);
-                            assertThat(row.type()).isEqualTo(NotificationType.TEAM_SUCCEEDED);
-                            assertThat(row.title()).isEqualTo("Your team is complete");
-                            assertThat(row.content())
-                                    .isEqualTo(
-                                            "Your group-buy team reached its target size of 4"
-                                                    + " members.");
-                            assertThat(row.createTime()).isEqualTo(NOW);
-                        });
+                .allSatisfy(row -> {
+                    assertThat(row.eventId()).isEqualTo(EVENT);
+                    assertThat(row.referenceId()).isEqualTo(REF);
+                    assertThat(row.type()).isEqualTo(NotificationType.TEAM_SUCCEEDED);
+                    assertThat(row.title()).isEqualTo("Your team is complete");
+                    assertThat(row.content())
+                            .isEqualTo(
+                                    "Your group-buy team reached its target size of 4"
+                                            + " members.");
+                    assertThat(row.createTime()).isEqualTo(NOW);
+                });
         assertThat(rows.get(0).id()).isNotEqualTo(rows.get(1).id());
     }
 
@@ -46,14 +45,13 @@ class NotificationEventAssemblerTest {
                         new NotificationEvent.TeamExpired(EVENT, REF, List.of(A)), NOW);
         assertThat(expired)
                 .singleElement()
-                .satisfies(
-                        row -> {
-                            assertThat(row.type()).isEqualTo(NotificationType.TEAM_EXPIRED);
-                            assertThat(row.title())
-                                    .isEqualTo(NotificationEventAssembler.TEAM_EXPIRED_TITLE);
-                            assertThat(row.content())
-                                    .isEqualTo(NotificationEventAssembler.TEAM_EXPIRED_CONTENT);
-                        });
+                .satisfies(row -> {
+                    assertThat(row.type()).isEqualTo(NotificationType.TEAM_EXPIRED);
+                    assertThat(row.title())
+                            .isEqualTo(NotificationEventAssembler.TEAM_EXPIRED_TITLE);
+                    assertThat(row.content())
+                            .isEqualTo(NotificationEventAssembler.TEAM_EXPIRED_CONTENT);
+                });
         var started =
                 NotificationEventAssembler.toNotifications(
                         new NotificationEvent.PaymentSucceeded(EVENT, REF, A, true), NOW);
@@ -62,21 +60,18 @@ class NotificationEventAssemblerTest {
                         new NotificationEvent.PaymentSucceeded(EVENT, REF, B, false), NOW);
         assertThat(started)
                 .singleElement()
-                .satisfies(
-                        row -> {
-                            assertThat(row.userId()).isEqualTo(A);
-                            assertThat(row.type()).isEqualTo(NotificationType.PAYMENT_SUCCEEDED);
-                            assertThat(row.title()).isEqualTo("Payment confirmed");
-                            assertThat(row.content())
-                                    .isEqualTo(NotificationEventAssembler.PAYMENT_START_CONTENT);
-                        });
+                .satisfies(row -> {
+                    assertThat(row.userId()).isEqualTo(A);
+                    assertThat(row.type()).isEqualTo(NotificationType.PAYMENT_SUCCEEDED);
+                    assertThat(row.title()).isEqualTo("Payment confirmed");
+                    assertThat(row.content())
+                            .isEqualTo(NotificationEventAssembler.PAYMENT_START_CONTENT);
+                });
         assertThat(joined)
                 .singleElement()
-                .satisfies(
-                        row ->
-                                assertThat(row.content())
-                                        .isEqualTo(
-                                                NotificationEventAssembler.PAYMENT_JOIN_CONTENT));
+                .satisfies(row ->
+                        assertThat(row.content())
+                                .isEqualTo(NotificationEventAssembler.PAYMENT_JOIN_CONTENT));
     }
 
     @Test

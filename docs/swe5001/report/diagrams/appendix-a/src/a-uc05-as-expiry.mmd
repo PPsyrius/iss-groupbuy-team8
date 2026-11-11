@@ -1,0 +1,25 @@
+%% frame: UC5 basic flow 2: the deadline passes (analysis)
+sequenceDiagram
+    actor S as Scheduler
+    participant X as SchedulerTrigger (boundary)
+    participant R as ResolveTeamControl (control)
+    participant T as Team (entity)
+    participant O as Order (entity)
+
+    S->>X: B5: tick(now)
+    X->>R: B5: expireDue(now)
+    R->>R: B6: selectDue(now)
+    loop each due team, oldest deadline first
+        R->>T: B7: expire(now)
+        alt still open and deadline passed
+            T->>T: B7: canMoveTo(EXPIRED)
+            T-->>R: expired
+            loop each pending order of the team
+                R->>O: B8: cancel(at)
+            end
+            Note over R,O: B9: «extend» UC6 at resolved {team expired}: one refund obligation per paid member (@sec-a-uc06)
+            Note over R,O: B10: the result is published for members (design only)
+        else already resolved (A2)
+            T-->>R: refused, skip this team
+        end
+    end

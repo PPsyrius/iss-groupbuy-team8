@@ -84,51 +84,49 @@ public final class StripeCheckoutService {
         Objects.requireNonNull(actor);
         Objects.requireNonNull(intentId);
         CheckoutPayment payment =
-                tx.execute(
-                        status -> {
-                            var quote = business.lockQuote(actor, intentId);
-                            if (!actor.equals(quote.userId())
-                                    || !intentId.equals(quote.intentId())) {
-                                throw conflict();
-                            }
-                            Instant now = repository.now();
-                            if (quote.expiredAt(now)) {
-                                throw conflict();
-                            }
-                            var existing = repository.findRequest(actor, requestKey);
-                            if (existing.isPresent()) {
-                                return reusableAttempt(existing.get(), quote);
-                            }
-                            if (repository.findBlockingAttempt(intentId).isPresent()) {
-                                throw conflict();
-                            }
-                            // One minute of headroom for Stripe's minimum 30-minute expiry
-                            // validation.
-                            Instant expires = now.plusSeconds(1860).truncatedTo(ChronoUnit.SECONDS);
-                            // Ask the quote itself rather than comparing one of its fields here:
-                            // a session must not outlive either the quote or the team's deadline,
-                            // and CheckoutQuote is the one place that knows what "expired" means.
-                            if (quote.expiredAt(expires)) {
-                                throw conflict();
-                            }
-                            UUID paymentId = UuidV7.next();
-                            CheckoutPayment created =
-                                    new CheckoutPayment(
-                                            paymentId,
-                                            quote,
-                                            requestKey,
-                                            now,
-                                            expires,
-                                            returnUrlForPayment(successUrl, paymentId),
-                                            returnUrlForPayment(cancelUrl, paymentId),
-                                            null,
-                                            null,
-                                            null,
-                                            CheckoutPayment.Status.CREATED,
-                                            0);
-                            repository.insert(created);
-                            return created;
-                        });
+                tx.execute(status -> {
+                    var quote = business.lockQuote(actor, intentId);
+                    if (!actor.equals(quote.userId()) || !intentId.equals(quote.intentId())) {
+                        throw conflict();
+                    }
+                    Instant now = repository.now();
+                    if (quote.expiredAt(now)) {
+                        throw conflict();
+                    }
+                    var existing = repository.findRequest(actor, requestKey);
+                    if (existing.isPresent()) {
+                        return reusableAttempt(existing.get(), quote);
+                    }
+                    if (repository.findBlockingAttempt(intentId).isPresent()) {
+                        throw conflict();
+                    }
+                    // One minute of headroom for Stripe's minimum 30-minute expiry
+                    // validation.
+                    Instant expires = now.plusSeconds(1860).truncatedTo(ChronoUnit.SECONDS);
+                    // Ask the quote itself rather than comparing one of its fields here:
+                    // a session must not outlive either the quote or the team's deadline,
+                    // and CheckoutQuote is the one place that knows what "expired" means.
+                    if (quote.expiredAt(expires)) {
+                        throw conflict();
+                    }
+                    UUID paymentId = UuidV7.next();
+                    CheckoutPayment created =
+                            new CheckoutPayment(
+                                    paymentId,
+                                    quote,
+                                    requestKey,
+                                    now,
+                                    expires,
+                                    returnUrlForPayment(successUrl, paymentId),
+                                    returnUrlForPayment(cancelUrl, paymentId),
+                                    null,
+                                    null,
+                                    null,
+                                    CheckoutPayment.Status.CREATED,
+                                    0);
+                    repository.insert(created);
+                    return created;
+                });
         Objects.requireNonNull(payment);
         if (payment.sessionId() != null) {
             var current = gateway.retrieveCheckoutSession(payment.sessionId());
@@ -152,31 +150,29 @@ public final class StripeCheckoutService {
     }
 
     private CheckoutResult bindAndReturn(UUID id, CheckoutGateway.Session session) {
-        return tx.execute(
-                status -> {
-                    CheckoutPayment initial = require(id);
-                    business.lockForSettlement(initial.quote());
-                    CheckoutPayment current = repository.lock(id);
-                    if (!matches(current, session)) {
-                        throw conflict();
-                    }
-                    CheckoutPayment bound =
-                            current.bind(session.id(), session.url(), session.paymentIntentId());
-                    repository.save(bound);
-                    // Do not hand out a URL after a webhook or business expiry has won the race.
-                    if (current.status() != CheckoutPayment.Status.CREATED
-                            || !"open".equals(session.status())
-                            || current.quote().expiredAt(repository.now())
-                            || session.url() == null) {
-                        return new CheckoutResult(id, null, current.status().name());
-                    }
-                    URI uri = URI.create(session.url());
-                    if (!"https".equals(uri.getScheme())
-                            || !"checkout.stripe.com".equals(uri.getHost())) {
-                        throw conflict();
-                    }
-                    return new CheckoutResult(id, session.url(), current.status().name());
-                });
+        return tx.execute(status -> {
+            CheckoutPayment initial = require(id);
+            business.lockForSettlement(initial.quote());
+            CheckoutPayment current = repository.lock(id);
+            if (!matches(current, session)) {
+                throw conflict();
+            }
+            CheckoutPayment bound =
+                    current.bind(session.id(), session.url(), session.paymentIntentId());
+            repository.save(bound);
+            // Do not hand out a URL after a webhook or business expiry has won the race.
+            if (current.status() != CheckoutPayment.Status.CREATED
+                    || !"open".equals(session.status())
+                    || current.quote().expiredAt(repository.now())
+                    || session.url() == null) {
+                return new CheckoutResult(id, null, current.status().name());
+            }
+            URI uri = URI.create(session.url());
+            if (!"https".equals(uri.getScheme()) || !"checkout.stripe.com".equals(uri.getHost())) {
+                throw conflict();
+            }
+            return new CheckoutResult(id, session.url(), current.status().name());
+        });
     }
 
     /** Verify outside the transaction, then atomically apply authoritative provider facts. */
@@ -273,12 +269,11 @@ public final class StripeCheckoutService {
         if (!confirm || operator == null || !operator.matches("[A-Za-z0-9._-]{1,64}")) {
             throw new IllegalArgumentException("Explicit operator confirmation required");
         }
-        tx.executeWithoutResult(
-                status -> {
-                    repository.lock(paymentId);
-                    repository.review(paymentId, "RECOVERY_REQUESTED", operator);
-                    repository.assignReview(paymentId, operator, repository.now().plusSeconds(900));
-                });
+        tx.executeWithoutResult(status -> {
+            repository.lock(paymentId);
+            repository.review(paymentId, "RECOVERY_REQUESTED", operator);
+            repository.assignReview(paymentId, operator, repository.now().plusSeconds(900));
+        });
         try {
             var session = inspect(paymentId, candidateSessionId);
             if (!paymentId.toString().equals(session.paymentId())) {
@@ -286,21 +281,20 @@ public final class StripeCheckoutService {
             }
             apply(session, "recovery-" + UuidV7.next(), MANUAL_RECOVERY, operator);
         } catch (RuntimeException failure) {
-            tx.executeWithoutResult(
-                    status -> {
-                        repository.lock(paymentId);
-                        repository.review(paymentId, "RECOVERY_FAILED", operator);
-                        String hint =
-                                isSandboxSessionId(candidateSessionId)
-                                        ? candidateSessionId
-                                        : "none-or-invalid";
-                        repository.recordRecovery(
-                                paymentId,
-                                operator,
-                                "UNVERIFIED",
-                                "lookupHint=" + hint + "; lookupOrApplicationFailed=true",
-                                false);
-                    });
+            tx.executeWithoutResult(status -> {
+                repository.lock(paymentId);
+                repository.review(paymentId, "RECOVERY_FAILED", operator);
+                String hint =
+                        isSandboxSessionId(candidateSessionId)
+                                ? candidateSessionId
+                                : "none-or-invalid";
+                repository.recordRecovery(
+                        paymentId,
+                        operator,
+                        "UNVERIFIED",
+                        "lookupHint=" + hint + "; lookupOrApplicationFailed=true",
+                        false);
+            });
             throw failure;
         }
     }
@@ -544,17 +538,15 @@ public final class StripeCheckoutService {
         if (operator == null || !operator.matches("[A-Za-z0-9._-]{1,64}") || nextCheck == null) {
             throw new IllegalArgumentException("Operator and next check time required");
         }
-        tx.executeWithoutResult(
-                status -> {
-                    repository.lock(paymentId);
-                    Instant now = repository.now();
-                    if (!nextCheck.isAfter(now) || nextCheck.isAfter(now.plusSeconds(86400))) {
-                        throw new IllegalArgumentException(
-                                "Next check must be within the next 24 hours");
-                    }
-                    repository.review(paymentId, "OPERATOR_REVIEW", operator);
-                    repository.assignReview(paymentId, operator, nextCheck);
-                });
+        tx.executeWithoutResult(status -> {
+            repository.lock(paymentId);
+            Instant now = repository.now();
+            if (!nextCheck.isAfter(now) || nextCheck.isAfter(now.plusSeconds(86400))) {
+                throw new IllegalArgumentException("Next check must be within the next 24 hours");
+            }
+            repository.review(paymentId, "OPERATOR_REVIEW", operator);
+            repository.assignReview(paymentId, operator, nextCheck);
+        });
     }
 
     private boolean matches(CheckoutPayment payment, CheckoutGateway.Session session) {

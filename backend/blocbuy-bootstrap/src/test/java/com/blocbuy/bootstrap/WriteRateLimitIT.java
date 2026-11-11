@@ -151,14 +151,13 @@ class WriteRateLimitIT {
         when(participation.hasActiveMember(any(), any())).thenReturn(true);
         when(participation.currentTime()).thenReturn(now);
         when(invites.findByDealAndSharer(any(), any()))
-                .thenAnswer(
-                        call ->
-                                Optional.of(
-                                        new ShareInvite(
-                                                UuidV7.next(),
-                                                "AAAAAAAAAAAAAAAAAAAAAA",
-                                                call.getArgument(0),
-                                                call.getArgument(1))));
+                .thenAnswer(call ->
+                        Optional.of(
+                                new ShareInvite(
+                                        UuidV7.next(),
+                                        "AAAAAAAAAAAAAAAAAAAAAA",
+                                        call.getArgument(0),
+                                        call.getArgument(1))));
     }
 
     @AfterEach

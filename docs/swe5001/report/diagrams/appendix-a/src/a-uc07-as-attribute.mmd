@@ -1,0 +1,33 @@
+%% frame: UC7 join through an invitation and credit the sharer, B7–B9 (analysis)
+sequenceDiagram
+    actor Buyer
+    participant UI as JoinTeamUI (boundary)
+    participant JTC as JoinTeamControl (control)
+    participant T as Team (entity)
+    participant Inv as Invitation (entity)
+    participant RCC as ReferralCreditControl (control)
+    create participant PI as PurchaseIntent (entity)
+    create participant M as Member­ship (entity)
+    create participant SC as ShareCredit (entity)
+
+    Buyer->>UI: B7: join(team, invitation)
+    UI->>JTC: B7: requestJoin(buyer, team, invitation)
+    JTC->>T: B7: resolveSharer(invitation, buyer)
+    T->>Inv: B7: attributes(team, buyer)
+    Inv-->>T: yes or no
+    T-->>JTC: sharer, or none (A6)
+    JTC->>PI: B7: «create» (team price, deadline, sharer)
+    Note over JTC,PI: B7: payment and the checks of UC4 B5–B6 (@sec-a-uc04)
+    JTC->>T: B8: admit(buyer, payment)
+    alt admitted
+        T->>M: B8: «create» (buyer, sharer)
+        T-->>JTC: admitted
+        JTC-)RCC: B8: memberJoined(membership)
+        RCC->>M: B9: sharer()
+        M-->>RCC: sharer, or none
+        opt attributed, no credit yet (A8)
+            RCC->>SC: B9: «create» (sharing membership)
+        end
+    else refused, or the payment reported again (A7)
+        T-->>JTC: A7: refused or already settled; no member announced
+    end

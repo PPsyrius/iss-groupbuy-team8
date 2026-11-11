@@ -40,14 +40,13 @@ class ProductTeamTermsPersistenceTest {
         when(mapper.selectActiveByIdForUpdate(productId)).thenReturn(row(3, 7200));
 
         assertThat(repository.lockById(productId))
-                .hasValueSatisfying(
-                        product -> {
-                            ProductTeamTerms terms = product.teamTerms();
-                            assertThat(terms.productId()).isEqualTo(productId);
-                            assertThat(terms.targetSize()).isEqualTo(3);
-                            assertThat(terms.lifetimeSeconds()).isEqualTo(7200);
-                            assertThat(terms.configured()).isTrue();
-                        });
+                .hasValueSatisfying(product -> {
+                    ProductTeamTerms terms = product.teamTerms();
+                    assertThat(terms.productId()).isEqualTo(productId);
+                    assertThat(terms.targetSize()).isEqualTo(3);
+                    assertThat(terms.lifetimeSeconds()).isEqualTo(7200);
+                    assertThat(terms.configured()).isTrue();
+                });
     }
 
     @Test
@@ -84,13 +83,11 @@ class ProductTeamTermsPersistenceTest {
 
         verify(mapper)
                 .updateTeamTerms(
-                        argThat(
-                                row ->
-                                        productId.equals(row.getId())
-                                                && Integer.valueOf(3)
-                                                        .equals(row.getTeamTargetSize())
-                                                && Integer.valueOf(7200)
-                                                        .equals(row.getTeamLifetimeSeconds())),
+                        argThat(row ->
+                                productId.equals(row.getId())
+                                        && Integer.valueOf(3).equals(row.getTeamTargetSize())
+                                        && Integer.valueOf(7200)
+                                                .equals(row.getTeamLifetimeSeconds())),
                         eq(2),
                         eq(actor));
         assertThatThrownBy(() -> repository.updateTeamTerms(revised, 2, actor))
@@ -117,11 +114,10 @@ class ProductTeamTermsPersistenceTest {
 
         verify(mapper)
                 .insertTeamTermsLog(
-                        argThat(
-                                row ->
-                                        productId.equals(row.getProductId())
-                                                && Integer.valueOf(3).equals(row.getNewTargetSize())
-                                                && row.getOldTargetSize() == null));
+                        argThat(row ->
+                                productId.equals(row.getProductId())
+                                        && Integer.valueOf(3).equals(row.getNewTargetSize())
+                                        && row.getOldTargetSize() == null));
         assertThatThrownBy(() -> repository.appendTeamTermsLog(change))
                 .isInstanceOf(IllegalStateException.class);
     }

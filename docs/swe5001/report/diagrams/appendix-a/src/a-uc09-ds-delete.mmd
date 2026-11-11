@@ -1,0 +1,38 @@
+%% frame: UC9 A4: delete a never-published draft (design)
+sequenceDiagram
+    actor Admin
+    participant Ctl as :AdminListingController
+    participant App as :AdminListingAppServiceImpl
+    participant Repo as :ProductRepository
+    participant Users as :UserAppService
+    participant Prod as :Product
+    participant State as status : ProductStatus
+    participant Prices as :TeamPriceRepository
+    participant Deals as :GroupDealQueryService
+
+    Note over Admin,Ctl: A4: delete a draft
+    Admin->>Ctl: delete(productId, expectedVersion)
+    Ctl->>App: delete(id, expectedVersion, actorId)
+    critical REQUIRED, READ COMMITTED, 10 s
+        App->>App: lockForChange(id, expectedVersion, actorId)
+        App->>Repo: lockById(id): lock 6, product row
+        App->>Users: requireActive(actorId)
+        App->>Prod: requireVersion(expectedVersion)
+        App->>Prod: requireDeletable()
+        Prod->>State: deletionError()
+        State-->>Prod: null for DRAFT, else PRODUCT_STATE_CONFLICT
+        break published before, or units sold (E9)
+            Prod-->>App: E9: PRODUCT_STATE_CONFLICT or PRODUCT_REFERENCED (CATALOG_409_004)
+        end
+        App->>Prices: hasProductReferences(id)
+        Prices-->>App: any policy or quote, deleted too
+        App->>Deals: hasProductReferences(id)
+        Deals-->>App: any team, deleted too
+        break any history (E9)
+            App-->>Ctl: E9: PRODUCT_REFERENCED
+        end
+        App->>Repo: deleteDraft(id, expectedVersion, actorId)
+        Note over Repo,Prices: soft delete: UPDATE SET deleted = true WHERE status = draft, sold_count = 0, version = expectedVersion
+    end
+    App-->>Ctl: void
+    Ctl-->>Admin: Result, row kept for audit

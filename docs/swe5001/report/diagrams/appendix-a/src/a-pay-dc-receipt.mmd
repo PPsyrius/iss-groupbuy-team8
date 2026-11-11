@@ -1,0 +1,61 @@
+%% frame: Pay upfront design, slice 1: capabilities, receipt and the persistence chain (commerce-svc)
+classDiagram
+    class StripeFeatureSwitch {
+        <<application service, Sec>>
+        +enabled(): boolean
+        +requireEnabled(): void
+    }
+    class StripeCheckoutController {
+        <<controller, Pres, Sec>>
+        +capabilities(response: HttpServletResponse): Result~PaymentCapabilities~
+        +receipt(id: UUID, response: HttpServletResponse): Result~Receipt~
+    }
+    class Receipt["PaymentBrowserService.Receipt"] {
+        <<record>>
+        +status: String
+        +outcome: String
+        +refundPending: boolean
+        +refundStatus: String
+        +productId: UUID
+    }
+    class RefundRepository {
+        <<interface, repository, Pers>>
+        +status(paymentId: UUID): String
+    }
+    class PaymentBrowserService {
+        <<application service, Sec>>
+        +receipt(user: UUID, id: UUID): Receipt
+    }
+    class PaymentIntentPort {
+        <<interface, Dist>>
+        +purchasedProduct(user: UUID, intentId: UUID): Optional~UUID~
+    }
+    class CheckoutPaymentRepository {
+        <<interface, repository, Pers>>
+        +receipt(id: UUID): Optional~CheckoutPaymentRepository.ReceiptSnapshot~
+    }
+    class CheckoutPaymentRepositoryImpl {
+        <<adapter, Pers>>
+        +receipt(id: UUID): Optional~CheckoutPaymentRepository.ReceiptSnapshot~
+    }
+    class PaymentMapper {
+        <<interface, mapper, Pers>>
+        +receipt(id: UUID): BizPaymentDO
+    }
+%% at StripeFeatureSwitch 0,0
+%% at StripeCheckoutController 1,0
+%% at Receipt 2,0
+%% at RefundRepository 0,1
+%% at PaymentBrowserService 1,1
+%% at PaymentIntentPort 2,1
+%% at CheckoutPaymentRepository 0,2
+%% at CheckoutPaymentRepositoryImpl 1,2
+%% at PaymentMapper 2,2
+    StripeCheckoutController "1" --> "1" StripeFeatureSwitch
+    StripeCheckoutController "1" --> "1" PaymentBrowserService
+    PaymentBrowserService ..> Receipt : «create»
+    PaymentBrowserService "1" --> "1" RefundRepository
+    PaymentBrowserService "1" --> "0..1" PaymentIntentPort
+    PaymentBrowserService "1" --> "1" CheckoutPaymentRepository
+    CheckoutPaymentRepositoryImpl ..|> CheckoutPaymentRepository
+    CheckoutPaymentRepositoryImpl "1" --> "1" PaymentMapper

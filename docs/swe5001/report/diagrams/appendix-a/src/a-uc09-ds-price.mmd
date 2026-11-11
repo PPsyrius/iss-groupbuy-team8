@@ -1,0 +1,27 @@
+%% frame: UC9 A5: the team price alone (design)
+sequenceDiagram
+    participant PCtl as :TeamPriceController
+    participant Prices as :TeamPriceAppServiceImpl
+    participant Repo as :ProductRepository
+    participant Users as :UserAppService
+    participant PRepo as :TeamPriceRepository
+    create participant Pol as :TeamPricePolicy
+
+    Note over PCtl,Prices: A5: PUT …/team-price-policy, after checkPermission only (S6)
+    PCtl->>Prices: A5: configure(productId, actorId, command)
+    critical A5: REQUIRED, READ COMMITTED, 10 s (its own transaction)
+        Prices->>Repo: lockById(productId) in lockProduct: lock 6
+        Prices->>Users: requireActive(actorId)
+        Prices->>PRepo: findLatestPolicy(productId)
+        break expectedVersion is not the latest policy version (E8)
+            Prices-->>PCtl: TEAM_PRICE_VERSION_CONFLICT (CATALOG_412_001)
+        end
+        Prices->>Pol: «create» (command fields, version + 1)
+        Prices->>Pol: requireCompatible(product)
+        Prices->>Pol: requireStartableWindow(now)
+        break not on sale, price not below the listing price, window past or too short (E8)
+            Pol-->>PCtl: TEAM_PRICE_UNAVAILABLE (CATALOG_409_001), TEAM_PRICE_INVALID (CATALOG_400_001)
+        end
+        Prices->>PRepo: appendPolicy(policy, actorId, now)
+    end
+    Prices-->>PCtl: TeamPricePolicy

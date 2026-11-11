@@ -116,10 +116,8 @@ public class ProductRepositoryImpl implements ProductRepository {
             return List.of();
         }
         return bizProductMapper.selectDisplaysByIds(ids).stream()
-                .map(
-                        row ->
-                                new ProductDisplay(
-                                        row.getProductId(), row.getTitle(), row.getCoverImage()))
+                .map(row ->
+                        new ProductDisplay(row.getProductId(), row.getTitle(), row.getCoverImage()))
                 .toList();
     }
 

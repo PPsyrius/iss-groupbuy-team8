@@ -1,0 +1,45 @@
+%% frame: UC3 B10: open the team through the Factory Method (design)
+sequenceDiagram
+    participant Cfg as :GroupDealCreationConfig
+    participant OFA as :OrderFulfilmentAdapter
+    participant Svc as :PaidGroupDealService
+    participant Repo as :PaidGroupDealRepository
+    participant Map as :PaidGroupDealMapper
+    create participant Cr as :StandardPaidGroupDealCreator
+    participant Paid as :PaidParticipation
+    create participant Deal as :GroupDeal
+
+    Note over Cfg,Map: at start-up, once: Spring injects the creator bean paidGroupDealCreator()
+    Cfg->>Cr: «create» in paidGroupDealCreator()
+    OFA->>Svc: startConfirmed(terms, paid)
+    Note over Svc,Map: lock 5: the payment's participation receipt
+    Svc->>Repo: reserveAndLock(paymentId, fingerprint, userId)
+    Repo->>Map: reserveReceipt(paymentId, fingerprint, actorId)
+    Repo->>Map: lockReceipt(paymentId)
+    Repo-->>Svc: ParticipationReceipt
+    break same payment, different terms (A7)
+        Svc-->>OFA: PAYMENT_REUSED
+    end
+    break receipt already holds a result (A7)
+        Svc-->>OFA: stored result
+    end
+    Svc->>Repo: currentTime()
+    Repo-->>Svc: now
+    Note over Svc,Deal: B10
+    Svc->>Cr: initiate(terms, paid, now)
+    Cr->>Paid: requirePrice(price, currency)
+    alt terms and price valid (B10)
+        Cr->>Cr: createGroupDeal(terms, paid, now)
+        Cr->>Deal: «create» startPaid
+        Cr-->>Svc: GroupDeal OPEN, size 1, payer leads
+        Svc->>Repo: insertStartedDeal(deal, paid, now)
+        Repo->>Map: insertDeal(row)
+        Repo->>Map: insertMember(dealId, paymentId, userId, "leader", null, now)
+        Svc->>Repo: complete(paymentId, applied, userId, now)
+        Repo->>Map: completeReceipt(paymentId, row, actorId, now)
+        Svc-->>OFA: result applied
+    else BizException INVALID_PARTICIPATION or PAYMENT_MISMATCH (A6)
+        Cr-->>Svc: BizException
+        Svc->>Repo: complete(paymentId, compensation, userId, now)
+        Svc-->>OFA: compensation_required
+    end

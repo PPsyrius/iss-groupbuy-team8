@@ -5,7 +5,7 @@ The numbers the pipeline enforces. Change to any row = team decision, recorded h
 | Gate | Tool | Threshold | Enforced at |
 |---|---|---|---|
 | Formatting | Spotless + google-java-format (AOSP) | 100% formatted | `validate` phase, CI `build-quality` step 1 |
-| Code style | Checkstyle 14.3.0 (Google checks) | 0 errors; line length 120 (D13) | `verify` phase |
+| Code style | Checkstyle 14.4.0 (Google checks) | 0 errors; line length 120 (D13) | `verify` phase |
 | Static bugs | SpotBugs 4.10.5 (Maven plugin 4.10.5.0) | 0 findings, threshold Medium, effort Max | `verify` phase |
 | Architecture | ArchUnit 1.5.1 | all current rules green | unit tests (`ArchitectureTest`) |
 | Build gates | Maven Enforcer | Java [21,22), Maven ≥3.9, dependency convergence | `validate` phase |
@@ -24,6 +24,8 @@ The numbers the pipeline enforces. Change to any row = team decision, recorded h
 2026-10-21: the [observed-failure repair](../ci/backend-pipeline.md#observed-ci-failures-and-scoped-repairs-2026-10-21) aligns the SpotBugs plugin/engine runtime; the table's existing Checkstyle and ArchUnit versions are synchronized with the parent POM. No required check, concurrency policy, test selection or coverage threshold changed. CodeQL remains disabled: its previous ingestion failure and current Code Scanning API 403 are recorded in the [audit](../ci/ci-failure-audit-20261021.md); it is not an available enforced gate.
 
 2026-11-07: reconciled JaCoCo 0.8.16 and **fixable** HIGH/CRITICAL wording with existing configuration; thresholds unchanged. [NFR audit](nfr-sweep-2026-11-07.md).
+
+2026-11-10: adopt Spotless 3.11.0 and explicitly pinned google-java-format 2.0.0, retaining AOSP and disabling its new non-whitespace cleanup pass (`cleanup=false`). This is a formatter/layout upgrade, not permission to rewrite business code or loosen gates; formatting-only changes land separately from dependency/behavior changes. The owner authorized manual adoption of reviewed releases inside Dependabot's seven-day cooldown without changing that policy. [Release checks and staged verification](backend-dependency-review-2026-11-10.md) distinguish sampled provenance, exact-package advisories and local tests from independent artifact authentication or deployment acceptance. Checkstyle moves to 14.4.0 with unchanged thresholds.
 
 ## Frontend dependency-alert remediation — 2026-11-06
 

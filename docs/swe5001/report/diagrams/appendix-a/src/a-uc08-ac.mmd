@@ -1,0 +1,79 @@
+%% frame: UC8 View my orders and my teams (analysis)
+classDiagram
+    class MyBlocsUI {
+        <<boundary>>
+        +openMyBlocs(page)
+        +showTeams(rows, total)
+        +showOrders(rows, total)
+        +filterTeams(chip)
+        +openOrder(order)
+        +showNotFound()
+    }
+    class ViewMyTeamsControl {
+        <<control>>
+        +listMyTeams(buyer, page)
+    }
+    class ViewMyOrdersControl {
+        <<control>>
+        +listMyOrders(buyer, page)
+        +findMyOrder(buyer, order)
+    }
+    class Account {
+        <<entity>>
+        -nickname: Text
+        -status: AccountStatus
+        +memberships(page)
+        +orders(page)
+    }
+    class Product {
+        <<entity>>
+        -title: Text
+        -coverImage: Text
+        -status: ProductStatus
+        +displayFieldsOf(products)
+    }
+    class Team {
+        <<entity>>
+        -price: Money
+        -targetSize: Count
+        -currentSize: Count
+        -deadline: Date-time
+        -status: TeamStatus
+        +summary()
+    }
+    class Membership {
+        <<entity>>
+        -role: MemberRole
+        -joinTime: Date-time
+        +describe()
+    }
+    class Order {
+        <<entity>>
+        -amount: Money
+        -productTitle: Text
+        -productImage: Text
+        -paidTime: Date-time
+        -status: OrderStatus
+        +summary()
+        +belongsTo(buyer)
+    }
+%% at MyBlocsUI 2,0
+%% at ViewMyTeamsControl 1,1
+%% at ViewMyOrdersControl 3,1
+%% at Product 0,1
+%% at Membership 1,2
+%% at Account 2.6,2
+%% at Team 1,3
+%% at Order 2.6,3
+    MyBlocsUI "1" -- "1" ViewMyTeamsControl
+    ViewMyOrdersControl "1" -- "1" MyBlocsUI
+    ViewMyTeamsControl "1" --> "1" Account
+    Product "*" <-- "1" ViewMyTeamsControl
+    ViewMyTeamsControl "1" --> "*" Membership
+    Account "1" <-- "1" ViewMyOrdersControl
+    ViewMyOrdersControl "1" --> "*" Order
+    Account "1" -- "*" Membership : holds
+    Account "1" -- "*" Order : buyer
+    Product "1" -- "*" Team : offers
+    Team "1" *-- "1..*" Membership : member
+    Membership "1" -- "0..1" Order : backed by

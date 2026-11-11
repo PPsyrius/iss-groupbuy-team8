@@ -31,21 +31,18 @@ class SqsOutboxEventTransportTest {
     void batchesAtTenAndIncludesEnvelopeAndRequiredAttributes() {
         List<OutboxEvent> events = events(11);
         when(client.sendMessageBatch(any(SendMessageBatchRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            SendMessageBatchRequest request = call.getArgument(0);
-                            return SendMessageBatchResponse.builder()
-                                    .successful(
-                                            request.entries().stream()
-                                                    .map(
-                                                            entry ->
-                                                                    SendMessageBatchResultEntry
-                                                                            .builder()
-                                                                            .id(entry.id())
-                                                                            .build())
-                                                    .toList())
-                                    .build();
-                        });
+                .thenAnswer(call -> {
+                    SendMessageBatchRequest request = call.getArgument(0);
+                    return SendMessageBatchResponse.builder()
+                            .successful(
+                                    request.entries().stream()
+                                            .map(entry ->
+                                                    SendMessageBatchResultEntry.builder()
+                                                            .id(entry.id())
+                                                            .build())
+                                            .toList())
+                            .build();
+                });
 
         assertThat(transport.publish(events)).hasSize(11).allMatch(result -> result.published());
 
@@ -83,11 +80,10 @@ class SqsOutboxEventTransportTest {
 
         assertThat(transport.publish(List.of(event)))
                 .singleElement()
-                .satisfies(
-                        result -> {
-                            assertThat(result.published()).isFalse();
-                            assertThat(result.failureReason()).isEqualTo("InternalError");
-                        });
+                .satisfies(result -> {
+                    assertThat(result.published()).isFalse();
+                    assertThat(result.failureReason()).isEqualTo("InternalError");
+                });
     }
 
     static List<OutboxEvent> events(int count) {

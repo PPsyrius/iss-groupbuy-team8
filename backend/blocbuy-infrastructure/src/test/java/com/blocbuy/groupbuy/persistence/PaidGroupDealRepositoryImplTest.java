@@ -131,14 +131,13 @@ class PaidGroupDealRepositoryImplTest {
         when(mapper.selectPaidMember(PAYMENT)).thenReturn(row, (PaidMemberDO) null);
 
         assertThat(repository.findPaidMember(PAYMENT))
-                .hasValueSatisfying(
-                        member -> {
-                            assertThat(member.dealId()).isEqualTo(DEAL);
-                            assertThat(member.userId()).isEqualTo(ACTOR);
-                            assertThat(member.status()).isEqualTo("paid");
-                            // Null until the order backfill lands in the same transaction.
-                            assertThat(member.orderId()).isNull();
-                        });
+                .hasValueSatisfying(member -> {
+                    assertThat(member.dealId()).isEqualTo(DEAL);
+                    assertThat(member.userId()).isEqualTo(ACTOR);
+                    assertThat(member.status()).isEqualTo("paid");
+                    // Null until the order backfill lands in the same transaction.
+                    assertThat(member.orderId()).isNull();
+                });
         assertThat(repository.findPaidMember(PAYMENT)).isEmpty();
     }
 
@@ -152,11 +151,10 @@ class PaidGroupDealRepositoryImplTest {
         verify(mapper)
                 .completeReceipt(
                         eq(PAYMENT),
-                        argThat(
-                                row ->
-                                        "applied".equals(row.getOutcome())
-                                                && DEAL.equals(row.getDealId())
-                                                && "open".equals(row.getDealStatus())),
+                        argThat(row ->
+                                "applied".equals(row.getOutcome())
+                                        && DEAL.equals(row.getDealId())
+                                        && "open".equals(row.getDealStatus())),
                         eq(ACTOR),
                         eq(NOW));
     }
@@ -208,11 +206,10 @@ class PaidGroupDealRepositoryImplTest {
     @Test
     void expireWritesTheResolvedStatusUnderTheStatusGuard() {
         when(mapper.expireDeal(
-                        argThat(
-                                row ->
-                                        DEAL.equals(row.getId())
-                                                && "expired".equals(row.getStatus())
-                                                && NOW.equals(row.getUpdateTime()))))
+                        argThat(row ->
+                                DEAL.equals(row.getId())
+                                        && "expired".equals(row.getStatus())
+                                        && NOW.equals(row.getUpdateTime()))))
                 .thenReturn(1);
 
         repository.expire(deal(), deal().expire(NOW.plusSeconds(60)), NOW);
@@ -231,15 +228,13 @@ class PaidGroupDealRepositoryImplTest {
 
         assertThatThrownBy(() -> repository.expire(before, after, NOW))
                 .isInstanceOf(com.blocbuy.common.exception.BizException.class)
-                .satisfies(
-                        failure ->
-                                assertThat(
-                                                ((com.blocbuy.common.exception.BizException)
-                                                                failure)
-                                                        .errorCode())
-                                        .isEqualTo(
-                                                com.blocbuy.groupbuy.exception.GroupbuyErrorCode
-                                                        .DEAL_CLOSED));
+                .satisfies(failure ->
+                        assertThat(
+                                        ((com.blocbuy.common.exception.BizException) failure)
+                                                .errorCode())
+                                .isEqualTo(
+                                        com.blocbuy.groupbuy.exception.GroupbuyErrorCode
+                                                .DEAL_CLOSED));
     }
 
     private static GroupDeal deal() {

@@ -1,0 +1,47 @@
+%% frame: UC5 A2: the last-seat join and the expiry race for one team (design)
+sequenceDiagram
+    participant Pay as txJ : StripeCheckoutService
+    participant Ful as :OrderFulfilmentAdapter
+    participant Set as :GroupDealSettlementSupport
+    participant Svc as :PaidGroupDealService
+    participant Exp as txE : GroupDealExpiryService
+    participant Repo as :PaidGroupDealRepository
+    participant GD as :GroupDeal
+
+    alt txJ takes lock 1 first, and its clock is still before expireTime
+        critical txJ: settlement, REQUIRED, READ COMMITTED, 10 s
+            Pay->>Ful: lockForSettlement(quote)
+            Ful->>Set: lockTeam(dealId)
+            Set->>Repo: lockDeal(dealId): lock 1, OPEN
+            Ful-->>Pay: void; locks 2 (intent) and 4 (payment) follow
+            Pay->>Ful: fulfil(event)
+            Ful->>Svc: joinConfirmed(dealId, paid, sharerUserId)
+            Svc->>Repo: lockDeal(dealId): lock 1, already held
+            Svc->>GD: joinPaid(paid, alreadyMember, now)
+            GD-->>Svc: PaidAdmission, teamCompleted: true
+            Svc-->>Ful: applied (B1-B4)
+            Ful-->>Pay: Outcome(dealId, orderId, null); COMMIT releases lock 1
+        end
+        critical txE: REQUIRED, default isolation, 10 s
+            Exp->>Repo: lockDeal(dealId): lock 1 after txJ's commit, SUCCEEDED
+            Exp->>GD: expire(now)
+            GD-->>Exp: DEAL_CLOSED, so expireOne returns false
+        end
+    else txE takes lock 1 first
+        critical txE: REQUIRED, default isolation, 10 s
+            Exp->>Repo: lockDeal(dealId): lock 1, OPEN; then B7-B10 and COMMIT
+        end
+        critical txJ: settlement, REQUIRED, READ COMMITTED, 10 s
+            Pay->>Ful: lockForSettlement(quote)
+            Ful->>Set: lockTeam(dealId)
+            Set->>Repo: lockDeal(dealId): lock 1 after txE's commit, EXPIRED
+            Ful-->>Pay: void
+            Pay->>Ful: fulfil(event)
+            Ful->>Svc: joinConfirmed(dealId, paid, sharerUserId)
+            Svc->>GD: joinPaid(paid, alreadyMember, now)
+            GD->>GD: requireJoinWindow(now)
+            GD-->>Svc: BizException DEAL_CLOSED
+            Svc-->>Ful: compensation_required
+            Ful-->>Pay: Outcome(dealId, null, "GROUP_REJECTED"): refund owed (UC4 A6)
+        end
+    end

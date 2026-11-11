@@ -1,0 +1,46 @@
+%% frame: UC7 B1–B3: mint or return the member's invitation (design, commerce-svc)
+sequenceDiagram
+    actor Member
+    participant Ctl as :GroupDealController
+    participant App as :ShareInviteAppService
+    participant RL as :RateLimitGateway
+    participant GDR as :GroupDealRepository
+    participant PGR as :PaidGroupDealRepository
+    participant SIR as :ShareInviteRepository
+    create participant SI as ShareInvite
+
+    Member->>Ctl: createInvite(csrf, dealId, response)
+    Note over Member,RL: B1: POST …/group-deals/{dealId}/invites; header must be "invite" (else FORBIDDEN); member from the session
+    Ctl->>App: mint(member, dealId)
+    App->>RL: tryAcquire(MINT_LIMIT, member)
+    RL-->>App: boolean
+    break over 60 a minute for this member (A1)
+        App-->>Ctl: RATE_LIMITED (COMMON_429_001)
+    end
+    critical tx REQUIRED (new), READ COMMITTED, 10 s
+        Note over App,PGR: B2: the team is only read, never locked
+        App->>GDR: findById(dealId)
+        GDR-->>App: Optional(GroupDeal)
+        App->>PGR: hasActiveMember(dealId, member)
+        PGR-->>App: boolean
+        break no team, or not an active member (A2)
+            App-->>Ctl: GROUPBUY_PLACEHOLDER (GROUPBUY_404_001)
+        end
+        App->>PGR: currentTime()
+        PGR-->>App: Instant now
+        break GroupDeal not OPEN, or now not before its expireTime (A3)
+            App-->>Ctl: DEAL_CLOSED (GROUPBUY_409_002)
+        end
+        Note over App,SI: B3: one invitation per team and sharer
+        App->>SIR: findByDealAndSharer(dealId, member)
+        SIR-->>App: Optional(ShareInvite)
+        opt none yet: the first share
+            App->>SI: «create» mint(dealId, member, random)
+            App->>SIR: insertIfAbsent(candidate)
+            SIR-->>App: boolean, false when a concurrent mint won
+            App->>SIR: findByDealAndSharer(dealId, member)
+            SIR-->>App: Optional(ShareInvite), the winner
+        end
+    end
+    App-->>Ctl: ShareInviteView
+    Ctl-->>Member: Result(ShareInviteResponse), no-store

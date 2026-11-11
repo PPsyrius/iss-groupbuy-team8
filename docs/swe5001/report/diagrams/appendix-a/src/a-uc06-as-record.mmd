@@ -1,0 +1,22 @@
+%% frame: UC6 record the refunds owed, inside the expiry (analysis)
+sequenceDiagram
+    actor Clock as Scheduler
+    participant Trig as SchedulerTrigger (boundary)
+    participant Res as ResolveTeamControl (control)
+    participant Ctl as RefundMembersControl (control)
+    participant Pay as Payment (entity)
+    participant Team as Team (entity)
+    create participant Ref as Refund (entity)
+
+    Clock->>Trig: B1: tick(now)
+    Trig->>Res: B1: expireDue(now)
+    Note over Trig,Team: B1: UC5 expires the team and cancels its orders (@sec-a-uc05); a resolved team owes nothing (A1)
+    Res->>Ctl: B2: recordRefundsOwed(team)
+    Ctl->>Team: B2: isExpired()
+    Team-->>Ctl: expired
+    Ctl->>Team: B3: paidPayments()
+    Team-->>Ctl: succeeded payments
+    loop each succeeded payment of the team (B4)
+        Ctl->>Pay: B4: requireRefund("team expired")
+        Pay->>Ref: B4: «create»
+    end

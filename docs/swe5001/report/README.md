@@ -97,7 +97,7 @@ Facts that one section states and another depends on. The owner of the second se
 |---|---|---|
 | 3.1.4 (Eric) | `ShareInvite` and `ShareCredit` are value objects inside `GroupDeal`; the code stores them through their own repositories (red marker in 3.1.4) | 3.2.3 aggregate-to-table mapping, D4, D7 |
 | 3.2.2 (Liu Jin) | One 0.5 vCPU commerce task saturated at about 280 req/s; three tasks about 455 req/s, the generator's limit (19 Oct 2026) | 4.1 (Pan) |
-| 3.4 AISS-13 (Liu Jin) | V4, V5, V7 and the identity outage have local results only | 4.2 (Yu Qianshuo) |
+| 3.4 AISS-13 (Liu Jin) | The identity outage and a poison message have local results only; V4 and V5 were not run | 4.2 (Yu Qianshuo) |
 | 3.2.3 (Liu Jin) | Settlement lock order team → purchase intent → payment | 3.2.4 UC4 sequence (Yu Qianshuo) |
 | 3.4 AISS-04, -08, -09, -15 (Liu Jin) | Security gaps and their R1 targets | 4.3 (Pan) |
 | 3.2.2 (Liu Jin) | Measured cost not cited until a record is committed (red marker) | 6 (Lim) |

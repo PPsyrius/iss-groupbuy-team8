@@ -135,25 +135,19 @@ class StripeCheckoutFlowTest {
         jdbc.update("INSERT INTO stripe_test_team VALUES (?,1,false)", TEAM);
         gateway = mock(CheckoutGateway.class);
         when(gateway.createCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            assertThat(
-                                            TransactionSynchronizationManager
-                                                    .isActualTransactionActive())
-                                    .isFalse();
-                            CheckoutPayment payment = call.getArgument(0);
-                            return sessions.computeIfAbsent(
-                                    "cs_test_" + payment.id(), key -> session(payment, false));
-                        });
+                .thenAnswer(call -> {
+                    assertThat(TransactionSynchronizationManager.isActualTransactionActive())
+                            .isFalse();
+                    CheckoutPayment payment = call.getArgument(0);
+                    return sessions.computeIfAbsent(
+                            "cs_test_" + payment.id(), key -> session(payment, false));
+                });
         when(gateway.retrieveCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            assertThat(
-                                            TransactionSynchronizationManager
-                                                    .isActualTransactionActive())
-                                    .isFalse();
-                            return sessions.get(call.getArgument(0));
-                        });
+                .thenAnswer(call -> {
+                    assertThat(TransactionSynchronizationManager.isActualTransactionActive())
+                            .isFalse();
+                    return sessions.get(call.getArgument(0));
+                });
         var business = new TestBusiness();
         service =
                 new StripeCheckoutService(
@@ -186,12 +180,10 @@ class StripeCheckoutFlowTest {
         assertThat(count("stripe_test_orders")).isEqualTo(1);
         assertThat(count("log_payment_webhook_event")).isEqualTo(2);
         new TransactionTemplate(transactions)
-                .executeWithoutResult(
-                        status -> {
-                            jdbc.update(
-                                    "UPDATE stripe_test_team SET expired=true WHERE id=?", TEAM);
-                            expiryRefunds.recordExpiredTeam(TEAM);
-                        });
+                .executeWithoutResult(status -> {
+                    jdbc.update("UPDATE stripe_test_team SET expired=true WHERE id=?", TEAM);
+                    expiryRefunds.recordExpiredTeam(TEAM);
+                });
         expiryRefunds.recordExpiredTeam(TEAM);
         assertThat(count("biz_refund")).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT status FROM biz_refund", String.class))
@@ -273,10 +265,9 @@ class StripeCheckoutFlowTest {
         assertThatThrownBy(
                         () -> repository.requireRefund(payment, "TEAM_EXPIRED", "evt_replacement"))
                 .isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(
-                        () ->
-                                repository.requireRefundsForExpiredTeam(
-                                        TEAM, "TEAM_EXPIRED", "evt_replacement_team"))
+        assertThatThrownBy(() ->
+                        repository.requireRefundsForExpiredTeam(
+                                TEAM, "TEAM_EXPIRED", "evt_replacement_team"))
                 .isInstanceOf(IllegalStateException.class);
         assertThat(
                         jdbc.queryForObject(
@@ -424,10 +415,8 @@ class StripeCheckoutFlowTest {
                         new StripeProperties("", SIGNING_FIXTURE),
                         new StripeClientProvider(new StripeProperties("", SIGNING_FIXTURE)));
         when(gateway.verifyCheckoutWebhook(any(), any()))
-                .thenAnswer(
-                        call ->
-                                verifier.verifyCheckoutWebhook(
-                                        call.getArgument(0), call.getArgument(1)));
+                .thenAnswer(call ->
+                        verifier.verifyCheckoutWebhook(call.getArgument(0), call.getArgument(1)));
         var beans = new DefaultListableBeanFactory();
         beans.registerSingleton("checkout", service);
         var facade =
@@ -651,16 +640,13 @@ class StripeCheckoutFlowTest {
         paid(payment);
         var fetched = new java.util.concurrent.CountDownLatch(2);
         when(gateway.retrieveCheckoutSession(payment.sessionId()))
-                .thenAnswer(
-                        call -> {
-                            assertThat(
-                                            TransactionSynchronizationManager
-                                                    .isActualTransactionActive())
-                                    .isFalse();
-                            fetched.countDown();
-                            assertThat(fetched.await(5, TimeUnit.SECONDS)).isTrue();
-                            return sessions.get(payment.sessionId());
-                        });
+                .thenAnswer(call -> {
+                    assertThat(TransactionSynchronizationManager.isActualTransactionActive())
+                            .isFalse();
+                    fetched.countDown();
+                    assertThat(fetched.await(5, TimeUnit.SECONDS)).isTrue();
+                    return sessions.get(payment.sessionId());
+                });
         try (var executor = Executors.newFixedThreadPool(2)) {
             var first = executor.submit(() -> service.recover(payment.id(), "yorik", true));
             var second = executor.submit(() -> service.recover(payment.id(), "backup", true));
@@ -736,16 +722,13 @@ class StripeCheckoutFlowTest {
                 "UPDATE biz_payment SET business_deadline=clock_timestamp()-interval '1 second' WHERE id=?",
                 payment.id());
         when(gateway.expireCheckoutSession(payment.sessionId()))
-                .thenAnswer(
-                        call -> {
-                            assertThat(
-                                            TransactionSynchronizationManager
-                                                    .isActualTransactionActive())
-                                    .isFalse();
-                            var closed = expired(sessions.get(payment.sessionId()));
-                            sessions.put(payment.sessionId(), closed);
-                            return closed;
-                        });
+                .thenAnswer(call -> {
+                    assertThat(TransactionSynchronizationManager.isActualTransactionActive())
+                            .isFalse();
+                    var closed = expired(sessions.get(payment.sessionId()));
+                    sessions.put(payment.sessionId(), closed);
+                    return closed;
+                });
         assertThat(service.expireDueSessions()).isEqualTo(1);
         assertThat(service.expireDueSessions()).isZero();
         assertThat(repository.findById(payment.id()).orElseThrow().status())
@@ -1065,15 +1048,10 @@ class StripeCheckoutFlowTest {
         var exceptionInput18 = UUID.randomUUID();
         var exceptionInput19 = UUID.randomUUID();
         var transaction = new TransactionTemplate(transactions);
-        transaction.executeWithoutResult(
-                status ->
-                        assertThatThrownBy(
-                                        () ->
-                                                service.prepare(
-                                                        exceptionInput18,
-                                                        exceptionInput19,
-                                                        "test-key"))
-                                .isInstanceOf(IllegalStateException.class));
+        transaction.executeWithoutResult(status ->
+                assertThatThrownBy(() ->
+                                service.prepare(exceptionInput18, exceptionInput19, "test-key"))
+                        .isInstanceOf(IllegalStateException.class));
     }
 
     private CheckoutPayment prepare() {

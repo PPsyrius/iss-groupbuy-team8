@@ -1,0 +1,38 @@
+%% frame: UC4 B3 and B4: lock the team and freeze the terms (design)
+sequenceDiagram
+    participant App as :PurchaseIntentAppService
+    participant GPS as :GroupDealPurchaseSupportImpl
+    participant Inv as :ShareInviteRepository
+    participant SI as :ShareInvite
+    participant Deals as :PaidGroupDealRepository
+    participant Deal as :GroupDeal
+    participant Cat as :CatalogPurchaseSupport
+    create participant Intent as :PurchaseIntent
+
+    opt inviteRef present (A1)
+        App->>GPS: resolveSharer(inviteRef, dealId, buyerId)
+        GPS->>Inv: findByRef(inviteRef)
+        Inv-->>GPS: Optional(ShareInvite)
+        GPS->>SI: attributes(dealId, buyerId)
+        SI-->>GPS: boolean
+        GPS-->>App: Optional(sharerUserId), empty if it does not attribute
+    end
+    Note over App,Deal: B3: lock 1, the team row
+    App->>GPS: lockJoinTerms(dealId, buyerId)
+    GPS->>Deals: lockDeal(dealId): SELECT … FOR UPDATE
+    Deals-->>GPS: Optional(GroupDeal)
+    GPS->>Deals: currentTime()
+    GPS->>Deal: requireJoinWindow(now)
+    GPS->>Deal: requireAvailableSeat()
+    GPS->>Deals: hasActiveMember(dealId, buyerId)
+    GPS->>Deal: requireNewMember(buyerId, alreadyMember)
+    break no team, closed, full or already a member (A3)
+        GPS-->>App: BizException GROUPBUY_PLACEHOLDER (GROUPBUY_404_001), DEAL_CLOSED, DEAL_FULL or ALREADY_MEMBER
+    end
+    GPS-->>App: JoinTerms
+    App->>Cat: requirePurchasable(productId)
+    Cat-->>App: CatalogPurchaseSupport.PurchasableProduct
+    Note over App,Cat: B4: valid 40 minutes, never past the team's deadline
+    App->>Intent: «create» issue(terms, quoteValidUntil, businessDeadline, now)
+    App->>Intent: attributedTo(sharerUserId)
+    Intent-->>App: PurchaseIntent

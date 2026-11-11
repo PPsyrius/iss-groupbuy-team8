@@ -46,9 +46,9 @@ class NotificationMigrationIT {
         var eventId =
                 jdbc.queryForObject(
                         """
-                INSERT INTO sys_outbox (event_type, event_version, aggregate_id, payload, trace_id)
-                VALUES ('TeamSucceeded', 1, uuidv7(), '{"size":2}', 'migration-test') RETURNING id
-                """,
+                        INSERT INTO sys_outbox (event_type, event_version, aggregate_id, payload, trace_id)
+                        VALUES ('TeamSucceeded', 1, uuidv7(), '{"size":2}', 'migration-test') RETURNING id
+                        """,
                         java.util.UUID.class);
 
         var v27 = configuration.target("27").load();

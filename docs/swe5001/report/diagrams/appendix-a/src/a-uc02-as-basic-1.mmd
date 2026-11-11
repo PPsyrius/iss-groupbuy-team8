@@ -1,0 +1,28 @@
+%% frame: UC2 basic flow, part 1: B1 to B6 with E1 to E3 (analysis)
+sequenceDiagram
+    actor Buyer
+    participant UI as SignInUI (boundary)
+    participant Ctl as SignInWithGoogleControl (control)
+    participant IdP as IdentityProvider (boundary)
+
+    Buyer->>UI: B1: signIn(returnTo)
+    UI->>Ctl: B1: startSignIn()
+    Ctl->>Ctl: B2: issueState()
+    Ctl->>IdP: B2: authorize(state)
+    Note over Buyer,IdP: B3: the buyer signs in and consents at Google, which sends the browser back
+    Buyer->>UI: B4: returned(code, state)
+    UI->>Ctl: B4: completeSignIn(code, state, binding)
+    break consent denied (E1)
+        Ctl->>UI: E1: showFailure(reason)
+    end
+    Ctl->>Ctl: B5: checkState(state, binding)
+    break state missing, used, expired or from another browser (E2)
+        Ctl->>UI: E2: showFailure(reason)
+    end
+    Ctl->>IdP: B6: verify(code)
+    IdP-->>Ctl: verified identity, or none
+    break provider unreachable or identity not verified (E3)
+        Ctl->>UI: E3: showFailure(reason)
+        UI-->>Buyer: sign-in page with an error, no session
+    end
+    Note over Ctl,IdP: B7 to B9: @fig-a-uc02-as-basic-2

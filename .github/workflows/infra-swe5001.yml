@@ -128,6 +128,13 @@ jobs:
       - name: Verify read-only HTTP preflight capture
         run: bash infra/swe5001/scripts/test-http-preflight.sh
 
+      - name: Verify load observer and operator safety guards (no AWS)
+        run: |
+          python3 -m unittest discover -s .github/tests -p 'load_*test.py' -v
+          python3 -m unittest discover -s .github/tests -p 'pool_cap_test.py' -v
+          python3 -m unittest discover -s .github/tests -p 'edge_recovery_test.py' -v
+          python3 -m unittest discover -s .github/tests -p 'subnet_inspection_test.py' -v
+
       - name: Verify service controls, messaging readiness and bootstrap sequencing
         run: bash infra/swe5001/scripts/test-messaging-readiness.sh
 

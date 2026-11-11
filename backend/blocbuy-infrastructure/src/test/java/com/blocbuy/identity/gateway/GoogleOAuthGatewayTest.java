@@ -147,10 +147,9 @@ class GoogleOAuthGatewayTest {
     void networkFailureMapsToProviderError() {
         RestClient restClient =
                 RestClient.builder()
-                        .requestFactory(
-                                (uri, method) -> {
-                                    throw new IOException("connection refused");
-                                })
+                        .requestFactory((uri, method) -> {
+                            throw new IOException("connection refused");
+                        })
                         .build();
         GoogleOAuthGateway gateway = new GoogleOAuthGateway(PROPS, restClient, mockVerifier());
 
@@ -284,14 +283,13 @@ class GoogleOAuthGatewayTest {
 
     private static RestClient stubRestClient(String json, HttpStatus status) {
         return RestClient.builder()
-                .requestFactory(
-                        (uri, method) -> {
-                            MockClientHttpRequest request = new MockClientHttpRequest(method, uri);
-                            request.setResponse(
-                                    new MockClientHttpResponse(
-                                            json.getBytes(StandardCharsets.UTF_8), status));
-                            return request;
-                        })
+                .requestFactory((uri, method) -> {
+                    MockClientHttpRequest request = new MockClientHttpRequest(method, uri);
+                    request.setResponse(
+                            new MockClientHttpResponse(
+                                    json.getBytes(StandardCharsets.UTF_8), status));
+                    return request;
+                })
                 .build();
     }
 

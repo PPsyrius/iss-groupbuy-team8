@@ -1,0 +1,83 @@
+%% frame: UC8 design, slice 2: my teams (commerce-svc, groupbuy and catalog modules)
+classDiagram
+    class GroupDealController {
+        <<controller, Dist, Sec>>
+        +myTeams(page: Integer, size: Integer, response: HttpServletResponse): Result<PageResult<MyTeamResponse>>
+    }
+    class GroupDealAppService {
+        <<interface>>
+        +pageMyTeams(page: PageQuery, userId: UUID): PageResult~MyTeamView~
+    }
+    class GroupDealAppServiceImpl {
+        <<application service, Conc>>
+        +pageMyTeams(page: PageQuery, userId: UUID): PageResult~MyTeamView~
+        -toView(membership: TeamMembership, listing: ListingDisplayGateway.ListingDisplay): MyTeamView «static»
+    }
+    class GroupDealRepository {
+        <<interface, repository, Pers>>
+        +pageMembershipsByUserId(query: PageQuery, userId: UUID): PageResult~TeamMembership~
+    }
+    class TeamMembership {
+        <<value object, record>>
+        +productId: UUID
+        +status: DealStatus
+        +role: MemberRole
+        +joinTime: Instant
+    }
+    class GroupDealRepositoryImpl {
+        <<adapter, Pers>>
+        +pageMembershipsByUserId(query: PageQuery, userId: UUID): PageResult~TeamMembership~
+    }
+    class BizGroupDealMapper {
+        <<interface, mapper, Pers>>
+        +selectMembershipPageByUserId(userId: UUID, limit: int, offset: long): List~TeamMembershipDO~
+        +countMembershipsByUserId(userId: UUID): long
+    }
+    class ListingDisplayGateway {
+        <<interface, gateway, Dist>>
+        +findByProductIds(productIds: Collection~UUID~): Map<UUID, ListingDisplayGateway.ListingDisplay>
+    }
+    class ListingDisplay["ListingDisplayGateway.ListingDisplay"] {
+        <<value object, record>>
+        +productId: UUID
+        +title: String
+        +coverImage: String
+    }
+    class GroupbuyListingDisplayAdapter {
+        <<adapter, application service, Dist>>
+        +findByProductIds(productIds: Collection~UUID~): Map<UUID, ListingDisplayGateway.ListingDisplay>
+        -toDisplay(product: ProductDisplay): ListingDisplayGateway.ListingDisplay «static»
+    }
+    class ProductRepository {
+        <<interface, repository, Pers>>
+        +findDisplaysByIds(ids: Collection~UUID~): List~ProductDisplay~
+    }
+    class ProductDisplay {
+        <<value object, record>>
+        +productId: UUID
+        +title: String
+        +coverImage: String
+    }
+%% at GroupDealController 0,0
+%% at GroupDealAppService 1,0
+%% at ListingDisplay 2,0
+%% at GroupDealRepository 0,1
+%% at GroupDealAppServiceImpl 1,1
+%% at ListingDisplayGateway 2,1
+%% at GroupDealRepositoryImpl 0,2
+%% at TeamMembership 1,2
+%% at GroupbuyListingDisplayAdapter 2,2
+%% at BizGroupDealMapper 0,3
+%% at ProductRepository 1,3
+%% at ProductDisplay 2,3
+    GroupDealController "1" --> "1" GroupDealAppService
+    GroupDealAppServiceImpl ..|> GroupDealAppService
+    GroupDealAppServiceImpl "1" --> "1" GroupDealRepository
+    GroupDealAppServiceImpl "1" --> "1" ListingDisplayGateway
+    GroupDealRepository ..> TeamMembership
+    GroupDealRepositoryImpl ..|> GroupDealRepository
+    GroupDealRepositoryImpl "1" --> "1" BizGroupDealMapper
+    ListingDisplayGateway ..> ListingDisplay
+    GroupbuyListingDisplayAdapter ..|> ListingDisplayGateway
+    GroupbuyListingDisplayAdapter "1" --> "1" ProductRepository
+    GroupbuyListingDisplayAdapter ..> ProductDisplay

@@ -69,10 +69,9 @@ class ProductRepositoryImplTest {
 
         verify(mapper)
                 .insertDraft(
-                        argThat(
-                                value ->
-                                        PRODUCT_ID.equals(value.getId())
-                                                && "DEMO-P-0001".equals(value.getProductNo())),
+                        argThat(value ->
+                                PRODUCT_ID.equals(value.getId())
+                                        && "DEMO-P-0001".equals(value.getProductNo())),
                         eq(ACTOR_ID));
     }
 

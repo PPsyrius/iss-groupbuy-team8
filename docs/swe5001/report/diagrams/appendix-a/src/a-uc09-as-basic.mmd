@@ -1,0 +1,51 @@
+%% frame: UC9 basic flow B1-B6: prepare and publish a listing (analysis)
+sequenceDiagram
+    actor Admin
+    participant UI as ListingConsoleUI (boundary)
+    participant Ctl as AdministerListingControl (control)
+    participant Acc as Account (entity)
+    participant Role as Role (entity)
+    create participant Prod as Product (entity)
+
+    Admin->>UI: B1: openConsole()
+    UI->>Ctl: B1: openConsole(admin)
+    Ctl->>Acc: B1: mayChangeListings()
+    Acc->>Role: B1: grants(change listings)
+    Role-->>Acc: granted
+    Acc-->>Ctl: allowed
+    break not signed in, not an admin or no permission (E1)
+        Ctl-->>UI: E1: refused
+        UI-->>Admin: E1: showRefusal(access denied)
+    end
+    Ctl-->>UI: B2: listings by state
+    Admin->>UI: B3: enterListing(details)
+    UI->>Ctl: B3: create(admin, details)
+    Ctl->>Acc: B4: isActive()
+    Acc-->>Ctl: active
+    Ctl->>Prod: B4: «create» draft(details)
+    Prod-->>Ctl: draft, version 0
+    Admin->>UI: B5: saveDetails(listing, details, v)
+    UI->>Ctl: B5: revise(admin, listing, details, v)
+    Ctl->>Prod: B5: checkVersion(v)
+    break another admin saved first (E5)
+        Prod-->>Ctl: E5: stale, current v + 1
+        Ctl-->>UI: E5: version conflict
+        UI-->>Admin: E5: showConflict(v + 1)
+    end
+    Ctl->>Prod: B5: revise(details)
+    Prod-->>Ctl: version v + 1
+    Admin->>UI: B6: changeStatus(listing, target, v + 1)
+    UI->>Ctl: B6: changeStatus(admin, listing, target, v + 1)
+    Ctl->>Prod: B6: checkVersion(v + 1)
+    alt target on sale (B6)
+        Ctl->>Prod: B6: publish()
+    else target off sale (A2)
+        Ctl->>Prod: A2: delist()
+    end
+    break move not allowed in this status (E7)
+        Prod-->>Ctl: E7: refused
+        Ctl-->>UI: E7: state conflict
+    end
+    Prod-->>Ctl: new status, version v + 2
+    Ctl-->>UI: B6: saved listing
+    UI-->>Admin: B6: showListing(listing)

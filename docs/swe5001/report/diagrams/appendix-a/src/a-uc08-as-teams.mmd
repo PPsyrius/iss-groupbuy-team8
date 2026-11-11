@@ -1,0 +1,26 @@
+%% frame: UC8 view my teams, B1–B4 (analysis)
+sequenceDiagram
+    actor Buyer
+    participant UI as MyBlocsUI (boundary)
+    participant Ctl as ViewMyTeamsControl (control)
+    participant Acc as Account (entity)
+    participant M as Membership (entity)
+    participant T as Team (entity)
+    participant P as Product (entity)
+
+    Buyer->>UI: B1: openMyBlocs(page)
+    UI->>Ctl: B2: listMyTeams(buyer, page)
+    Ctl->>Acc: B2: memberships(page)
+    Acc-->>Ctl: memberships, newest first, and total
+    loop each membership on the page
+        Ctl->>M: B2: describe()
+        M->>T: B2: summary()
+        T-->>M: stored status, seats, deadline, price
+        M-->>Ctl: role, join time, team summary
+    end
+    opt the page is not empty
+        Ctl->>P: B2: displayFieldsOf(products)
+        P-->>Ctl: title and image of each listing still offered (A3: others absent)
+    end
+    Ctl->>UI: B4: showTeams(rows, total)
+    UI-->>Buyer: B4: rows under Active, Completed and Refunded

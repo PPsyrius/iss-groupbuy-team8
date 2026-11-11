@@ -1,0 +1,33 @@
+%% frame: UC4 basic flow, part 2: after payment (analysis)
+sequenceDiagram
+    participant PU as PayUpfrontControl (control)
+    participant Ctl as JoinTeamControl (control)
+    participant Intent as PurchaseIntent (entity)
+    participant Acc as Account (entity)
+    participant Prod as Product (entity)
+    participant Team as Team (entity)
+    create participant Ord as Order (entity)
+    participant Res as ResolveTeamControl (control)
+    participant UI as JoinTeamUI (boundary)
+    create participant Mem as Member­ship (entity)
+
+    Note over PU,Prod: B5: Pay upfront verified the payment (@sec-a-pay-upfront)
+    PU->>Ctl: B5: paymentConfirmed(payment)
+    Ctl->>Intent: B6: isPayable()
+    Intent-->>Ctl: payable
+    Ctl->>Acc: B6: isActive()
+    Acc-->>Ctl: active
+    Ctl->>Prod: B6: isPurchasable()
+    Prod-->>Ctl: purchasable
+    Ctl->>Team: B7: admit(buyer, payment)
+    Team->>Mem: B7: «create» (buyer, sharer)
+    Team-->>Ctl: admitted, team complete or not
+    Ctl->>Ord: B8: «create» (buyer, team price)
+    Ctl->>Intent: B8: fulfilBy(payment)
+    Ctl->>Prod: B8: takeOneUnit()
+    Ctl-->>PU: B9: outcome (fulfilled), recorded by Pay upfront
+    opt team now complete (B10)
+        Ctl->>Res: B10: teamFilled(team)
+        Note over Team,UI: UC5 B2–B4 confirm the orders (@fig-a-uc05-as-success)
+    end
+    Ctl->>UI: B11: showJoined(teamStatus)

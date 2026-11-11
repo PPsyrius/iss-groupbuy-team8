@@ -46,21 +46,20 @@ class CheckoutPaymentTest {
         var exceptionInput4 = p.sessionExpiresAt();
         var exceptionInput5 = p.successUrl();
         var exceptionInput6 = p.cancelUrl();
-        assertThatThrownBy(
-                        () ->
-                                new CheckoutPayment(
-                                        exceptionInput1,
-                                        exceptionInput2,
-                                        " ",
-                                        exceptionInput3,
-                                        exceptionInput4,
-                                        exceptionInput5,
-                                        exceptionInput6,
-                                        null,
-                                        null,
-                                        null,
-                                        CheckoutPayment.Status.CREATED,
-                                        0))
+        assertThatThrownBy(() ->
+                        new CheckoutPayment(
+                                exceptionInput1,
+                                exceptionInput2,
+                                " ",
+                                exceptionInput3,
+                                exceptionInput4,
+                                exceptionInput5,
+                                exceptionInput6,
+                                null,
+                                null,
+                                null,
+                                CheckoutPayment.Status.CREATED,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

@@ -1,0 +1,61 @@
+%% frame: Notifications design, slice 1: the outbox writer (commerce-svc)
+classDiagram
+    class IntegrationRecipientRepository {
+        <<interface, repository, Pers>>
+        +findActiveMemberIdsByDealId(dealId: UUID): List~UUID~
+    }
+    class IntegrationOutboxWriter {
+        <<subscriber, Evt, Dist>>
+        +onTeamSucceeded(event: TeamSucceeded): void
+        +onTeamExpired(event: TeamExpired): void
+        +onPaymentSucceeded(event: PaymentSucceeded): void
+    }
+    class OutboxMapper {
+        <<interface, mapper, Pers>>
+        +insert(row: OutboxInsert): int
+    }
+    class TeamSucceededV1 {
+        <<integration event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +size: int
+        +recipientUserIds: List~UUID~
+    }
+    class TeamExpiredV1 {
+        <<integration event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +expiredAt: Instant
+        +recipientUserIds: List~UUID~
+    }
+    class PaymentSucceededV1 {
+        <<integration event, record>>
+        +paymentId: UUID
+        +intentId: UUID
+        +recipientUserId: UUID
+        +operation: String
+        +businessId: UUID
+        +confirmedAt: Instant
+    }
+    class OutboxInsert {
+        <<record, Pers>>
+        +eventType: String
+        +eventVersion: int
+        +aggregateId: UUID
+        +payload: String
+        +traceId: String
+    }
+%% at OutboxInsert 2,0
+%% at IntegrationRecipientRepository 0,1
+%% at IntegrationOutboxWriter 1,1
+%% at OutboxMapper 2,1
+%% at TeamSucceededV1 0,2
+%% at TeamExpiredV1 1,2
+%% at PaymentSucceededV1 2,2
+    IntegrationOutboxWriter "1" --> "1" IntegrationRecipientRepository : recipients
+    IntegrationOutboxWriter "1" --> "1" OutboxMapper : outbox
+    IntegrationOutboxWriter ..> TeamSucceededV1 : «create»
+    IntegrationOutboxWriter ..> TeamExpiredV1 : «create»
+    IntegrationOutboxWriter ..> PaymentSucceededV1 : «create»
+    IntegrationOutboxWriter ..> OutboxInsert : «create»
+    OutboxMapper ..> OutboxInsert

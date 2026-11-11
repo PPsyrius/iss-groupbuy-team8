@@ -25,14 +25,13 @@ public class SnsOutboxEventTransport
     protected PublishBatchRequestEntry entry(OutboxEvent event) {
         var attributes = new HashMap<String, MessageAttributeValue>();
         OutboxMessageFactory.attributes(event)
-                .forEach(
-                        (name, value) ->
-                                attributes.put(
-                                        name,
-                                        MessageAttributeValue.builder()
-                                                .dataType("String")
-                                                .stringValue(value)
-                                                .build()));
+                .forEach((name, value) ->
+                        attributes.put(
+                                name,
+                                MessageAttributeValue.builder()
+                                        .dataType("String")
+                                        .stringValue(value)
+                                        .build()));
         return PublishBatchRequestEntry.builder()
                 .id(event.id().toString())
                 .message(OutboxMessageFactory.body(event, json))

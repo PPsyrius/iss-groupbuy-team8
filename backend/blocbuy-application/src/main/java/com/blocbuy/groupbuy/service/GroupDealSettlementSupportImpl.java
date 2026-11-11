@@ -32,13 +32,12 @@ public class GroupDealSettlementSupportImpl implements GroupDealSettlementSuppor
     @Override
     public Optional<SettledMember> settledMember(UUID paymentId) {
         return deals.findPaidMember(paymentId)
-                .map(
-                        member ->
-                                new SettledMember(
-                                        member.dealId(),
-                                        member.userId(),
-                                        member.orderId(),
-                                        member.status()));
+                .map(member ->
+                        new SettledMember(
+                                member.dealId(),
+                                member.userId(),
+                                member.orderId(),
+                                member.status()));
     }
 
     @Override

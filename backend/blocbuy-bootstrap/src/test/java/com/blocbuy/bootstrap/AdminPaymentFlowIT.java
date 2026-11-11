@@ -307,10 +307,8 @@ class AdminPaymentFlowIT {
         assertThat(large).hasSameSizeAs(small);
         assertThat(
                         large.stream()
-                                .filter(
-                                        statement ->
-                                                statement.contains(
-                                                        "biz_group_participation_receipt")))
+                                .filter(statement ->
+                                        statement.contains("biz_group_participation_receipt")))
                 .hasSize(2)
                 .noneMatch(statement -> statement.contains("sys_user"));
         // #469: one identity batch per page, whatever the page size or buyer count.

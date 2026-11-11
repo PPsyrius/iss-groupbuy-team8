@@ -1,0 +1,66 @@
+%% frame: S3 Distribution: the account check crosses from commerce-svc to identity-svc
+classDiagram
+    class StripeCheckoutController {
+        <<controller, Dist, Sec>>
+        +intent(csrf: String, request: IntentRequest): Result~IntentResponse~
+    }
+    class PaymentBrowserService {
+        <<application service, Dist>>
+        +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
+    }
+    class PaymentIntentPort {
+        <<interface, Dist>>
+        +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
+    }
+    class PurchaseIntentAppService {
+        <<adapter, application service, Dist>>
+        +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
+    }
+    class UserAppService {
+        <<interface, Dist>>
+        +requireActive(userId: UUID): void
+        +publicNickname(userId: UUID): Optional~String~
+        +publicNicknames(userIds: Set~UUID~): Map~UUID, String~
+    }
+    class RemoteUserAppService {
+        <<adapter, Dist>>
+        -identity: RestClient
+        +requireActive(userId: UUID): void
+    }
+    class UserAppServiceImpl {
+        <<application service>>
+        +requireActive(userId: UUID): void
+    }
+    class IdentityUnavailableException {
+        <<exception>>
+    }
+    class InternalUserController {
+        <<controller, Dist, Sec>>
+        +requireActive(id: UUID): Result~Void~
+        +publicNickname(id: UUID): Result~PublicNicknameView~
+        +publicNicknames(query: PublicNicknamesQuery): Result~PublicNicknamesView~
+    }
+    class UserRepository {
+        <<interface, repository, Pers>>
+        +findById(id: UUID): Optional~User~
+    }
+%% at StripeCheckoutController 0,0
+%% at PaymentBrowserService 1,0
+%% at PaymentIntentPort 2,0
+%% at PurchaseIntentAppService 2,1
+%% at RemoteUserAppService 0,2
+%% at UserAppService 1,2
+%% at UserAppServiceImpl 2,2
+%% at IdentityUnavailableException 0,3
+%% at InternalUserController 1,3
+%% at UserRepository 2,3
+    StripeCheckoutController "1" --> "1" PaymentBrowserService
+    PaymentBrowserService "1" --> "0..1" PaymentIntentPort
+    PurchaseIntentAppService ..|> PaymentIntentPort
+    PurchaseIntentAppService "1" --> "1" UserAppService
+    RemoteUserAppService ..|> UserAppService
+    UserAppServiceImpl ..|> UserAppService
+    RemoteUserAppService ..> IdentityUnavailableException : «create»
+    RemoteUserAppService ..> InternalUserController : «HTTP»
+    InternalUserController "1" --> "1" UserAppService
+    UserAppServiceImpl "1" --> "1" UserRepository

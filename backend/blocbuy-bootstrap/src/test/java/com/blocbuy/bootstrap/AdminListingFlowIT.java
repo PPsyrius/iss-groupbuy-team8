@@ -180,12 +180,12 @@ class AdminListingFlowIT {
         assertThat(
                         jdbc.update(
                                 """
-                UPDATE rel_role_permission SET deleted = true
-                WHERE role_id = (SELECT id FROM sys_role WHERE role_code = 'admin' AND deleted = false)
-                  AND permission_id = (SELECT id FROM sys_permission
-                      WHERE perm_code = 'catalog:product:write' AND deleted = false)
-                  AND deleted = false
-                """))
+                                UPDATE rel_role_permission SET deleted = true
+                                WHERE role_id = (SELECT id FROM sys_role WHERE role_code = 'admin' AND deleted = false)
+                                  AND permission_id = (SELECT id FROM sys_permission
+                                      WHERE perm_code = 'catalog:product:write' AND deleted = false)
+                                  AND deleted = false
+                                """))
                 .isEqualTo(1);
         assertThat(roles.findRoleCodesByUserId(admin)).contains("admin");
         assertThat(roles.findPermissionCodesByUserId(admin))
@@ -209,10 +209,10 @@ class AdminListingFlowIT {
         assertThat(
                         jdbc.update(
                                 """
-                INSERT INTO rel_role_permission (role_id, permission_id)
-                SELECT ?, id FROM sys_permission
-                WHERE perm_code = 'catalog:product:write' AND deleted = false
-                """,
+                                INSERT INTO rel_role_permission (role_id, permission_id)
+                                SELECT ?, id FROM sys_permission
+                                WHERE perm_code = 'catalog:product:write' AND deleted = false
+                                """,
                                 editorRole))
                 .isEqualTo(1);
         assertThat(roles.findPermissionCodesByUserId(buyer)).contains("catalog:product:write");
@@ -1035,9 +1035,9 @@ class AdminListingFlowIT {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(
                                         """
-                                {"expectedVersion":0,"listing":{
-                                "title":"Plain tea","originalPrice":"12.00","currency":"sgd","stock":5}}
-                                """))
+                                        {"expectedVersion":0,"listing":{
+                                        "title":"Plain tea","originalPrice":"12.00","currency":"sgd","stock":5}}
+                                        """))
                 .andExpect(status().isOk());
         mvc.perform(get(BASE + "/" + id).header(HEADER, adminToken))
                 .andExpect(status().isOk())

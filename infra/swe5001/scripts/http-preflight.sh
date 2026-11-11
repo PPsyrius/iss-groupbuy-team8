@@ -72,10 +72,16 @@ targets=$(aws application-autoscaling describe-scalable-targets --service-namesp
   --resource-ids "$resource" --scalable-dimension ecs:service:DesiredCount --output json)
 policies=$(aws application-autoscaling describe-scaling-policies --service-namespace ecs \
   --resource-id "$resource" --scalable-dimension ecs:service:DesiredCount --output json)
+cpu_headroom=null
+if jq -e 'any(.ScalingPolicies[]; .PolicyName == "blocbuy-swe5001-commerce-cpu-headroom")' <<< "$policies" > /dev/null; then
+  cpu_alarms=$(aws cloudwatch describe-alarms --alarm-names blocbuy-swe5001-commerce-cpu-headroom \
+    --query 'MetricAlarms[].{name:AlarmName,namespace:Namespace,metric:MetricName,statistic:Statistic,period:Period,evaluationPeriods:EvaluationPeriods,datapointsToAlarm:DatapointsToAlarm,threshold:Threshold,comparison:ComparisonOperator,missingData:TreatMissingData,actionsEnabled:ActionsEnabled,actions:AlarmActions,dimensions:Dimensions}' --output json)
+  cpu_headroom=$(jq -nc --argjson alarms "$cpu_alarms" '{alarms:$alarms}')
+fi
 jq -n --arg at "$collected" --arg sha "$sha" --arg mode "$1" --arg base "https://$domain" \
-  --argjson services "$services" --argjson tasks "$observed" --argjson targets "$targets" --argjson policies "$policies" \
+  --argjson services "$services" --argjson tasks "$observed" --argjson targets "$targets" --argjson policies "$policies" --argjson cpu "$cpu_headroom" \
   --argjson edge "$edge" --argjson groups "$groups" --argjson balancers "$balancers" --argjson listeners "$listeners" --arg listener "$listener" --argjson rules "$rules" \
   '{schema:1,account:"402178232802",region:"ap-southeast-1",cluster:"blocbuy-swe5001",
     collectedAt:$at,toolingSha:$sha,mode:$mode,baseUrl:$base,
-    services:$services,tasks:$tasks,targets:$targets,policies:$policies,
+    services:$services,tasks:$tasks,targets:$targets,policies:$policies,cpuHeadroom:$cpu,
     routing:{edge:$edge,targetGroups:$groups,loadBalancers:$balancers,listeners:$listeners,rulesListenerArn:$listener,rules:$rules}}'

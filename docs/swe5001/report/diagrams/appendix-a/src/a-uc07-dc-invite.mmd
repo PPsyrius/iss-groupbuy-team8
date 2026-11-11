@@ -1,0 +1,89 @@
+%% frame: UC7 design, slice 1: mint, resolve and the cached invitation lookup (commerce-svc)
+classDiagram
+    class GroupDealController {
+        <<controller, Dist, Sec>>
+        +createInvite(csrf: String, dealId: UUID, response: HttpServletResponse): Result<GroupDealController.ShareInviteResponse>
+    }
+    class RateLimitGateway {
+        <<interface, gateway, Sec>>
+        +tryAcquire(limit: RateLimitGateway.RateLimit, subject: String): boolean
+    }
+    class InviteController {
+        <<controller, Dist, Sec>>
+        +resolve(ref: String, request: HttpServletRequest, response: HttpServletResponse): Result<InviteController.InviteResponse>
+    }
+    class GroupDealRepository {
+        <<interface, repository, Pers>>
+        +findById(id: UUID): Optional~GroupDeal~
+    }
+    class ShareInviteAppService {
+        <<application service, Sec, Conc>>
+        +mint(userId: UUID, dealId: UUID): ShareInviteView
+        +resolve(ref: String, clientAddress: String): ResolvedInviteView
+    }
+    class UserAppService {
+        <<interface, Dist>>
+        +publicNickname(userId: UUID): Optional~String~
+    }
+    class RemoteUserAppService {
+        <<adapter, Dist>>
+        +publicNickname(userId: UUID): Optional~String~
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers>>
+        +hasActiveMember(dealId: UUID, userId: UUID): boolean
+        +currentTime(): Instant
+    }
+    class ShareInviteRepository {
+        <<interface, repository, Pers>>
+        +findByRef(ref: String): Optional~ShareInvite~
+        +findByDealAndSharer(dealId: UUID, sharerUserId: UUID): Optional~ShareInvite~
+        +insertIfAbsent(candidate: ShareInvite): boolean
+    }
+    class ShareInvite {
+        <<aggregate root, record>>
+        +ref: String
+        +mint(dealId: UUID, sharerUserId: UUID, random: RandomGenerator): ShareInvite «static»
+        +isWellFormedRef(ref: String): boolean «static»
+    }
+    class RedisCachedShareInviteRepository {
+        <<adapter, repository, Pers, Conc>>
+        +findByRef(ref: String): Optional~ShareInvite~
+        +findByDealAndSharer(dealId: UUID, sharerUserId: UUID): Optional~ShareInvite~
+        +insertIfAbsent(candidate: ShareInvite): boolean
+    }
+    class ShareInviteRepositoryImpl {
+        <<adapter, repository, Pers>>
+        +findByRef(ref: String): Optional~ShareInvite~
+        ~findByRefWithDeadline(ref: String): Optional<InviteWithDeadline>
+    }
+    class BizShareInviteMapper {
+        <<interface, mapper, Pers>>
+        +selectByRef(ref: String): BizShareInviteDO
+    }
+%% at GroupDealController 0,0
+%% at RateLimitGateway 1,0
+%% at InviteController 2,0
+%% at GroupDealRepository 0,1
+%% at ShareInviteAppService 1,1
+%% at UserAppService 2,1
+%% at RemoteUserAppService 2,2
+%% at PaidGroupDealRepository 0,2
+%% at ShareInviteRepository 1,2
+%% at ShareInvite 0,3
+%% at RedisCachedShareInviteRepository 1,3
+%% at ShareInviteRepositoryImpl 2,3
+%% at BizShareInviteMapper 2,4
+    GroupDealController "1" --> "1" ShareInviteAppService
+    InviteController "1" --> "1" ShareInviteAppService
+    ShareInviteAppService "1" --> "1" RateLimitGateway
+    ShareInviteAppService "1" --> "1" GroupDealRepository
+    ShareInviteAppService "1" --> "1" PaidGroupDealRepository
+    ShareInviteAppService "1" --> "1" ShareInviteRepository
+    ShareInviteAppService "1" --> "1" UserAppService
+    RemoteUserAppService ..|> UserAppService
+    ShareInviteRepository ..> ShareInvite
+    RedisCachedShareInviteRepository ..|> ShareInviteRepository
+    ShareInviteRepositoryImpl ..|> ShareInviteRepository
+    RedisCachedShareInviteRepository "1" --> "1" ShareInviteRepositoryImpl : source
+    ShareInviteRepositoryImpl "1" --> "1" BizShareInviteMapper

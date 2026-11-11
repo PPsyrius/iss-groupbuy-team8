@@ -29,22 +29,19 @@ class SnsOutboxEventTransportTest {
     void batchesAtTenAndAddsMessageAttributes() {
         List<OutboxEvent> events = SqsOutboxEventTransportTest.events(11);
         when(client.publishBatch(any(PublishBatchRequest.class)))
-                .thenAnswer(
-                        call -> {
-                            PublishBatchRequest request = call.getArgument(0);
-                            return PublishBatchResponse.builder()
-                                    .successful(
-                                            request.publishBatchRequestEntries().stream()
-                                                    .map(
-                                                            entry ->
-                                                                    PublishBatchResultEntry
-                                                                            .builder()
-                                                                            .id(entry.id())
-                                                                            .messageId(entry.id())
-                                                                            .build())
-                                                    .toList())
-                                    .build();
-                        });
+                .thenAnswer(call -> {
+                    PublishBatchRequest request = call.getArgument(0);
+                    return PublishBatchResponse.builder()
+                            .successful(
+                                    request.publishBatchRequestEntries().stream()
+                                            .map(entry ->
+                                                    PublishBatchResultEntry.builder()
+                                                            .id(entry.id())
+                                                            .messageId(entry.id())
+                                                            .build())
+                                            .toList())
+                            .build();
+                });
 
         assertThat(transport.publish(events)).hasSize(11).allMatch(result -> result.published());
 

@@ -104,29 +104,27 @@ class IntegrationEventContractTest {
     void envelopeRejectsInvalidVersionAndOversizedTraceId() {
         UUID id = UUID.randomUUID();
         assertThatIllegalArgumentException()
-                .isThrownBy(
-                        () ->
-                                new IntegrationEventEnvelope<>(
-                                        id,
-                                        "TeamSucceeded",
-                                        0,
-                                        Instant.now(),
-                                        "commerce-svc",
-                                        "trace",
-                                        id,
-                                        new TeamSucceededV1(id, id, 2, List.of())));
+                .isThrownBy(() ->
+                        new IntegrationEventEnvelope<>(
+                                id,
+                                "TeamSucceeded",
+                                0,
+                                Instant.now(),
+                                "commerce-svc",
+                                "trace",
+                                id,
+                                new TeamSucceededV1(id, id, 2, List.of())));
         assertThatIllegalArgumentException()
-                .isThrownBy(
-                        () ->
-                                new IntegrationEventEnvelope<>(
-                                        id,
-                                        "TeamSucceeded",
-                                        1,
-                                        Instant.now(),
-                                        "commerce-svc",
-                                        "x".repeat(65),
-                                        id,
-                                        new TeamSucceededV1(id, id, 2, List.of())));
+                .isThrownBy(() ->
+                        new IntegrationEventEnvelope<>(
+                                id,
+                                "TeamSucceeded",
+                                1,
+                                Instant.now(),
+                                "commerce-svc",
+                                "x".repeat(65),
+                                id,
+                                new TeamSucceededV1(id, id, 2, List.of())));
     }
 
     @Test
@@ -135,15 +133,9 @@ class IntegrationEventContractTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> new TeamSucceededV1(id, id, 1, List.of()));
         assertThatIllegalArgumentException()
-                .isThrownBy(
-                        () ->
-                                new PaymentSucceededV1(
-                                        id,
-                                        id,
-                                        id,
-                                        "REFUND",
-                                        id,
-                                        Instant.parse("2026-10-12T00:00:00Z")));
+                .isThrownBy(() ->
+                        new PaymentSucceededV1(
+                                id, id, id, "REFUND", id, Instant.parse("2026-10-12T00:00:00Z")));
     }
 
     @ParameterizedTest
@@ -154,41 +146,24 @@ class IntegrationEventContractTest {
         var payload = new TeamSucceededV1(id, id, 2, List.of());
         Instant occurredAt = Instant.parse("2026-10-12T00:00:00Z");
         assertThatIllegalArgumentException()
-                .isThrownBy(
-                        () ->
-                                new IntegrationEventEnvelope<>(
-                                        id,
-                                        invalid,
-                                        1,
-                                        occurredAt,
-                                        "commerce-svc",
-                                        "trace",
-                                        id,
-                                        payload));
+                .isThrownBy(() ->
+                        new IntegrationEventEnvelope<>(
+                                id, invalid, 1, occurredAt, "commerce-svc", "trace", id, payload));
         assertThatIllegalArgumentException()
-                .isThrownBy(
-                        () ->
-                                new IntegrationEventEnvelope<>(
-                                        id,
-                                        "TeamSucceeded",
-                                        1,
-                                        occurredAt,
-                                        invalid,
-                                        "trace",
-                                        id,
-                                        payload));
+                .isThrownBy(() ->
+                        new IntegrationEventEnvelope<>(
+                                id, "TeamSucceeded", 1, occurredAt, invalid, "trace", id, payload));
         assertThatIllegalArgumentException()
-                .isThrownBy(
-                        () ->
-                                new IntegrationEventEnvelope<>(
-                                        id,
-                                        "TeamSucceeded",
-                                        1,
-                                        occurredAt,
-                                        "commerce-svc",
-                                        invalid,
-                                        id,
-                                        payload));
+                .isThrownBy(() ->
+                        new IntegrationEventEnvelope<>(
+                                id,
+                                "TeamSucceeded",
+                                1,
+                                occurredAt,
+                                "commerce-svc",
+                                invalid,
+                                id,
+                                payload));
     }
 
     private static UUID id(String suffix) {

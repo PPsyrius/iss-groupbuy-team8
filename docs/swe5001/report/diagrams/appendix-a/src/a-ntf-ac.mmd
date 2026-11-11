@@ -1,0 +1,59 @@
+%% frame: Receive notifications for team and payment facts (analysis)
+classDiagram
+    class NotificationListUI {
+        <<boundary>>
+        +listMine(page)
+        +showNotifications(page)
+        +showSignInRequired()
+    }
+    class ReceiveNotificationsControl {
+        <<control>>
+        +factHappened(fact)
+        +listNotifications(buyer, page)
+    }
+    class Team {
+        <<entity>>
+        -targetSize: Count
+        -status: TeamStatus
+        +activeMembers()
+    }
+    class Membership {
+        <<entity>>
+        -role: MemberRole
+        -joinTime: Date-time
+    }
+    class Payment {
+        <<entity>>
+        -amount: Money
+        -status: PaymentStatus
+        +payer()
+    }
+    class Account {
+        <<entity>>
+        -status: AccountStatus
+    }
+    class Notification {
+        <<entity>>
+        -type: NotificationType
+        -title: Text
+        -content: Text
+        -createTime: Date-time
+        +forRecipient(buyer, page) «static»
+    }
+%% at ReceiveNotificationsControl 1,0
+%% at NotificationListUI 2,0
+%% at Team 0,1
+%% at Notification 1,1
+%% at Payment 2,1
+%% at Membership 0,2
+%% at Account 1,2
+    ReceiveNotificationsControl "1" -- "1" NotificationListUI
+    Team "*" -- "1" ReceiveNotificationsControl
+    ReceiveNotificationsControl "1" --> "*" Payment
+    ReceiveNotificationsControl "1" --> "*" Notification
+    Team "1" *-- "1..*" Membership : member
+    Account "1" -- "*" Membership : holds
+    Account "1" -- "*" Payment : payer
+    Account "1" -- "*" Notification : recipient {one per fact}
+    Team "0..1" -- "*" Notification : about
+    Notification "*" -- "0..1" Payment : about

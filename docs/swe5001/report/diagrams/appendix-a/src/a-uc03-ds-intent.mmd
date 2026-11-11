@@ -1,0 +1,41 @@
+%% frame: UC3 B5 to B7: create the START purchase intent (design)
+sequenceDiagram
+    participant Svc as :PaymentBrowserService
+    participant App as :PurchaseIntentAppService
+    participant Users as :UserAppService
+    participant Repo as :PurchaseIntentRepository
+    participant Cat as :CatalogPurchaseSupport
+    participant Uuid as UuidV7
+    create participant Intent as :PurchaseIntent
+
+    Note over Svc,App: B5: request, CSRF check and controller as in @fig-a-uc04-ds-intent; no rate limit for START
+    critical intent transaction, REQUIRED, default isolation, 10 s
+        Svc->>App: createIntent(user, "START", productId, null, quoteId)
+        App->>Users: requireActive(user)
+        break identity-svc unreachable (E2)
+            Users-->>App: IdentityUnavailableException
+            App-->>Svc: exception: transaction rolled back
+        end
+        App->>Repo: currentTime()
+        Repo-->>App: now
+        App->>App: start(user, productId, quoteId, now)
+        Note over App,Cat: B6: catalog takes lock 6, the product row, and checks the listing and the quote (@tbl-a-uc03-ops)
+        alt quoteId given (B6)
+            App->>Cat: lockQuotedStart(productId, quoteId, user)
+        else no quote, API callers only (A1)
+            App->>Cat: lockStartQuote(productId, now)
+        end
+        break listing cannot start a team, or quote refused (A3)
+            Cat-->>App: BizException
+            App-->>Svc: BizException: rolled back, "Get a new price"
+        end
+        Cat-->>App: StartQuote
+        Note over App,Intent: B7: reserve the id of the team that does not exist yet
+        App->>Uuid: next()
+        Uuid-->>App: dealId
+        App->>Intent: «create» issue(terms, now + 2400 s, now + lifetimeSeconds, now)
+        App->>Repo: save(intent)
+        Repo-->>App: PurchaseIntent
+        App-->>Svc: intentId
+    end
+    Note over Svc,App: B8: the controller returns the intent id; Pay upfront follows (@sec-a-pay-upfront)

@@ -1,0 +1,89 @@
+%% frame: UC6 design, slice 1: refund obligations inside the expiry (commerce-svc)
+classDiagram
+    class GroupDealExpiryService {
+        <<application service, Conc, Evt>>
+        +expireOne(dealId: UUID): boolean
+    }
+    class ApplicationEventPublisher {
+        <<interface, Evt>>
+        +publishEvent(event: Object): void
+    }
+    class TeamExpired {
+        <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +at: Instant
+    }
+    class TeamExpiryRefundSubscriber {
+        <<subscriber, Evt>>
+        +onTeamExpired(event: TeamExpired): void
+    }
+    class TeamExpiryRefundService {
+        <<application service, Conc>>
+        -tx: TransactionTemplate
+        +recordExpiredTeam(dealId: UUID): void
+    }
+    class PaymentBusinessPort {
+        <<interface, Dist, Conc>>
+        +lockExpiredTeam(dealId: UUID): void
+    }
+    class OrderFulfilmentAdapter {
+        <<adapter, application service, Dist>>
+        +lockExpiredTeam(dealId: UUID): void
+    }
+    class GroupDealSettlementSupport {
+        <<interface, Dist>>
+        +lockExpiredTeam(dealId: UUID): void
+    }
+    class GroupDealSettlementSupportImpl {
+        <<application service, Conc>>
+        +lockExpiredTeam(dealId: UUID): void
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers, Conc>>
+        +lockDeal(dealId: UUID): Optional~GroupDeal~
+    }
+    class GroupDeal {
+        <<aggregate root>>
+        +status(): DealStatus
+    }
+    class CheckoutPaymentRepository {
+        <<interface, repository, Pers, Conc>>
+        +requireRefundsForExpiredTeam(dealId: UUID, reason: String, eventId: String): void
+    }
+    class CheckoutPaymentRepositoryImpl {
+        <<adapter, Pers>>
+        +requireRefundsForExpiredTeam(dealId: UUID, reason: String, eventId: String): void
+    }
+    class PaymentMapper {
+        <<interface, mapper, Pers, Conc>>
+        +lockRefundableMemberIds(dealId: UUID): List~UUID~
+        +refundExpiredTeam(dealId: UUID, reason: String, eventId: String): int
+    }
+%% at ApplicationEventPublisher 0,0
+%% at GroupDealExpiryService 1,0
+%% at TeamExpired 2,0
+%% at TeamExpiryRefundSubscriber 0,1
+%% at PaymentBusinessPort 0,2
+%% at TeamExpiryRefundService 1,2
+%% at CheckoutPaymentRepository 2,2
+%% at OrderFulfilmentAdapter 0,3
+%% at PaymentMapper 1,3
+%% at CheckoutPaymentRepositoryImpl 2,3
+%% at GroupDealSettlementSupport 0,4
+%% at GroupDealSettlementSupportImpl 1,4
+%% at GroupDeal 1,5
+%% at PaidGroupDealRepository 2,5
+    GroupDealExpiryService "1" --> "1" ApplicationEventPublisher
+    GroupDealExpiryService ..> TeamExpired : «create»
+    TeamExpiryRefundSubscriber ..> TeamExpired
+    TeamExpiryRefundSubscriber "1" --> "1" TeamExpiryRefundService
+    TeamExpiryRefundService "1" --> "1" PaymentBusinessPort
+    TeamExpiryRefundService "1" --> "1" CheckoutPaymentRepository
+    OrderFulfilmentAdapter ..|> PaymentBusinessPort
+    OrderFulfilmentAdapter "1" --> "1" GroupDealSettlementSupport
+    GroupDealSettlementSupportImpl ..|> GroupDealSettlementSupport
+    GroupDealSettlementSupportImpl "1" --> "1" PaidGroupDealRepository
+    PaidGroupDealRepository ..> GroupDeal
+    CheckoutPaymentRepositoryImpl ..|> CheckoutPaymentRepository
+    CheckoutPaymentRepositoryImpl "1" --> "1" PaymentMapper

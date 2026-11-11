@@ -1,0 +1,79 @@
+%% frame: UC3 design, slice 2: START purchase intent before payment (commerce-svc)
+classDiagram
+    class StripeCheckoutController {
+        <<controller, Pres, Sec>>
+        +intent(csrf: String, request: IntentRequest): Result~IntentResponse~
+        -checkCsrf(value: String): void
+    }
+    class PaymentBrowserService {
+        <<application service, Sec>>
+        +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
+    }
+    class PaymentIntentPort {
+        <<interface, Dist>>
+        +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
+    }
+    class UserAppService {
+        <<interface, Dist>>
+        +requireActive(userId: UUID): void
+    }
+    class PurchaseIntentAppService {
+        <<adapter, application service, Dist>>
+        +createIntent(user: UUID, operation: String, businessId: UUID, inviteRef: String, quoteId: UUID): UUID
+        -start(user: UUID, productId: UUID, quoteId: UUID, now: Instant): PurchaseIntent
+    }
+    class PurchaseIntentRepository {
+        <<interface, repository, Pers>>
+        +currentTime(): Instant
+        +save(intent: PurchaseIntent): PurchaseIntent
+    }
+    class UuidV7 {
+        <<utility>>
+        +next(): UUID «static»
+    }
+    class CatalogPurchaseSupport {
+        <<interface, Dist>>
+        +lockQuotedStart(productId: UUID, quoteId: UUID, buyerId: UUID): CatalogPurchaseSupport.StartQuote
+        +lockStartQuote(productId: UUID, now: Instant): CatalogPurchaseSupport.StartQuote
+    }
+    class PurchaseIntent {
+        <<aggregate root, Pers>>
+        -terms: PurchaseIntent.Terms
+        -quoteValidUntil: Instant
+        -businessDeadline: Instant
+        -fulfilledPaymentId: UUID
+        -expiredAt: Instant
+        +issue(terms: PurchaseIntent.Terms, quoteValidUntil: Instant, businessDeadline: Instant, now: Instant): PurchaseIntent «static»
+    }
+    class StartQuote["CatalogPurchaseSupport.StartQuote"] {
+        <<value object, record>>
+        +productId: UUID
+        +amount: BigDecimal
+        +currency: String
+        +targetSize: int
+        +lifetimeSeconds: int
+    }
+%% at StripeCheckoutController 0,0
+%% at PaymentBrowserService 1,0
+%% at PaymentIntentPort 2,0
+%% at UserAppService 0,1
+%% at PurchaseIntentAppService 1,1
+%% at PurchaseIntentRepository 2,1
+%% at UuidV7 0,2
+%% at CatalogPurchaseSupport 1,2
+%% at PurchaseIntent 2,2
+%% at StartQuote 1,3
+    StripeCheckoutController "1" --> "1" PaymentBrowserService
+    PaymentBrowserService "1" --> "0..1" PaymentIntentPort
+    PurchaseIntentAppService ..|> PaymentIntentPort
+    PurchaseIntentAppService "1" --> "1" UserAppService
+    PurchaseIntentAppService "1" --> "1" PurchaseIntentRepository
+    PurchaseIntentAppService ..> UuidV7
+    PurchaseIntentAppService "1" --> "1" CatalogPurchaseSupport
+    PurchaseIntentAppService ..> PurchaseIntent : «create»
+    PurchaseIntentRepository ..> PurchaseIntent
+    CatalogPurchaseSupport ..> StartQuote
+
+
+
+

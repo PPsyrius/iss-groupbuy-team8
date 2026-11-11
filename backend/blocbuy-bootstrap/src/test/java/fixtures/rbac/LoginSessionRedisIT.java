@@ -165,17 +165,16 @@ class LoginSessionRedisIT {
         CountDownLatch releaseFirst = new CountDownLatch(1);
         AtomicInteger calls = new AtomicInteger();
         when(authorization.snapshot(user))
-                .thenAnswer(
-                        invocation -> {
-                            if (calls.incrementAndGet() == 1) {
-                                firstRead.countDown();
-                                if (!releaseFirst.await(10, TimeUnit.SECONDS)) {
-                                    throw new IllegalStateException("test callback timed out");
-                                }
-                                return new Snapshot(List.of("admin"), List.of("payment:read"));
-                            }
-                            return new Snapshot(List.of("buyer"), List.of("order:read"));
-                        });
+                .thenAnswer(invocation -> {
+                    if (calls.incrementAndGet() == 1) {
+                        firstRead.countDown();
+                        if (!releaseFirst.await(10, TimeUnit.SECONDS)) {
+                            throw new IllegalStateException("test callback timed out");
+                        }
+                        return new Snapshot(List.of("admin"), List.of("payment:read"));
+                    }
+                    return new Snapshot(List.of("buyer"), List.of("order:read"));
+                });
         try (var executor = Executors.newSingleThreadExecutor()) {
             var older = executor.submit(() -> mvc.perform(callback()).andReturn().getResponse());
             try {

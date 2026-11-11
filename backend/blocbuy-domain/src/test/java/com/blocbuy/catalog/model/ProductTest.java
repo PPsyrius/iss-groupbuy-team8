@@ -18,44 +18,24 @@ class ProductTest {
     void reconstituteRejectsNullIdentity() {
         BigDecimal price = new BigDecimal("40.00");
 
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        null,
-                                        "Product",
-                                        price,
-                                        "sgd",
-                                        ProductStatus.ON_SALE,
-                                        PricingMode.DUAL,
-                                        5,
-                                        0,
-                                        0))
+        assertThatThrownBy(() ->
+                        reconstitute(
+                                null,
+                                "Product",
+                                price,
+                                "sgd",
+                                ProductStatus.ON_SALE,
+                                PricingMode.DUAL,
+                                5,
+                                0,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        ID,
-                                        "Product",
-                                        price,
-                                        "sgd",
-                                        null,
-                                        PricingMode.DUAL,
-                                        5,
-                                        0,
-                                        0))
+        assertThatThrownBy(() ->
+                        reconstitute(ID, "Product", price, "sgd", null, PricingMode.DUAL, 5, 0, 0))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        ID,
-                                        "Product",
-                                        price,
-                                        "sgd",
-                                        ProductStatus.ON_SALE,
-                                        null,
-                                        5,
-                                        0,
-                                        0))
+        assertThatThrownBy(() ->
+                        reconstitute(
+                                ID, "Product", price, "sgd", ProductStatus.ON_SALE, null, 5, 0, 0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -63,63 +43,59 @@ class ProductTest {
     void reconstituteRejectsBlankTitle() {
         BigDecimal price = new BigDecimal("40.00");
 
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        ID,
-                                        null,
-                                        price,
-                                        "sgd",
-                                        ProductStatus.ON_SALE,
-                                        PricingMode.DUAL,
-                                        5,
-                                        0,
-                                        0))
+        assertThatThrownBy(() ->
+                        reconstitute(
+                                ID,
+                                null,
+                                price,
+                                "sgd",
+                                ProductStatus.ON_SALE,
+                                PricingMode.DUAL,
+                                5,
+                                0,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        ID,
-                                        "  ",
-                                        price,
-                                        "sgd",
-                                        ProductStatus.ON_SALE,
-                                        PricingMode.DUAL,
-                                        5,
-                                        0,
-                                        0))
+        assertThatThrownBy(() ->
+                        reconstitute(
+                                ID,
+                                "  ",
+                                price,
+                                "sgd",
+                                ProductStatus.ON_SALE,
+                                PricingMode.DUAL,
+                                5,
+                                0,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void reconstituteRejectsBadPrice() {
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        ID,
-                                        "Product",
-                                        null,
-                                        "sgd",
-                                        ProductStatus.ON_SALE,
-                                        PricingMode.DUAL,
-                                        5,
-                                        0,
-                                        0))
+        assertThatThrownBy(() ->
+                        reconstitute(
+                                ID,
+                                "Product",
+                                null,
+                                "sgd",
+                                ProductStatus.ON_SALE,
+                                PricingMode.DUAL,
+                                5,
+                                0,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
 
         BigDecimal negativePrice = new BigDecimal("-1");
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        ID,
-                                        "Product",
-                                        negativePrice,
-                                        "sgd",
-                                        ProductStatus.ON_SALE,
-                                        PricingMode.DUAL,
-                                        5,
-                                        0,
-                                        0))
+        assertThatThrownBy(() ->
+                        reconstitute(
+                                ID,
+                                "Product",
+                                negativePrice,
+                                "sgd",
+                                ProductStatus.ON_SALE,
+                                PricingMode.DUAL,
+                                5,
+                                0,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -127,44 +103,41 @@ class ProductTest {
     void reconstituteRejectsBlankCurrencyAndNegativeVersion() {
         BigDecimal price = new BigDecimal("40.00");
 
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        ID,
-                                        "Product",
-                                        price,
-                                        null,
-                                        ProductStatus.ON_SALE,
-                                        PricingMode.DUAL,
-                                        5,
-                                        0,
-                                        0))
+        assertThatThrownBy(() ->
+                        reconstitute(
+                                ID,
+                                "Product",
+                                price,
+                                null,
+                                ProductStatus.ON_SALE,
+                                PricingMode.DUAL,
+                                5,
+                                0,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        ID,
-                                        "Product",
-                                        price,
-                                        "  ",
-                                        ProductStatus.ON_SALE,
-                                        PricingMode.DUAL,
-                                        5,
-                                        0,
-                                        0))
+        assertThatThrownBy(() ->
+                        reconstitute(
+                                ID,
+                                "Product",
+                                price,
+                                "  ",
+                                ProductStatus.ON_SALE,
+                                PricingMode.DUAL,
+                                5,
+                                0,
+                                0))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                reconstitute(
-                                        ID,
-                                        "Product",
-                                        price,
-                                        "sgd",
-                                        ProductStatus.ON_SALE,
-                                        PricingMode.DUAL,
-                                        5,
-                                        0,
-                                        -1))
+        assertThatThrownBy(() ->
+                        reconstitute(
+                                ID,
+                                "Product",
+                                price,
+                                "sgd",
+                                ProductStatus.ON_SALE,
+                                PricingMode.DUAL,
+                                5,
+                                0,
+                                -1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

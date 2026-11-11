@@ -96,13 +96,12 @@ class PurchaseIntentRepositoryImplTest {
         when(mapper.lockById(intentId)).thenReturn(null);
 
         assertThat(repository.findById(intentId))
-                .hasValueSatisfying(
-                        found -> {
-                            assertThat(found.id()).isEqualTo(intentId);
-                            assertThat(found.operation()).isEqualTo(PurchaseOperation.JOIN);
-                            assertThat(found.amount()).isEqualByComparingTo("12.50");
-                            assertThat(found.targetSize()).isEqualTo(3);
-                        });
+                .hasValueSatisfying(found -> {
+                    assertThat(found.id()).isEqualTo(intentId);
+                    assertThat(found.operation()).isEqualTo(PurchaseOperation.JOIN);
+                    assertThat(found.amount()).isEqualByComparingTo("12.50");
+                    assertThat(found.targetSize()).isEqualTo(3);
+                });
         assertThat(repository.lockById(intentId)).isEmpty();
     }
 

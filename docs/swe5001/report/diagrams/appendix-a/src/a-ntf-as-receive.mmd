@@ -1,0 +1,37 @@
+%% frame: Receive notifications, basic flow with A3, A4 (analysis)
+sequenceDiagram
+    actor Buyer
+    participant UI as NotificationListUI (boundary)
+    participant Prod as producing control (control)
+    participant Ctl as ReceiveNotificationsControl (control)
+    participant Team as Team (entity)
+    participant Pay as Payment (entity)
+    participant NL as Notification (entity)
+    create participant N as n : Notification (entity)
+
+    Note over Prod,Ctl: B1: UC4 B10 or UC5 (team succeeded or expired), Pay upfront (payment succeeded)
+    Prod->>Ctl: B1: factHappened(fact)
+    alt team succeeded or expired
+        Ctl->>Team: B1: activeMembers()
+        Team-->>Ctl: member accounts
+    else payment succeeded
+        Ctl->>Pay: B1: payer()
+        Pay-->>Ctl: payer account
+    end
+    Ctl-->>Prod: noted with the business change
+    Note over Ctl,N: B2: the fact is checked (A1, A2 design only, S5, S9)
+    loop each new recipient (A3: none)
+        Ctl->>N: B3: «create» (recipient, type, fixed text)
+    end
+    Note over Buyer,UI: B4: later, the buyer opens the notification list
+    Buyer->>UI: B4: listMine(page)
+    UI->>Ctl: B4: listNotifications(buyer, page)
+    alt signed in
+        Ctl->>NL: B4: forRecipient(buyer, page)
+        NL-->>Ctl: page, newest first
+        Ctl-->>UI: page
+        UI->>UI: B4: showNotifications(page)
+    else not signed in (A4)
+        Ctl-->>UI: refused
+        UI->>UI: A4: showSignInRequired()
+    end

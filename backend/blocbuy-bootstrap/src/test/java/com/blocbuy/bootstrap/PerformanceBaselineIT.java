@@ -185,18 +185,13 @@ class PerformanceBaselineIT {
                                     "resolutionTargetMet",
                                     expiries.size() == EXPIRY_TEAMS
                                             && expiries.stream()
-                                                    .allMatch(
-                                                            row ->
-                                                                    "expired"
-                                                                                    .equals(
+                                                    .allMatch(row ->
+                                                            "expired".equals(row.get("status"))
+                                                                    && ((Number)
                                                                                             row.get(
-                                                                                                    "status"))
-                                                                            && ((Number)
-                                                                                                    row
-                                                                                                            .get(
-                                                                                                                    "observed_lag_ms"))
-                                                                                            .doubleValue()
-                                                                                    <= 60_000),
+                                                                                                    "observed_lag_ms"))
+                                                                                    .doubleValue()
+                                                                            <= 60_000),
                                     "failedMetric",
                                     meters.counter("blocbuy.team.expiry.teams", "result", "failed")
                                             .count(),
@@ -211,10 +206,9 @@ class PerformanceBaselineIT {
                                     "maxResolutionLagMs",
                                     expiries.stream()
                                             .filter(row -> "expired".equals(row.get("status")))
-                                            .mapToDouble(
-                                                    row ->
-                                                            ((Number) row.get("observed_lag_ms"))
-                                                                    .doubleValue())
+                                            .mapToDouble(row ->
+                                                    ((Number) row.get("observed_lag_ms"))
+                                                            .doubleValue())
                                             .max()
                                             .orElse(Double.NaN))));
             assertThat(workload.exitValue()).as("workload errors; see target/perf").isZero();

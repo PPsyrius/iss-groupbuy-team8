@@ -14,7 +14,7 @@ Nygard format, numbered from 0001. New decisions get the next number; superseded
 | 0008 | [Documentation and evidence conventions](0008-documentation-and-evidence.md) | Accepted (2026-09-16; backend ADR/daily-log path addendum 2026-09-27) |
 | 0009 | [Result envelope handling](0009-result-envelope-handling.md) | Accepted (2026-09-17, T1-15) |
 | 0010 | [React Compiler via Babel preset now, native path as spike](0010-react-compiler-babel-now-native-spike.md) | Accepted (2026-09-17, T1-15; T2-08 addendum 2026-09-23: keep the Babel preset) |
-| 0011 | [Testing strategy](0011-testing-strategy.md) | Accepted (2026-09-17, T1-15) |
+| 0011 | [Testing strategy](0011-testing-strategy.md) | Accepted (2026-09-17, T1-15; MSW 3 maintenance addendum 2026-11-10) |
 | 0012 | [Agent configuration](0012-agent-configuration.md) | Accepted (2026-09-17, T1-10) |
 | 0013 | [Package manager and runtime pinning](0013-package-manager-and-runtime-pinning.md) | Accepted (2026-09-17, T1-15) |
 | 0014 | [Payments through Stripe Hosted Checkout with a server-owned intent](0014-stripe-hosted-checkout-server-owned-intent.md) | Accepted (2026-09-23, #160; T3-06 addendum 2026-09-24) |

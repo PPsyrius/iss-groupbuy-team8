@@ -1,0 +1,37 @@
+%% frame: UC1 A1 and A2: keyword search with optional re-ranking (design)
+sequenceDiagram
+    actor Visitor
+    participant Ctl as :ProductController
+    participant App as :ProductAppServiceImpl
+    participant Repo as :ProductRepositoryImpl
+    participant M as :BizProductMapper
+    create participant LQ as :ListingQuery
+    participant RR as :TypeSafeJevListingSearchReranker
+    actor Jev as Jev service
+
+    Note over Visitor,Ctl: A1
+    Visitor->>Ctl: pageListings(page, size, category, keyword, ai)
+    Ctl->>LQ: «create» of(keyword, category, page, size, ai)
+    Ctl->>App: search(query)
+    App->>LQ: keywordTokens()
+    LQ-->>App: List(String), whitespace collapsed
+    App->>Repo: searchOnSale(page, category, keywordTokens)
+    Repo->>Repo: toLikePattern(token), for each token
+    Repo->>M: selectVisibleSearchPage(category, patterns, limit, offset)
+    M-->>Repo: List(BizProductDO); no transaction, each statement its own snapshot
+    Repo->>M: countVisibleSearch(category, patterns)
+    M-->>Repo: long
+    Repo-->>App: PageResult(Product), newest first
+    Note over App,RR: A2
+    App->>App: rerank(query, products)
+    opt aiRerank and at least two products
+        App->>RR: rerank(keyword, candidates)
+        opt adapter enabled
+            RR->>Jev: POST shortlist of at most 20 (1 s connect, 2 s read)
+            Jev-->>RR: probabilities, or error
+        end
+        RR-->>App: ranked ids, or the original order on any failure
+    end
+    Note over App,M: B3 to B5 as in @fig-a-uc01-ds-browse
+    App-->>Ctl: PageResult(ListingView)
+    Ctl-->>Visitor: 200 Result(PageResult(ProductSummaryResponse))

@@ -176,10 +176,8 @@ public class OrderFulfilmentAdapter implements PaymentBusinessPort {
         UUID orderId =
                 orders.findByPaymentId(event.paymentId())
                         .map(Order::id)
-                        .orElseThrow(
-                                () ->
-                                        new IllegalStateException(
-                                                "Fulfilled intent without its order"));
+                        .orElseThrow(() ->
+                                new IllegalStateException("Fulfilled intent without its order"));
         return new Outcome(intent.dealId(), orderId, null);
     }
 

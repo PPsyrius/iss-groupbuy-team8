@@ -108,28 +108,26 @@ class StripeLocalIntegrationTest {
         // Group terms live on the product itself (V14) and are written through the admin command.
         adminTerms.configure(product, new ConfigureTerms(0, 2, 7200, null), admin);
         when(gateway.createCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            CheckoutPayment p = call.getArgument(0);
-                            var session = session(p, "open", "unpaid");
-                            sessions.put(session.id(), session);
-                            return session;
-                        });
+                .thenAnswer(call -> {
+                    CheckoutPayment p = call.getArgument(0);
+                    var session = session(p, "open", "unpaid");
+                    sessions.put(session.id(), session);
+                    return session;
+                });
         when(gateway.retrieveCheckoutSession(any()))
                 .thenAnswer(call -> sessions.get(call.getArgument(0)));
         when(gateway.expireCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            String id = call.getArgument(0);
-                            var previous = sessions.get(id);
-                            CheckoutPayment p =
-                                    repository
-                                            .findById(UUID.fromString(previous.paymentId()))
-                                            .orElseThrow();
-                            var expired = session(p, "expired", "unpaid");
-                            sessions.put(id, expired);
-                            return expired;
-                        });
+                .thenAnswer(call -> {
+                    String id = call.getArgument(0);
+                    var previous = sessions.get(id);
+                    CheckoutPayment p =
+                            repository
+                                    .findById(UUID.fromString(previous.paymentId()))
+                                    .orElseThrow();
+                    var expired = session(p, "expired", "unpaid");
+                    sessions.put(id, expired);
+                    return expired;
+                });
     }
 
     @Test
@@ -175,21 +173,18 @@ class StripeLocalIntegrationTest {
         try (var executor = Executors.newFixedThreadPool(8)) {
             var replays =
                     java.util.stream.IntStream.range(0, 8)
-                            .mapToObj(
-                                    ignored ->
-                                            executor.submit(
-                                                    () -> {
-                                                        start.await();
-                                                        try {
-                                                            payments.recover(
-                                                                    p.id(), "test-operator", true);
-                                                        } catch (RuntimeException contended) {
-                                                            // Losing a lock race is acceptable; a
-                                                            // second membership is not.
-                                                            failures.incrementAndGet();
-                                                        }
-                                                        return true;
-                                                    }))
+                            .mapToObj(ignored ->
+                                    executor.submit(() -> {
+                                        start.await();
+                                        try {
+                                            payments.recover(p.id(), "test-operator", true);
+                                        } catch (RuntimeException contended) {
+                                            // Losing a lock race is acceptable; a
+                                            // second membership is not.
+                                            failures.incrementAndGet();
+                                        }
+                                        return true;
+                                    }))
                             .toList();
             start.countDown();
             for (var replay : replays) {
@@ -228,15 +223,12 @@ class StripeLocalIntegrationTest {
         try (var executor = Executors.newFixedThreadPool(20)) {
             var results =
                     attempts.stream()
-                            .map(
-                                    p ->
-                                            executor.submit(
-                                                    () -> {
-                                                        start.await();
-                                                        payments.recover(
-                                                                p.id(), "test-operator", true);
-                                                        return true;
-                                                    }))
+                            .map(p ->
+                                    executor.submit(() -> {
+                                        start.await();
+                                        payments.recover(p.id(), "test-operator", true);
+                                        return true;
+                                    }))
                             .toList();
             start.countDown();
             for (var result : results) {
@@ -302,10 +294,9 @@ class StripeLocalIntegrationTest {
                         mappings.stream()
                                 .flatMap(handler -> handler.getHandlerMethods().keySet().stream()))
                 .isNotEmpty()
-                .allSatisfy(
-                        mapping ->
-                                assertThat(mapping.getPatternValues())
-                                        .noneMatch(path -> path.startsWith("/local/stripe")));
+                .allSatisfy(mapping ->
+                        assertThat(mapping.getPatternValues())
+                                .noneMatch(path -> path.startsWith("/local/stripe")));
     }
 
     @Test
@@ -392,22 +383,21 @@ class StripeLocalIntegrationTest {
         CheckoutPayment p = expiredPurchase();
         var provider = mock(com.blocbuy.payment.gateway.RefundGateway.class);
         when(provider.createRefund(any()))
-                .thenAnswer(
-                        call -> {
-                            assertThat(
-                                            org.springframework.transaction.support
-                                                    .TransactionSynchronizationManager
-                                                    .isActualTransactionActive())
-                                    .isFalse();
-                            com.blocbuy.payment.model.RefundWork w = call.getArgument(0);
-                            return new com.blocbuy.payment.gateway.RefundGateway.Snapshot(
-                                    "re_test",
-                                    w.providerIntentId(),
-                                    w.id().toString(),
-                                    1000,
-                                    "sgd",
-                                    "succeeded");
-                        });
+                .thenAnswer(call -> {
+                    assertThat(
+                                    org.springframework.transaction.support
+                                            .TransactionSynchronizationManager
+                                            .isActualTransactionActive())
+                            .isFalse();
+                    com.blocbuy.payment.model.RefundWork w = call.getArgument(0);
+                    return new com.blocbuy.payment.gateway.RefundGateway.Snapshot(
+                            "re_test",
+                            w.providerIntentId(),
+                            w.id().toString(),
+                            1000,
+                            "sgd",
+                            "succeeded");
+                });
         var worker = new com.blocbuy.payment.service.RefundService(refunds, provider, transactions);
         assertThat(worker.processNext()).isTrue();
         assertThat(worker.processNext()).isFalse();
@@ -454,21 +444,15 @@ class StripeLocalIntegrationTest {
         assertThat(worker.processNext()).isFalse();
         verify(provider, never()).createRefund(any());
         when(provider.retrieveRefund("re_recovered"))
-                .thenAnswer(
-                        call -> {
-                            String obligation =
-                                    jdbc.queryForObject(
-                                            "SELECT id::text FROM biz_refund WHERE payment_id=?",
-                                            String.class,
-                                            p.id());
-                            return new com.blocbuy.payment.gateway.RefundGateway.Snapshot(
-                                    "re_recovered",
-                                    "pi_" + p.id(),
-                                    obligation,
-                                    1000,
-                                    "sgd",
-                                    "succeeded");
-                        });
+                .thenAnswer(call -> {
+                    String obligation =
+                            jdbc.queryForObject(
+                                    "SELECT id::text FROM biz_refund WHERE payment_id=?",
+                                    String.class,
+                                    p.id());
+                    return new com.blocbuy.payment.gateway.RefundGateway.Snapshot(
+                            "re_recovered", "pi_" + p.id(), obligation, 1000, "sgd", "succeeded");
+                });
         assertThat(worker.reconcile(p.id(), "re_recovered")).isTrue();
         assertThat(refunds.status(p.id())).isEqualTo("succeeded");
     }
@@ -621,10 +605,8 @@ class StripeLocalIntegrationTest {
                                 intent))
                 .containsEntry("target_size", 3)
                 .extractingByKey("amount")
-                .satisfies(
-                        amount ->
-                                assertThat((java.math.BigDecimal) amount)
-                                        .isEqualByComparingTo("12.00"));
+                .satisfies(amount ->
+                        assertThat((java.math.BigDecimal) amount).isEqualByComparingTo("12.00"));
     }
 
     /**

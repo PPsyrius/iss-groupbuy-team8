@@ -1,0 +1,39 @@
+%% frame: UC2 B8 with E6: publish roles into the shared session, then the cookie (design)
+sequenceDiagram
+    actor Buyer
+    participant AC as :AuthController
+    participant PB as :LoginSessionPublisher
+    participant SG as :LoginSnapshotGateway
+    participant LA as :LoginAuthorizationService
+    participant RR as :RoleRepository
+    participant SL as :StpLogic
+
+    Note over AC,PB: B8, still inside googleCallback
+    AC->>PB: login(userId)
+    PB->>SG: beginRefresh(userId)
+    SG-->>PB: refresh fence (kept 2 min)
+    critical snapshot: read-only, REPEATABLE READ, 3 s
+        PB->>LA: snapshot(userId)
+        LA->>RR: findRoleCodesByUserId(userId)
+        RR-->>LA: List(String)
+        LA->>RR: findPermissionCodesByUserId(userId)
+        RR-->>LA: List(String)
+        LA-->>PB: Snapshot(roles, permissions)
+    end
+    PB->>SL: createTokenValue(userId, deviceType, timeout, extraData)
+    SL-->>PB: token
+    PB->>SL: createLoginSession(userId, parameter)
+    PB->>SL: getSessionTimeoutByLoginId(userId)
+    SL-->>PB: timeout in seconds
+    PB->>SG: publish(userId, refresh, roles, permissions, timeoutSeconds)
+    SG-->>PB: boolean; false if a newer sign-in replaced the fence
+    break false, or any failure (E6)
+        PB->>SL: logoutByTokenValue(token)
+        PB-->>AC: exception; sessions on other devices untouched
+        AC-->>Buyer: 302 /login?error=COMMON_500_001, no cookie
+    end
+    PB->>SL: setTokenValue(token, parameter)
+    Note over PB,SL: only now the blocbuy-token cookie is written (HttpOnly, SameSite=Lax; Secure on HTTPS deployments)
+    PB-->>AC: void
+    AC-->>Buyer: 302 /auth/callback
+    Note over Buyer,AC: B9: @fig-a-uc02-ds-access

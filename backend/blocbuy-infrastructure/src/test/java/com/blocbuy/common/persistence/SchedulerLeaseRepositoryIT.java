@@ -224,11 +224,10 @@ class SchedulerLeaseRepositoryIT {
             for (int i = 0; i < racers; i++) {
                 String owner = "racer-" + i;
                 results.add(
-                        pool.submit(
-                                () -> {
-                                    start.await();
-                                    return leases.tryAcquire(key, owner, LEASE);
-                                }));
+                        pool.submit(() -> {
+                            start.await();
+                            return leases.tryAcquire(key, owner, LEASE);
+                        }));
             }
             start.countDown();
             int winners = 0;

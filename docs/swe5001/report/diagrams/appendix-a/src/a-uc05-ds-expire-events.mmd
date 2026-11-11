@@ -1,0 +1,29 @@
+%% frame: UC5 B8-B10: the subscribers of TeamExpired at commit (design)
+sequenceDiagram
+    participant Tx as proxy : GroupDealExpiryService
+    participant OLS as :OrderLifecycleSubscriber
+    participant Ord as :OrderRepository
+    participant Ref as :TeamExpiryRefundSubscriber
+    participant Out as :IntegrationOutboxWriter
+    participant CS as :OpenDealOfferCacheSubscriber
+
+    Note over Tx,CS: expireOne has returned to its @Transactional proxy, the transaction owner; at commit Spring's transaction synchronisation calls each listener on this thread
+    critical expireOne transaction (continued), BEFORE_COMMIT phase, in @Order
+        Note over Tx,Ord: B8
+        Tx->>OLS: onTeamExpired(event), @Order(10)
+        OLS->>Ord: cancelByDealId(dealId, canceledAt: event.at)
+        Ord-->>OLS: int cancelled (status = pending guard)
+        OLS-->>Tx: void
+        Note over Tx,Ref: B9: «extend» UC6 (@sec-a-uc06)
+        Tx->>Ref: onTeamExpired(event), @Order(20)
+        Note over Ref,Out: UC6: recordExpiredTeam(dealId) records one refund obligation per paid member
+        Ref-->>Tx: void
+        Note over Tx,Out: B10: only when blocbuy.events.enabled
+        Tx->>Out: onTeamExpired(event), lowest precedence
+        Note over Out,CS: writes the TeamExpiredV1 outbox row: @fig-a-ntf-ds-produce
+        Out-->>Tx: void
+    end
+    Note over Tx,CS: COMMIT, then AFTER_COMMIT, outside the transaction
+    Tx->>CS: onTeamExpired(event)
+    Note over Out,CS: evicts the product's cached open-deal offer
+    CS-->>Tx: void

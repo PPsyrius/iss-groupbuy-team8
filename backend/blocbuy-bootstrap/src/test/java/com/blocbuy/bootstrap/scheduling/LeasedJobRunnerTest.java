@@ -109,11 +109,10 @@ class LeasedJobRunnerTest {
         var observedValidity = new AtomicReference<Boolean>();
         when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
         when(leases.renew(JOB, OWNER, shortLease))
-                .thenAnswer(
-                        ignored -> {
-                            renewalAttempted.countDown();
-                            return false;
-                        });
+                .thenAnswer(ignored -> {
+                    renewalAttempted.countDown();
+                    return false;
+                });
         when(leases.release(JOB, OWNER)).thenReturn(false);
 
         runner.run(
@@ -140,30 +139,28 @@ class LeasedJobRunnerTest {
         var interrupted = new AtomicReference<Boolean>(false);
         when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
         when(leases.renew(JOB, OWNER, shortLease))
-                .thenAnswer(
-                        ignored -> {
-                            renewing.countDown();
-                            try {
-                                if (!finishRenewal.await(2, TimeUnit.SECONDS)) {
-                                    throw new QueryTimeoutException("renewal did not finish");
-                                }
-                            } catch (InterruptedException e) {
-                                interrupted.set(true);
-                                Thread.currentThread().interrupt();
-                                throw new QueryTimeoutException("renewal was interrupted", e);
-                            }
-                            return true;
-                        });
+                .thenAnswer(ignored -> {
+                    renewing.countDown();
+                    try {
+                        if (!finishRenewal.await(2, TimeUnit.SECONDS)) {
+                            throw new QueryTimeoutException("renewal did not finish");
+                        }
+                    } catch (InterruptedException e) {
+                        interrupted.set(true);
+                        Thread.currentThread().interrupt();
+                        throw new QueryTimeoutException("renewal was interrupted", e);
+                    }
+                    return true;
+                });
         when(leases.release(JOB, OWNER)).thenReturn(true);
 
         Thread finish =
                 Thread.ofVirtual()
-                        .start(
-                                () -> {
-                                    await(renewing);
-                                    LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100));
-                                    finishRenewal.countDown();
-                                });
+                        .start(() -> {
+                            await(renewing);
+                            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(100));
+                            finishRenewal.countDown();
+                        });
         try {
             runner.run(
                     JOB,
@@ -191,12 +188,11 @@ class LeasedJobRunnerTest {
         var renewalTraceId = new AtomicReference<String>();
         when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
         when(leases.renew(JOB, OWNER, shortLease))
-                .thenAnswer(
-                        ignored -> {
-                            renewalTraceId.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY));
-                            renewed.countDown();
-                            return true;
-                        });
+                .thenAnswer(ignored -> {
+                    renewalTraceId.set(MDC.get(ApiConstants.TRACE_ID_MDC_KEY));
+                    renewed.countDown();
+                    return true;
+                });
         when(leases.release(JOB, OWNER)).thenReturn(true);
 
         runner.run(
@@ -217,11 +213,10 @@ class LeasedJobRunnerTest {
         var renewalAttempted = new CountDownLatch(1);
         when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
         when(leases.renew(JOB, OWNER, shortLease))
-                .thenAnswer(
-                        ignored -> {
-                            renewalAttempted.countDown();
-                            throw new QueryTimeoutException("canceling renewal");
-                        });
+                .thenAnswer(ignored -> {
+                    renewalAttempted.countDown();
+                    throw new QueryTimeoutException("canceling renewal");
+                });
         when(leases.release(JOB, OWNER)).thenReturn(false);
 
         runner.run(JOB, shortLease, ignored -> await(renewalAttempted));
@@ -235,12 +230,11 @@ class LeasedJobRunnerTest {
         var renewalAttempted = new CountDownLatch(1);
         when(leases.tryAcquire(JOB, OWNER, shortLease)).thenReturn(true);
         when(leases.renew(JOB, OWNER, shortLease))
-                .thenAnswer(
-                        ignored -> {
-                            renewalAttempted.countDown();
-                            Thread.currentThread().interrupt();
-                            return true;
-                        });
+                .thenAnswer(ignored -> {
+                    renewalAttempted.countDown();
+                    Thread.currentThread().interrupt();
+                    return true;
+                });
         when(leases.release(JOB, OWNER)).thenReturn(false);
 
         runner.run(

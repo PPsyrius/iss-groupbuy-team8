@@ -2,7 +2,6 @@ package com.blocbuy.groupbuy.gateway;
 
 import com.blocbuy.common.config.RedisKeys;
 import com.blocbuy.groupbuy.query.OpenDealOffer;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,7 +11,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.LongSupplier;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -32,25 +35,39 @@ import tools.jackson.databind.ObjectMapper;
 public class RedisOpenDealOfferCache implements OpenDealOfferCache {
     private static final String ACTIVE_PROFILE_PROPERTY = "spring.profiles.active";
     private static final String DEFAULT_PROFILE = "local";
+    private static final long RETRY_DELAY_NANOS = TimeUnit.SECONDS.toNanos(1);
+    private static final RetryWindow NORMAL = new RetryWindow(0, false);
     private static final RedisScript<Long> POPULATE =
             RedisScript.of(
                     """
-            for i = 1, #KEYS do
-                redis.call('SET', KEYS[i], ARGV[2*i-1], 'PX', ARGV[2*i])
-            end
-            return #KEYS
-            """,
+                    for i = 1, #KEYS do
+                        redis.call('SET', KEYS[i], ARGV[2*i-1], 'PX', ARGV[2*i])
+                    end
+                    return #KEYS
+                    """,
                     Long.class);
     private final StringRedisTemplate redis;
     private final Environment environment;
     private final ObjectMapper json;
+    private final LongSupplier ticker;
+    // Healthy concurrency is not a cache failure. Back off only after failed store I/O.
+    private final AtomicReference<RetryWindow> retryWindow = new AtomicReference<>();
 
-    @SuppressFBWarnings("EI_EXPOSE_REP2") // Spring-owned mutable collaborators.
+    @Autowired
     public RedisOpenDealOfferCache(
             StringRedisTemplate redis, Environment environment, ObjectMapper json) {
+        this(redis, environment, json, System::nanoTime);
+    }
+
+    RedisOpenDealOfferCache(
+            StringRedisTemplate redis,
+            Environment environment,
+            ObjectMapper json,
+            LongSupplier ticker) {
         this.redis = redis;
         this.environment = environment;
         this.json = json;
+        this.ticker = ticker;
     }
 
     record Entry(int version, OpenDealOffer offer) {}
@@ -61,9 +78,10 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
         List<UUID> ids = productIds.stream().distinct().toList();
         try {
             String profile = environment.getProperty(ACTIVE_PROFILE_PROPERTY, DEFAULT_PROFILE);
-            List<String> values =
-                    redis.opsForValue().multiGet(ids.stream().map(id -> key(profile, id)).toList());
-            if (values == null) return new Lookup(Map.of(), false);
+            Optional<List<String>> cached =
+                    readValues(ids.stream().map(id -> key(profile, id)).toList());
+            if (cached.isEmpty()) return new Lookup(Map.of(), false);
+            List<String> values = cached.orElseThrow();
             Map<UUID, Optional<OpenDealOffer>> hits = new HashMap<>();
             Instant now = Instant.now();
             for (int i = 0; i < ids.size(); i++) {
@@ -76,6 +94,25 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
         } catch (DataAccessException unavailable) {
             unavailable("read", unavailable);
             return new Lookup(Map.of(), false);
+        }
+    }
+
+    private Optional<List<String>> readValues(List<String> keys) {
+        RetryWindow call = beginStoreCall();
+        if (call == null) return Optional.empty();
+        try {
+            List<String> values = redis.opsForValue().multiGet(keys);
+            if (values == null) {
+                storeFailed();
+            } else {
+                storeSucceeded(call);
+            }
+            return Optional.ofNullable(values);
+        } catch (DataAccessException unavailable) {
+            storeFailed();
+            throw unavailable;
+        } finally {
+            releaseProbe(call);
         }
     }
 
@@ -116,9 +153,67 @@ public class RedisOpenDealOfferCache implements OpenDealOfferCache {
                                                 present ? 15_000 : 5_000,
                                                 present ? 25_001 : 10_001)));
             }
-            redis.execute(POPULATE, keys, arguments.toArray());
+            populate(keys, arguments.toArray());
         } catch (DataAccessException | JacksonException unavailable) {
             unavailable("populate", unavailable);
+        }
+    }
+
+    private void populate(List<String> keys, Object[] arguments) {
+        RetryWindow call = beginStoreCall();
+        if (call == null) return;
+        try {
+            redis.execute(POPULATE, keys, arguments);
+            storeSucceeded(call);
+        } catch (DataAccessException unavailable) {
+            storeFailed();
+            throw unavailable;
+        } finally {
+            releaseProbe(call);
+        }
+    }
+
+    private RetryWindow beginStoreCall() {
+        RetryWindow failed = retryWindow.get();
+        if (failed == null) return NORMAL;
+        // Subtraction is wrap-safe for the bounded one-second monotonic interval.
+        if (failed.probing || ticker.getAsLong() - failed.retryAtNanos < 0) {
+            return null;
+        }
+        RetryWindow probe = new RetryWindow(failed.retryAtNanos, true);
+        return retryWindow.compareAndSet(failed, probe) ? probe : null;
+    }
+
+    private void storeFailed() {
+        RetryWindow failed = new RetryWindow(ticker.getAsLong() + RETRY_DELAY_NANOS, false);
+        // Preserve newer failures and their probes, including across monotonic wraparound.
+        retryWindow.getAndUpdate(current ->
+                current == null || failed.retryAtNanos - current.retryAtNanos > 0
+                        ? failed
+                        : current);
+    }
+
+    private void storeSucceeded(RetryWindow call) {
+        if (call != NORMAL) {
+            // An older success must never erase a newer failure or its cooldown.
+            retryWindow.compareAndSet(call, null);
+        }
+    }
+
+    private void releaseProbe(RetryWindow call) {
+        if (call != NORMAL) {
+            // Also release the probe after unexpected exceptions, without erasing newer state.
+            retryWindow.compareAndSet(call, new RetryWindow(call.retryAtNanos, false));
+        }
+    }
+
+    private static final class RetryWindow {
+        private final long retryAtNanos;
+        private final boolean probing;
+
+        private RetryWindow(long retryAtNanos, boolean probing) {
+            this.retryAtNanos = retryAtNanos;
+            this.probing = probing;
         }
     }
 

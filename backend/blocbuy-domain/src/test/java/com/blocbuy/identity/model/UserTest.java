@@ -43,10 +43,8 @@ class UserTest {
 
     @Test
     void registerViaOAuthRejectsLocalSource() {
-        assertThatThrownBy(
-                        () ->
-                                User.registerViaOAuth(
-                                        RegisterSource.LOCAL, "ada@example.com", "Ada", null))
+        assertThatThrownBy(() ->
+                        User.registerViaOAuth(RegisterSource.LOCAL, "ada@example.com", "Ada", null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -74,41 +72,32 @@ class UserTest {
     /** Verifies reconstitution rejects absent identity without touching other fields. */
     @Test
     void reconstituteRejectsNullIdentity() {
-        assertThatThrownBy(
-                        () ->
-                                User.reconstitute(
-                                        null,
-                                        null,
-                                        "ada@example.com",
-                                        RegisterSource.GOOGLE,
-                                        UserStatus.ACTIVE,
-                                        null,
-                                        null))
+        assertThatThrownBy(() ->
+                        User.reconstitute(
+                                null,
+                                null,
+                                "ada@example.com",
+                                RegisterSource.GOOGLE,
+                                UserStatus.ACTIVE,
+                                null,
+                                null))
                 .isInstanceOf(IllegalArgumentException.class);
 
         UUID id = UUID.randomUUID();
 
-        assertThatThrownBy(
-                        () ->
-                                User.reconstitute(
-                                        id,
-                                        null,
-                                        "ada@example.com",
-                                        null,
-                                        UserStatus.ACTIVE,
-                                        null,
-                                        null))
+        assertThatThrownBy(() ->
+                        User.reconstitute(
+                                id, null, "ada@example.com", null, UserStatus.ACTIVE, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                User.reconstitute(
-                                        id,
-                                        null,
-                                        "ada@example.com",
-                                        RegisterSource.GOOGLE,
-                                        null,
-                                        null,
-                                        null))
+        assertThatThrownBy(() ->
+                        User.reconstitute(
+                                id,
+                                null,
+                                "ada@example.com",
+                                RegisterSource.GOOGLE,
+                                null,
+                                null,
+                                null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

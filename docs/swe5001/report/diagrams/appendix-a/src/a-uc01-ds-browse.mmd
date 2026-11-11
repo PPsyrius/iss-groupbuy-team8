@@ -1,0 +1,44 @@
+%% frame: UC1 B1 to B5: browse one page of products (design)
+sequenceDiagram
+    actor Visitor
+    participant Ctl as :ProductController
+    participant App as :ProductAppServiceImpl
+    participant Repo as :ProductRepository
+    participant Q as :GroupDealQueryService
+    participant Res as :PricingStrategyResolver
+    participant PS as :PricingStrategy
+
+    Note over Visitor,Ctl: B1: anonymous GET, no session needed
+    Visitor->>Ctl: pageListings(page, size, category, keyword: null, ai: false)
+    break page below 1, size above 100 or keyword over 64 characters (E1)
+        Ctl-->>Visitor: 400 VALIDATION_FAILED (COMMON_400_002)
+    end
+    Ctl->>App: pageListings(page, size, category)
+    Note over App,Repo: B2
+    critical read-only, REQUIRED, READ COMMITTED (default), no timeout
+        App->>Repo: pageOnSale(query, category)
+        Repo-->>App: PageResult(Product), newest first
+    end
+    App->>App: toPageResult(products, query)
+    activate App
+    Note over App,Q: B3, inside toPageResult: transaction already committed; cache-aside in @fig-a-uc01-ds-detail
+    App->>Q: findBestOpenDealsByProductIds(productIds)
+    Q-->>App: Map(productId, OpenDealOffer)
+    loop each product on the page
+        Note over App,PS: B4
+        App->>App: resolvePrice(product, deal)
+        activate App
+        App->>Res: strategyFor(pricingMode)
+        break no strategy for the mode (E2)
+            Res-->>App: BizException PRICING_MODE_UNSUPPORTED (CATALOG_500_001)
+        end
+        Res-->>App: PricingStrategy
+        App->>App: toOffer(deal)
+        App->>PS: resolve(product, offer)
+        PS-->>App: ListingPrice, groupPrice null if no same-currency team (A4)
+        deactivate App
+    end
+    deactivate App
+    App-->>Ctl: PageResult(ListingView)
+    Note over Visitor,Ctl: B5, A3
+    Ctl-->>Visitor: 200 Result(PageResult(ProductSummaryResponse)), no items if nothing matches

@@ -55,21 +55,19 @@ class OAuthUserTxServiceTest {
         assertThat(result.avatarUrl()).isEqualTo("https://pic");
         verify(userRepository)
                 .saveNew(
-                        argThat(
-                                user ->
-                                        user.registerSource() == RegisterSource.GOOGLE
-                                                && user.lastLoginTime() != null
-                                                && user.email().equals("ada@example.com")
-                                                && user.nickname().equals("Ada")
-                                                && user.avatarUrl().equals("https://pic")));
+                        argThat(user ->
+                                user.registerSource() == RegisterSource.GOOGLE
+                                        && user.lastLoginTime() != null
+                                        && user.email().equals("ada@example.com")
+                                        && user.nickname().equals("Ada")
+                                        && user.avatarUrl().equals("https://pic")));
         verify(userOAuthRepository)
                 .saveNew(
-                        argThat(
-                                binding ->
-                                        binding.provider() == OAuthProvider.GOOGLE
-                                                && binding.providerUserId().equals("sub-123")
-                                                && binding.userId().equals(result.userId())
-                                                && binding.email().equals("ada@example.com")));
+                        argThat(binding ->
+                                binding.provider() == OAuthProvider.GOOGLE
+                                        && binding.providerUserId().equals("sub-123")
+                                        && binding.userId().equals(result.userId())
+                                        && binding.email().equals("ada@example.com")));
         verify(roleRepository).assignRole(result.userId(), buyerRole);
     }
 

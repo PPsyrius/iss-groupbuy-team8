@@ -1,0 +1,52 @@
+%% frame: Pay upfront, Stripe reports the payment (analysis)
+sequenceDiagram
+    actor Stripe
+    participant PG as PaymentGateway (boundary)
+    participant Ctl as PayUpfrontControl (control)
+    participant Pay as Payment (entity)
+    participant Intent as PurchaseIntent (entity)
+    participant Base as BaseUseCaseControl (control)
+    create participant Rep as ProviderReport (entity)
+    create participant RC as ReviewCase (entity)
+    create participant Ref as Refund (entity)
+
+    Stripe->>PG: B5: paid(report)
+    PG->>Ctl: B5: paymentReported(report)
+    Ctl->>PG: B5: verify(report)
+    PG-->>Ctl: genuine
+    break not genuine (A9)
+        Ctl-->>PG: refused: Stripe reports again
+    end
+    Ctl->>PG: B5: readPayment(paymentPage)
+    PG-->>Ctl: page facts
+    Ctl->>Rep: B6: «create» (eventId)
+    Rep-->>Ctl: first report, or repeat
+    break report already recorded (A11)
+        Ctl-->>PG: done: nothing applied twice
+    end
+    Ctl->>Pay: B6: matches(paymentPage)
+    Pay-->>Ctl: matches
+    break page differs (A12) or paid after closing (A13)
+        Ctl->>RC: A12, A13: «create» (reason)
+    end
+    alt page closed unpaid (A7)
+        Ctl->>Pay: A7: close(paymentPage)
+    else paid (B7)
+        Ctl->>Pay: B7: succeed()
+        Ctl->>Intent: B8: isPayable()
+        Intent-->>Ctl: payable
+        opt terms still payable
+            Ctl->>Base: B8: paymentConfirmed(payment)
+            Base-->>Ctl: outcome
+        end
+        alt terms lapsed (A14) or base use case refuses (A15)
+            Ctl->>Pay: A14, A15: requireRefund(reason)
+            Pay->>Ref: A14, A15: «create» (amount, reason)
+            Ctl->>Pay: recordOutcome(refund required)
+        else fulfilled (B9)
+            Ctl->>Pay: B9: recordOutcome(fulfilled)
+        end
+    end
+    Ctl->>Rep: B9: finish(result)
+    Ctl-->>PG: done
+    PG-->>Stripe: acknowledged

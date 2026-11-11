@@ -109,13 +109,12 @@ class PurchaseIntentExpiryIT {
                 admin,
                 admin);
         when(gateway.createCheckoutSession(any()))
-                .thenAnswer(
-                        call -> {
-                            CheckoutPayment p = call.getArgument(0);
-                            var session = session(p, false);
-                            sessions.put(session.id(), session);
-                            return session;
-                        });
+                .thenAnswer(call -> {
+                    CheckoutPayment p = call.getArgument(0);
+                    var session = session(p, false);
+                    sessions.put(session.id(), session);
+                    return session;
+                });
         when(gateway.retrieveCheckoutSession(any()))
                 .thenAnswer(call -> sessions.get(call.getArgument(0)));
     }
@@ -218,18 +217,16 @@ class PurchaseIntentExpiryIT {
         var release = new CountDownLatch(1);
         try (var workers = Executors.newFixedThreadPool(1)) {
             var holder =
-                    workers.submit(
-                            () ->
-                                    new TransactionTemplate(transactions)
-                                            .executeWithoutResult(
-                                                    s -> {
-                                                        jdbc.queryForObject(
-                                                                "SELECT id FROM biz_purchase_intent WHERE id=? FOR UPDATE",
-                                                                UUID.class,
-                                                                busy);
-                                                        held.countDown();
-                                                        await(release);
-                                                    }));
+                    workers.submit(() ->
+                            new TransactionTemplate(transactions)
+                                    .executeWithoutResult(s -> {
+                                        jdbc.queryForObject(
+                                                "SELECT id FROM biz_purchase_intent WHERE id=? FOR UPDATE",
+                                                UUID.class,
+                                                busy);
+                                        held.countDown();
+                                        await(release);
+                                    }));
             assertThat(held.await(5, TimeUnit.SECONDS)).isTrue();
             try {
                 job.run();
@@ -262,17 +259,15 @@ class PurchaseIntentExpiryIT {
         var start = new CyclicBarrier(2);
         try (var workers = Executors.newFixedThreadPool(2)) {
             var cleanup =
-                    workers.submit(
-                            () -> {
-                                await(start);
-                                job.run();
-                            });
+                    workers.submit(() -> {
+                        await(start);
+                        job.run();
+                    });
             var webhook =
-                    workers.submit(
-                            () -> {
-                                await(start);
-                                payments.handleWebhook("body", "signature");
-                            });
+                    workers.submit(() -> {
+                        await(start);
+                        payments.handleWebhook("body", "signature");
+                    });
             cleanup.get(10, TimeUnit.SECONDS);
             webhook.get(10, TimeUnit.SECONDS);
         }
@@ -361,19 +356,17 @@ class PurchaseIntentExpiryIT {
                         .count();
         try (var workers = Executors.newFixedThreadPool(2)) {
             var holder =
-                    workers.submit(
-                            () ->
-                                    new TransactionTemplate(transactions)
-                                            .executeWithoutResult(
-                                                    status -> {
-                                                        jdbc.queryForObject(
-                                                                "SELECT item_id FROM sys_scheduled_item_retry"
-                                                                        + " WHERE job_key='purchase-intent-expiry' AND item_id=? FOR UPDATE",
-                                                                UUID.class,
-                                                                id);
-                                                        held.countDown();
-                                                        await(release);
-                                                    }));
+                    workers.submit(() ->
+                            new TransactionTemplate(transactions)
+                                    .executeWithoutResult(status -> {
+                                        jdbc.queryForObject(
+                                                "SELECT item_id FROM sys_scheduled_item_retry"
+                                                        + " WHERE job_key='purchase-intent-expiry' AND item_id=? FOR UPDATE",
+                                                UUID.class,
+                                                id);
+                                        held.countDown();
+                                        await(release);
+                                    }));
             try {
                 assertThat(held.await(5, TimeUnit.SECONDS)).isTrue();
                 workers.submit(job::run).get(12, TimeUnit.SECONDS);
@@ -411,22 +404,20 @@ class PurchaseIntentExpiryIT {
         var release = new CountDownLatch(1);
         try (var workers = Executors.newFixedThreadPool(2)) {
             var holder =
-                    workers.submit(
-                            () ->
-                                    new TransactionTemplate(transactions)
-                                            .executeWithoutResult(
-                                                    s -> {
-                                                        jdbc.queryForObject(
-                                                                "SELECT id FROM biz_group_deal WHERE id=? FOR UPDATE",
-                                                                UUID.class,
-                                                                pending.quote().businessId());
-                                                        jdbc.queryForObject(
-                                                                "SELECT id FROM biz_purchase_intent WHERE id=? FOR UPDATE",
-                                                                UUID.class,
-                                                                pending.quote().intentId());
-                                                        held.countDown();
-                                                        await(release);
-                                                    }));
+                    workers.submit(() ->
+                            new TransactionTemplate(transactions)
+                                    .executeWithoutResult(s -> {
+                                        jdbc.queryForObject(
+                                                "SELECT id FROM biz_group_deal WHERE id=? FOR UPDATE",
+                                                UUID.class,
+                                                pending.quote().businessId());
+                                        jdbc.queryForObject(
+                                                "SELECT id FROM biz_purchase_intent WHERE id=? FOR UPDATE",
+                                                UUID.class,
+                                                pending.quote().intentId());
+                                        held.countDown();
+                                        await(release);
+                                    }));
             assertThat(held.await(5, TimeUnit.SECONDS)).isTrue();
             var cleanup = workers.submit(job::run);
             try {
@@ -434,14 +425,13 @@ class PurchaseIntentExpiryIT {
                         .pollDelay(Duration.ZERO)
                         .pollInterval(Duration.ofMillis(10))
                         .atMost(Duration.ofSeconds(5))
-                        .untilAsserted(
-                                () ->
-                                        assertThat(
-                                                        jdbc.queryForObject(
-                                                                "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database()"
-                                                                        + " AND wait_event_type='Lock' AND position('biz_group_deal' in query)>0",
-                                                                Integer.class))
-                                                .isPositive());
+                        .untilAsserted(() ->
+                                assertThat(
+                                                jdbc.queryForObject(
+                                                        "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database()"
+                                                                + " AND wait_event_type='Lock' AND position('biz_group_deal' in query)>0",
+                                                        Integer.class))
+                                        .isPositive());
                 assertThat(cleanup.isDone()).isFalse();
                 assertThat(expired(pending.quote().intentId())).isFalse();
             } finally {

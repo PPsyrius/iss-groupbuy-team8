@@ -77,11 +77,10 @@ class PurchaseIntentExpirySweeperTest {
         when(intents.dueForExpiry(NOW, 2)).thenReturn(List.of(first, second));
         var valid = new AtomicBoolean(true);
         when(expiry.expireOne(first))
-                .thenAnswer(
-                        call -> {
-                            valid.set(false);
-                            return PurchaseIntentExpiryService.Outcome.EXPIRED;
-                        });
+                .thenAnswer(call -> {
+                    valid.set(false);
+                    return PurchaseIntentExpiryService.Outcome.EXPIRED;
+                });
         assertThat(sweeper.sweep(2, valid::get))
                 .isEqualTo(new PurchaseIntentExpirySweeper.Result(2, 1, 0, 0));
         verify(expiry, never()).expireOne(second);

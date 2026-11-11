@@ -1,0 +1,60 @@
+%% frame: UC3 design, slice 5: the purchase-intent sweep (commerce-svc)
+classDiagram
+    class PurchaseIntentExpiryJob {
+        <<scheduled job, Sched>>
+        ~JOB: String = "purchase-intent-expiry"
+        +run(): void
+        -sweepOnce(leaseValid: BooleanSupplier): void
+    }
+    class LeasedJobRunner {
+        <<utility, Sched, Conc>>
+        +run(job: String, lease: Duration, work: LeasedJobRunner.LeaseAwareWork): void
+    }
+    class PurchaseIntentExpirySweeper {
+        <<application service, Sched>>
+        ~RETRY_DELAY: Duration = 5 min
+        +sweep(limit: int, leaseValid: BooleanSupplier): PurchaseIntentExpirySweeper.Result
+    }
+    class PurchaseIntentExpiryService {
+        <<application service, Conc>>
+        +expireOne(id: UUID): PurchaseIntentExpiryService.Outcome
+    }
+    class PurchaseIntentRepository {
+        <<interface, repository, Pers, Conc>>
+        +currentTime(): Instant
+        +findById(id: UUID): Optional~PurchaseIntent~
+        +tryLockForExpiry(id: UUID): Optional~PurchaseIntent~
+        +dueForExpiry(now: Instant, limit: int): List~UUID~
+        +markExpired(before: PurchaseIntent, expired: PurchaseIntent): void
+        +deferExpiryRetry(id: UUID, delay: Duration): void
+        +excludePaidFromExpiry(id: UUID): void
+    }
+    class GroupDealSettlementSupport {
+        <<interface, Dist, Conc>>
+        +lockTeam(dealId: UUID): void
+    }
+    class PaymentIntentExpirySupport {
+        <<application service, Dist>>
+        +hasSucceededIntent(intentId: UUID): boolean
+    }
+    class PurchaseIntent {
+        <<aggregate root, Pers>>
+        +expireAt(now: Instant): PurchaseIntent
+    }
+%% at PurchaseIntentExpiryJob 0,0
+%% at LeasedJobRunner 1,0
+%% at PurchaseIntentExpirySweeper 0,1
+%% at PurchaseIntentExpiryService 1,1
+%% at PaymentIntentExpirySupport 2,1
+%% at PurchaseIntentRepository 0,2
+%% at GroupDealSettlementSupport 2,2
+%% at PurchaseIntent 1,2
+    PurchaseIntentExpiryJob "1" --> "1" LeasedJobRunner
+    PurchaseIntentExpiryJob "1" --> "1" PurchaseIntentExpirySweeper
+    PurchaseIntentExpirySweeper "1" --> "1" PurchaseIntentExpiryService
+    PurchaseIntentExpirySweeper "1" --> "1" PurchaseIntentRepository
+    PurchaseIntentExpiryService "1" --> "1" PurchaseIntentRepository
+    PurchaseIntentExpiryService "1" --> "1" GroupDealSettlementSupport
+    PurchaseIntentExpiryService "1" --> "1" PaymentIntentExpirySupport
+    PurchaseIntentExpiryService ..> PurchaseIntent
+    PurchaseIntentRepository ..> PurchaseIntent

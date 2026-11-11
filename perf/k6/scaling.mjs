@@ -25,7 +25,8 @@ function verifiedV3(report) {
   const context = report.context;
   const config = configure({ BASE_URL: context.baseUrl, CONFIRM_TARGET: context.baseUrl,
     TEST_SHA: context.testSha, IMAGE_SHA: context.imageSha, EXPECTED_IMAGE_DIGEST: context.expectedImageDigest,
-    RUN_LABEL: context.runLabel, MODE: 'v3', TOPOLOGY: context.topology, KNEE_RPS: String(context.knee) });
+    RUN_LABEL: context.runLabel, MODE: 'v3', TOPOLOGY: context.topology, KNEE_RPS: String(context.knee),
+    ...(context.cpuHeadroom ? { CONFIRM_CPU_HEADROOM: 'true', CPU_HEADROOM_THRESHOLD: String(context.cpuHeadroom.threshold) } : {}) });
   const end = timestamp(report.finishedAt, 'run finish');
   const duration = report.summary?.state?.testRunDurationMs;
   if (!Number.isFinite(duration) || duration <= 0 || (config.remote && duration < 1799000)) throw new Error('Incomplete V3 timing');

@@ -1,0 +1,31 @@
+%% frame: UC1 basic flow B1 to B5 with A1 to A4: browse or search (analysis)
+sequenceDiagram
+    actor Visitor
+    participant UI as CatalogUI (boundary)
+    participant Ctl as BrowseListingsControl (control)
+    participant Prod as Product (entity)
+    participant SR as SemanticRanker (boundary)
+    participant Team as Team (entity)
+
+    Visitor->>UI: B1: browse(category, keyword, page)
+    alt no keyword
+        UI->>Ctl: B1: browse(criteria)
+        Ctl->>Prod: B2: selectOnSale(criteria)
+        Prod-->>Ctl: one page of products
+    else keyword given (A1)
+        UI->>Ctl: A1: search(criteria, reorder)
+        Ctl->>Prod: A1: matchOnSale(keyword, criteria)
+        Prod-->>Ctl: one page of matching products
+        opt re-ordering asked for and offered (A2)
+            Ctl->>SR: A2: rank(keyword, products)
+            SR-->>Ctl: new order, or none
+        end
+    end
+    Ctl->>Team: B3: bestOpenFor(products)
+    Team-->>Ctl: best open team per product
+    loop each product on the page
+        Ctl->>Prod: B4: priceFor(team)
+        Prod-->>Ctl: individual price, team price or none (A4)
+    end
+    Ctl->>UI: B5: showListings(page)
+    UI-->>Visitor: cards with both prices and seats, or an empty state (A3)

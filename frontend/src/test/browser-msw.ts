@@ -902,5 +902,5 @@ export async function startBrowserMsw() {
       },
     }),
   );
-  await worker.start({ onUnhandledRequest: "bypass" });
+  await worker.start({ onUnhandledFrame: "bypass" });
 }

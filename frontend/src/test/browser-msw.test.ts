@@ -14,9 +14,13 @@ import { startBrowserMsw } from "@/test/browser-msw";
 import { server } from "@/test/msw";
 
 // Exercise the actual browser handlers through the node transport, without a service worker.
+const workerStart = vi.hoisted(() => vi.fn<(options: unknown) => void>());
 vi.mock("msw/browser", () => ({
   setupWorker: (...handlers: RequestHandler[]) => ({
-    start: () => Promise.resolve(server.use(...handlers)),
+    start: (options: unknown) => {
+      workerStart(options);
+      return Promise.resolve(server.use(...handlers));
+    },
   }),
 }));
 
@@ -33,7 +37,8 @@ async function payload<T>(request: Promise<{ data: ResultEnvelope<T> | undefined
 it("keeps catalog and detail progress in sync after a mocked paid JOIN", async () => {
   window.history.replaceState(null, "", "/?me=1");
   await startBrowserMsw();
-  const client = createClient({ baseUrl: "http://localhost" });
+  expect(workerStart).toHaveBeenCalledWith({ onUnhandledFrame: "bypass" });
+  const client = createClient({ baseUrl: window.location.origin });
   const before = await payload(pageListings({ client }));
   const listing = before.items?.find(
     (item) =>

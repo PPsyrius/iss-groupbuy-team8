@@ -1,0 +1,36 @@
+%% frame: UC2 basic flow, part 2: B7 to B9 with A1, A2, E4 to E6 (analysis)
+sequenceDiagram
+    participant UI as SignInUI (boundary)
+    participant Ctl as SignInWithGoogleControl (control)
+    participant Bind as OAuthBinding (entity)
+    participant Acc as Account (entity)
+    participant Role as Role (entity)
+    create participant NAcc as new : Account (entity)
+    create participant NBind as new : OAuthBinding (entity)
+
+    Ctl->>Bind: B7: findBySubject(provider, subject)
+    Bind-->>Ctl: binding, or none
+    alt binding found
+        Ctl->>Acc: B7: ensureActive()
+        Acc-->>Ctl: active, or disabled
+        break account disabled (E5)
+            Ctl->>UI: E5: showFailure(reason)
+        end
+        Ctl->>Acc: B7: touchSignIn()
+        Ctl->>Bind: B7: touchSignIn(profile)
+    else first sign-in (A1)
+        Ctl->>NAcc: A1: «create» (email, nickname)
+        break account refused: e-mail already used by another account (E4)
+            Ctl->>UI: E4: showFailure(reason)
+        end
+        Ctl->>NBind: A1: «create» (account, provider, subject)
+        Ctl->>Role: A1: grantTo(account)
+        Note over Ctl,NBind: A2: a lost race finds the binding and goes on as "binding found"
+    end
+    Ctl->>Role: B8: grantedTo(account)
+    Role-->>Ctl: roles and permissions
+    Ctl->>Ctl: B8: openSession(account, roles)
+    break session not opened, or a newer sign-in won (E6)
+        Ctl->>UI: E6: showFailure(reason)
+    end
+    Ctl->>UI: B9: showSignedIn(returnTo)

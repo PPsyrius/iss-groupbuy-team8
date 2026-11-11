@@ -45,17 +45,16 @@ public final class NotificationEventAssembler {
                             payment.startedTeam() ? PAYMENT_START_CONTENT : PAYMENT_JOIN_CONTENT;
                 };
         return event.recipientUserIds().stream()
-                .map(
-                        userId ->
-                                new Notification(
-                                        UuidV7.next(),
-                                        event.eventId(),
-                                        userId,
-                                        event.type(),
-                                        event.referenceId(),
-                                        title,
-                                        content,
-                                        now))
+                .map(userId ->
+                        new Notification(
+                                UuidV7.next(),
+                                event.eventId(),
+                                userId,
+                                event.type(),
+                                event.referenceId(),
+                                title,
+                                content,
+                                now))
                 .toList();
     }
 }
