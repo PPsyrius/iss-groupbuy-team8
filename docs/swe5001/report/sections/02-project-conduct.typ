@@ -67,7 +67,7 @@ Every use case and platform capability in scope is built; dated AWS records veri
   caption: [Project status on 11 November 2026. Status words follow the evidence rules of this report: "verified on AWS" needs a dated AWS record; "verified locally" never stands in for it.],
 ) <tbl-status>
 
-*Outstanding issues.* Each open item has an owner and a proposed date in @tbl-aiss and @tbl-roadmap (§3.4). AISS-07 is resolved; the drills (AISS-13) and the start-up fix (AISS-14) move to R1 (§3.4). V3 r4's incomplete observation record and the unproven maximum capacity and linear scaling remain open under AISS-12. Two project items sit outside the AISS register: progress report 2, due 18 October, has no record (#iss(462)), and the request for milestone and effort records (#iss(620)) is answered by §2.3.
+*Outstanding issues.* Each open item has an owner and a proposed date in @tbl-aiss and @tbl-roadmap (§3.4). AISS-07 is resolved; the drills (AISS-13) and the start-up fix (AISS-14) move to R1 (§3.4). V3 r4’s incomplete observation record and the unproven maximum capacity and linear scaling remain open under AISS-12. Two project items sit outside the AISS register: progress report 2, due 18 October, has no record (#iss(462)), and the request for milestone and effort records (#iss(620)) is answered by §2.3.
 
 == Project Metrics
 
