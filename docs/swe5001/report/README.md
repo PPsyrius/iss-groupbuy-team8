@@ -105,7 +105,7 @@ Facts that one section states and another depends on. The owner of the second se
 | Stated in | Fact | Must match |
 |---|---|---|
 | 3.1.4 (Eric) | `ShareInvite` (`biz_share_invite`, `ShareInviteRepository`) and `ShareCredit` (`biz_share_credit`, `ShareCreditRepository`) are aggregate roots; both reference `GroupDeal` by `dealId`, outside its lock; `ShareCreditSubscriber` writes the credit `AFTER_COMMIT` in `REQUIRES_NEW` (ADR 0003). Eleven aggregate roots in all, plus the refund and review records, which are not roots | 3.2.3 aggregate-to-table mapping, D4, D7a–D7c |
-| 3.2.2 (Liu Jin) | One 0.5 vCPU commerce task saturated at about 280 req/s; three tasks about 455 req/s, the generator's limit (19 Oct 2026) | 4.1 (Pan) |
+| 3.2.2 (Liu Jin) | The committed size is 0.5 vCPU, 1 GiB and `db.t4g.micro`; V3 R4 ran commerce at 1 vCPU, 2 GiB and RDS at `db.t4g.small` as session-only settings; §4.1 reports the tested 600 req/s under one-to-six scaling, not per-task saturation or linearity | 4.1 (Pan) |
 | 3.4 AISS-13 (Liu Jin) | The identity outage and a poison message have local results only; V4 and V5 were not run | 4.2 (Yu Qianshuo) |
 | 3.2.3 (Liu Jin) | Settlement lock order team → purchase intent → payment | 3.2.4 UC4 sequence (Yu Qianshuo) |
 | 3.4 AISS-04, -08, -09, -15 (Liu Jin) | Security gaps and their R1 targets | 4.3 (Pan) |
@@ -162,7 +162,7 @@ Template headings are fixed. "Must contain" lists what an assessor will look for
 
 | Section | Owner | Must contain | Sources |
 |---|---|---|---|
-| 4.1 Performance | Pan | F1: workload model, metric definitions and thresholds, results per run, what each run does and does not prove; caching and load balancing; scaling policy; capacity statement (measured, projected, next limit) | [`perf/k6/`](../../../perf/k6/README.md), evidence `20261016-http-baseline-dashboard`, `20261019-v3-autoscaling` |
+| 4.1 Performance | Pan | F1: workload model, metric definitions and thresholds, every run with its verdict, the V3 R4 result with its limits; caching and load balancing; scaling policy; capacity statement (measured, projected, next limit) | [`perf/k6/`](../../../perf/k6/README.md), [V2 baseline](../evidence/20261016-http-baseline-dashboard/README.md), [V3 R4](../evidence/20261111-v3-r4/README.md) |
 | 4.2 Availability | Yu Qianshuo | Two zones, single-zone data tier, self-healing, rollback, failure drills with "AWS" or "local only" stated per result | Evidence `20261015-local-failure-rehearsal`, deck backup B12 |
 | 4.3 Security | Pan | Layered controls: Organization guardrails, Identity Center, OIDC, network isolation, encryption, secrets, pipeline scans; known gaps | Deck slide 22, [`infra/swe5001/github/`](../../../infra/swe5001/github/) |
 | 4.4 Extensibility and Maintainability | Lim | Measured reuse (audit queue), service template, architecture rules, API contract checks | Deck slide 11 |
@@ -207,7 +207,9 @@ The view set answers F8, F9 and F10. Every diagram is UML or a named notation, h
 
 Every UML diagram, in the chapters and in the Appendix A source book, is drawn with one kit (`docs/swe5006/report/typst/uml.typ`): its source is `diagrams/uml/src/<id>.mmd`, generated into `gen/<id>.typ` and placed with `afig` (see [`diagrams/uml/README.md`](diagrams/uml/README.md)). D4a and D6 are the two non-UML views; they use the kit's palette and fonts.
 
-The additional §4.1 [November V3 timeline](diagrams/performance-v3-timeline.svg) is a data plot, not an architecture view. Its adjacent [Python source](diagrams/performance-v3-timeline.py) regenerates the SVG from retained minute/activity records with the standard library only (`python docs/swe5001/report/diagrams/performance-v3-timeline.py`, run in Docker). It excludes partial minutes, integrates the offered-rate reference and shades the original ECS-observer gap; it does not reconstruct missing task samples or create new acceptance evidence.
+The additional §4.1 [V3 R4 timeline](diagrams/performance-v3-timeline.svg) is a data plot, not an architecture view. Its adjacent [Python source](diagrams/performance-v3-timeline.py) regenerates the SVG from the R4 evidence package only, with the standard library (`python docs/swe5001/report/diagrams/performance-v3-timeline.py`, run in Docker; `--check` compares without writing). Client completion bins and complete UTC CPU minutes keep their separate time origins; task-count dots are actual samples; shading marks the tail after the canonical observer ended. The offered schedule is a reference, not reconstructed arrivals. The SVG and Python source come from Pan's commit `0405b1f0`.
+
+The 12 November [audit follow-up](../evidence/20261112-audit-followup/README.md) is reflected in §3.2 as a topology table (`tbl-topologies`) and observed task zones, not as a separate D5 drawing; its typed schema dictionary is covered by D9a–D9d with `tbl-invariant-indexes` and `tbl-aggregate-tables`.
 
 ## Briefing coverage
 

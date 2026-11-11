@@ -66,7 +66,21 @@ The paths in @fig-d5a-communication-paths work as follows:
 - *All three services* read the shared login session from Valkey over TLS with an AUTH token (AD-05).
 - *Outbound calls* leave through fck-nat: identity exchanges the Google sign-in code, commerce calls the Stripe API and publishes to SNS, and `notification-svc` long-polls SQS. The same path carries the tasks' other calls to AWS APIs; S3 traffic uses the gateway endpoint instead.
 
-AWS chooses each data store's zone; on 10 November RDS ran in `ap-southeast-1b` and Valkey in `ap-southeast-1a`. The monolith fallback topology (`topology = monolith`) runs the SWE5006 image as one ECS service on `/api/*` in the same network; it is not drawn.
+AWS chooses each data store's zone. On 10 November on AWS, RDS ran in `ap-southeast-1b` and Valkey in `ap-southeast-1a`; one commerce task ran in each zone, and the identity and notification tasks both ran in `ap-southeast-1a` (#src("docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November record]). These are observations of one session, not a placement guarantee, and a subnet group in two zones does not make RDS or Valkey multi-zone.
+
+*Topologies.* The figures draw the distributed topology. The same code also deploys as a monolith, so three deployments exist (@tbl-topologies, ADR 0008). The monolith fallback (`topology = monolith`) runs the SWE5006 image as one ECS service on `/api/*` in the same network.
+
+#figure(
+  table(
+    columns: (1fr, 1.3fr, 1.6fr, 1fr),
+    table.header([Topology], [Runs on], [Calls between contexts], [Status]),
+    [SWE5006 monolith], [One EC2 host, Docker; PostgreSQL and Redis], [In-process calls and domain listeners; no remote identity call, no SNS or SQS], [The shared development deployment; the 24 Oct recording used it (§6.6)],
+    [SWE5001 monolith fallback], [One Fargate service; one RDS database and Valkey], [In-process; `BLOCBUY_EVENTS_ENABLED` is `false`, so no outbox publication or queue consumption; no per-service scaling], [Verified on AWS: first promotion (6 Oct) and the V2 load baselines (16 Oct, 11 Nov, §4.1)],
+    [SWE5001 distributed], [Three Fargate services; three databases on one RDS server and Valkey], [Commerce calls identity through Service Connect; outbox → SNS → notification and audit queues], [Released; the subject of §3.2 and §4],
+  ),
+  kind: table,
+  caption: [The three deployment topologies of one code base. In-process domain listeners run in every topology, so turning messaging off does not turn off the financial consequences of a payment. Source: ADR 0008 and `infra/swe5001/runtime/services.tf`.],
+) <tbl-topologies>
 
 *Network and security groups.* @fig-d6-network draws the network in AWS group notation: every subnet with its CIDR, its route table and the security group of each resource.
 
@@ -200,7 +214,7 @@ The physical decisions buy isolation and a small bill rather than always-on capa
       *Options considered:* (a) target tracking on CPU, rejected because CPU lags a request burst; (b) step scaling on alarms, rejected because it needs tuned alarm thresholds; (c) target tracking on `ALBRequestCountPerTarget`. \
       *Choice:* (c), at 12,000 requests per target per minute (calculated: 200 req/s × 60 s), two to six tasks (one in baseline sessions), cooldowns of 60 s out and 180 s in. `notification-svc` tracks its queue backlog per task (target 50 messages, one to four tasks). \
       *Trade-off:* The request count follows the burst itself and needs no tuned thresholds; but the target comes from one baseline run, and one-minute metrics let a fast burst outrun it (AISS-12). An opt-in CPU step guard exists and is off by default (`commerce_cpu_scale_out_enabled`). \
-      *Consequence:* The 12,000 value is the GitHub environment setting, and the Terraform fallback is 200. On 19 October on AWS, commerce scaled from one to three tasks, but no V3 campaign has passed acceptance (§4.1). \
+      *Consequence:* The 12,000 value is the GitHub environment setting, and the Terraform fallback is 200. On 11 November on AWS, with a session-only target of 6,000, the policy scaled commerce from one to six tasks under the V3 R4 workload, and every k6 gate passed; the analyser gave no verdict, and linearity is unproven (§4.1). \
       *Record:* No ADR; #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October policy record].
     ]),
   ),
@@ -217,12 +231,12 @@ The solution uses managed AWS services wherever one exists, so we run no servers
     columns: (0.8fr, 1.4fr, 2.2fr),
     table.header([Layer], [Technology and version], [Why this one, and what it costs us]),
     [Application runtime], [Java 21, Spring Boot 4.1.2, MyBatis; image `eclipse-temurin:21-jre-noble`, built for `linux/arm64`], [The SWE5006 code base, reused unchanged by the strangler migration (AD-01). One base image for all three services keeps patching in one place],
-    [Container platform], [ECS on Fargate, ARM64; 0.5 vCPU and 1 GiB per task], [No hosts to manage (AD-07). The task size was kept small on purpose: on 19 October on AWS, one 0.5 vCPU commerce task saturated at about 280 req/s (§4.1), so the service scales out instead of up. The 11 November load sessions (V3 r2 and r3) ran a larger, session-only configuration; §4.1 reports it, and the configured size is unchanged],
+    [Container platform], [ECS on Fargate, ARM64; 0.5 vCPU and 1 GiB per task], [No hosts to manage (AD-07). The task size is kept small on purpose, so the service scales out instead of up (AD-20). The 11 November load runs V3 r2, r3 and R4 gave commerce 1 vCPU and 2 GiB in a session-only setting, while identity and notification stayed at 0.5 vCPU and 1 GiB; §4.1 reports R4's scale-out result, not a per-task capacity, and the committed size is unchanged],
     [Image registry], [Amazon ECR, one repository per service plus `swe5001/monolith`; immutable tags, scan on push, lifecycle policy], [Immutable tags make a release digest refer to exactly one image; Trivy in the pipeline is the blocking scan (§5.2). Configured, not tested: ECR also scans each pushed image; its findings are not part of the gate],
     [Edge], [Amazon CloudFront (`PriceClass_200`, HTTP/2) and a private S3 bucket], [HTTPS without a custom domain or certificate; the website and the API share one origin, so the browser needs no cross-origin settings (AD-09). The price class excludes the most expensive edge locations],
     [Load balancing], [Application Load Balancer, HTTP :80, path rules], [Path-based routing to three services without a separate API gateway product; API Gateway was rejected because it adds a hop and a per-request charge],
     [Service discovery], [ECS Service Connect], [Commerce calls identity by name inside the VPC with no load balancer or DNS records to manage],
-    [Relational database], [Amazon RDS for PostgreSQL 18, `db.t4g.micro`, 20 GiB gp3], [PostgreSQL 18 generates UUIDv7 keys natively (§3.2.3). The smallest Graviton class is enough for the demonstration; the 11 November load sessions used a larger class (§4.1). The single database server is the next scaling limit (AISS-05)],
+    [Relational database], [Amazon RDS for PostgreSQL 18, `db.t4g.micro`, 20 GiB gp3], [PostgreSQL 18 generates UUIDv7 keys natively (§3.2.3). The smallest Graviton class is enough for the demonstration; the 11 November load runs V3 r2, r3 and R4 used `db.t4g.small` as a session-only setting, not a committed resize (§4.1). The single database server is a shared capacity and failure boundary (AISS-05); R4 did not measure it as a bottleneck],
     [Session store], [Amazon ElastiCache for Valkey 8.0, `cache.t4g.micro`, one node], [Redis-compatible, so Sa-Token and Spring Data Redis work unchanged; Valkey costs less than Redis OSS on ElastiCache. One node is a cost choice (AISS-01, AISS-10)],
     [Messaging], [Amazon SNS (one domain-event topic, plus an alarm topic) and SQS (standard queues with DLQs)], [Fan-out to several consumers with no broker to run (AD-04); standard queues give at-least-once delivery, which the consumers handle with `sys_consumed_message`],
     [Outbound network], [fck-nat on `t4g.nano`], [About a quarter of a NAT Gateway's cost (AD-10)],
@@ -247,7 +261,7 @@ The solution uses managed AWS services wherever one exists, so we run no servers
     [Online API], [Checkout, team pages, sign-in], [One ECS Fargate service per context group (`identity-svc`, `commerce-svc`, `notification-svc`)], [`commerce-svc`: ALB requests per target, two to six tasks (AD-20); `identity-svc`: one task, not scaled], [Long-lived connection pools and a shared session (AD-07)],
     [Event consumer], [Notification from `TeamSucceeded`], [`notification-svc` on Fargate], [Notification queue backlog per task, target 50, one to four tasks (AD-20)], [Long polling needs a running worker; Lambda and App Runner rejected (AD-07)],
     [Scheduled job], [Team and purchase-intent expiry, refunds, outbox relay and retention], [In-process in `commerce-svc`, under `LeasedJobRunner`], [None: one lease holder runs each job], [The job stays with the data it changes (AD-16)],
-    [Heavy batch (not built)], [Settlement reconciliation, payout aggregation], [ECS scheduled task or AWS Batch reading the audit queue], [Schedule or queue depth], [Designed but not implemented: keeps long jobs off the checkout tasks],
+    [Heavy batch (not built)], [Settlement reconciliation, payout aggregation], [ECS scheduled task or AWS Batch with its own subscription and queue], [Schedule or queue depth], [Designed but not implemented: keeps long jobs off the checkout CPU. The audit queue receives only `Team*` events and has no worker; the shared RDS server still allows contention, and no isolation was tested],
   ),
   kind: table,
   caption: [Workloads and the compute that runs them. Source: `infra/swe5001/runtime`, AD-07, AD-16, \#741.],
@@ -281,7 +295,7 @@ The trade-off: one migration stream is simple to build and test, and the grants 
 
 The schema follows our PostgreSQL conventions (`pgsql-ddl` skill):
 
-- *Keys.* Native `uuid` primary keys generated as UUIDv7 (`DEFAULT uuidv7()`, PostgreSQL 18). UUIDv7 is time-ordered, so new rows append to the index instead of splitting pages, and the database assigns it at insert, so the outbox row ID serves as the event ID. One exception: `sys_consumed_message` has the composite key (`event_id`, `consumer`).
+- *Keys.* Native `uuid` primary keys generated as UUIDv7 (`DEFAULT uuidv7()`, PostgreSQL 18). UUIDv7 is time-ordered, so new rows mostly append to the index and split fewer pages, and the database assigns it at insert, so the outbox row ID serves as the event ID. Two exceptions: `biz_payment_review_case` names its key `case_id`, and `sys_consumed_message` has the composite key (`event_id`, `consumer`).
 - *Prefixes.* `sys_` for platform and technical tables, `biz_` for business entities, `rel_` for many-to-many links, `log_` for append-only records.
 - *Audit and soft delete.* Ordinary business tables carry `create_time`, `create_by`, `update_time`, `update_by` and `deleted`; most mutable aggregates also carry `version` for optimistic locking (exceptions under the figures). Active-row uniqueness rules use partial indexes `WHERE deleted = false`, so a soft-deleted row does not block a new one; rules that must hold for every row ever written (one member, order, refund or review case per payment; one webhook event; one notification per event and recipient) use plain unique indexes.
 - *No foreign keys or CHECK constraints.* Relationships are logical, kept by the application inside its transactions. This lets a table move to another service's database without unpicking constraints, and keeps validation in one place (the domain model). The cost is that the database does not catch an orphaned row; the unique indexes below catch the errors that matter most.
@@ -314,7 +328,7 @@ Several business rules are enforced by unique indexes, so that a race between tw
     [`uq_biz_payment_pending_intent` (also `status = 'created'`)], [Yes], [At most one open payment per purchase intent],
     [`uq_biz_payment_request_key` (`user_id, request_key`)], [Yes], [A retried checkout request does not create a second payment],
     [`uq_biz_order_payment_id`, `uq_biz_order_deal_user`], [No; yes], [One order per payment, and one order per buyer per team],
-    [`biz_refund.payment_id` (unique)], [No], [A payment is refunded at most once],
+    [`biz_refund.payment_id` (unique)], [No], [A payment has at most one local refund record; Stripe idempotency and manual review govern the repayment itself],
     [`uq_log_payment_webhook_event_event_id`], [No], [A Stripe webhook event is processed at most once],
     [`uq_sys_scheduler_lock_key`], [Yes], [A scheduled job has at most one lease holder],
     [`pk_sys_consumed_message` (`event_id, consumer`)], [No], [A consumer applies an event at most once],
