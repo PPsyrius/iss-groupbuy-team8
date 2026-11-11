@@ -1,4 +1,4 @@
-// Availability: part of 04-quality-attributes.typ (split for parallel editing; output unchanged).
+// Availability: part of 04-quality-attributes.typ.
 #import "../lib.typ": *
 
 == Availability

@@ -1,4 +1,4 @@
-// Extensibility and Maintainability: part of 04-quality-attributes.typ (split for parallel editing; output unchanged).
+// Extensibility and Maintainability: part of 04-quality-attributes.typ.
 #import "../lib.typ": *
 
 == Extensibility and Maintainability
@@ -71,6 +71,8 @@ Two things are deliberately outside the module: the auto-scaling policy, because
 *What a new use case gains (Q3).* A new use case built on the platform starts with sign-in and roles, the error format, trace propagation, the outbox and duplicate-protection code (switched on per service, with its own publish or receive permission), a runtime with rollback (configured, not exercised: V6, §2.2), a dashboard series and a guarded API contract. Built from scratch, each of these would be designed, built and secured again. The evidence is the size of the edits above; we did not time the addition of a fourth service.
 
 === Maintainability
+
+@tbl-maintainability counts the codebase on 8 November.
 
 #figure(
   table(
