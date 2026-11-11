@@ -1,0 +1,62 @@
+{
+  "preparedAtUtc": "2026-11-11T07:50:26.856928+00:00",
+  "fullPlanExit": 2,
+  "fullPlanSha256": "8bc84e11dfce2308fdc211d7c5cb2be8ee545ccfb47dd41d56e817e16de2efec",
+  "changes": [
+    {
+      "address": "aws_appautoscaling_policy.commerce_cpu_headroom[0]",
+      "actions": [
+        "create"
+      ],
+      "replacementPaths": []
+    },
+    {
+      "address": "aws_appautoscaling_target.commerce[0]",
+      "actions": [
+        "update"
+      ],
+      "replacementPaths": []
+    },
+    {
+      "address": "aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0]",
+      "actions": [
+        "create"
+      ],
+      "replacementPaths": []
+    },
+    {
+      "address": "module.client_service[\"commerce-svc\"].aws_ecs_service.this",
+      "actions": [
+        "update"
+      ],
+      "replacementPaths": []
+    },
+    {
+      "address": "module.client_service[\"commerce-svc\"].aws_ecs_task_definition.this",
+      "actions": [
+        "create",
+        "delete"
+      ],
+      "replacementPaths": [
+        [
+          "memory"
+        ],
+        [
+          "cpu"
+        ]
+      ]
+    },
+    {
+      "address": "module.postgres.aws_db_instance.this",
+      "actions": [
+        "update"
+      ],
+      "replacementPaths": []
+    }
+  ],
+  "review": "pass: exact intended six-resource scope; no NAT/parameter-group/identity/notification/image change or ECS service replacement",
+  "applied": false,
+  "importsRequired": false,
+  "scope": "Native Terraform ownership using explicitly hashed session-only overlays; no GitHub changes or additional repository checkout.",
+  "limits": "Full plan is review-only, not an approved all-at-once apply. DB resize and a fresh SQL budget gate must precede task/guard rollout; fresh phase-B plan required after DB state changes."
+}

@@ -1,0 +1,411 @@
+{
+  "kind": "local-backoff-v3-diagnostic-not-AWS-acceptance",
+  "limits": "Failures remain failures; no startup/capacity/linearity or hosted quality-gate acceptance follows.",
+  "files": [
+    {
+      "path": "analysis.json",
+      "bytes": 263548,
+      "sha256": "83d75843dea3b338f76c21b9be4f35942dd1eed8e4bbad55e577ec80ff308e41"
+    },
+    {
+      "path": "backoff-base-a-jfr-analysis.json",
+      "bytes": 42697,
+      "sha256": "bfccd2b06492ff253247a2592fbef4ff436bdc0ac8858087ab0ec10b17067d2e"
+    },
+    {
+      "path": "backoff-base-b-jfr-analysis.json",
+      "bytes": 32416,
+      "sha256": "a58786c65faa9436b23f3dfb4eae212b489328e403ba84cfa64ca71c4aea61f8"
+    },
+    {
+      "path": "backoff-v3-a-jfr-analysis.json",
+      "bytes": 42509,
+      "sha256": "14c49100486cc972b3491319097ce88118bf84de4dee7324250b265be0f7c863"
+    },
+    {
+      "path": "backoff-v3-b-jfr-analysis.json",
+      "bytes": 31927,
+      "sha256": "17e66f12ab544fd8b9af74f7f4e457e46413270ff3dedf838ae796f44f6a03a8"
+    },
+    {
+      "path": "cases/backoff-base-a-control/audit.json",
+      "bytes": 11331,
+      "sha256": "ad4e0c569bc499d0a8bfe7fe29ac9d50b0284aa7d906adbf06ef5ee747ed017d"
+    },
+    {
+      "path": "cases/backoff-base-a-control/context.json",
+      "bytes": 794,
+      "sha256": "c1ae68acda604563dac3f1f1dce23ca2f4b17a12fa81dc02fe950d9bfc0d7ab2"
+    },
+    {
+      "path": "cases/backoff-base-a-control/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/backoff-base-a-control/summary.json",
+      "bytes": 6801,
+      "sha256": "7325e7690870f220a0f4e6a8d1f298a8084da79c5a006f8d9b864a1b5cce2595"
+    },
+    {
+      "path": "cases/backoff-base-a-down/actions.jsonl",
+      "bytes": 154,
+      "sha256": "e2172993bb6d39957295e9142758cd1f781a7bf3c97164868d77f9b6caf47cc8"
+    },
+    {
+      "path": "cases/backoff-base-a-down/audit.json",
+      "bytes": 12360,
+      "sha256": "af73b3b801319cd46ecbe2e9ed5c67b0c3d6de68e76fdac60e8e0443776ec745"
+    },
+    {
+      "path": "cases/backoff-base-a-down/context.json",
+      "bytes": 971,
+      "sha256": "0be0e319151fd116bfedca4cf7c1c42da7ba5287caaac969a44ed63979726ec2"
+    },
+    {
+      "path": "cases/backoff-base-a-down/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/backoff-base-a-down/summary.json",
+      "bytes": 6908,
+      "sha256": "1497a0bac74a28cff854873a422acd642c44029c6d70be5efb9dc0468bfa79bf"
+    },
+    {
+      "path": "cases/backoff-base-a-flush/actions.jsonl",
+      "bytes": 86,
+      "sha256": "08d89ff50f006209e595ce03d9175e0cdf8172e76f622c5c4c19e425526528e9"
+    },
+    {
+      "path": "cases/backoff-base-a-flush/audit.json",
+      "bytes": 11149,
+      "sha256": "c8966f5eb4997d28dcafee5869606a783eefd2bf2860d65bcefc5aeff678cb6e"
+    },
+    {
+      "path": "cases/backoff-base-a-flush/context.json",
+      "bytes": 892,
+      "sha256": "c0217b85ee0c5aad0d0a2a224e0fe0659509d94b1288bd0548d169f39670ee1f"
+    },
+    {
+      "path": "cases/backoff-base-a-flush/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/backoff-base-a-flush/summary.json",
+      "bytes": 6849,
+      "sha256": "8fb8a87124d29fedb6e89a0b163c4b9236bdb6aea81e93c3249828f8c13f0333"
+    },
+    {
+      "path": "cases/backoff-base-a-recovery/audit.json",
+      "bytes": 11121,
+      "sha256": "4d086aceeab92a9f55cf52dcee0201bb89d29048b0b8f633311fd5569681b5f1"
+    },
+    {
+      "path": "cases/backoff-base-a-recovery/context.json",
+      "bytes": 795,
+      "sha256": "cd56bdbcc8829a26636ff14344aad443c7001ad3f6199ee3c3c4a5e70b49378b"
+    },
+    {
+      "path": "cases/backoff-base-a-recovery/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/backoff-base-a-recovery/summary.json",
+      "bytes": 6836,
+      "sha256": "19f8d65b2df5066ff59ea2f8dcf06a6a3875e4ca8ea7c89c8e4cb84a7ad80bc2"
+    },
+    {
+      "path": "cases/backoff-base-a-slow/actions.jsonl",
+      "bytes": 179,
+      "sha256": "4a2e3609308a2c4e002db90616ca50bbda3639b617f32f8562fb5817e3cf0d17"
+    },
+    {
+      "path": "cases/backoff-base-a-slow/audit.json",
+      "bytes": 12208,
+      "sha256": "8c520a0d675cc154a9e0a9114c3021a79090aa0e234c1a64c3c620bebe524fdb"
+    },
+    {
+      "path": "cases/backoff-base-a-slow/context.json",
+      "bytes": 996,
+      "sha256": "a64e7248f9e5c03d9f6a4ee7c95fbdcc37863ff288015f862c41e21261788188"
+    },
+    {
+      "path": "cases/backoff-base-a-slow/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/backoff-base-a-slow/summary.json",
+      "bytes": 6914,
+      "sha256": "71fc6bbee4a46a0ea79179f3f2f317a43867134c07a45aef9841daf4ea5449e5"
+    },
+    {
+      "path": "cases/backoff-base-a-warmup/audit.json",
+      "bytes": 20258,
+      "sha256": "4dee7ab4568124c0c27eb2d9664c9ba53efd2539d0bef5559ef79b65bfa44423"
+    },
+    {
+      "path": "cases/backoff-base-a-warmup/context.json",
+      "bytes": 794,
+      "sha256": "b8423377eac2862483567408a721fb7fdd49edac8d4f1a7cb880902b76a24b11"
+    },
+    {
+      "path": "cases/backoff-base-a-warmup/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/backoff-base-a-warmup/summary.json",
+      "bytes": 6921,
+      "sha256": "a10f117682147310b2ae8ca7603c57a44a0e7f15679377e2729bbffd9db74e97"
+    },
+    {
+      "path": "cases/backoff-base-b-control/audit.json",
+      "bytes": 11370,
+      "sha256": "d170c2726376d28e2b5e52d45913d2b020512633d10f13e06c9d9d69a84fdf1a"
+    },
+    {
+      "path": "cases/backoff-base-b-control/context.json",
+      "bytes": 794,
+      "sha256": "17361ebda2ecfa8a3fa7b370bc120b3372d4f8594b5650f4d18914ab9ac13b1d"
+    },
+    {
+      "path": "cases/backoff-base-b-control/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/backoff-base-b-control/summary.json",
+      "bytes": 6902,
+      "sha256": "6af6207b71cc627d9a80cb0a766b1c0de919e7866b8f87c9e935b40fdf70a5d4"
+    },
+    {
+      "path": "cases/backoff-base-b-warmup/audit.json",
+      "bytes": 20445,
+      "sha256": "4c5e682985e448a03af6bde1e4b3e3c65b56b6de141757323f95effe1be5ca60"
+    },
+    {
+      "path": "cases/backoff-base-b-warmup/context.json",
+      "bytes": 794,
+      "sha256": "d58789821ebf1c39b7a277a295f07cdf00fce26a7d96417d3c566ec8f1372b34"
+    },
+    {
+      "path": "cases/backoff-base-b-warmup/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/backoff-base-b-warmup/summary.json",
+      "bytes": 6906,
+      "sha256": "ef2cfce32af6d169cc76e28c7fb04b47c1ac7f01386d46178236150e25b087b8"
+    },
+    {
+      "path": "cases/backoff-v3-a-control/audit.json",
+      "bytes": 11234,
+      "sha256": "37e9a82473e4e8c3ddb85f67fbb6ff57cc0b142cff33ac4cabb269634d2a3ead"
+    },
+    {
+      "path": "cases/backoff-v3-a-control/context.json",
+      "bytes": 790,
+      "sha256": "beadb5d126b8e06b7d7716fc6a6d37ffec10f2248b8001c899c3f62f2424ea06"
+    },
+    {
+      "path": "cases/backoff-v3-a-control/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/backoff-v3-a-control/summary.json",
+      "bytes": 6830,
+      "sha256": "6ac678d65002825cc36f28b699494ff21c8432ebd1bbf4fc2efbe8d969b125a6"
+    },
+    {
+      "path": "cases/backoff-v3-a-down/actions.jsonl",
+      "bytes": 154,
+      "sha256": "f94b4fa242f8813f94635bf33471edf2891515c9be515d985a24723a7548ffa8"
+    },
+    {
+      "path": "cases/backoff-v3-a-down/audit.json",
+      "bytes": 12266,
+      "sha256": "7b8b5346d5fddb36bf57a9476838ff501d5370510b3e44a097dbf6d3c9c2236a"
+    },
+    {
+      "path": "cases/backoff-v3-a-down/context.json",
+      "bytes": 967,
+      "sha256": "d08ecc1597b1855167bf06b87fce21dc14e1f091c6bafc68b2a5ff41d363fbbd"
+    },
+    {
+      "path": "cases/backoff-v3-a-down/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/backoff-v3-a-down/summary.json",
+      "bytes": 6879,
+      "sha256": "44ecb52a396d07e89fe445aa3d9e060545d6e3bb956dbcf38a84165d2bcb95ac"
+    },
+    {
+      "path": "cases/backoff-v3-a-flush/actions.jsonl",
+      "bytes": 86,
+      "sha256": "4dceaba805c5e953aa6b02953fa6300b3a60d4a64133821e8033a247e3fb7a5c"
+    },
+    {
+      "path": "cases/backoff-v3-a-flush/audit.json",
+      "bytes": 11154,
+      "sha256": "019c855d242e23198b6ab8d87d0fc7bf93b752a3d14dba6d4edb7e5afa77fa64"
+    },
+    {
+      "path": "cases/backoff-v3-a-flush/context.json",
+      "bytes": 888,
+      "sha256": "d59bb058903da482b4a1d382673c4b0b95683c1f006cfb7974af266cd8c82e03"
+    },
+    {
+      "path": "cases/backoff-v3-a-flush/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/backoff-v3-a-flush/summary.json",
+      "bytes": 6835,
+      "sha256": "e810a1e0a4c26aea20060c256f94147457c124cfe086f859795ce65b1e74d654"
+    },
+    {
+      "path": "cases/backoff-v3-a-recovery/audit.json",
+      "bytes": 11143,
+      "sha256": "97342722852dcbc3c99cdf77ef53538c4df472e1bfe2482d90a2fbb3f5879d05"
+    },
+    {
+      "path": "cases/backoff-v3-a-recovery/context.json",
+      "bytes": 791,
+      "sha256": "fd3efb95294f5f5898fc47645060b4f16b56cdb0a10e9ae989748803a626bdce"
+    },
+    {
+      "path": "cases/backoff-v3-a-recovery/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/backoff-v3-a-recovery/summary.json",
+      "bytes": 6839,
+      "sha256": "cb06e9690d29d0a9d26e2367a940b80e4c2831d0153a402d04b52e8de9d4ca5e"
+    },
+    {
+      "path": "cases/backoff-v3-a-slow/actions.jsonl",
+      "bytes": 179,
+      "sha256": "2a8bc244e0c6f9ec7ca8f6624bac80c1ddab3c5bd418b841bf79b00552c79766"
+    },
+    {
+      "path": "cases/backoff-v3-a-slow/audit.json",
+      "bytes": 12237,
+      "sha256": "901f976c3eba94e6abd1b0cfc8e59f6c0261047a2cc8bdf52513d692b83abf72"
+    },
+    {
+      "path": "cases/backoff-v3-a-slow/context.json",
+      "bytes": 992,
+      "sha256": "1384f5741fddeaa037bd6da3ea16f52bc3028849595739002e3fa67f49d002a4"
+    },
+    {
+      "path": "cases/backoff-v3-a-slow/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/backoff-v3-a-slow/summary.json",
+      "bytes": 6875,
+      "sha256": "e70f2da9d3fdc1b0f113f070b5b846751a1a93714ae4970c1a7371f284ec0f77"
+    },
+    {
+      "path": "cases/backoff-v3-a-warmup/audit.json",
+      "bytes": 20089,
+      "sha256": "7dc69e59476143367e096afcf9100290664b16f7ee6530baaa1b2ddb160a1aad"
+    },
+    {
+      "path": "cases/backoff-v3-a-warmup/context.json",
+      "bytes": 790,
+      "sha256": "3a8f3ce93422a258b221a1f0ac723ee73f479eb797473e5b58a8b9b439a5023c"
+    },
+    {
+      "path": "cases/backoff-v3-a-warmup/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/backoff-v3-a-warmup/summary.json",
+      "bytes": 6936,
+      "sha256": "31608c9a88624002789f88ee9a44b9a47be1c262f0f7f8cff01d22c44ae47fe4"
+    },
+    {
+      "path": "cases/backoff-v3-b-control/audit.json",
+      "bytes": 11304,
+      "sha256": "bfec66c8ed5d28361cc0c68627d5f4f5c7957a2f5edab857bf9a51450048af4e"
+    },
+    {
+      "path": "cases/backoff-v3-b-control/context.json",
+      "bytes": 790,
+      "sha256": "1d713f54fd428c406a48cf1c9ab40998c58660a9fcbe56383836e0043ce926e7"
+    },
+    {
+      "path": "cases/backoff-v3-b-control/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/backoff-v3-b-control/summary.json",
+      "bytes": 6845,
+      "sha256": "98379a24f44e58da9e0e78b7fe018d83dd11006756467964993ce4dd5f37c2ed"
+    },
+    {
+      "path": "cases/backoff-v3-b-warmup/audit.json",
+      "bytes": 20284,
+      "sha256": "c01033295631f45757d5e9bc664ddfdf7214a2bd0f5e28e629664f085c9e9c17"
+    },
+    {
+      "path": "cases/backoff-v3-b-warmup/context.json",
+      "bytes": 790,
+      "sha256": "3908465626189925b0dad8e20f559f02ee6cabef5319219fc93cd290b2cf4fee"
+    },
+    {
+      "path": "cases/backoff-v3-b-warmup/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/backoff-v3-b-warmup/summary.json",
+      "bytes": 6906,
+      "sha256": "811f5203d3503fe7359971ae4a180b3fb96b193556fe133cc32ac318b07f39d7"
+    },
+    {
+      "path": "private-artifacts.json",
+      "bytes": 4362,
+      "sha256": "7ef10145b8afe3d1e0b58842c27c2f4b6b5f62e09d747fa45ac91f5920a6c3f8"
+    },
+    {
+      "path": "receipts.json",
+      "bytes": 10998,
+      "sha256": "f6f42957d83ea855d48062b398839630ef51d4874cabac910540a1a3a070fa55"
+    },
+    {
+      "path": "scripts/JfrFailureSummary.java",
+      "bytes": 7582,
+      "sha256": "bf5702df7f7efa9fd534db0a1ce94f5bd054e3e6c8d43f05cfcf5e49ca423a2b"
+    },
+    {
+      "path": "scripts/analyze-backoff-v3.py",
+      "bytes": 7047,
+      "sha256": "bc419f52124fd71901f05d6f471ae6e1092459215dec683e939d6210f2b6ab7d"
+    },
+    {
+      "path": "scripts/driver-resources.js",
+      "bytes": 2636,
+      "sha256": "7602510ba95b8de04b41405558662904cb73ca2fffdf7a5919bd1025d7222b45"
+    },
+    {
+      "path": "scripts/run-backoff-v3.mjs",
+      "bytes": 15445,
+      "sha256": "acc16415d438cede4804fa69274e8938a7ab1ebc398748966edcbb067c8862dd"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "label": "redis-unavailable",
+  "app": "blocbuy-matrix2-failure",
+  "rate": 200,
+  "seconds": 70,
+  "port": 8589,
+  "startedAt": "2026-11-10T06:11:26.483Z",
+  "actions": [
+    {
+      "afterSeconds": 15,
+      "description": "Disable matrix Redis proxy"
+    },
+    {
+      "afterSeconds": 40,
+      "description": "Restore matrix Redis proxy"
+    }
+  ],
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-tls:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

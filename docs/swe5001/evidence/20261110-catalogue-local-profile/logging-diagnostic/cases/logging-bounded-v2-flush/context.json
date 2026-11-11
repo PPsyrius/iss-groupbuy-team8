@@ -1,0 +1,42 @@
+{
+  "label": "logging-bounded-v2-flush",
+  "app": "blocbuy-matrix2-logging-bounded-v2",
+  "rate": 200,
+  "seconds": 60,
+  "port": 8589,
+  "startedAt": "2026-11-10T08:11:26.371Z",
+  "actions": [
+    {
+      "afterSeconds": 15,
+      "description": "Flush matrix-owned Redis cache once"
+    }
+  ],
+  "actualLimits": {
+    "nanoCpus": 500000000,
+    "memoryBytes": 1073741824
+  },
+  "hostMemory": {
+    "MemTotal": 16510500864,
+    "MemAvailable": 5501431808,
+    "SwapTotal": 4294967296,
+    "SwapFree": 4213268480
+  },
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-candidate:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

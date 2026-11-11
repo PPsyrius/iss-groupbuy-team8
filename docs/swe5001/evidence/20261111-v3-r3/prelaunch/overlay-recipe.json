@@ -1,0 +1,41 @@
+{
+  "at": "2026-11-11T18:23:36.946276+08:00",
+  "overlays": {
+    "infra/swe5001/runtime/ecs.tf": {
+      "overlay": "overlays/runtime-ecs.tf",
+      "overlaySha256": "707de4d629ad15880132ada95c844b1fa4ed016ec14342975b93d09b28129084",
+      "originalSha256": "77b790dd2c51d3be9fd25dced34657b6dbc0f92f2be02eab25f8572f9a864079"
+    },
+    "infra/swe5001/runtime/data-stores.tf": {
+      "overlay": "overlays/runtime-data-stores.tf",
+      "overlaySha256": "b656dd4dcdcdc51b3536296178a4f0fa3ec79fd9170351675eb2fe69cbc97bf6",
+      "originalSha256": "10cde9c97c4365f340e6573aa178dbe22515e5db263cff2eea32115608761bcd"
+    },
+    "infra/swe5001/runtime/observability.tf": {
+      "overlay": "overlays/runtime-observability-active.tf",
+      "overlaySha256": "5edcdbbad85475d68429181e7e9e8407432e3772698d2892b6fe273ddcd72cbc",
+      "originalSha256": "29c26900f484ba8a3a0902b8de3c87f31edd1492779bfcfdeebdedf45e522ee4"
+    },
+    "infra/swe5001/modules/network/fck-nat.tf": {
+      "overlay": "overlays/network-fck-nat.tf",
+      "overlaySha256": "dfb22180484ef8cbb1da4fa9e3ef41ab827754dcf324c858539d43b29726c5f3",
+      "originalSha256": "d8d24a943500415445190e3a87a2d9ad95e2a14fbed14a77e08cf8214fe66a5f"
+    },
+    "infra/swe5001/modules/rds-postgres/main.tf": {
+      "overlay": "overlays/rds-main.tf",
+      "overlaySha256": "2274897ba63759e61a59b2e8a8512d3e02fe02288b669b6bfafdd621a1c983d8",
+      "originalSha256": "cc806f11ea6feeab92ef975034200b967ba749bd5249dc74b7123dcc167f115e"
+    },
+    "infra/swe5001/modules/ecs-service/main.tf": {
+      "overlay": "overlays/ecs-service-main-v2.tf",
+      "overlaySha256": "b89355003d97baf091aa25a36a351e97f3b4351d2595ff5cc751a26c224eced4",
+      "originalSha256": "7d455565296d9cfde9a3d571d06502b49a844ca2370605673abc868f3d7cda55"
+    },
+    "infra/swe5001/runtime/alb.tf": {
+      "overlay": "overlays/runtime-alb.tf",
+      "overlaySha256": "35a0fd630d32c2673efa208763283b9b45d95afe57f6bc0a5853e3ca4827f313",
+      "originalSha256": "a6482f14280c1ccc7e215341b5d2ad25919e14d8abde42a8206a3539e0e3174d"
+    }
+  },
+  "sourceState": "Uncommitted session overlays; not a merged deployment"
+}

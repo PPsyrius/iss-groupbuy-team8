@@ -1,0 +1,36 @@
+{
+  "checkedAtUtc": "2026-11-11T06:51:05.739973+00:00",
+  "runLabel": "20261111-v3-distributed-r1",
+  "rawSha256": "8b82eb7e3472505b2c8fccf5c1050ac6c05dab3b5961914aae50ceb1493047c6",
+  "rawBytes": 2490048123,
+  "rawSummaryConsistency": "pass",
+  "totals": {
+    "browse_requests": 687083,
+    "browse_errors": 11841,
+    "http_reqs": 687084,
+    "dropped_iterations": 38916
+  },
+  "firstBrowseCompletion": "2026-11-11T06:18:01.122139136Z",
+  "lastBrowseCompletion": "2026-11-11T06:47:59.74118352Z",
+  "browseErrorPercent": 1.7233725765300554,
+  "clientLatencyMs": {
+    "avg": 672.9113702420232,
+    "min": 5,
+    "med": 15,
+    "max": 10012,
+    "p(95)": 3957,
+    "p(99)": 10000
+  },
+  "originalK6Exit": 99,
+  "generatorOomKilled": false,
+  "httpDisposition": "fail: error rate exceeds 1% and generator drops are nonzero; event-window latency exclusions cannot make these gates pass",
+  "generator": {
+    "samples": 507,
+    "first": "2026-11-11T06:18:00.805Z",
+    "last": "2026-11-11T06:47:59.725Z",
+    "maximumGapSeconds": 3.615,
+    "peakDockerCpuPercent": 145.75,
+    "peakMemoryPercentOf8GiBLimit": 9.83
+  },
+  "limits": "Server/scaling correlation and completed observer evidence are separate. Container metrics do not establish host/network headroom or causation. No repeat, restoration or teardown was run."
+}

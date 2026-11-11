@@ -1,0 +1,17 @@
+{
+  "note": "Working-tree bytes and normalized Java inputs are distinct on Windows; baseline source is 93984f61, candidate is uncommitted.",
+  "files": [
+    {
+      "path": "backend/blocbuy-infrastructure/src/main/java/com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCache.java",
+      "bytes": 6905,
+      "sha256": "401b293665f2512d7cf4942fc949cffd5ad0e76b97f142a63174b63392ace929",
+      "lfNormalizedSha256": "506667c591e4972ffb7629be2ff424f2a8425bb207a8bed5618aa2bc2d16e815"
+    },
+    {
+      "path": "backend/blocbuy-infrastructure/src/test/java/com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCacheTest.java",
+      "bytes": 13054,
+      "sha256": "2be3acd9acc2cd7ad22f6a0b9a79c3553cb7eeb9693ba9e4a1bccd718ac026f4",
+      "lfNormalizedSha256": "71fc30cb21347feefe238837cde383c7e3389e62788d646b07c34e5a1f681ff6"
+    }
+  ]
+}

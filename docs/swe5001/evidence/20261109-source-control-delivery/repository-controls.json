@@ -1,0 +1,75 @@
+{
+  "observedOnUtc": "2026-11-09",
+  "kind": "selected non-secret GitHub API fields; not a full ruleset export",
+  "repository": "PPsyrius/iss-groupbuy-team8",
+  "repositorySettings": {
+    "defaultBranch": "dev",
+    "visibility": "public",
+    "allowSquashMerge": true,
+    "allowMergeCommit": true,
+    "allowRebaseMerge": true
+  },
+  "rulesets": [
+    {
+      "id": 22734681,
+      "name": "dev-require-review",
+      "enforcement": "active",
+      "include": ["~DEFAULT_BRANCH", "refs/heads/dev"],
+      "bypassActors": [],
+      "allowedMergeMethods": ["squash"],
+      "requiredApprovingReviewCount": 1,
+      "requireCodeOwnerReview": true,
+      "dismissStaleReviewsOnPush": true,
+      "requireLastPushApproval": false,
+      "requiredReviewThreadResolution": true,
+      "blockForcePush": true,
+      "restrictDeletion": true,
+      "strictRequiredStatusChecks": true,
+      "requiredChecks": ["build-quality", "SonarCloud Backend", "docker", "gitleaks", "frontend-check", "SonarCloud Frontend"],
+      "requireSignedCommits": false,
+      "requireMergeQueue": false
+    },
+    {
+      "id": 24551375,
+      "name": "prod-release",
+      "enforcement": "active",
+      "include": ["refs/heads/prod"],
+      "bypassActors": [],
+      "allowedMergeMethods": ["merge"],
+      "requiredApprovingReviewCount": 1,
+      "requireCodeOwnerReview": true,
+      "dismissStaleReviewsOnPush": true,
+      "requireLastPushApproval": false,
+      "requiredReviewThreadResolution": true,
+      "blockForcePush": true,
+      "restrictDeletion": true,
+      "strictRequiredStatusChecks": false,
+      "requiredChecks": ["promotion-source", "service-images", "infra-plan"],
+      "requireSignedCommits": false,
+      "requireMergeQueue": false
+    }
+  ],
+  "environments": [
+    {"name": "backend-dev", "branches": ["dev"], "hasRequiredReviewers": false},
+    {"name": "frontend-dev", "branches": ["dev"], "hasRequiredReviewers": false},
+    {"name": "swe5001-demo", "branches": ["prod"], "hasRequiredReviewers": false},
+    {"name": "swe5001-plan", "branchRestriction": null, "hasRequiredReviewers": false}
+  ],
+  "repositoryVariables": {
+    "ENABLE_EC2_DEPLOY": "true",
+    "ENABLE_S3_DEPLOY": "true",
+    "ENABLE_SWE5001_DEPLOY": "true",
+    "ENABLE_SWE5001_NIGHTLY_DOWN": "true",
+    "ENABLE_EC2_DEPLOY_PROD": null
+  },
+  "milestoneTags": ["v0.1.0-sprint1", "v0.1.0-sprint2", "v0.1.0-sprint3", "v0.1.0-sprint4"],
+  "pendingPromotion": {
+    "number": 757,
+    "url": "https://github.com/PPsyrius/iss-groupbuy-team8/pull/757",
+    "state": "OPEN",
+    "headSha": "b80debcd8b8cdeb1272219758789e1a9927b9d7d",
+    "mergedAt": null,
+    "reviewDecision": "REVIEW_REQUIRED"
+  },
+  "unknown": ["team-wide GitHub 2FA confirmation", "team commit-signing decision", "per-developer Git transport/credential method", "fresh AWS runtime acceptance"]
+}

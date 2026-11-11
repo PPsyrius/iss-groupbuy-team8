@@ -1,0 +1,114 @@
+{
+  "files": [
+    {
+      "sha256": "082b24f2ad3e26d46e61fcc34c7d626e65ccff9b5582278bbcf84ace9e96013f",
+      "bytes": 15047,
+      "byteVerified": true,
+      "sourceRelativePath": "windows-review/REVIEW.md",
+      "path": "windows-review/REVIEW.md"
+    },
+    {
+      "sha256": "b276f20284531ec865f5003b0ef2f818694efa5eb68dfade968fd4328fcaed2e",
+      "bytes": 5670,
+      "byteVerified": true,
+      "sourceRelativePath": "windows-review/review-receipt.json",
+      "path": "windows-review/review-receipt.json"
+    },
+    {
+      "sha256": "a786dc140c9405eeb743de8d31159725ae6461653bdd5483464d51983deae69d",
+      "bytes": 15212,
+      "byteVerified": true,
+      "sourceRelativePath": "aws-review/FINDINGS.md",
+      "path": "aws-review/FINDINGS.md"
+    },
+    {
+      "sha256": "592d31036cdcb2ea0eb79ee658144be219acf62c23e74d03db448923fd53154b",
+      "bytes": 9502,
+      "byteVerified": true,
+      "sourceRelativePath": "aws-review/APPROVAL-PROPOSAL.md",
+      "path": "aws-review/APPROVAL-PROPOSAL.md"
+    },
+    {
+      "sha256": "d4b848e78f4bb3dc676af2c300bc4df344ee5e387d79be02af5d1a483650091f",
+      "bytes": 4969,
+      "byteVerified": true,
+      "sourceRelativePath": "aws-review/summary.json",
+      "path": "aws-review/summary.json"
+    },
+    {
+      "sha256": "3699c693f150d40b1e7b7bbce30957824bc65c631faa892aee475a058b293ce6",
+      "bytes": 12012,
+      "byteVerified": true,
+      "sourceRelativePath": "evidence-review/REVIEW.md",
+      "path": "evidence-review/REVIEW.md"
+    },
+    {
+      "sha256": "135638bd12b5ef143a2da1acdda611f34c97fcd429cfa806fbf28009411a3cc2",
+      "bytes": 2086,
+      "byteVerified": true,
+      "sourceRelativePath": "evidence-review/integrity-receipt.json",
+      "path": "evidence-review/integrity-receipt.json"
+    },
+    {
+      "sha256": "9540194e8fbf2273b794374bd317a54442ffdb445a557a39bfe6477645c015d7",
+      "bytes": 292,
+      "byteVerified": true,
+      "sourceRelativePath": "evidence-review/analyzer-cli-receipt.json",
+      "path": "evidence-review/analyzer-cli-receipt.json"
+    },
+    {
+      "sha256": "0bef11cd521fcc383b042a38afcade09e58631214a0c0b999640b615cff64969",
+      "bytes": 39,
+      "byteVerified": true,
+      "sourceRelativePath": "evidence-review/analyzer-cli.stderr.txt",
+      "path": "evidence-review/analyzer-cli.stderr.txt"
+    },
+    {
+      "sha256": "14347c9d02a3e49346d052e0ac2aafe21fcbc05471454ccd207761e2e5e6255e",
+      "bytes": 4910,
+      "byteVerified": true,
+      "sourceRelativePath": "evidence-review/acceptance-and-coverage.json",
+      "path": "evidence-review/acceptance-and-coverage.json"
+    },
+    {
+      "sha256": "dc6a6e82b85e09e3b8cddda74298b71d0ec7aac44219e43cb86649942103f349",
+      "bytes": 11629,
+      "byteVerified": true,
+      "sourceRelativePath": "evidence-review/experiment-design-review.md",
+      "path": "evidence-review/experiment-design-review.md"
+    },
+    {
+      "sha256": "c0b4facfccd446d5a3d8dc9e18b50032cfb5a63f4ff8c1e4254a2fb218b6e5bb",
+      "bytes": 6512,
+      "byteVerified": true,
+      "sourceRelativePath": "evidence-review/experiment-design-review.json",
+      "path": "evidence-review/experiment-design-review.json"
+    },
+    {
+      "sha256": "198d2f3131fb7f5cc148eb3b0e672f2b690d5479d6ca47571505dccc1a8c9872",
+      "bytes": 11052,
+      "byteVerified": true,
+      "sourceRelativePath": "rate-concurrency-review/README.md",
+      "path": "rate-concurrency-review/README.md"
+    },
+    {
+      "sha256": "9a3935dc7c253e44b5f40304904c54cac733a2725146122c10fe2d437c4bb602",
+      "bytes": 110731,
+      "byteVerified": true,
+      "sourceRelativePath": "rate-concurrency-review/analysis.json",
+      "path": "rate-concurrency-review/analysis.json"
+    },
+    {
+      "sha256": "e8c67deb483a1f3fb8890a2e34d13e7ac3438d0a5b8d51fe844f96369685d3c4",
+      "bytes": 3009,
+      "byteVerified": true,
+      "sourceRelativePath": "rate-concurrency-review/matrix-receipt.json",
+      "path": "rate-concurrency-review/matrix-receipt.json"
+    }
+  ],
+  "at": "2026-11-11T12:16:07.2189118+00:00",
+  "credentialPatternScan": "pass",
+  "scope": "Selected projected independent reviews; excludes raw private access logs, captures, credentials and Terraform material",
+  "unpublished": true,
+  "r4LaunchAllowed": false
+}

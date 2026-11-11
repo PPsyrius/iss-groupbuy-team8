@@ -54,6 +54,18 @@ test('V3 observes real task growth instead of assuming an activity completed it'
   input.evidence.events = [];
   assert.equal(analyze(input).latencyAndScaleOutGatesPassed, false);
 });
+test('V3 analyser retains explicit policy target, historical fallback and drop refusal', () => {
+  const input = v3();
+  input.report.context.scalingRequestsPerTarget = 6000;
+  assert.equal(analyze(input).latencyAndScaleOutGatesPassed, true);
+  input.report.context.scalingRequestsPerTarget = 0;
+  assert.throws(() => analyze(input), /SCALING_REQUESTS_PER_TARGET/);
+  delete input.report.context.scalingRequestsPerTarget;
+  assert.equal(analyze(input).latencyAndScaleOutGatesPassed, true);
+  input.report.context.scalingRequestsPerTarget = 6000;
+  input.report.summary.metrics.dropped_iterations.values.count = 1;
+  assert.throws(() => analyze(input), /drops/);
+});
 test('V3 rejects incomplete samples, drops, mismatched metadata and bad observation coverage', () => {
   for (const mutate of [
     x => x.report.schema = 2, x => x.report.context.mode = 'v2', x => x.report.finishedAt = 'invalid',
@@ -216,6 +228,16 @@ test('AWS V3 requires the verified route/digest/revision and complete nominal ra
     x => x.report.summary.metrics.browse_requests.values.count = 3000]) {
     const input = awsV3(); mutate(input); assert.throws(() => analyze(input));
   }
+});
+test('AWS analyser reconstructs the explicitly reviewed policy rather than the workload candidate', () => {
+  const input = awsV3();
+  input.report.context.scalingRequestsPerTarget = 30;
+  input.report.preflight.policies.ScalingPolicies[0].TargetTrackingScalingPolicyConfiguration.TargetValue = 30;
+  assert.equal(analyze(input).hasAwsPreflight, true);
+  input.report.preflight.policies.ScalingPolicies[0].TargetTrackingScalingPolicyConfiguration.TargetValue = 60;
+  assert.throws(() => analyze(input), /explicitly bound target/);
+  delete input.report.context.scalingRequestsPerTarget;
+  assert.equal(analyze(input).hasAwsPreflight, true);
 });
 
 test('V3 analysis retains explicit CPU guard confirmation without changing acceptance gates', () => {

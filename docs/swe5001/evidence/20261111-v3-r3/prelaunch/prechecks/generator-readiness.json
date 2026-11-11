@@ -1,0 +1,22 @@
+{
+  "existingContainers": [
+    {
+      "Name": "competent_ramanujan",
+      "CPUPerc": "68.32%",
+      "MemPerc": "6.50%"
+    },
+    {
+      "Name": "zealous_yalow",
+      "CPUPerc": "75.00%",
+      "MemPerc": "11.16%"
+    }
+  ],
+  "generatorMemoryBytes": 8589934592,
+  "at": "2026-11-11T10:27:54.7517669+00:00",
+  "dockerCpus": 16,
+  "dockerMemoryBytes": 16510504960,
+  "hostFreeDiskBytes": 993840308224,
+  "limits": "Point-in-time headroom, not a reservation; active report compiler must not run during V3",
+  "generatorCpuLimit": 8,
+  "fits": true
+}

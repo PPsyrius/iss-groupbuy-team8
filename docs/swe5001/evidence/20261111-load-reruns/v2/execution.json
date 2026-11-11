@@ -1,0 +1,15 @@
+{
+  "runLabel": "20261111-v2-monolith-r1",
+  "orchestrationSha256": "323add03b128de89582b70a9dae55d6947c1e1fde41583180f322581e93d987d",
+  "preallocatedVUs": 1000,
+  "releasedSourceSha": "3a893036d70d028b29ae13ebf820283571c1ae00",
+  "cpuLimit": 8,
+  "maxVUs": 1000,
+  "generatorContainer": "blocbuy-20261111-v2-monolith-r1",
+  "startedAtUtc": "2026-11-11T04:34:21.9070850+00:00",
+  "toolingSha": "b911ea63795c5ddb7db1f7918f7f7af03a2745ff",
+  "expectedImageDigest": "sha256:a0379552af144645dfef295681c76128d7bee0c1ddaa3be8dff3a6f03bd24b3e",
+  "monitorContainer": "blocbuy-20261111-v2-monolith-r1-monitor",
+  "memoryLimitBytes": 8589934592,
+  "sourceState": "committed workload and monitor; external PowerShell orchestration"
+}

@@ -1,0 +1,75 @@
+{
+  "kind": "safe-log-volume-diagnosis-not-causal-proof",
+  "cases": [
+    {
+      "label": "logging-bounded-v2-warmup",
+      "records": 2617,
+      "bytes": 7168524,
+      "errorRecords": 2608,
+      "cacheUnavailableRecords": 0,
+      "stackTraceCharacters": 5359616,
+      "largestStackTraceCharacters": 2048,
+      "errorClasses": {
+        "org.springframework.transaction.CannotCreateTransactionException": 2352,
+        "org.mybatis.spring.MyBatisSystemException": 247,
+        "org.springframework.web.context.request.async.AsyncRequestNotUsableException": 9,
+        "org.springframework.http.converter.HttpMessageNotWritableException": 9
+      }
+    },
+    {
+      "label": "logging-bounded-v2-control",
+      "records": 44,
+      "bytes": 118925,
+      "errorRecords": 44,
+      "cacheUnavailableRecords": 0,
+      "stackTraceCharacters": 90112,
+      "largestStackTraceCharacters": 2048,
+      "errorClasses": {
+        "org.springframework.transaction.CannotCreateTransactionException": 43,
+        "org.mybatis.spring.MyBatisSystemException": 1
+      }
+    },
+    {
+      "label": "logging-bounded-v2-flush",
+      "records": 0,
+      "bytes": 0,
+      "errorRecords": 0,
+      "cacheUnavailableRecords": 0,
+      "stackTraceCharacters": 0,
+      "largestStackTraceCharacters": 0,
+      "errorClasses": {}
+    },
+    {
+      "label": "logging-bounded-v2-slow",
+      "records": 128,
+      "bytes": 63292,
+      "errorRecords": 0,
+      "cacheUnavailableRecords": 128,
+      "stackTraceCharacters": 0,
+      "largestStackTraceCharacters": 0,
+      "errorClasses": {}
+    },
+    {
+      "label": "logging-bounded-v2-down",
+      "records": 192,
+      "bytes": 93642,
+      "errorRecords": 0,
+      "cacheUnavailableRecords": 176,
+      "stackTraceCharacters": 0,
+      "largestStackTraceCharacters": 0,
+      "errorClasses": {}
+    },
+    {
+      "label": "logging-bounded-v2-recovery",
+      "records": 0,
+      "bytes": 0,
+      "errorRecords": 0,
+      "cacheUnavailableRecords": 0,
+      "stackTraceCharacters": 0,
+      "largestStackTraceCharacters": 0,
+      "errorClasses": {}
+    }
+  ],
+  "limits": "Byte counts include JSON log envelopes and stack traces. Counts are logs, not independent request counts; no raw log body is retained here.",
+  "localStackTraceCapEffective": true
+}

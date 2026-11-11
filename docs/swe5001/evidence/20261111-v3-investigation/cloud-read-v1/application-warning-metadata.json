@@ -1,0 +1,100 @@
+{
+  "matchedEvents": 10,
+  "categoryCounts": {
+    "other-warn-error-or-503-match": 10
+  },
+  "records": [
+    {
+      "timestamp": 1794385665654,
+      "eventId": "40016137517645616590697265653605375590895150424678006788",
+      "logStreamName": "commerce-svc/commerce-svc/a449f1deb0464bfebcbe01e041491cae",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    },
+    {
+      "timestamp": 1794385665654,
+      "eventId": "40016137517645616590697265653605375590895150424678006789",
+      "logStreamName": "commerce-svc/commerce-svc/a449f1deb0464bfebcbe01e041491cae",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    },
+    {
+      "timestamp": 1794385802062,
+      "eventId": "40016140559645667631862507308589348399112605116039364616",
+      "logStreamName": "commerce-svc/commerce-svc/d4eb22190e4d4d82abc3671d4cc37a75",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    },
+    {
+      "timestamp": 1794385802063,
+      "eventId": "40016140559667968377061037931730884117385253477545345033",
+      "logStreamName": "commerce-svc/commerce-svc/d4eb22190e4d4d82abc3671d4cc37a75",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    },
+    {
+      "timestamp": 1794385849849,
+      "eventId": "40016141625331378434045395430540828011006075662751367176",
+      "logStreamName": "commerce-svc/commerce-svc/ce4146d8826b49509868d495d62a2bf9",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    },
+    {
+      "timestamp": 1794385849850,
+      "eventId": "40016141625353679179243926053682363729278724024257347593",
+      "logStreamName": "commerce-svc/commerce-svc/ce4146d8826b49509868d495d62a2bf9",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    },
+    {
+      "timestamp": 1794385890652,
+      "eventId": "40016142535268684769690411522906216708535701748787445768",
+      "logStreamName": "commerce-svc/commerce-svc/33412e05d83e4e6587fed9b2f8e890a2",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    },
+    {
+      "timestamp": 1794385890652,
+      "eventId": "40016142535268684769690411522906216708535701748787445769",
+      "logStreamName": "commerce-svc/commerce-svc/33412e05d83e4e6587fed9b2f8e890a2",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    },
+    {
+      "timestamp": 1794386058653,
+      "eventId": "40016146281816178868033630127301227740258879806237507592",
+      "logStreamName": "commerce-svc/commerce-svc/cc09ca6688d24e4f93818250ebc1b7db",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    },
+    {
+      "timestamp": 1794386058653,
+      "eventId": "40016146281816178868033630127301227740258879806237507593",
+      "logStreamName": "commerce-svc/commerce-svc/cc09ca6688d24e4f93818250ebc1b7db",
+      "categories": [],
+      "exceptionClasses": [],
+      "cacheCauseClass": null,
+      "level": null
+    }
+  ],
+  "rawMessagesRetained": false,
+  "limit": "Filtered log-event counts, not distinct requests. No raw messages, SQL, tokens, request bodies or response payloads retained. Absence of logged errors does not prove absence of pool/dependency stalls."
+}

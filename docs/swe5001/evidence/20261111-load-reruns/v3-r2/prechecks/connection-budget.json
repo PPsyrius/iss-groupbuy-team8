@@ -1,0 +1,28 @@
+{
+  "maxConnections": 181,
+  "reservedConnections": 5,
+  "ownerConnections": 3,
+  "operatorConnections": 2,
+  "headroomConnections": 10,
+  "services": [
+    {
+      "name": "identity-svc",
+      "maxTasks": 1,
+      "poolSize": 5
+    },
+    {
+      "name": "commerce-svc",
+      "maxTasks": 6,
+      "poolSize": 5
+    },
+    {
+      "name": "notification-svc",
+      "maxTasks": 4,
+      "poolSize": 5
+    }
+  ],
+  "pooledConnections": 55,
+  "required": 75,
+  "remaining": 106,
+  "fits": true
+}

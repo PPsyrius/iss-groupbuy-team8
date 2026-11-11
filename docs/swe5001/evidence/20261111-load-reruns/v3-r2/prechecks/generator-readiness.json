@@ -1,0 +1,24 @@
+{
+  "networkPath": "Workstation ISP to CloudFront viewer edge to dedicated Singapore ALB",
+  "maxVUs": 1000,
+  "preallocatedVUs": 1000,
+  "dockerCpuCount": 16,
+  "hostDiskFreeBytes": 1017122492416,
+  "location": "Existing persistent Windows workstation, Docker Desktop; not a Singapore AWS generator",
+  "monitorCpuLimit": 1,
+  "dockerMemoryBytes": 16510504960,
+  "monitorMemoryBytes": 268435456,
+  "generatorCpuLimit": 8,
+  "limitations": "Container/host allocation and disk checked; independent ISP/network capacity and physical host contention not established. No user-owned container was stopped or changed.",
+  "runningContainers": [
+    {
+      "memoryLimitBytes": 1073741824,
+      "image": "blocbuy-swe5001-operator:20261111",
+      "name": "sad_bartik",
+      "cpuLimit": 1.0
+    }
+  ],
+  "at": "2026-11-11T08:14:42.9405797+00:00",
+  "generatorMemoryBytes": 8589934592,
+  "fits": true
+}

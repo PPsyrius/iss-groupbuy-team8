@@ -1,0 +1,44 @@
+{
+  "at": "2026-11-11T08:05:33.103736+00:00",
+  "planSha256": "aeb2af91ba17ce599c7f7416b9367d9ee3e2bf6f32208d46da077a456beaebd0",
+  "changes": [
+    {
+      "address": "aws_appautoscaling_policy.commerce_cpu_headroom[0]",
+      "actions": [
+        "create"
+      ]
+    },
+    {
+      "address": "aws_appautoscaling_target.commerce[0]",
+      "actions": [
+        "update"
+      ]
+    },
+    {
+      "address": "aws_appautoscaling_target.notification[0]",
+      "actions": [
+        "update"
+      ]
+    },
+    {
+      "address": "aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0]",
+      "actions": [
+        "create"
+      ]
+    },
+    {
+      "address": "module.client_service[\"commerce-svc\"].aws_ecs_service.this",
+      "actions": [
+        "update"
+      ]
+    },
+    {
+      "address": "module.client_service[\"commerce-svc\"].aws_ecs_task_definition.this",
+      "actions": [
+        "create",
+        "delete"
+      ]
+    }
+  ],
+  "review": "pass: only reviewed dependency resume, task CPU/memory, commerce normal floor and disabled guard; no DB/NAT/image/SSL/service replacement"
+}

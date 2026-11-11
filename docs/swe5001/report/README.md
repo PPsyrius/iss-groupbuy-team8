@@ -75,6 +75,10 @@ Settled on 4 November 2026 (Phase 0). Sections are written against these; change
 4. **Critical use cases for 3.2.4.** UC4 join a team by paying, and team expiry with refund (both confirmed). Both are already drawn at component level in [`docs/presentation-kit/diagrams/`](../../presentation-kit/diagrams/); the report needs them at class level.
 5. **Section owners.** Confirmed below.
 
+10 November 2026 reconciliation (#775): the [dated session record](../evidence/20261110-subnet-verification/README.md) now verifies AD-15 placement and required connectivity on AWS; AISS-07 is resolved for that recorded session. This supersedes item 1's earlier “configured only” writing instruction, not its original decision. Negative packet/failover tests remain outside the result. The [pool/scaling experiment disposition](../evidence/20261110-load-preflight/README.md#10-november-disposition-for-775), [operator edge repair](../evidence/20261109-edge-policy-recovery/README.md) and D10 in §5 close the other report gaps without importing executable fixes from PR #784.
+
+11 November 2026 session addendum: the [released-image rerun record](../evidence/20261111-load-reruns/README.md) adds a passing V2 lower bound and two failed V3 campaigns. Its r2 variant used commerce 1 vCPU/2 GiB, RDS `db.t4g.small` and a 50% CPU guard through reviewed, hashed session-only overlays, not merged configuration. Historical 0.5-vCPU/micro-class facts below and in the writing harness remain dated observations/defaults, not that variant's sizing. Do not convert its improved error/drop totals into acceptance or revise other owners' historical sections silently; §4.1 owns the result and limitations, §4.3 the fresh metadata boundary, and §5 the operational provenance. Original report bytes/staged state were restored and verified before this continuation; evidence publication/pinning and second-owner review remain outstanding.
+
 ### Section owners
 
 Derived from three sources: the presenter of each deck section on 21 October (v3 deck), the report section named in each feedback issue (#585–#592, #595, tracked in #596) and merged PR authorship. Where the sources disagree, the work was moved to balance load; the issue's original owner reviews.
@@ -89,13 +93,17 @@ Derived from three sources: the presenter of each deck section on 21 October (v3
 
 Reviewer pairs (second owner per [`AGENTS.md`](AGENTS.md#workflow-per-section)): Eric ↔ Yu Qianshuo (DDD and class diagrams must use the same names), Liu Jin ↔ Pan (physical, security and performance share the network and scaling facts), Lim reviews Liu Jin's 3.4 and Eric reviews Lim's 3.3.
 
+## Citation snapshot policy (11 November 2026)
+
+Report PDF hyperlinks must be absolute repository or external URLs, not paths relative to the checkout. Historical implementation claims retain the revision actually inspected; each dated evidence record separately identifies the tested application and collector/tooling revisions. Restored November evidence uses draft `blob/dev/` destinations until publication. Those new paths are not claimed to exist remotely while the work remains local. At evidence freeze, the editor must publish the records, replace these draft URLs with the full commit SHA containing the frozen records, compile again, and check PDF `/URI` annotations and destination accessibility outside the checkout. Do not repin historical source claims to a newer implementation simply to make all links use one SHA. A portable URL is not proof of publication or of performance acceptance.
+
 ## Cross-section facts
 
-Facts that one section states and another depends on. The owner of the second section checks them before the final review; the reconcile of 3.1 with 3.2–3.4 on 6 November 2026 aligned the aggregate names and AD-01 to AD-06, except the placement of `ShareInvite` and `ShareCredit`, which stays open until Eric confirms it (first row).
+Facts that one section states and another depends on. The owner of the second section checks them before the final review. The 6 November 2026 reconciliation aligned the aggregate names and AD-01 to AD-06. The 9 November local follow-up adopts the repository-boundary correction proposed in PR #747 for `ShareInvite` and `ShareCredit` across 3.1.4, 3.2.3, D4 and D7; this does not resolve or merge the remote PR. A second-owner review remains required.
 
 | Stated in | Fact | Must match |
 |---|---|---|
-| 3.1.4 (Eric) | `ShareInvite` and `ShareCredit` are value objects inside `GroupDeal`; the code stores them through their own repositories (red marker in 3.1.4) | 3.2.3 aggregate-to-table mapping, D4, D7 |
+| 3.1.4 (Eric) | `ShareInvite` and `ShareCredit` have separate repositories and reference `GroupDeal` by `dealId`, outside its aggregate lock; credit is written `AFTER_COMMIT` in `REQUIRES_NEW` (ADR 0003) | 3.2.3 aggregate-to-table mapping, D4, D7; second-owner review pending |
 | 3.2.2 (Liu Jin) | One 0.5 vCPU commerce task saturated at about 280 req/s; three tasks about 455 req/s, the generator's limit (19 Oct 2026) | 4.1 (Pan) |
 | 3.4 AISS-13 (Liu Jin) | The identity outage and a poison message have local results only; V4 and V5 were not run | 4.2 (Yu Qianshuo) |
 | 3.2.3 (Liu Jin) | Settlement lock order team → purchase intent → payment | 3.2.4 UC4 sequence (Yu Qianshuo) |
@@ -185,11 +193,13 @@ The view set answers F8, F9 and F10. Every diagram is UML or a named notation, h
 | D7 | Aggregates and life cycles | UML class + state machine | 3.1.4 | `aggregates.svg` |
 | D8 | Domain event catalogue and producer/consumer flow | Table + UML component | 3.1.4 | ADR 0007 |
 | D9 | ER diagram per database | Crow's foot or UML class | 3.2.3 | Flyway migrations |
-| D10 | CI/CD pipeline | UML activity | 5.2, 5.3 | Deck slides 19–20 |
+| D10a/b | Service-image job and deployment caller | UML activity, separate views | 5.2, 5.3 | [`d10-cicd-pipeline.typ`](diagrams/d10-cicd-pipeline.typ); broader CI paths are tabulated in §5.2 |
 | D11 | UC4 class diagram | UML class | 3.2.4 | New |
 | D12 | UC4 sequence, two users and the last seat | UML sequence | 3.2.4 | `uc4-join-sequence.svg` |
 | D13 | Team expiry and refund class diagram | UML class | 3.2.4 | New |
 | D14 | Team expiry and refund sequence | UML sequence | 3.2.4 | `expiry-refund-sequence.svg` |
+
+The additional §4.1 [November V3 timeline](diagrams/performance-v3-timeline.svg) is a data plot, not an architecture view. Its adjacent [Python source](diagrams/performance-v3-timeline.py) regenerates the SVG from retained minute/activity records with the standard library only (`python docs/swe5001/report/diagrams/performance-v3-timeline.py`, run in Docker). It excludes partial minutes, integrates the offered-rate reference and shades the original ECS-observer gap; it does not reconstruct missing task samples or create new acceptance evidence.
 
 ## Briefing coverage
 

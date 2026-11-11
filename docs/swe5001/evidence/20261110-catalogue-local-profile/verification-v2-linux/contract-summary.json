@@ -1,0 +1,10 @@
+{
+  "kind": "local-verified-JAR-contract-comparison",
+  "commerceDiagnosticJarSha256": "f4c7372bef03a6627331a469113e3a341f5531485f36da90213ff9861d621dc1",
+  "command": "java -jar blocbuy-bootstrap/target/blocbuy-backend-exec.jar --spring.profiles.active=openapi-export; GET localhost:18080/v3/api-docs",
+  "jsonEqual": true,
+  "textEqualAfterNewlineNormalization": true,
+  "generatedSha256": "822481f06f8948bff59d3d866ba2a22e5309aab35d49d36c8c41d80baedb0673",
+  "checkoutSha256": "822481f06f8948bff59d3d866ba2a22e5309aab35d49d36c8c41d80baedb0673",
+  "limits": "No HTTP API changes intended; contract fetched from the monolith produced by full verification. No contract file overwritten, frontend client regenerated, commit or publication."
+}

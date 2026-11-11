@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-11T10:23:36.946276+00:00",
+  "authorisation": "Implement approved controls, final review, then one V3 before 19:00 SGT if gates pass",
+  "requestTargetPerMinute": 6000,
+  "commerceSlowStartSeconds": 120,
+  "candidateRps": 200,
+  "peakRps": 600,
+  "workloadSeconds": 1800,
+  "oneTaskStart": true,
+  "maximumTasks": 6,
+  "noTeardown": true,
+  "noRetry": true,
+  "noPublication": true
+}

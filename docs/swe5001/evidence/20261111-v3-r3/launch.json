@@ -1,0 +1,16 @@
+{
+  "runCount": 1,
+  "noTeardown": true,
+  "nominalWorkloadEndUtc": "2026-11-11T11:09:29.9549416+00:00",
+  "perTaskCpuRecordsAtCaptureStart": 51,
+  "localDocker": true,
+  "nominalWorkloadSeconds": 1800,
+  "actualStartedAtUtc": "2026-11-11T10:39:29.954941565Z",
+  "networkControlsStarted": true,
+  "runningConfirmed": true,
+  "outcome": "Pending; launch/capture evidence is not acceptance",
+  "generatorCpuMemoryCaptureStarted": true,
+  "noRetry": true,
+  "observer": "Unchanged persistent 40-minute collector; final completeness still pending",
+  "checkedAtUtc": "2026-11-11T10:41:08.5142710+00:00"
+}

@@ -62,18 +62,16 @@ package "GroupBuy Context" {
     +expire(now)
   }
   class PaidMember <<entity>> {
+    +dealId: UUID
     +userId: UUID
-    +paymentId: UUID
     +orderId: UUID
-    +sharerUserId: UUID
-    +role: MemberRole
+    +status: String
   }
   class ParticipationReceipt <<entity>> {
-    +paymentId: UUID
     +fingerprint: String
     +result: ParticipationResult
   }
-  class ShareInvite <<value object>> {
+  class ShareInvite <<own-repository record>> {
     +id: UUID
     +ref: String
     +dealId: UUID
@@ -81,7 +79,7 @@ package "GroupBuy Context" {
     +mint(dealId, sharerId, rng)
     +attributes(dealId, buyerId)
   }
-  class ShareCredit <<value object>> {
+  class ShareCredit <<own-repository record>> {
     +dealId: UUID
     +paymentId: UUID
     +sharerUserId: UUID
@@ -91,6 +89,8 @@ package "GroupBuy Context" {
   GroupDeal "1" *-- "1..*" PaidMember
   GroupDeal "1" *-- "1..*" ParticipationReceipt
   GroupDeal ..> Product : productId (ID ref)
+  ShareInvite ..> GroupDeal : dealId (ShareInviteRepository)
+  ShareCredit ..> GroupDeal : dealId (ShareCreditRepository)\nAFTER_COMMIT, REQUIRES_NEW
 }
 
 package "Ordering Context" {

@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "runLabel": "20261110-v3-194543",
+  "privateDirectory": "C:\\Users\\sirip\\AppData\\Local\\Temp\\opencode\\swe5001-v3-20261110-live",
+  "files": [
+    {
+      "name": "container-id.txt",
+      "bytes": 65,
+      "sha256": "8fda457d9cbabbc5ab6758a6f2399121ace299ee6ec0656f09ab4c4d2dd77af0",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "docker-info-private.json",
+      "bytes": 17029,
+      "sha256": "3e85025e12c848b66f1f00577fd41a416283e797bfa893566c183071dce9da47",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "generator-context.json",
+      "bytes": 1073,
+      "sha256": "050b9f75f7d8ce236459daba26b05a6c158b489e90e1a3d5b4ad385b69709c86",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "generator-final-state.json",
+      "bytes": 225,
+      "sha256": "cc8c7082102d86f830e83bf533324896c51a731bf929795f771f079394d220f4",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "generator.jsonl",
+      "bytes": 139871,
+      "sha256": "5b6cdd6b6a03705dfe1efb857bc62a3db2665c9243dc962117594ac35c05a112",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "k6-exit-code.txt",
+      "bytes": 4,
+      "sha256": "2dd9964aa7c59c01362061846da85dcf727bb9f7f25e6b1c67ff342e6ef8c69c",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "k6.stderr.log",
+      "bytes": 2438131,
+      "sha256": "415b3cfc456ddb5fcf2a71d88d3259588ad1b87bf2861d432e0c7321f78f1953",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "k6.stdout.log",
+      "bytes": 104,
+      "sha256": "3f1fa3a99d5392ec940dc458817605eeb598712fce617621478c1f8e76d4fc85",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "monitor-exit-code.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "monitor-id.txt",
+      "bytes": 65,
+      "sha256": "4727c3a75006e744f87373160c36d054dbd039b61d30c7c80f755f3803fb4ea2",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "monitor.stderr.log",
+      "bytes": 110,
+      "sha256": "7a10412d4a7104a9ff47a8bfa4636733a34e83a428d43d400196cfbd2e6eb413",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "monitor.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "preflight.json",
+      "bytes": 10062,
+      "sha256": "a3959d87860f11de7a8a49505542f0638be4c1439c866ef5dca01fe4ebed9a55",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "raw-audit.json",
+      "bytes": 5128,
+      "sha256": "95919b337ac0c04f812dc89f08200039fd9304261915b95d60d23fa66f4ab9dd",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "samples.jsonl",
+      "bytes": 2230222334,
+      "sha256": "b0b734c1fbc824b736510fa820ce5c268b2043011d25891429f1ce5b5e108775",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "summary.json",
+      "bytes": 17741,
+      "sha256": "ec1440f6f71021229f6621c35a07a32e01442fc8e600ef4f3e542656ccc5792a",
+      "retainedOutsideGit": true
+    },
+    {
+      "name": "validated-preflight.json",
+      "bytes": 2134,
+      "sha256": "f30cd122f5229c7168433745e5317612efe90250ceef3b7ad3c07e0d293c288e",
+      "retainedOutsideGit": true
+    }
+  ]
+}

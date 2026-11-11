@@ -1,0 +1,12 @@
+{
+  "archivedFilesUnchanged": 580,
+  "owningContinuationFilesChanged": [
+    "docs/agile/sprint-04/log/2026-11-11.md",
+    "docs/quality/nfr-register.md",
+    "docs/swe5001/report/README.md",
+    "docs/swe5001/report/sections/04-quality-attributes.typ",
+    "docs/swe5001/report/sections/05-devops.typ"
+  ],
+  "otherOwnersAvailabilityAndMaintainabilitySectionsUnchanged": true,
+  "scope": "Pan \u00a7\u00a74.1/4.3/5, report reconciliation metadata and agile/NFR evidence only; new rerun receipts separate."
+}

@@ -58,9 +58,10 @@
 <text x="538" y="256" class="h1">GroupBuy Context</text>
 <text x="665" y="256" class="body" fill="#BC4C00" font-weight="bold">(CORE Subdomain)</text>
 <text x="538" y="277" class="body">Root: GroupDeal / Team (DealStatus state machine)</text>
-<text x="538" y="295" class="body">Entities/VOs: PaidMember, ParticipationReceipt</text>
-<text x="538" y="313" class="body">ShareInvite, ShareCredit · Factory: PaidGroupDealCreator</text>
+<text x="538" y="295" class="body">Entities: PaidMember, ParticipationReceipt</text>
+<text x="538" y="313" class="body">Own repositories: ShareInvite, ShareCredit</text>
 <text x="538" y="331" class="small" fill="#BC4C00">Events: TeamSucceeded, TeamExpired, MemberJoined</text>
+<text x="538" y="347" class="small">Factory: PaidGroupDealCreator</text>
 <line x1="525" y1="295" x2="410" y2="295" stroke="#2F363D" stroke-width="1.4" marker-end="url(#arrow-solid)"/>
 <text x="467" y="270" text-anchor="middle" class="small" font-weight="bold" fill="#1F2328">Customer/Supplier</text>
 <text x="424" y="288" class="h2">D</text>

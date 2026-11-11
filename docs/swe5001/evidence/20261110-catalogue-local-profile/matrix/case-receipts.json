@@ -1,0 +1,1109 @@
+[
+  {
+    "label": "tls-warmup",
+    "app": "blocbuy-matrix2-tls",
+    "rate": 50,
+    "seconds": 45,
+    "port": 8589,
+    "startedAt": "2026-11-10T05:51:37.745Z",
+    "finishedAt": "2026-11-10T05:52:23.719Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 2250,
+      "errors": {
+        "fails": 2250,
+        "rate": 0,
+        "passes": 0
+      },
+      "latency": {
+        "avg": 11.01511111111111,
+        "med": 4,
+        "min": 2,
+        "max": 279,
+        "p(95)": 63,
+        "p(99)": 102
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "tls-control",
+    "app": "blocbuy-matrix2-tls",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T05:52:23.900Z",
+    "finishedAt": "2026-11-10T05:53:24.141Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "fails": 12001,
+        "rate": 0,
+        "passes": 0
+      },
+      "latency": {
+        "max": 128,
+        "p(95)": 52,
+        "p(99)": 76,
+        "avg": 8.271894008832597,
+        "med": 2,
+        "min": 0
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "pg-delay-2ms",
+    "app": "blocbuy-matrix2-tls",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T05:53:24.324Z",
+    "finishedAt": "2026-11-10T05:54:24.651Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "min": 5,
+        "max": 60,
+        "p(95)": 11,
+        "p(99)": 14,
+        "avg": 8.4618781768186,
+        "med": 9
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "pg-delay-5ms",
+    "app": "blocbuy-matrix2-tls",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T05:54:24.831Z",
+    "finishedAt": "2026-11-10T05:55:25.156Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "passes": 0,
+        "fails": 12001,
+        "rate": 0
+      },
+      "latency": {
+        "avg": 17.1044912923923,
+        "med": 18,
+        "min": 11,
+        "max": 109,
+        "p(95)": 20,
+        "p(99)": 25
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "redis-delay-50ms",
+    "app": "blocbuy-matrix2-tls",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T05:55:25.339Z",
+    "finishedAt": "2026-11-10T05:56:25.715Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "passes": 0,
+        "fails": 12001,
+        "rate": 0
+      },
+      "latency": {
+        "p(99)": 105,
+        "avg": 55.03958003499709,
+        "med": 52,
+        "min": 49,
+        "max": 257,
+        "p(95)": 58
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "proxy-warmup",
+    "app": "blocbuy-matrix2-proxy",
+    "rate": 50,
+    "seconds": 45,
+    "port": 8589,
+    "startedAt": "2026-11-10T05:56:58.406Z",
+    "finishedAt": "2026-11-10T05:57:44.359Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 2251,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 2251
+      },
+      "latency": {
+        "avg": 13.22034651266104,
+        "med": 4,
+        "min": 2,
+        "max": 366,
+        "p(95)": 70,
+        "p(99)": 170
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "shared-budget-direct",
+    "app": "blocbuy-matrix2-proxy",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T05:57:44.532Z",
+    "finishedAt": "2026-11-10T05:58:44.835Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "passes": 0,
+        "fails": 12001,
+        "rate": 0
+      },
+      "latency": {
+        "max": 166,
+        "p(95)": 62,
+        "p(99)": 81,
+        "avg": 11.22564786267811,
+        "med": 2,
+        "min": 1
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "shared-budget-proxied",
+    "app": "blocbuy-matrix2-proxy",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8588,
+    "startedAt": "2026-11-10T05:58:45.022Z",
+    "finishedAt": "2026-11-10T05:59:45.313Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "max": 31,
+        "p(95)": 3,
+        "p(99)": 5,
+        "avg": 2.154237146904425,
+        "med": 2,
+        "min": 1
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "shared-budget-400",
+    "app": "blocbuy-matrix2-proxy",
+    "rate": 400,
+    "seconds": 60,
+    "port": 8588,
+    "startedAt": "2026-11-10T05:59:45.552Z",
+    "finishedAt": "2026-11-10T06:00:45.819Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 23998,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 23998
+      },
+      "latency": {
+        "max": 1269,
+        "p(95)": 82,
+        "p(99)": 446,
+        "avg": 19.478539878323193,
+        "med": 2,
+        "min": 1
+      },
+      "drops": 3
+    }
+  },
+  {
+    "label": "cold-first-traffic",
+    "app": "blocbuy-matrix2-cold",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:01:16.698Z",
+    "finishedAt": "2026-11-10T06:02:22.351Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 6286,
+      "errors": {
+        "rate": 0.7900095450206809,
+        "passes": 4966,
+        "fails": 1320
+      },
+      "latency": {
+        "avg": 9124.987273305758,
+        "med": 10000,
+        "min": 357,
+        "max": 10011,
+        "p(95)": 10001,
+        "p(99)": 10002
+      },
+      "drops": 5715
+    }
+  },
+  {
+    "label": "cold-warmed-traffic",
+    "app": "blocbuy-matrix2-cold",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:02:22.539Z",
+    "finishedAt": "2026-11-10T06:03:22.873Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "p(99)": 94,
+        "avg": 18.17606866094492,
+        "med": 2,
+        "min": 0,
+        "max": 192,
+        "p(95)": 74
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "jobs-idle",
+    "app": "blocbuy-matrix2-jobs",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:03:55.751Z",
+    "finishedAt": "2026-11-10T06:05:01.104Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 9102,
+      "errors": {
+        "rate": 0.0992089650626236,
+        "passes": 903,
+        "fails": 8199
+      },
+      "latency": {
+        "avg": 6218.990112063283,
+        "med": 5669,
+        "min": 23,
+        "max": 10002,
+        "p(95)": 10000,
+        "p(99)": 10001
+      },
+      "drops": 2899
+    }
+  },
+  {
+    "label": "jobs-with-expiry",
+    "app": "blocbuy-matrix2-jobs",
+    "rate": 200,
+    "seconds": 150,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:05:01.398Z",
+    "finishedAt": "2026-11-10T06:07:31.682Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 30000,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 30000
+      },
+      "latency": {
+        "avg": 12.5353,
+        "med": 2,
+        "min": 0,
+        "max": 195,
+        "p(95)": 69,
+        "p(99)": 89
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "failure-control",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:08:06.410Z",
+    "finishedAt": "2026-11-10T06:09:13.160Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 6988,
+      "errors": {
+        "rate": 0.5088723526044648,
+        "passes": 3556,
+        "fails": 3432
+      },
+      "latency": {
+        "avg": 8233.420578133944,
+        "med": 9654,
+        "min": 162,
+        "max": 10007,
+        "p(95)": 10001,
+        "p(99)": 10002
+      },
+      "drops": 5013
+    }
+  },
+  {
+    "label": "cache-expiry",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:09:13.341Z",
+    "finishedAt": "2026-11-10T06:10:15.804Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 11645,
+      "errors": {
+        "fails": 11487,
+        "rate": 0.013568054959209961,
+        "passes": 158
+      },
+      "latency": {
+        "avg": 2168.059768140833,
+        "med": 2238,
+        "min": 3,
+        "max": 6784,
+        "p(95)": 3601,
+        "p(99)": 4505.5599999999995
+      },
+      "drops": 355
+    }
+  },
+  {
+    "label": "redis-slow-timeout",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 70,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:10:15.995Z",
+    "finishedAt": "2026-11-10T06:11:26.298Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 11636,
+      "errors": {
+        "rate": 0.08241663801993812,
+        "passes": 959,
+        "fails": 10677
+      },
+      "latency": {
+        "avg": 2426.1729116534893,
+        "med": 392,
+        "min": 1,
+        "max": 10012,
+        "p(95)": 10000,
+        "p(99)": 10001
+      },
+      "drops": 2365
+    }
+  },
+  {
+    "label": "redis-unavailable",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 70,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:11:26.483Z",
+    "finishedAt": "2026-11-10T06:12:36.785Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 10618,
+      "errors": {
+        "rate": 0.19193821812017328,
+        "passes": 2038,
+        "fails": 8580
+      },
+      "latency": {
+        "p(95)": 10001,
+        "p(99)": 10001,
+        "avg": 3565.3908457336597,
+        "med": 1618,
+        "min": 1,
+        "max": 10002
+      },
+      "drops": 3383
+    }
+  },
+  {
+    "label": "failure-recovery",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:12:36.967Z",
+    "finishedAt": "2026-11-10T06:13:37.269Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "avg": 2.0514957086909424,
+        "med": 2,
+        "min": 1,
+        "max": 22,
+        "p(95)": 3,
+        "p(99)": 4
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "warm-fault-warmup",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 50,
+    "seconds": 30,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:20:54.729Z",
+    "finishedAt": "2026-11-10T06:21:25.150Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 1501,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 1501
+      },
+      "latency": {
+        "avg": 3.010659560293138,
+        "med": 3,
+        "min": 2,
+        "max": 17,
+        "p(95)": 4,
+        "p(99)": 5
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "warm-fault-control",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:21:25.336Z",
+    "finishedAt": "2026-11-10T06:22:25.704Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "fails": 12001,
+        "rate": 0,
+        "passes": 0
+      },
+      "latency": {
+        "max": 25,
+        "p(95)": 3,
+        "p(99)": 4,
+        "avg": 2.0150820764936257,
+        "med": 2,
+        "min": 1
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "warm-cache-expiry",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:22:25.889Z",
+    "finishedAt": "2026-11-10T06:23:26.265Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "med": 2,
+        "min": 1,
+        "max": 325,
+        "p(95)": 3,
+        "p(99)": 15,
+        "avg": 3.1310724106324472
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "warm-redis-slow",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 70,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:23:26.443Z",
+    "finishedAt": "2026-11-10T06:24:36.867Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 11931,
+      "errors": {
+        "fails": 10333,
+        "rate": 0.13393680328555863,
+        "passes": 1598
+      },
+      "latency": {
+        "min": 1,
+        "max": 10012,
+        "p(95)": 10000,
+        "p(99)": 10001,
+        "avg": 2352.544547816612,
+        "med": 3
+      },
+      "drops": 2070
+    }
+  },
+  {
+    "label": "warm-redis-down",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 70,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:24:37.043Z",
+    "finishedAt": "2026-11-10T06:25:47.499Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 10795,
+      "errors": {
+        "rate": 0.2414080592867068,
+        "passes": 2606,
+        "fails": 8189
+      },
+      "latency": {
+        "avg": 3605.088930060213,
+        "med": 873,
+        "min": 1,
+        "max": 10010,
+        "p(95)": 10001,
+        "p(99)": 10001
+      },
+      "drops": 3206
+    }
+  },
+  {
+    "label": "warm-fault-recovery",
+    "app": "blocbuy-matrix2-failure",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:25:47.682Z",
+    "finishedAt": "2026-11-10T06:26:48.151Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "p(99)": 5,
+        "avg": 2.172235647029414,
+        "med": 2,
+        "min": 1,
+        "max": 37,
+        "p(95)": 3
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "warm-proxy-400",
+    "app": "blocbuy-matrix2-proxy",
+    "rate": 400,
+    "seconds": 60,
+    "port": 8588,
+    "startedAt": "2026-11-10T06:26:48.999Z",
+    "finishedAt": "2026-11-10T06:27:49.497Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 22908,
+      "errors": {
+        "rate": 0.004147022874105116,
+        "passes": 95,
+        "fails": 22813
+      },
+      "latency": {
+        "med": 1821.5,
+        "min": 0,
+        "max": 4962,
+        "p(95)": 3097,
+        "p(99)": 3625.790000000001,
+        "avg": 1501.8278767242884
+      },
+      "drops": 1092
+    }
+  },
+  {
+    "label": "resource05m1-cold",
+    "app": "blocbuy-matrix2-resource05m1",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:28:20.618Z",
+    "finishedAt": "2026-11-10T06:29:24.989Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 8666,
+      "errors": {
+        "rate": 0.2306715901223171,
+        "passes": 1999,
+        "fails": 6667
+      },
+      "latency": {
+        "min": 32,
+        "max": 10008,
+        "p(95)": 10001,
+        "p(99)": 10001,
+        "avg": 6555.178859912301,
+        "med": 5898.5
+      },
+      "drops": 3334
+    }
+  },
+  {
+    "label": "resource1m1-cold",
+    "app": "blocbuy-matrix2-resource1m1",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:29:42.720Z",
+    "finishedAt": "2026-11-10T06:30:43.507Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 12000,
+      "errors": {
+        "rate": 0.0018333333333333333,
+        "passes": 22,
+        "fails": 11978
+      },
+      "latency": {
+        "p(99)": 3077.1100000000024,
+        "avg": 377.55241666666666,
+        "med": 2,
+        "min": 1,
+        "max": 4852,
+        "p(95)": 2219
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "resource05m2-cold",
+    "app": "blocbuy-matrix2-resource05m2",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:31:16.026Z",
+    "finishedAt": "2026-11-10T06:32:18.868Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 10064,
+      "errors": {
+        "rate": 0.061506359300476945,
+        "passes": 619,
+        "fails": 9445
+      },
+      "latency": {
+        "p(95)": 9603.250000000002,
+        "p(99)": 10000,
+        "avg": 5339.1069157392685,
+        "med": 5108.5,
+        "min": 99,
+        "max": 10002
+      },
+      "drops": 1936
+    }
+  },
+  {
+    "label": "resource1m2-cold",
+    "app": "blocbuy-matrix2-resource1m2",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:32:36.518Z",
+    "finishedAt": "2026-11-10T06:33:37.329Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0.0009165902841429881,
+        "passes": 11,
+        "fails": 11990
+      },
+      "latency": {
+        "p(99)": 3101,
+        "avg": 408.7503541371552,
+        "med": 3,
+        "min": 1,
+        "max": 4848,
+        "p(95)": 2248
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "paired-base-warmup",
+    "app": "blocbuy-matrix2-paired-base",
+    "rate": 200,
+    "seconds": 120,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:45:05.786Z",
+    "finishedAt": "2026-11-10T06:47:11.975Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 14671,
+      "errors": {
+        "rate": 0.5692181855360916,
+        "passes": 8351,
+        "fails": 6320
+      },
+      "latency": {
+        "avg": 7995.350760002726,
+        "med": 9999,
+        "min": 137,
+        "max": 10011,
+        "p(95)": 10001,
+        "p(99)": 10002
+      },
+      "drops": 9330
+    }
+  },
+  {
+    "label": "paired-base-control",
+    "app": "blocbuy-matrix2-paired-base",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:47:12.166Z",
+    "finishedAt": "2026-11-10T06:48:12.564Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "med": 2,
+        "min": 1,
+        "max": 253,
+        "p(95)": 75,
+        "p(99)": 103,
+        "avg": 15.6043663028081
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "paired-base-flush",
+    "app": "blocbuy-matrix2-paired-base",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:48:12.747Z",
+    "finishedAt": "2026-11-10T06:49:13.164Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "avg": 3.338721773185568,
+        "med": 2,
+        "min": 1,
+        "max": 294,
+        "p(95)": 3,
+        "p(99)": 53
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "paired-base-slow",
+    "app": "blocbuy-matrix2-paired-base",
+    "rate": 200,
+    "seconds": 70,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:49:13.350Z",
+    "finishedAt": "2026-11-10T06:50:23.785Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 11927,
+      "errors": {
+        "rate": 0.13213716777060452,
+        "passes": 1576,
+        "fails": 10351
+      },
+      "latency": {
+        "avg": 2249.682904334703,
+        "med": 2,
+        "min": 1,
+        "max": 10006,
+        "p(95)": 10001,
+        "p(99)": 10001
+      },
+      "drops": 2074
+    }
+  },
+  {
+    "label": "paired-base-down",
+    "app": "blocbuy-matrix2-paired-base",
+    "rate": 200,
+    "seconds": 70,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:50:23.964Z",
+    "finishedAt": "2026-11-10T06:51:34.433Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 10788,
+      "errors": {
+        "rate": 0.24165739710789766,
+        "passes": 2607,
+        "fails": 8181
+      },
+      "latency": {
+        "med": 1889.5,
+        "min": 1,
+        "max": 10014,
+        "p(95)": 10001,
+        "p(99)": 10001,
+        "avg": 3793.003893214683
+      },
+      "drops": 3213
+    }
+  },
+  {
+    "label": "paired-base-recovery",
+    "app": "blocbuy-matrix2-paired-base",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:51:34.615Z",
+    "finishedAt": "2026-11-10T06:52:34.976Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "min": 1,
+        "max": 35,
+        "p(95)": 3,
+        "p(99)": 4,
+        "avg": 2.0081659861678194,
+        "med": 2
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "paired-bulkhead-warmup",
+    "app": "blocbuy-matrix2-paired-bulkhead",
+    "rate": 200,
+    "seconds": 120,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:53:09.612Z",
+    "finishedAt": "2026-11-10T06:55:22.542Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 12337,
+      "errors": {
+        "passes": 12084,
+        "fails": 253,
+        "rate": 0.97949258328605
+      },
+      "latency": {
+        "p(99)": 10002,
+        "avg": 9828.197779038665,
+        "med": 10000,
+        "min": 336,
+        "max": 10013,
+        "p(95)": 10001
+      },
+      "drops": 11663
+    }
+  },
+  {
+    "label": "paired-bulkhead-control",
+    "app": "blocbuy-matrix2-paired-bulkhead",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:55:22.740Z",
+    "finishedAt": "2026-11-10T06:56:32.664Z",
+    "exitCode": 99,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "passes": 63,
+        "fails": 11938,
+        "rate": 0.005249562536455295
+      },
+      "latency": {
+        "max": 5478,
+        "p(95)": 2246,
+        "p(99)": 3180,
+        "avg": 719.6234480459962,
+        "med": 458,
+        "min": 1
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "paired-bulkhead-flush",
+    "app": "blocbuy-matrix2-paired-bulkhead",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:56:32.865Z",
+    "finishedAt": "2026-11-10T06:57:33.304Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "avg": 3.213232230647446,
+        "med": 2,
+        "min": 0,
+        "max": 83,
+        "p(95)": 5,
+        "p(99)": 35
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "paired-bulkhead-slow",
+    "app": "blocbuy-matrix2-paired-bulkhead",
+    "rate": 200,
+    "seconds": 70,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:57:33.528Z",
+    "finishedAt": "2026-11-10T06:58:44.022Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 14001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 14001
+      },
+      "latency": {
+        "avg": 33.97121634168988,
+        "med": 2,
+        "min": 1,
+        "max": 3036,
+        "p(95)": 17,
+        "p(99)": 895
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "paired-bulkhead-down",
+    "app": "blocbuy-matrix2-paired-bulkhead",
+    "rate": 200,
+    "seconds": 70,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:58:44.209Z",
+    "finishedAt": "2026-11-10T06:59:54.607Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 14001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 14001
+      },
+      "latency": {
+        "p(99)": 3002,
+        "avg": 50.32254838940076,
+        "med": 3,
+        "min": 1,
+        "max": 3061,
+        "p(95)": 91
+      },
+      "drops": 0
+    }
+  },
+  {
+    "label": "paired-bulkhead-recovery",
+    "app": "blocbuy-matrix2-paired-bulkhead",
+    "rate": 200,
+    "seconds": 60,
+    "port": 8589,
+    "startedAt": "2026-11-10T06:59:54.822Z",
+    "finishedAt": "2026-11-10T07:00:55.289Z",
+    "exitCode": 0,
+    "result": {
+      "requests": 12001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 12001
+      },
+      "latency": {
+        "p(99)": 34,
+        "avg": 2.9320889925839513,
+        "med": 2,
+        "min": 1,
+        "max": 91,
+        "p(95)": 5
+      },
+      "drops": 0
+    }
+  }
+]

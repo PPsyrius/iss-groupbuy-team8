@@ -1,0 +1,153 @@
+{
+  "at": "2026-11-11T10:28:01.858800+00:00",
+  "services": [
+    {
+      "name": "identity-svc",
+      "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-identity-svc:20",
+      "imageDigest": "sha256:fbc67dbe2e5912d8862e8cbedcee37bca0492ce987cf41d80f18fced0eaee074",
+      "poolSize": 5,
+      "cpuUnits": 512,
+      "memoryMiB": 1024,
+      "maxTasks": 1
+    },
+    {
+      "name": "commerce-svc",
+      "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:37",
+      "imageDigest": "sha256:f2e65b444395c2e5c26ae8675d4a4c203fbf97f0b3a98ae8e2eb187a6a51d92e",
+      "poolSize": 5,
+      "cpuUnits": 1024,
+      "memoryMiB": 2048,
+      "maxTasks": 6
+    },
+    {
+      "name": "notification-svc",
+      "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-notification-svc:34",
+      "imageDigest": "sha256:6e42508bd3ba990984aced334eac1bff57fd782c69e636a555dbb7d1f670699a",
+      "poolSize": 5,
+      "cpuUnits": 512,
+      "memoryMiB": 1024,
+      "maxTasks": 4
+    }
+  ],
+  "targets": [
+    {
+      "ServiceNamespace": "ecs",
+      "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+      "ScalableDimension": "ecs:service:DesiredCount",
+      "MinCapacity": 2,
+      "MaxCapacity": 6,
+      "RoleARN": "arn:aws:iam::402178232802:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService",
+      "CreationTime": "2026-11-11T05:43:24.667000+00:00",
+      "SuspendedState": {
+        "DynamicScalingInSuspended": false,
+        "DynamicScalingOutSuspended": false,
+        "ScheduledScalingSuspended": false
+      },
+      "ScalableTargetARN": "arn:aws:application-autoscaling:ap-southeast-1:402178232802:scalable-target/0ec5de50d0be59534dd4aa84ea0bccc173cf"
+    },
+    {
+      "ServiceNamespace": "ecs",
+      "ResourceId": "service/blocbuy-swe5001/notification-svc",
+      "ScalableDimension": "ecs:service:DesiredCount",
+      "MinCapacity": 1,
+      "MaxCapacity": 4,
+      "RoleARN": "arn:aws:iam::402178232802:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService",
+      "CreationTime": "2026-11-11T05:43:23.273000+00:00",
+      "SuspendedState": {
+        "DynamicScalingInSuspended": false,
+        "DynamicScalingOutSuspended": false,
+        "ScheduledScalingSuspended": false
+      },
+      "ScalableTargetARN": "arn:aws:application-autoscaling:ap-southeast-1:402178232802:scalable-target/0ec578553400d5d848c8bfaf9a44b464fb79"
+    }
+  ],
+  "policies": [
+    {
+      "PolicyARN": "arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:de50d0be-5953-4dd4-aa84-ea0bccc173cf:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-requests-per-target",
+      "PolicyName": "blocbuy-swe5001-commerce-requests-per-target",
+      "ServiceNamespace": "ecs",
+      "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+      "ScalableDimension": "ecs:service:DesiredCount",
+      "PolicyType": "TargetTrackingScaling",
+      "TargetTrackingScalingPolicyConfiguration": {
+        "TargetValue": 6000.0,
+        "PredefinedMetricSpecification": {
+          "PredefinedMetricType": "ALBRequestCountPerTarget",
+          "ResourceLabel": "app/blocbuy-swe5001/643fcaad1990ae88/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68"
+        },
+        "ScaleOutCooldown": 60,
+        "ScaleInCooldown": 180,
+        "DisableScaleIn": false
+      },
+      "Alarms": [
+        {
+          "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-ebc81154-eeda-4f8b-b97a-e6e575a281cd",
+          "AlarmARN": "arn:aws:cloudwatch:ap-southeast-1:402178232802:alarm:TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-ebc81154-eeda-4f8b-b97a-e6e575a281cd"
+        },
+        {
+          "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmLow-f23e7327-6f9d-4898-8fc2-5ff297a4ce7c",
+          "AlarmARN": "arn:aws:cloudwatch:ap-southeast-1:402178232802:alarm:TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmLow-f23e7327-6f9d-4898-8fc2-5ff297a4ce7c"
+        }
+      ],
+      "CreationTime": "2026-11-11T05:43:25.409000+00:00"
+    },
+    {
+      "PolicyARN": "arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:de50d0be-5953-4dd4-aa84-ea0bccc173cf:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-cpu-headroom",
+      "PolicyName": "blocbuy-swe5001-commerce-cpu-headroom",
+      "ServiceNamespace": "ecs",
+      "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+      "ScalableDimension": "ecs:service:DesiredCount",
+      "PolicyType": "StepScaling",
+      "StepScalingPolicyConfiguration": {
+        "AdjustmentType": "ChangeInCapacity",
+        "StepAdjustments": [
+          {
+            "MetricIntervalLowerBound": 0.0,
+            "ScalingAdjustment": 1
+          }
+        ],
+        "Cooldown": 60,
+        "MetricAggregationType": "Average"
+      },
+      "Alarms": [
+        {
+          "AlarmName": "blocbuy-swe5001-commerce-cpu-headroom",
+          "AlarmARN": "arn:aws:cloudwatch:ap-southeast-1:402178232802:alarm:blocbuy-swe5001-commerce-cpu-headroom"
+        }
+      ],
+      "CreationTime": "2026-11-11T08:05:43.292000+00:00"
+    }
+  ],
+  "emailSubscriptions": {
+    "total": 3,
+    "confirmed": 1,
+    "pending": 2
+  },
+  "cpuAlarm": {
+    "AlarmName": "blocbuy-swe5001-commerce-cpu-headroom",
+    "Threshold": 50.0,
+    "Period": 60,
+    "EvaluationPeriods": 1,
+    "DatapointsToAlarm": 1,
+    "ActionsEnabled": true,
+    "AlarmActions": [
+      "arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:de50d0be-5953-4dd4-aa84-ea0bccc173cf:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-cpu-headroom"
+    ],
+    "Dimensions": [
+      {
+        "Name": "ClusterName",
+        "Value": "blocbuy-swe5001"
+      },
+      {
+        "Name": "ServiceName",
+        "Value": "commerce-svc"
+      }
+    ]
+  },
+  "database": {
+    "class": "db.t4g.small",
+    "status": "available",
+    "pending": {}
+  },
+  "runtimeMutationPerformed": false
+}

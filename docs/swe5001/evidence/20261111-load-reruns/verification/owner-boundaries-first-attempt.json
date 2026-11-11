@@ -1,0 +1,8 @@
+{
+  "exit": 1,
+  "scope": "Offline verification tooling, not an application/HTTP gate",
+  "cause": "The checker decoded original archive bytes verbatim but used universal-newline read_text for the current file. CRLF sections falsely differed.",
+  "readOnlyFollowUp": "Both protected sections were confirmed byte-text identical, including all 22 and 80 original CRLF sequences respectively.",
+  "correction": "Read current file as bytes and decode, matching the original; no repository content or owner boundary was changed to satisfy the check.",
+  "originalFailurePreserved": true
+}

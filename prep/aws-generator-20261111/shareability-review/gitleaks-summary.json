@@ -1,0 +1,10 @@
+{
+  "image": "ghcr.io/gitleaks/gitleaks:v8.30.1",
+  "exitCode": 0,
+  "reportParsed": true,
+  "snapshotFileCount": 89,
+  "sharelistSha256": "8de83106646d4bb5c7cc9352bdb80e5e76ba8941b7e7f672eef55e0f38ffa75f",
+  "coverage": "Prospective working-tree files via exact read-only mounts; default built-in rules; ignore-gitleaks-allow enabled; no repository config/history read",
+  "findings": [],
+  "limitation": "Only path, rule and count retained; stdout report handled in memory, stderr suppressed; exit 0 + parsed empty findings required for clean scan. Files may change concurrently; separate hash stability receipt required."
+}

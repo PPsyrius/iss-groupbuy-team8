@@ -1,0 +1,125 @@
+{
+  "retention": "Private local Temp; raw streams/JFR/GC logs are not copied to Git",
+  "files": [
+    {
+      "path": "matrix-v2/backoff-base-a-warmup/samples.jsonl",
+      "bytes": 43058184,
+      "sha256": "f29ac359ac6d4af0372a388f1532b5df0b66cdaf91cb7b43edf31cb78198d744"
+    },
+    {
+      "path": "matrix-v2/backoff-base-a-control/samples.jsonl",
+      "bytes": 36934670,
+      "sha256": "b7b0a9c0a314879663a98336509575064a110a10b16401d1afa8fe35c6a6f1db"
+    },
+    {
+      "path": "matrix-v2/backoff-base-a-flush/samples.jsonl",
+      "bytes": 36906447,
+      "sha256": "ccb539dc0e27c119cae94cb46cb1639ba0b58362dabdc55ed1832ccaaeb03ffb"
+    },
+    {
+      "path": "matrix-v2/backoff-base-a-slow/samples.jsonl",
+      "bytes": 37170707,
+      "sha256": "07e8026f3a45d54c92fa8ee2458994b0344009c8acd2825c9c48b29d0436d3a6"
+    },
+    {
+      "path": "matrix-v2/backoff-base-a-down/samples.jsonl",
+      "bytes": 33625420,
+      "sha256": "10b2b8c96422a40867f6d7020028b79f1d03a825f82c677b501d98b8cee90100"
+    },
+    {
+      "path": "matrix-v2/backoff-base-a-recovery/samples.jsonl",
+      "bytes": 36905463,
+      "sha256": "325af174b72346d43c12175c340feb614c5ff78bb53189a3248c4ff46ec00d29"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-a-warmup/samples.jsonl",
+      "bytes": 49643713,
+      "sha256": "dbedff09b37a287bb67bf5809908d631f3167ba148c643eea2bb247ff0aeab4b"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-a-control/samples.jsonl",
+      "bytes": 36920301,
+      "sha256": "27477fc7045d75c6614a347f63de42c4b22151140866f53332557eb9720d4ade"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-a-flush/samples.jsonl",
+      "bytes": 36905921,
+      "sha256": "fc5654ef4f8a6d31364af7eb08a688233b987a6e143305fecbe4bd090c522f7e"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-a-slow/samples.jsonl",
+      "bytes": 43077962,
+      "sha256": "a5b1df1c5ee7f909559f2d983d8ee25c0a5ca1ec3709a38ccbdf6f552414f4be"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-a-down/samples.jsonl",
+      "bytes": 43070290,
+      "sha256": "b7b35223b4a397997e0a6c6f3fe3ee4745d5c1caf296102a87ecb88d23be162d"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-a-recovery/samples.jsonl",
+      "bytes": 36905510,
+      "sha256": "2eb7c1f60cd47b8ed1fbb84d74042ae0aaa50178fff40fadcfd7849739e2149c"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-b-warmup/samples.jsonl",
+      "bytes": 47871476,
+      "sha256": "7260f5f815411ad6861827f5f0ca57d672f4d1474aa90e2a599d3c75917a746b"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-b-control/samples.jsonl",
+      "bytes": 36920737,
+      "sha256": "757e1d84a09583ddb653381ca684901ac674f02ef9784cd5d9259fbb8c6a8110"
+    },
+    {
+      "path": "matrix-v2/backoff-base-b-warmup/samples.jsonl",
+      "bytes": 43986906,
+      "sha256": "0840c5652d32da1e6c8f8a17a7d8dea4fe3028fbec1cb943c0824e68b7e6e48c"
+    },
+    {
+      "path": "matrix-v2/backoff-base-b-control/samples.jsonl",
+      "bytes": 36958167,
+      "sha256": "d8651a0bb375274674ce9a31d725f3bc43d62bec55d478bab2bc6a026128e3e3"
+    },
+    {
+      "path": "matrix-v2/backoff-base-a.jfr",
+      "bytes": 40411520,
+      "sha256": "55a93282c7dd0569c014335dc345d8f48bd0314c862ed5c4ec54fc6f81f1468c"
+    },
+    {
+      "path": "matrix-v2/backoff-base-a-gc.log",
+      "bytes": 287668,
+      "sha256": "dede75316ec82b67ec38009db1743d4cca9c930f2a24a9f5f8786a1f091b8a1c"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-a.jfr",
+      "bytes": 35469114,
+      "sha256": "de8fe161f0865b5d6e42b41cf3777c4cd06e78ef79bd10dd57517770f79a7228"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-a-gc.log",
+      "bytes": 317360,
+      "sha256": "fc4e2198e3c1ab1f5e5ce73271a445f050674d76f54c22c2f2dd796bf86be969"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-b.jfr",
+      "bytes": 23288759,
+      "sha256": "961c99435ef456f577a84be3b0e1ac4c14bb38bbf4e778b729303e7a6cd94a2f"
+    },
+    {
+      "path": "matrix-v2/backoff-v3-b-gc.log",
+      "bytes": 229062,
+      "sha256": "eb8ca3754eed84552e652e3fc7b17034c2229773566feb7449d479a6be270bd5"
+    },
+    {
+      "path": "matrix-v2/backoff-base-b.jfr",
+      "bytes": 24009148,
+      "sha256": "fbdb6e295c6ddd1daaa04acc987c6ad44c0f7fd3bb1d45f82498c29a92612949"
+    },
+    {
+      "path": "matrix-v2/backoff-base-b-gc.log",
+      "bytes": 233299,
+      "sha256": "26619788515ec14f926b32d477e9540fb3717b71e2d24c131e981bc20cd308c6"
+    }
+  ]
+}

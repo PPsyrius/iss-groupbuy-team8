@@ -1,0 +1,162 @@
+{
+  "loadStartUtc": "2026-11-11T10:39:30.898138+00:00",
+  "loadEndUtc": "2026-11-11T11:09:30.924000+00:00",
+  "nominalArrivalIntegral": {
+    "firstFiveMinutes": 36000,
+    "nextTenMinutes": 240000,
+    "tenMinutePeak": 360000,
+    "finalFiveMinutes": 90000,
+    "total": 726000
+  },
+  "browseRequests": 725924,
+  "droppedIterations": 75,
+  "browsePlusDrops": 725999,
+  "nominalMinusBrowse": 76,
+  "nominalMinusBrowseAndDrops": 1,
+  "arrivalGateTolerance": 1,
+  "fullArrivalGatePassed": false,
+  "errorMetricOriginal": {
+    "type": "rate",
+    "contains": "default",
+    "values": {
+      "rate": 0.011611408356797682,
+      "passes": 8429,
+      "fails": 717495
+    },
+    "thresholds": {
+      "rate<0.01": {
+        "ok": false
+      }
+    }
+  },
+  "latencyMetricOriginal": {
+    "thresholds": {
+      "p(95)<800": {
+        "ok": true
+      }
+    },
+    "type": "trend",
+    "contains": "time",
+    "values": {
+      "max": 10012,
+      "p(95)": 450,
+      "p(99)": 9999,
+      "avg": 212.9906174751076,
+      "min": 7,
+      "med": 16
+    }
+  },
+  "zeroDropGatePassed": false,
+  "errorGatePassed": false,
+  "allRunP95ScreenPassed": true,
+  "eventRelativeP95AcceptanceComputed": false,
+  "reason": "Original analyzer refuses dropped iterations before streaming raw samples; no gate bypass performed.",
+  "observer": {
+    "samples": 157,
+    "collectionComplete": false,
+    "timerCompleted": true,
+    "maximumGapSeconds": 41.878859,
+    "bracketsExecution": true,
+    "originalAnalyzerCountBoundViolations": [],
+    "errors": [
+      {
+        "at": "2026-11-11T10:49:24.659692Z",
+        "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+      },
+      {
+        "at": "2026-11-11T10:52:46.743595Z",
+        "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+      },
+      {
+        "at": "2026-11-11T10:59:01.564508Z",
+        "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+      },
+      {
+        "at": "2026-11-11T11:00:34.573905Z",
+        "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+      }
+    ]
+  },
+  "supplemental": {
+    "samples": 147,
+    "receiptSamples": 147,
+    "collectionComplete": false,
+    "errors": [
+      {
+        "at": "2026-11-11T10:48:11.208707+00:00",
+        "errorType": "ValueError"
+      },
+      {
+        "at": "2026-11-11T10:52:33.381621+00:00",
+        "errorType": "ValueError"
+      },
+      {
+        "at": "2026-11-11T10:52:58.748391+00:00",
+        "errorType": "ValueError"
+      },
+      {
+        "at": "2026-11-11T10:53:21.681160+00:00",
+        "errorType": "ValueError"
+      },
+      {
+        "at": "2026-11-11T10:53:44.015381+00:00",
+        "errorType": "ValueError"
+      }
+    ],
+    "maxGapSeconds": 117.816525,
+    "countMaxima": {
+      "listedTasks": 6,
+      "runningTasks": 6,
+      "desiredRunningTasks": 6,
+      "healthyTargets": 6
+    },
+    "overSixDiagnosticSamples": [],
+    "limits": "Task-list/detail reads are not atomic with target-health or service-count reads; listed tasks are not all RUNNING and are not the analyzer service-count input."
+  },
+  "normalization": {
+    "schema": 1,
+    "toolingSha": "b911ea63795c5ddb7db1f7918f7f7af03a2745ff",
+    "runLabel": "20261111-v3-distributed-r3",
+    "events": [
+      {
+        "at": "2026-11-11T10:46:48.317000+00:00",
+        "from": 1,
+        "to": 2,
+        "source": "application-autoscaling",
+        "activityId": "8f90e795-0550-4b36-ade8-72cd665dcde2",
+        "activityCompletedAt": "2026-11-11T10:47:54.867000+00:00",
+        "policy": "blocbuy-swe5001-commerce-requests-per-target"
+      },
+      {
+        "at": "2026-11-11T10:48:48.308000+00:00",
+        "from": 2,
+        "to": 3,
+        "source": "application-autoscaling",
+        "activityId": "3dc98220-16bf-42f2-b345-89fab669617b",
+        "activityCompletedAt": "2026-11-11T10:49:54.757000+00:00",
+        "policy": "blocbuy-swe5001-commerce-requests-per-target"
+      },
+      {
+        "at": "2026-11-11T10:51:48.326000+00:00",
+        "from": 3,
+        "to": 6,
+        "source": "application-autoscaling",
+        "activityId": "002af5ca-f24d-431a-944f-ff9b67fd8a2e",
+        "activityCompletedAt": "2026-11-11T10:53:24.836000+00:00",
+        "policy": "blocbuy-swe5001-commerce-requests-per-target"
+      }
+    ],
+    "timestampMeaning": "Original successful Application Auto Scaling StartTime, not readiness; includes CPU and request policies. Chronological successful desired-count changes from observed one-task baseline. Unhealthy replacements are not scale-out events.",
+    "normalizationBlockers": []
+  },
+  "runtimeK6Exit": 99,
+  "runtimeWaitOutput": 99,
+  "monitorExit": 0,
+  "analyzerCliExit": 1,
+  "outerOrchestrationShellExit": {
+    "reportedByParent": 1,
+    "notEquivalentToK6Exit": true
+  },
+  "acceptance": false,
+  "r4Launch": "HOLD"
+}

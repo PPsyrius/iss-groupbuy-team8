@@ -1,0 +1,919 @@
+{
+  "kind": "codec-startup",
+  "evidenceKind": "local-diagnostic-not-AWS-acceptance",
+  "completeAuditAndJfrCollection": true,
+  "cases": [
+    {
+      "label": "codec-base-a-warmup",
+      "exitCode": 99,
+      "requests": 14678,
+      "errorRate": 0.5534132715628832,
+      "drops": 9323,
+      "p95Ms": 10001,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-base-a-control",
+      "exitCode": 0,
+      "requests": 12001,
+      "errorRate": 0,
+      "drops": 0,
+      "p95Ms": 94,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-base-a-flush",
+      "exitCode": 0,
+      "requests": 12001,
+      "errorRate": 0,
+      "drops": 0,
+      "p95Ms": 4,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-base-a-slow",
+      "exitCode": 99,
+      "requests": 11889,
+      "errorRate": 0.12919505425182942,
+      "drops": 2112,
+      "p95Ms": 10001,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-base-a-down",
+      "exitCode": 99,
+      "requests": 10554,
+      "errorRate": 0.25506916808792873,
+      "drops": 3447,
+      "p95Ms": 10001,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-base-a-recovery",
+      "exitCode": 0,
+      "requests": 12001,
+      "errorRate": 0,
+      "drops": 0,
+      "p95Ms": 4,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-candidate-a-warmup",
+      "exitCode": 99,
+      "requests": 12321,
+      "errorRate": 0.9757324892460028,
+      "drops": 11679,
+      "p95Ms": 10001,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-candidate-a-control",
+      "exitCode": 99,
+      "requests": 12001,
+      "errorRate": 0.00916590284142988,
+      "drops": 0,
+      "p95Ms": 3713,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-candidate-b-warmup",
+      "exitCode": 99,
+      "requests": 12406,
+      "errorRate": 0.9251168789295502,
+      "drops": 11595,
+      "p95Ms": 10001,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-candidate-b-control",
+      "exitCode": 99,
+      "requests": 12001,
+      "errorRate": 0.005749520873260561,
+      "drops": 0,
+      "p95Ms": 2717,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-base-b-warmup",
+      "exitCode": 99,
+      "requests": 12362,
+      "errorRate": 0.9208865879307555,
+      "drops": 11638,
+      "p95Ms": 10001,
+      "auditPresent": true,
+      "usableMeasurement": true
+    },
+    {
+      "label": "codec-base-b-control",
+      "exitCode": 99,
+      "requests": 12000,
+      "errorRate": 0.0003333333333333333,
+      "drops": 0,
+      "p95Ms": 856,
+      "auditPresent": true,
+      "usableMeasurement": true
+    }
+  ],
+  "coldJfrComparison": {
+    "codec-base-a": {
+      "first5SecondsPresent": true,
+      "first5SecondsExecutionSamples": 22,
+      "first5SecondsJacksonInclusiveMonitorDurationNanos": 9441820952,
+      "first5SecondsTopMonitorStacks": [
+        {
+          "value": 3877670427,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.util.TextBuffer.contentsAsInt > tools.jackson.core.json.JsonParserBase._parseIntValue > tools.jackson.core.base.ParserBase.getIntValue > tools.jackson.databind.deser.jdk.NumberDeserializers$IntegerDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$IntegerDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeWithErrorWrapping > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased"
+        },
+        {
+          "value": 3197141384,
+          "name": "tools.jackson.databind.deser.bean.PropertyBasedCreator.startBuilding > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased > tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault > tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject > tools.jackson.databind.deser.bean.BeanDeserializer.deserialize > tools.jackson.databind.deser.DeserializationContextExt.readRootValue > tools.jackson.databind.ObjectMapper._readMapAndClose > tools.jackson.databind.ObjectMapper.readValue > com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCache.addValidHit > com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCache.findByProductIds > com.blocbuy.groupbuy.service.GroupDealQueryServiceImpl.findBestOpenDealsByProductIds > java.lang.invoke.LambdaForm$DMH.0x0000711158158400.invokeVirtual"
+        },
+        {
+          "value": 678251990,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal > tools.jackson.core.json.JsonParserBase._parseSlowFloat > tools.jackson.core.json.JsonParserBase._parseNumericValue > tools.jackson.core.base.ParserBase.getDecimalValue > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize"
+        },
+        {
+          "value": 326738993,
+          "name": "java.time.format.Parsed.<init> > java.time.format.DateTimeParseContext.<init> > java.time.format.DateTimeFormatter.parseUnresolved0 > java.time.format.DateTimeFormatter.parseResolved0 > java.time.format.DateTimeFormatter.parse > tools.jackson.databind.ext.javatime.deser.InstantDeserializer._fromString > tools.jackson.databind.ext.javatime.deser.InstantDeserializer.deserialize > tools.jackson.databind.ext.javatime.deser.InstantDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeWithErrorWrapping > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased > tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault"
+        },
+        {
+          "value": 296488569,
+          "name": "tools.jackson.databind.ser.impl.PropertySerializerMap$Single.newWith > tools.jackson.databind.ser.impl.PropertySerializerMap.findAndAddPrimarySerializer > tools.jackson.databind.ser.BeanPropertyWriter._findAndAddDynamic > tools.jackson.databind.ser.BeanPropertyWriter.serializeAsProperty > tools.jackson.databind.ser.UnrolledBeanSerializer.serializeNonFiltered > tools.jackson.databind.ser.UnrolledBeanSerializer.serialize > tools.jackson.databind.ser.SerializationContextExt._serialize > tools.jackson.databind.ser.SerializationContextExt.serializeValue > tools.jackson.databind.ObjectWriter$Prefetch.serialize > tools.jackson.databind.ObjectWriter.writeValue > org.springframework.http.converter.AbstractJacksonHttpMessageConverter.writeInternal > org.springframework.http.converter.AbstractSmartHttpMessageConverter.write"
+        },
+        {
+          "value": 295539496,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.databind.deser.bean.PropertyBasedCreator.startBuilding > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased > tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault > tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject > tools.jackson.databind.deser.bean.BeanDeserializer.deserialize > tools.jackson.databind.deser.DeserializationContextExt.readRootValue > tools.jackson.databind.ObjectMapper._readMapAndClose > tools.jackson.databind.ObjectMapper.readValue"
+        },
+        {
+          "value": 196048376,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.register > org.apache.coyote.AbstractProtocol$ConnectionHandler.process > org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun > org.apache.tomcat.util.net.SocketProcessorBase.run > org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker > org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run > org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run > java.lang.Thread.runWith > java.lang.Thread.run"
+        },
+        {
+          "value": 193148105,
+          "name": "org.springframework.boot.loader.zip.FileDataBlock$FileAccess.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.read > org.springframework.boot.loader.zip.DataBlock.readFully > org.springframework.boot.loader.zip.ZipCentralDirectoryFileHeaderRecord.load > org.springframework.boot.loader.zip.ZipContent.loadZipCentralDirectoryFileHeaderRecord > org.springframework.boot.loader.zip.ZipContent.hasEntry > org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackage > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackageIfNecessary > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass"
+        },
+        {
+          "value": 190848834,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.BigDecimalParser.parseWithFastParser > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal > tools.jackson.core.json.JsonParserBase._parseSlowFloat > tools.jackson.core.json.JsonParserBase._parseNumericValue > tools.jackson.core.base.ParserBase.getDecimalValue > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize"
+        },
+        {
+          "value": 99586898,
+          "name": "org.springframework.boot.loader.zip.FileDataBlock$FileAccess.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.read > org.springframework.boot.loader.zip.DataBlock.readFully > org.springframework.boot.loader.zip.ZipCentralDirectoryFileHeaderRecord.load > org.springframework.boot.loader.zip.ZipContent.loadZipCentralDirectoryFileHeaderRecord > org.springframework.boot.loader.zip.ZipContent.getEntry > org.springframework.boot.loader.jar.NestedJarFile.getContentEntry > org.springframework.boot.loader.jar.NestedJarFile.getNestedJarEntry > org.springframework.boot.loader.jar.NestedJarFile.getJarEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.assertCachedJarFileHasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.connect"
+        },
+        {
+          "value": 98502893,
+          "name": "org.springframework.core.env.PropertiesPropertySource.getPropertyNames > org.springframework.boot.context.properties.source.SpringIterableConfigurationPropertySource$Cache.tryUpdate > org.springframework.boot.context.properties.source.SpringIterableConfigurationPropertySource$Cache.update > org.springframework.boot.context.properties.source.SpringIterableConfigurationPropertySource.updateCache > org.springframework.boot.context.properties.source.SpringIterableConfigurationPropertySource$$Lambda.0x000071115810af50.apply > org.springframework.boot.context.properties.source.SoftReferenceConfigurationPropertyCache.get > org.springframework.boot.context.properties.source.SpringIterableConfigurationPropertySource.getCache > org.springframework.boot.context.properties.source.SpringIterableConfigurationPropertySource.getConfigurationProperty > org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertySource.findConfigurationProperty > org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver.findPropertyValue > org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver.getProperty > org.springframework.boot.context.properties.source.ConfigurationPropertySourcesPropertyResolver.getProperty"
+        },
+        {
+          "value": 96687383,
+          "name": "org.springframework.boot.loader.jar.NestedJarFile.getContentEntry > org.springframework.boot.loader.jar.NestedJarFile.getVersionedContentEntry > org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackage > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackageIfNecessary > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.BigDecimalParser.parseWithFastParser > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal"
+        },
+        {
+          "value": 96437425,
+          "name": "com.fasterxml.jackson.databind.ser.SerializerCache._makeReadOnlyLookupMap > com.fasterxml.jackson.databind.ser.SerializerCache.getReadOnlyLookupMap > com.fasterxml.jackson.databind.SerializerProvider.<init> > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider.<init> > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider$Impl.<init> > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider$Impl.createInstance > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider$Impl.createInstance > com.fasterxml.jackson.databind.ObjectMapper._serializerProvider > com.fasterxml.jackson.databind.ObjectMapper.canSerialize > org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter.canWrite > org.springframework.http.converter.AbstractGenericHttpMessageConverter.canWrite > org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.getProducibleMediaTypes"
+        },
+        {
+          "value": 94972367,
+          "name": "java.util.Hashtable.get > org.apache.commons.logging.impl.WeakHashtable.get > org.apache.commons.logging.LogFactory.getCachedFactory > org.apache.commons.logging.LogFactory.getFactory > org.apache.commons.logging.LogFactory.getLog > org.springframework.data.redis.connection.AbstractRedisConnection.<init> > org.springframework.data.redis.connection.lettuce.LettuceConnection.<init> > org.springframework.data.redis.connection.lettuce.LettuceConnection.<init> > org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory.doCreateLettuceConnection > org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory.getConnection > org.springframework.data.redis.core.RedisConnectionUtils.fetchConnection > org.springframework.data.redis.core.RedisConnectionUtils.doGetConnection"
+        },
+        {
+          "value": 93281448,
+          "name": "org.springframework.boot.loader.jar.NestedJarFile.getContentEntry > org.springframework.boot.loader.jar.NestedJarFile.getVersionedContentEntry > org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.open > org.springframework.boot.loader.net.protocol.jar.Handler.openConnection > java.net.URL.openConnection > jdk.internal.loader.URLClassPath$Loader.getResource > jdk.internal.loader.URLClassPath.getResource > java.net.URLClassLoader$1.run > java.net.URLClassLoader$1.run > java.security.AccessController.executePrivileged"
+        }
+      ],
+      "coldPhases": {
+        "cold-00to05": {
+          "executionSamples": 22,
+          "monitorInclusiveCategoryDurationNanos": {
+            "environment": 98502893,
+            "classLoading": 5606254639,
+            "application": 9716536270,
+            "json": 9441820952
+          },
+          "cpuInclusiveCategories": {
+            "classLoading": 2,
+            "application": 18,
+            "datasource": 4,
+            "mybatis": 7,
+            "mybatisResultMapping": 4,
+            "logging": 1,
+            "json": 3,
+            "postgresTimestamp": 1,
+            "observability": 3
+          },
+          "compilation": {
+            "count": 12,
+            "totalEventDurationNanos": 5138094170,
+            "byLevel": {
+              "4": 5138094170
+            }
+          },
+          "gc": {
+            "totalPauseMs": 24.196725,
+            "count": 3,
+            "maxPauseMs": 15.949442
+          }
+        },
+        "cold-05to15": {
+          "executionSamples": 75,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 392849507,
+            "environment": 98903847,
+            "classLoading": 5586253909,
+            "application": 6078007263,
+            "mybatis": 2157465892
+          },
+          "cpuInclusiveCategories": {
+            "application": 65,
+            "datasource": 16,
+            "mybatis": 15,
+            "mybatisResultMapping": 10,
+            "logging": 26,
+            "json": 6,
+            "observability": 5,
+            "validation": 1,
+            "cryptoTLS": 6
+          },
+          "compilation": {
+            "count": 12,
+            "totalEventDurationNanos": 9607099656,
+            "byLevel": {
+              "1": 193255069,
+              "2": 196308602,
+              "3": 1119074060,
+              "4": 8098461925
+            }
+          },
+          "gc": {
+            "totalPauseMs": 472.363112,
+            "count": 8,
+            "maxPauseMs": 199.813526
+          }
+        },
+        "cold-15to45": {
+          "executionSamples": 249,
+          "monitorInclusiveCategoryDurationNanos": {
+            "environment": 1463348438,
+            "secureRandom": 3426019129,
+            "application": 4985800594
+          },
+          "cpuInclusiveCategories": {
+            "mybatis": 51,
+            "secureRandom": 1,
+            "environment": 4,
+            "classLoading": 3,
+            "application": 186,
+            "datasource": 47,
+            "mybatisResultMapping": 23,
+            "json": 22,
+            "logging": 17,
+            "postgresTimestamp": 3,
+            "springAnnotations": 4,
+            "observability": 13,
+            "validation": 4,
+            "cryptoTLS": 29
+          },
+          "compilation": {
+            "count": 77,
+            "totalEventDurationNanos": 24038095017,
+            "byLevel": {
+              "1": 192428004,
+              "2": 1619988980,
+              "3": 1651310122,
+              "4": 20574367911
+            }
+          },
+          "gc": {
+            "totalPauseMs": 554.658714,
+            "count": 16,
+            "maxPauseMs": 208.416068
+          }
+        },
+        "cold-45plus": {
+          "executionSamples": 715,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 2989180085,
+            "environment": 4095821629,
+            "classLoading": 97071483,
+            "application": 7182073197,
+            "datasource": 97071483,
+            "mybatis": 97071483,
+            "mybatisResultMapping": 97071483,
+            "postgresTimestamp": 97071483
+          },
+          "cpuInclusiveCategories": {
+            "mybatis": 153,
+            "secureRandom": 4,
+            "environment": 16,
+            "classLoading": 11,
+            "application": 504,
+            "datasource": 114,
+            "mybatisResultMapping": 68,
+            "logging": 8,
+            "json": 86,
+            "postgresTimestamp": 7,
+            "springAnnotations": 20,
+            "observability": 46,
+            "validation": 12,
+            "cryptoTLS": 48
+          },
+          "compilation": {
+            "count": 164,
+            "totalEventDurationNanos": 58452259391,
+            "byLevel": {
+              "2": 107138531,
+              "3": 332396740,
+              "4": 58012724120
+            }
+          },
+          "gc": {
+            "totalPauseMs": 1066.2496270000001,
+            "count": 34,
+            "maxPauseMs": 196.816587
+          }
+        }
+      }
+    },
+    "codec-candidate-a": {
+      "first5SecondsPresent": true,
+      "first5SecondsExecutionSamples": 17,
+      "first5SecondsJacksonInclusiveMonitorDurationNanos": 7803056464,
+      "first5SecondsTopMonitorStacks": [
+        {
+          "value": 3759272500,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.util.TextBuffer.contentsAsInt > tools.jackson.core.json.JsonParserBase._parseIntValue > tools.jackson.core.base.ParserBase.getIntValue > tools.jackson.databind.deser.jdk.NumberDeserializers$IntegerDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$IntegerDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeWithErrorWrapping > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased"
+        },
+        {
+          "value": 1374726985,
+          "name": "tools.jackson.databind.util.internal.UnreflectHandleSupplier.initialize > tools.jackson.databind.util.internal.UnreflectHandleSupplier$$Lambda.0x00007fa3ec696c30.get > tools.jackson.databind.util.internal.UnreflectHandleSupplier.get > tools.jackson.databind.introspect.AnnotatedConstructor.call > tools.jackson.databind.deser.std.StdValueInstantiator.createFromObjectWith > tools.jackson.databind.deser.ValueInstantiator.createFromObjectWith > tools.jackson.databind.deser.bean.PropertyBasedCreator.build > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased > tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault > tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject > tools.jackson.databind.deser.bean.BeanDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize"
+        },
+        {
+          "value": 1278237464,
+          "name": "tools.jackson.databind.deser.bean.PropertyBasedCreator.startBuilding > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased > tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault > tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject > tools.jackson.databind.deser.bean.BeanDeserializer.deserialize > tools.jackson.databind.deser.DeserializationContextExt.readRootValue > tools.jackson.databind.ObjectReader._bindAndClose > tools.jackson.databind.ObjectReader.readValue > com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCache.addValidHit > com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCache.findByProductIds > com.blocbuy.groupbuy.service.GroupDealQueryServiceImpl.findBestOpenDealsByProductIds > java.lang.invoke.LambdaForm$DMH.0x00007fa3ec158400.invokeVirtual"
+        },
+        {
+          "value": 902905398,
+          "name": "org.springframework.boot.loader.jar.NestedJarFile.getContentEntry > org.springframework.boot.loader.jar.NestedJarFile.getVersionedContentEntry > org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackage > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackageIfNecessary > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.BigDecimalParser.parseWithFastParser > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal"
+        },
+        {
+          "value": 298544061,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.BigDecimalParser.parseWithFastParser > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal > tools.jackson.core.json.JsonParserBase._parseSlowFloat > tools.jackson.core.json.JsonParserBase._parseNumericValue > tools.jackson.core.base.ParserBase.getDecimalValue > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize"
+        },
+        {
+          "value": 189370056,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal > tools.jackson.core.json.JsonParserBase._parseSlowFloat > tools.jackson.core.json.JsonParserBase._parseNumericValue > tools.jackson.core.base.ParserBase.getDecimalValue > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize"
+        },
+        {
+          "value": 155607337,
+          "name": "org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.open > org.springframework.boot.loader.net.protocol.jar.Handler.openConnection > java.net.URL.openConnection > jdk.internal.loader.URLClassPath$Loader.getResource > jdk.internal.loader.URLClassPath.getResource > java.net.URLClassLoader$1.run > java.net.URLClassLoader$1.run > java.security.AccessController.executePrivileged > java.security.AccessController.doPrivileged > java.net.URLClassLoader.findClass"
+        },
+        {
+          "value": 94667411,
+          "name": "org.springframework.boot.loader.zip.FileDataBlock$FileAccess.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.read > org.springframework.boot.loader.zip.DataBlock.readFully > org.springframework.boot.loader.zip.ZipCentralDirectoryFileHeaderRecord.load > org.springframework.boot.loader.zip.ZipContent.loadZipCentralDirectoryFileHeaderRecord > org.springframework.boot.loader.zip.ZipContent.getEntry > org.springframework.boot.loader.jar.NestedJarFile.getContentEntry > org.springframework.boot.loader.jar.NestedJarFile.getNestedJarEntry > org.springframework.boot.loader.jar.NestedJarFile.getJarEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.assertCachedJarFileHasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.connect"
+        },
+        {
+          "value": 87136786,
+          "name": "sun.security.provider.SecureRandom.engineNextBytes > sun.security.provider.NativePRNG$RandomIO.implNextBytes > sun.security.provider.NativePRNG.engineNextBytes > java.security.SecureRandom.nextBytes > java.util.UUID.randomUUID > com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal > org.springframework.web.filter.OncePerRequestFilter.doFilter > org.apache.catalina.core.ApplicationFilterChain.doFilter > org.apache.catalina.core.StandardWrapperValve.invoke > org.apache.catalina.core.StandardContextValve.invoke > org.apache.catalina.authenticator.AuthenticatorBase.invoke > org.apache.catalina.core.StandardHostValve.invoke"
+        }
+      ],
+      "coldPhases": {
+        "cold-00to05": {
+          "executionSamples": 17,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 87136786,
+            "application": 8066524203,
+            "classLoading": 5400366763,
+            "datasource": 94667411,
+            "mybatis": 94667411,
+            "mybatisResultMapping": 94667411,
+            "json": 7803056464,
+            "postgresTimestamp": 94667411
+          },
+          "cpuInclusiveCategories": {
+            "application": 13,
+            "datasource": 4,
+            "mybatis": 7,
+            "mybatisResultMapping": 4,
+            "json": 4,
+            "observability": 2,
+            "cryptoTLS": 3
+          },
+          "compilation": {
+            "totalEventDurationNanos": 3522371354,
+            "count": 8,
+            "byLevel": {
+              "4": 3522371354
+            }
+          },
+          "gc": {
+            "maxPauseMs": 103.687526,
+            "count": 3,
+            "totalPauseMs": 113.306121
+          }
+        },
+        "cold-05to15": {
+          "executionSamples": 52,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 164163842,
+            "application": 6324776117,
+            "classLoading": 5956854250,
+            "mybatis": 490452529
+          },
+          "cpuInclusiveCategories": {
+            "application": 44,
+            "datasource": 4,
+            "mybatis": 9,
+            "mybatisResultMapping": 1,
+            "logging": 24,
+            "json": 6,
+            "observability": 2,
+            "cryptoTLS": 2,
+            "validation": 1
+          },
+          "compilation": {
+            "totalEventDurationNanos": 13447894900,
+            "count": 36,
+            "byLevel": {
+              "1": 300343566,
+              "2": 2822217821,
+              "3": 1547500212,
+              "4": 8777833301
+            }
+          },
+          "gc": {
+            "maxPauseMs": 207.654072,
+            "count": 7,
+            "totalPauseMs": 464.441433
+          }
+        },
+        "cold-15to45": {
+          "executionSamples": 128,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 22765577870,
+            "classLoading": 491006787,
+            "application": 26820847229
+          },
+          "cpuInclusiveCategories": {
+            "application": 111,
+            "datasource": 12,
+            "mybatis": 16,
+            "mybatisResultMapping": 2,
+            "json": 9,
+            "logging": 61,
+            "observability": 1,
+            "springAnnotations": 2,
+            "cryptoTLS": 11
+          },
+          "compilation": {
+            "totalEventDurationNanos": 37382853114,
+            "count": 105,
+            "byLevel": {
+              "2": 7751873809,
+              "3": 3595956889,
+              "4": 26035022416
+            }
+          },
+          "gc": {
+            "maxPauseMs": 230.902415,
+            "count": 16,
+            "totalPauseMs": 564.165539
+          }
+        },
+        "cold-45plus": {
+          "executionSamples": 823,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 2787950591,
+            "application": 4500878577
+          },
+          "cpuInclusiveCategories": {
+            "mybatis": 195,
+            "secureRandom": 7,
+            "classLoading": 14,
+            "application": 601,
+            "datasource": 136,
+            "mybatisResultMapping": 85,
+            "json": 105,
+            "logging": 32,
+            "postgresTimestamp": 6,
+            "springAnnotations": 15,
+            "observability": 51,
+            "validation": 10,
+            "cryptoTLS": 59
+          },
+          "compilation": {
+            "totalEventDurationNanos": 65607370526,
+            "count": 164,
+            "byLevel": {
+              "2": 201686465,
+              "3": 729961337,
+              "4": 64675722724
+            }
+          },
+          "gc": {
+            "maxPauseMs": 294.241677,
+            "count": 31,
+            "totalPauseMs": 1424.1583259999995
+          }
+        }
+      }
+    },
+    "codec-candidate-b": {
+      "first5SecondsPresent": true,
+      "first5SecondsExecutionSamples": 16,
+      "first5SecondsJacksonInclusiveMonitorDurationNanos": 11089612578,
+      "first5SecondsTopMonitorStacks": [
+        {
+          "name": "tools.jackson.databind.deser.bean.PropertyBasedCreator.startBuilding > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased > tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault > tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject > tools.jackson.databind.deser.bean.BeanDeserializer.deserialize > tools.jackson.databind.deser.DeserializationContextExt.readRootValue > tools.jackson.databind.ObjectReader._bindAndClose > tools.jackson.databind.ObjectReader.readValue > com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCache.addValidHit > com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCache.findByProductIds > com.blocbuy.groupbuy.service.GroupDealQueryServiceImpl.findBestOpenDealsByProductIds > java.lang.invoke.LambdaForm$DMH.0x00007c4f64158400.invokeVirtual",
+          "value": 6929477425
+        },
+        {
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.util.TextBuffer.contentsAsInt > tools.jackson.core.json.JsonParserBase._parseIntValue > tools.jackson.core.base.ParserBase.getIntValue > tools.jackson.databind.deser.jdk.NumberDeserializers$IntegerDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$IntegerDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeWithErrorWrapping > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased",
+          "value": 2187551532
+        },
+        {
+          "name": "com.fasterxml.jackson.databind.ser.SerializerCache._makeReadOnlyLookupMap > com.fasterxml.jackson.databind.ser.SerializerCache.getReadOnlyLookupMap > com.fasterxml.jackson.databind.SerializerProvider.<init> > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider.<init> > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider$Impl.<init> > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider$Impl.createInstance > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider$Impl.createInstance > com.fasterxml.jackson.databind.ObjectMapper._serializerProvider > com.fasterxml.jackson.databind.ObjectMapper.canSerialize > org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter.canWrite > org.springframework.http.converter.AbstractGenericHttpMessageConverter.canWrite > org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.getProducibleMediaTypes",
+          "value": 590548911
+        },
+        {
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.databind.deser.bean.PropertyBasedCreator.startBuilding > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased > tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault > tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject > tools.jackson.databind.deser.bean.BeanDeserializer.deserialize > tools.jackson.databind.deser.DeserializationContextExt.readRootValue > tools.jackson.databind.ObjectReader._bindAndClose > tools.jackson.databind.ObjectReader.readValue",
+          "value": 400656635
+        },
+        {
+          "name": "tools.jackson.databind.ser.impl.PropertySerializerMap$Single.newWith > tools.jackson.databind.ser.impl.PropertySerializerMap.findAndAddPrimarySerializer > tools.jackson.databind.ser.BeanPropertyWriter._findAndAddDynamic > tools.jackson.databind.ser.BeanPropertyWriter.serializeAsProperty > tools.jackson.databind.ser.UnrolledBeanSerializer.serializeNonFiltered > tools.jackson.databind.ser.UnrolledBeanSerializer.serialize > tools.jackson.databind.ser.SerializationContextExt._serialize > tools.jackson.databind.ser.SerializationContextExt.serializeValue > tools.jackson.databind.ObjectWriter$Prefetch.serialize > tools.jackson.databind.ObjectWriter.writeValue > org.springframework.http.converter.AbstractJacksonHttpMessageConverter.writeInternal > org.springframework.http.converter.AbstractSmartHttpMessageConverter.write",
+          "value": 393099434
+        },
+        {
+          "name": "org.springframework.boot.loader.jar.NestedJarFile.getContentEntry > org.springframework.boot.loader.jar.NestedJarFile.getVersionedContentEntry > org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.open > org.springframework.boot.loader.net.protocol.jar.Handler.openConnection > java.net.URL.openConnection > jdk.internal.loader.URLClassPath$Loader.getResource > jdk.internal.loader.URLClassPath.getResource > java.net.URLClassLoader$1.run > java.net.URLClassLoader$1.run > java.security.AccessController.executePrivileged",
+          "value": 195229909
+        },
+        {
+          "name": "org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.open > org.springframework.boot.loader.net.protocol.jar.Handler.openConnection > java.net.URL.openConnection > jdk.internal.loader.URLClassPath$Loader.getResource > jdk.internal.loader.URLClassPath.getResource > java.net.URLClassLoader$1.run > java.net.URLClassLoader$1.run > java.security.AccessController.executePrivileged > java.security.AccessController.doPrivileged > java.net.URLClassLoader.findClass",
+          "value": 162997237
+        },
+        {
+          "name": "java.lang.reflect.Field.declaredAnnotations > java.lang.reflect.Field.declaredAnnotations > java.lang.reflect.Field.getDeclaredAnnotations > tools.jackson.databind.introspect.AnnotatedFieldCollector._findFields > tools.jackson.databind.introspect.AnnotatedFieldCollector.collect > tools.jackson.databind.introspect.AnnotatedFieldCollector.collectFields > tools.jackson.databind.introspect.AnnotatedClass._fields > tools.jackson.databind.introspect.AnnotatedClass.fields > tools.jackson.databind.introspect.POJOPropertiesCollector._addFields > tools.jackson.databind.introspect.POJOPropertiesCollector.collectAll > tools.jackson.databind.introspect.POJOPropertiesCollector.getJsonValueAccessor > tools.jackson.databind.introspect.BasicBeanDescription.findJsonValueAccessor",
+          "value": 101520826
+        },
+        {
+          "name": "java.time.format.DateTimeParseContext.<init> > java.time.format.DateTimeFormatter.parseUnresolved0 > java.time.format.DateTimeFormatter.parseResolved0 > java.time.format.DateTimeFormatter.parse > tools.jackson.databind.ext.javatime.deser.InstantDeserializer._fromString > tools.jackson.databind.ext.javatime.deser.InstantDeserializer.deserialize > tools.jackson.databind.ext.javatime.deser.InstantDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeWithErrorWrapping > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased > tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault > tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject",
+          "value": 99790350
+        },
+        {
+          "name": "tools.jackson.databind.util.internal.UnreflectHandleSupplier.initialize > tools.jackson.databind.util.internal.UnreflectHandleSupplier$$Lambda.0x00007c4f64696c30.get > tools.jackson.databind.util.internal.UnreflectHandleSupplier.get > tools.jackson.databind.ser.BeanPropertyWriter.get > tools.jackson.databind.ser.BeanPropertyWriter.serializeAsProperty > tools.jackson.databind.ser.bean.BeanSerializerBase._serializePropertiesNoView > tools.jackson.databind.ser.BeanSerializer.serialize > tools.jackson.databind.ser.BeanPropertyWriter.serializeAsProperty > tools.jackson.databind.ser.UnrolledBeanSerializer.serializeNonFiltered > tools.jackson.databind.ser.UnrolledBeanSerializer.serialize > tools.jackson.databind.ser.SerializationContextExt._serialize > tools.jackson.databind.ser.SerializationContextExt.serializeValue",
+          "value": 96110729
+        },
+        {
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal > tools.jackson.core.json.JsonParserBase._parseSlowFloat > tools.jackson.core.json.JsonParserBase._parseNumericValue > tools.jackson.core.base.ParserBase.getDecimalValue > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize",
+          "value": 95626827
+        }
+      ],
+      "coldPhases": {
+        "cold-00to05": {
+          "executionSamples": 16,
+          "monitorInclusiveCategoryDurationNanos": {
+            "application": 11252609815,
+            "classLoading": 3042062140,
+            "json": 11089612578
+          },
+          "cpuInclusiveCategories": {
+            "application": 11,
+            "classLoading": 2,
+            "datasource": 2,
+            "mybatis": 2,
+            "mybatisResultMapping": 1,
+            "json": 5,
+            "postgresTimestamp": 1,
+            "observability": 1,
+            "cryptoTLS": 2
+          },
+          "compilation": {
+            "count": 12,
+            "byLevel": {
+              "2": 196546158,
+              "3": 394612706,
+              "4": 4205879566
+            },
+            "totalEventDurationNanos": 4797038430
+          },
+          "gc": {
+            "count": 3,
+            "totalPauseMs": 21.920062,
+            "maxPauseMs": 10.248635
+          }
+        },
+        "cold-05to15": {
+          "executionSamples": 54,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 98513996,
+            "application": 5378187032,
+            "classLoading": 2392818051,
+            "mybatis": 199705052,
+            "logging": 195880046
+          },
+          "cpuInclusiveCategories": {
+            "application": 42,
+            "datasource": 13,
+            "mybatis": 12,
+            "mybatisResultMapping": 6,
+            "logging": 2,
+            "json": 7,
+            "postgresTimestamp": 1,
+            "observability": 1,
+            "validation": 1,
+            "cryptoTLS": 8
+          },
+          "compilation": {
+            "count": 29,
+            "byLevel": {
+              "1": 102620212,
+              "2": 1183815198,
+              "3": 899721510,
+              "4": 9338072882
+            },
+            "totalEventDurationNanos": 11524229802
+          },
+          "gc": {
+            "count": 7,
+            "totalPauseMs": 414.403402,
+            "maxPauseMs": 232.693496
+          }
+        },
+        "cold-15to45": {
+          "executionSamples": 252,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 3109935142,
+            "application": 3300983760,
+            "mybatis": 191048618
+          },
+          "cpuInclusiveCategories": {
+            "mybatis": 54,
+            "secureRandom": 1,
+            "classLoading": 4,
+            "application": 183,
+            "datasource": 52,
+            "mybatisResultMapping": 17,
+            "json": 21,
+            "logging": 20,
+            "postgresTimestamp": 2,
+            "productImageParsing": 1,
+            "springAnnotations": 7,
+            "observability": 16,
+            "validation": 5,
+            "cryptoTLS": 27
+          },
+          "compilation": {
+            "count": 60,
+            "byLevel": {
+              "2": 2975844795,
+              "3": 1410134080,
+              "4": 23165821734
+            },
+            "totalEventDurationNanos": 27551800609
+          },
+          "gc": {
+            "count": 19,
+            "totalPauseMs": 942.1746299999999,
+            "maxPauseMs": 219.125815
+          }
+        },
+        "cold-45plus": {
+          "executionSamples": 837,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 4634792032,
+            "application": 4634792032
+          },
+          "cpuInclusiveCategories": {
+            "mybatis": 199,
+            "secureRandom": 4,
+            "classLoading": 15,
+            "application": 596,
+            "datasource": 157,
+            "mybatisResultMapping": 71,
+            "json": 98,
+            "logging": 17,
+            "postgresTimestamp": 5,
+            "productImageParsing": 1,
+            "springAnnotations": 27,
+            "observability": 55,
+            "validation": 12,
+            "cryptoTLS": 59
+          },
+          "compilation": {
+            "count": 166,
+            "byLevel": {
+              "2": 202696869,
+              "3": 809362507,
+              "4": 64972501864
+            },
+            "totalEventDurationNanos": 65984561240
+          },
+          "gc": {
+            "count": 34,
+            "totalPauseMs": 1566.857237,
+            "maxPauseMs": 322.290033
+          }
+        }
+      }
+    },
+    "codec-base-b": {
+      "first5SecondsPresent": true,
+      "first5SecondsExecutionSamples": 23,
+      "first5SecondsJacksonInclusiveMonitorDurationNanos": 5803272090,
+      "first5SecondsTopMonitorStacks": [
+        {
+          "value": 2373611461,
+          "name": "tools.jackson.databind.deser.bean.PropertyBasedCreator.startBuilding > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased > tools.jackson.databind.deser.bean.BeanDeserializerBase.deserializeFromObjectUsingNonDefault > tools.jackson.databind.deser.bean.BeanDeserializer.deserializeFromObject > tools.jackson.databind.deser.bean.BeanDeserializer.deserialize > tools.jackson.databind.deser.DeserializationContextExt.readRootValue > tools.jackson.databind.ObjectMapper._readMapAndClose > tools.jackson.databind.ObjectMapper.readValue > com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCache.addValidHit > com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCache.findByProductIds > com.blocbuy.groupbuy.service.GroupDealQueryServiceImpl.findBestOpenDealsByProductIds > java.lang.invoke.LambdaForm$DMH.0x0000730554158400.invokeVirtual"
+        },
+        {
+          "value": 1710004088,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.util.TextBuffer.contentsAsInt > tools.jackson.core.json.JsonParserBase._parseIntValue > tools.jackson.core.base.ParserBase.getIntValue > tools.jackson.databind.deser.jdk.NumberDeserializers$IntegerDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$IntegerDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeWithErrorWrapping > tools.jackson.databind.deser.bean.BeanDeserializer._deserializeUsingPropertyBased"
+        },
+        {
+          "value": 1227833511,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal > tools.jackson.core.json.JsonParserBase._parseSlowFloat > tools.jackson.core.json.JsonParserBase._parseNumericValue > tools.jackson.core.base.ParserBase.getDecimalValue > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.SettableBeanProperty.deserialize"
+        },
+        {
+          "value": 264759115,
+          "name": "org.springframework.boot.loader.zip.FileDataBlock$FileAccess.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.read > org.springframework.boot.loader.zip.DataBlock.readFully > org.springframework.boot.loader.zip.ZipCentralDirectoryFileHeaderRecord.load > org.springframework.boot.loader.zip.ZipContent.loadZipCentralDirectoryFileHeaderRecord > org.springframework.boot.loader.zip.ZipContent.hasEntry > org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlConnection.open > org.springframework.boot.loader.net.protocol.jar.Handler.openConnection > java.net.URL.openConnection"
+        },
+        {
+          "value": 101292349,
+          "name": "com.fasterxml.jackson.databind.ser.SerializerCache._makeReadOnlyLookupMap > com.fasterxml.jackson.databind.ser.SerializerCache.getReadOnlyLookupMap > com.fasterxml.jackson.databind.SerializerProvider.<init> > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider.<init> > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider$Impl.<init> > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider$Impl.createInstance > com.fasterxml.jackson.databind.ser.DefaultSerializerProvider$Impl.createInstance > com.fasterxml.jackson.databind.ObjectMapper._serializerProvider > com.fasterxml.jackson.databind.ObjectMapper.canSerialize > org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter.canWrite > org.springframework.http.converter.AbstractGenericHttpMessageConverter.canWrite > org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.getProducibleMediaTypes"
+        },
+        {
+          "value": 100752843,
+          "name": "java.lang.ClassLoader.loadClass > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.BigDecimalParser.parseWithFastParser > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal > tools.jackson.core.json.JsonParserBase._parseSlowFloat > tools.jackson.core.json.JsonParserBase._parseNumericValue > tools.jackson.core.base.ParserBase.getDecimalValue > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize > tools.jackson.databind.deser.jdk.NumberDeserializers$BigDecimalDeserializer.deserialize"
+        },
+        {
+          "value": 100585395,
+          "name": "org.springframework.boot.loader.jar.NestedJarFile.getContentEntry > org.springframework.boot.loader.jar.NestedJarFile.getVersionedContentEntry > org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackage > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackageIfNecessary > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass > org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass > java.lang.ClassLoader.loadClass > tools.jackson.core.io.BigDecimalParser.parseWithFastParser > tools.jackson.core.io.NumberInput.parseBigDecimal > tools.jackson.core.util.TextBuffer.contentsAsDecimal"
+        },
+        {
+          "value": 98843275,
+          "name": "org.springframework.boot.loader.zip.FileDataBlock$FileAccess.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.ensureOpen > org.springframework.boot.loader.zip.FileDataBlock.read > org.springframework.boot.loader.zip.DataBlock.readFully > org.springframework.boot.loader.zip.ZipCentralDirectoryFileHeaderRecord.load > org.springframework.boot.loader.zip.ZipContent.loadZipCentralDirectoryFileHeaderRecord > org.springframework.boot.loader.zip.ZipContent.hasEntry > org.springframework.boot.loader.jar.NestedJarFile.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.hasEntry > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackage > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.definePackageIfNecessary > org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass"
+        }
+      ],
+      "coldPhases": {
+        "cold-00to05": {
+          "executionSamples": 23,
+          "monitorInclusiveCategoryDurationNanos": {
+            "classLoading": 3502778227,
+            "application": 5977682037,
+            "datasource": 96954601,
+            "mybatis": 96954601,
+            "mybatisResultMapping": 96954601,
+            "json": 5803272090,
+            "postgresTimestamp": 96954601
+          },
+          "cpuInclusiveCategories": {
+            "environment": 1,
+            "application": 20,
+            "datasource": 3,
+            "mybatis": 6,
+            "mybatisResultMapping": 2,
+            "json": 2,
+            "observability": 2,
+            "cryptoTLS": 2
+          },
+          "compilation": {
+            "byLevel": {
+              "3": 102964875,
+              "4": 3121496269
+            },
+            "totalEventDurationNanos": 3224461144,
+            "count": 12
+          },
+          "gc": {
+            "maxPauseMs": 82.986352,
+            "count": 4,
+            "totalPauseMs": 108.97115
+          }
+        },
+        "cold-05to15": {
+          "executionSamples": 45,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 288384951,
+            "environment": 593769255,
+            "classLoading": 1395197894,
+            "application": 3272919413,
+            "mybatis": 798458609,
+            "logging": 99760707
+          },
+          "cpuInclusiveCategories": {
+            "application": 36,
+            "datasource": 5,
+            "mybatis": 11,
+            "mybatisResultMapping": 2,
+            "json": 4,
+            "logging": 11,
+            "observability": 3,
+            "validation": 1,
+            "cryptoTLS": 4
+          },
+          "compilation": {
+            "byLevel": {
+              "2": 2005753315,
+              "3": 1703443655,
+              "4": 10594895840
+            },
+            "totalEventDurationNanos": 14304092810,
+            "count": 17
+          },
+          "gc": {
+            "maxPauseMs": 139.70719,
+            "count": 6,
+            "totalPauseMs": 464.18542799999994
+          }
+        },
+        "cold-15to45": {
+          "executionSamples": 250,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 13411955043,
+            "environment": 4037649026,
+            "application": 21429419729,
+            "springAnnotations": 192906280
+          },
+          "cpuInclusiveCategories": {
+            "mybatis": 41,
+            "secureRandom": 1,
+            "environment": 1,
+            "classLoading": 2,
+            "application": 197,
+            "datasource": 37,
+            "mybatisResultMapping": 5,
+            "json": 29,
+            "logging": 44,
+            "observability": 10,
+            "springAnnotations": 7,
+            "cryptoTLS": 25,
+            "validation": 6
+          },
+          "compilation": {
+            "byLevel": {
+              "2": 2510608349,
+              "3": 3341980114,
+              "4": 20954801452
+            },
+            "totalEventDurationNanos": 26807389915,
+            "count": 89
+          },
+          "gc": {
+            "maxPauseMs": 205.205826,
+            "count": 16,
+            "totalPauseMs": 807.7860039999999
+          }
+        },
+        "cold-45plus": {
+          "executionSamples": 957,
+          "monitorInclusiveCategoryDurationNanos": {
+            "secureRandom": 3793307986,
+            "environment": 4444996616,
+            "application": 8728565270
+          },
+          "cpuInclusiveCategories": {
+            "mybatis": 226,
+            "secureRandom": 2,
+            "environment": 16,
+            "classLoading": 23,
+            "application": 685,
+            "datasource": 162,
+            "mybatisResultMapping": 98,
+            "json": 111,
+            "logging": 8,
+            "postgresTimestamp": 7,
+            "springAnnotations": 22,
+            "observability": 62,
+            "validation": 13,
+            "cryptoTLS": 83
+          },
+          "compilation": {
+            "byLevel": {
+              "2": 109010933,
+              "3": 516943554,
+              "4": 58544614438
+            },
+            "totalEventDurationNanos": 59170568925,
+            "count": 164
+          },
+          "gc": {
+            "maxPauseMs": 228.384825,
+            "count": 36,
+            "totalPauseMs": 1542.0331020000003
+          }
+        }
+      }
+    }
+  },
+  "issues": [],
+  "limits": "Local diagnostics only, not acceptance. Missing events in an existing sampled bracket mean no recorded matching events, not proven absence. Cumulative monitor durations overlap across threads and are attributed by event start, not clipped to five seconds or CPU time. ABBA alone does not isolate causality."
+}

@@ -1,0 +1,75 @@
+{
+  "cases": [
+    {
+      "label": "logging-bounded-v2-warmup",
+      "app": "blocbuy-matrix2-logging-bounded-v2",
+      "startedAt": "2026-11-10T08:08:14.980Z",
+      "finishedAt": "2026-11-10T08:10:25.561Z",
+      "rate": 200,
+      "seconds": 120,
+      "exitCode": 99
+    },
+    {
+      "label": "logging-bounded-v2-control",
+      "app": "blocbuy-matrix2-logging-bounded-v2",
+      "startedAt": "2026-11-10T08:10:25.750Z",
+      "finishedAt": "2026-11-10T08:11:26.189Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 99
+    },
+    {
+      "label": "logging-bounded-v2-flush",
+      "app": "blocbuy-matrix2-logging-bounded-v2",
+      "startedAt": "2026-11-10T08:11:26.371Z",
+      "finishedAt": "2026-11-10T08:12:26.846Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0
+    },
+    {
+      "label": "logging-bounded-v2-slow",
+      "app": "blocbuy-matrix2-logging-bounded-v2",
+      "startedAt": "2026-11-10T08:12:27.027Z",
+      "finishedAt": "2026-11-10T08:13:37.437Z",
+      "rate": 200,
+      "seconds": 70,
+      "exitCode": 0
+    },
+    {
+      "label": "logging-bounded-v2-down",
+      "app": "blocbuy-matrix2-logging-bounded-v2",
+      "startedAt": "2026-11-10T08:13:37.628Z",
+      "finishedAt": "2026-11-10T08:14:48.090Z",
+      "rate": 200,
+      "seconds": 70,
+      "exitCode": 0
+    },
+    {
+      "label": "logging-bounded-v2-recovery",
+      "app": "blocbuy-matrix2-logging-bounded-v2",
+      "startedAt": "2026-11-10T08:14:48.269Z",
+      "finishedAt": "2026-11-10T08:15:48.708Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0
+    }
+  ],
+  "conditions": {
+    "rate": 200,
+    "cpu": 0.5,
+    "memoryBytes": 1073741824,
+    "pool": 5,
+    "preAllocatedVUs": 1000,
+    "maxVUs": 1000,
+    "warmupSeconds": 120,
+    "logStackTraceMaxLength": 2048,
+    "notes": "One fresh JVM/cache diagnostic arm, same v2 artifact and synthetic database. Only structured JSON stack-trace length changes; every error event/severity and HTTP gate remains intact. Earlier full-stack failed sources preserved. This is not a matched ABBA or accepted production configuration. No concurrent builder/verification, scheduling, payment or cloud access."
+  },
+  "artifactHashes": {
+    "commerce-baseline.jar": "37c7c7332b5d40e5c940241e75a180d9cfb2b6df020663b233008e61ec7e2960",
+    "commerce-bulkhead-scope-v2.jar": "f4c7372bef03a6627331a469113e3a341f5531485f36da90213ff9861d621dc1"
+  },
+  "decision": "Capping stack traces did not resolve cold overload; do not change production logging on this evidence.",
+  "limits": "No matched counterbalanced comparison or default-configuration acceptance. Every error event/severity and gate retained; warmed fault improvement does not supersede cold/control failures."
+}

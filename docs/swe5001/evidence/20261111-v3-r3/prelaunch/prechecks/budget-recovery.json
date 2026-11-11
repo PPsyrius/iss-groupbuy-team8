@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-11T10:30:54.761252+00:00",
+  "taskArn": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/3e32126eef784268be84a323aaec9690",
+  "taskExit": 0,
+  "report": {
+    "maxConnections": 181,
+    "reservedConnections": 5
+  },
+  "readOnlyRecovery": true,
+  "reportingTaskRelaunched": false,
+  "originalTransportFailurePreserved": true
+}

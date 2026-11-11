@@ -1,0 +1,31 @@
+{
+  "kind": "local-v2-static-verification-not-runtime-acceptance",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1244,
+      "sha256": "05062df939f53bab8fb8f9c28556a70089d4f391f4dcc7d83f4d52b1db48e1e8"
+    },
+    {
+      "path": "check-scope-contract.py",
+      "bytes": 1503,
+      "sha256": "207b54a5b6aeeb7654667c26358e218eb3ff0d60cfed12b645888aa2084c4257"
+    },
+    {
+      "path": "contract-summary.json",
+      "bytes": 741,
+      "sha256": "b690bee0f33a877a68b86c1a1977afe6368d7d80fc1785bcbdf5e5ad6f5b295f"
+    },
+    {
+      "path": "full-verification-summary.json",
+      "bytes": 79163,
+      "sha256": "43ee10bc073e53695e51e31e441691273af5ba8000b653757adf7240d9df93ab"
+    },
+    {
+      "path": "inspect-cache-verification.py",
+      "bytes": 4982,
+      "sha256": "6a3f4ad11df96350575d282b8987d2af2bf3483188afea0ce8f01f850c80bb70"
+    }
+  ],
+  "limits": "Cold startup failed; aggregate unit-coverage collection remains under investigation. No publication or AWS operation."
+}

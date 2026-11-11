@@ -1,0 +1,26 @@
+{
+  "kind": "rejected-experimental-source-preservation",
+  "files": [
+    {
+      "path": "BestOpenDealCacheIT.java.txt",
+      "bytes": 13108,
+      "sha256": "94ea103b25dc410411efeef9ae285c354cbde79c0e55f9137559acfca51732ab"
+    },
+    {
+      "path": "RedisOpenDealOfferCache.java.txt",
+      "bytes": 9629,
+      "sha256": "6539f53a8014a493a66f101bbacca857de3977a37fdb164bf665195f5f53d556"
+    },
+    {
+      "path": "RedisOpenDealOfferCacheTest.java.txt",
+      "bytes": 35263,
+      "sha256": "2dfc3e1e1122313d62bc3d89d3f6a8f0692acd43f69a6f4a302854bd2d14f381"
+    },
+    {
+      "path": "restoration.json",
+      "bytes": 2841,
+      "sha256": "a993576b4521aca4e1a03e05f76a4de6d4493a687313c02915445fc4d7b0745a"
+    }
+  ],
+  "limits": "No private logs or credentials copied; current checkout uses the separately verified reviewed-v3 source."
+}

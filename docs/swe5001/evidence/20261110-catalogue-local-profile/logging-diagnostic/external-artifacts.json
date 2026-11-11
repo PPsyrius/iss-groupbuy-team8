@@ -1,0 +1,40 @@
+{
+  "retention": "Private local Temp only; full logs/JFR/raw streams excluded from Git",
+  "files": [
+    {
+      "path": "matrix-v2/logging-bounded-v2-warmup/samples.jsonl",
+      "bytes": 39729528,
+      "sha256": "d94c2d9edb2e75f30f1551fdc6385d2fea775e601421cb113c83bfac1e37fcfd"
+    },
+    {
+      "path": "matrix-v2/logging-bounded-v2-control/samples.jsonl",
+      "bytes": 36983137,
+      "sha256": "34e404b0e7a191fbd14a3df9b5e123ccb745d3dd6b9e84b0765e3aed2f083f27"
+    },
+    {
+      "path": "matrix-v2/logging-bounded-v2-flush/samples.jsonl",
+      "bytes": 36905839,
+      "sha256": "8e31337ccc572b57a19ef362891a48c7f1f525d4612c36317b0ed35c7118ab93"
+    },
+    {
+      "path": "matrix-v2/logging-bounded-v2-slow/samples.jsonl",
+      "bytes": 43053311,
+      "sha256": "befeb9747bd9c756e738c5c5cfdf05484d22ef539aea7afef3908badb7072a34"
+    },
+    {
+      "path": "matrix-v2/logging-bounded-v2-down/samples.jsonl",
+      "bytes": 43060025,
+      "sha256": "57c270509d1a9d6d087d1f50daee466f3c3c3c3fbbbd5753c69a1e4be270cb85"
+    },
+    {
+      "path": "matrix-v2/logging-bounded-v2-recovery/samples.jsonl",
+      "bytes": 36905004,
+      "sha256": "e8611c17a0f727ecbc7163430eec36dad10b066308fb02d6499029c8a457fd95"
+    },
+    {
+      "path": "matrix-v2/logging-bounded-v2.jfr",
+      "bytes": 37990476,
+      "sha256": "645fe175d3bae4ed771a62f7cfd2f036d4912066e8d0b79380dd1fdf895e1f38"
+    }
+  ]
+}

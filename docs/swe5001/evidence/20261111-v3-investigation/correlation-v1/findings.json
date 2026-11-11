@@ -1,0 +1,827 @@
+{
+  "at": "2026-11-11T09:45:20.008818+00:00",
+  "runLabel": "20261111-v3-distributed-r2",
+  "sourceRawSha256": "9f120188b3afa3c01e9d488f80feb3eb8a44acc97d81325a028ef63dcda95c2f",
+  "mechanism": {
+    "slowHttpRequests": 36476,
+    "waitingDominatedSlowRequests": 36292,
+    "waitingDominatedPercent": 99.49555872354425,
+    "peakInferredActiveHttp": 1000,
+    "peakInferredActiveHttpAt": "2026-11-11T08:25:46.075638+00:00",
+    "firstDropAt": "2026-11-11T08:25:46.159397+00:00",
+    "millisecondsFromFirst1000ActiveToFirstDrop": 83.75883102416992,
+    "firstSlowRequestInferredStart": "2026-11-11T08:25:23.060341+00:00",
+    "firstTimeoutWarningAt": "2026-11-11T08:25:37+00:00"
+  },
+  "scalingDecisions": [
+    {
+      "at": "2026-11-11T08:26:44.977000+00:00",
+      "fromPreviousRequestedDesired": 1,
+      "toRequestedDesired": 2,
+      "policy": "request",
+      "originalStatus": "Successful",
+      "originalStatusMessage": "Successfully set desired count to 2. Change successfully fulfilled by ecs.",
+      "activityEnd": "2026-11-11T08:27:50.440000+00:00",
+      "activityDurationSeconds": 65.46300005912781,
+      "firstSampleAtOrAboveRequestedRunningCount": "2026-11-11T08:27:42.105204Z",
+      "secondsUntilThatRunningSample": 57.128204107284546
+    },
+    {
+      "at": "2026-11-11T08:29:11.212000+00:00",
+      "fromPreviousRequestedDesired": 2,
+      "toRequestedDesired": 3,
+      "policy": "CPU",
+      "originalStatus": "Overridden",
+      "originalStatusMessage": "Successfully set desired count to 3. Found it was later changed to 4.",
+      "activityEnd": "2026-11-11T08:29:47.415000+00:00",
+      "activityDurationSeconds": 36.20300006866455,
+      "firstSampleAtOrAboveRequestedRunningCount": "2026-11-11T08:30:12.092153Z",
+      "secondsUntilThatRunningSample": 60.8801531791687
+    },
+    {
+      "at": "2026-11-11T08:29:44.971000+00:00",
+      "fromPreviousRequestedDesired": 3,
+      "toRequestedDesired": 4,
+      "policy": "request",
+      "originalStatus": "Successful",
+      "originalStatusMessage": "Successfully set desired count to 4. Change successfully fulfilled by ecs.",
+      "activityEnd": "2026-11-11T08:30:51.489000+00:00",
+      "activityDurationSeconds": 66.51800012588501,
+      "firstSampleAtOrAboveRequestedRunningCount": "2026-11-11T08:30:42.033399Z",
+      "secondsUntilThatRunningSample": 57.06239914894104
+    },
+    {
+      "at": "2026-11-11T08:30:44.952000+00:00",
+      "fromPreviousRequestedDesired": 4,
+      "toRequestedDesired": 5,
+      "policy": "request",
+      "originalStatus": "Successful",
+      "originalStatusMessage": "Successfully set desired count to 5. Change successfully fulfilled by ecs.",
+      "activityEnd": "2026-11-11T08:31:55.368000+00:00",
+      "activityDurationSeconds": 70.41600012779236,
+      "firstSampleAtOrAboveRequestedRunningCount": "2026-11-11T08:31:27.032731Z",
+      "secondsUntilThatRunningSample": 42.08073115348816
+    },
+    {
+      "at": "2026-11-11T08:33:11.249000+00:00",
+      "fromPreviousRequestedDesired": 5,
+      "toRequestedDesired": 6,
+      "policy": "CPU",
+      "originalStatus": "Successful",
+      "originalStatusMessage": "Successfully set desired count to 6. Change successfully fulfilled by ecs.",
+      "activityEnd": "2026-11-11T08:34:19.657000+00:00",
+      "activityDurationSeconds": 68.4079999923706,
+      "firstSampleAtOrAboveRequestedRunningCount": "2026-11-11T08:34:27.041922Z",
+      "secondsUntilThatRunningSample": 75.7929220199585
+    }
+  ],
+  "alarmEvaluationDelays": [
+    {
+      "alarm": "blocbuy-swe5001-commerce-cpu-headroom",
+      "decisionAt": "2026-11-11T08:33:11.038000+00:00",
+      "periodSeconds": 60,
+      "evaluatedPoints": [
+        {
+          "timestamp": "2026-11-11T08:30:00.000+0000",
+          "sampleCount": 4.0,
+          "value": 54.250391940275826
+        }
+      ],
+      "threshold": 50.0,
+      "secondsAfterLatestEvaluatedBucketStart": 191.03800010681152,
+      "secondsAfterLatestEvaluatedBucketEnd": 131.03800010681152
+    },
+    {
+      "alarm": "blocbuy-swe5001-commerce-cpu-headroom",
+      "decisionAt": "2026-11-11T08:29:11.038000+00:00",
+      "periodSeconds": 60,
+      "evaluatedPoints": [
+        {
+          "timestamp": "2026-11-11T08:26:00.000+0000",
+          "sampleCount": 1.0,
+          "value": 52.26897430419922
+        }
+      ],
+      "threshold": 50.0,
+      "secondsAfterLatestEvaluatedBucketStart": 191.03800010681152,
+      "secondsAfterLatestEvaluatedBucketEnd": 131.03800010681152
+    },
+    {
+      "alarm": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-9e1983e7-80c1-47e0-9405-c58848e50ebb",
+      "decisionAt": "2026-11-11T08:26:44.793000+00:00",
+      "periodSeconds": 60,
+      "evaluatedPoints": [
+        {
+          "timestamp": "2026-11-11T08:23:00.000+0000",
+          "sampleCount": 17876.0,
+          "value": 17876.0
+        },
+        {
+          "timestamp": "2026-11-11T08:22:00.000+0000",
+          "sampleCount": 15476.0,
+          "value": 15475.0
+        },
+        {
+          "timestamp": "2026-11-11T08:21:00.000+0000",
+          "sampleCount": 13076.0,
+          "value": 13076.0
+        }
+      ],
+      "threshold": 12000.0,
+      "secondsAfterLatestEvaluatedBucketStart": 224.79299998283386,
+      "secondsAfterLatestEvaluatedBucketEnd": 164.79299998283386
+    }
+  ],
+  "firstScaleOutSecondsAfterFirstSlowRequestInferredStart": 81.916659116745,
+  "firstScaleOutSecondsAfterFirstDrop": 58.81760311126709,
+  "earlyClientOriginMismatch": {
+    "calendarMinutes": [
+      {
+        "minuteUtc": "2026-11-11T08:25:00+00:00",
+        "completed": 21787,
+        "non200": 985,
+        "drops": 5,
+        "clientDurationP95Ms": 7197.6410866000015,
+        "clientWaitingP95Ms": 7142.0939579000005,
+        "albTargetP95Ms": 27.455261364934536,
+        "albTargetMaxMs": 328.434,
+        "serviceCpuAveragePercent": 45.11909548441569,
+        "maxObservedTaskCpuPercent": 45.11909548441569,
+        "healthyTargetsMinimum": 1.0,
+        "unhealthyTargetsMaximum": 0.0,
+        "cloudfrontRequestsAllPaths": 22530.0,
+        "cloudfront5xxPercentAllPaths": 0.0
+      },
+      {
+        "minuteUtc": "2026-11-11T08:26:00+00:00",
+        "completed": 25753,
+        "non200": 2850,
+        "drops": 0,
+        "clientDurationP95Ms": 10000.3252628,
+        "clientWaitingP95Ms": 10000.272167199999,
+        "albTargetP95Ms": 112.2535798511876,
+        "albTargetMaxMs": 640.2099999999999,
+        "serviceCpuAveragePercent": 52.26897430419922,
+        "maxObservedTaskCpuPercent": 52.268974304199226,
+        "healthyTargetsMinimum": 1.0,
+        "unhealthyTargetsMaximum": 0.0,
+        "cloudfrontRequestsAllPaths": 25204.0,
+        "cloudfront5xxPercentAllPaths": 0.0
+      },
+      {
+        "minuteUtc": "2026-11-11T08:27:00+00:00",
+        "completed": 27656,
+        "non200": 471,
+        "drops": 0,
+        "clientDurationP95Ms": 271.3792115,
+        "clientWaitingP95Ms": 271.258191,
+        "albTargetP95Ms": 23.936958548994873,
+        "albTargetMaxMs": 347.642,
+        "serviceCpuAveragePercent": 57.601904710133866,
+        "maxObservedTaskCpuPercent": 61.12191104888915,
+        "healthyTargetsMinimum": 1.0,
+        "unhealthyTargetsMaximum": 0.0,
+        "cloudfrontRequestsAllPaths": 27484.0,
+        "cloudfront5xxPercentAllPaths": 0.0
+      }
+    ],
+    "non200Completions": 4306,
+    "interpretation": "Early client timeouts are not explained by retained ALB target-response timings alone. TargetResponseTime does not cover every client/edge/ALB-pre-target phase and has no per-request correlation here."
+  },
+  "largestDropBurst": {
+    "calendarMinute": {
+      "minuteUtc": "2026-11-11T08:28:00+00:00",
+      "completed": 23347,
+      "non200": 215,
+      "drops": 5796,
+      "clientDurationP95Ms": 7182.518583400001,
+      "clientWaitingP95Ms": 7182.4222304,
+      "albTargetP95Ms": 6972.766812256331,
+      "albTargetMaxMs": 9885.148,
+      "serviceCpuAveragePercent": 57.836048762003585,
+      "maxObservedTaskCpuPercent": 91.57271114985149,
+      "healthyTargetsMinimum": 2.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 23319.0,
+      "cloudfront5xxPercentAllPaths": 0.4845833869376903
+    },
+    "shareOfAllDropsPercent": 98.941618299761,
+    "interpretation": "Most drops coincide with the first newly admitted task and high per-task CPU, hidden by service averaging. Correlation supports a cold-task/transition bottleneck hypothesis, not a unique causal proof."
+  },
+  "highestTaskCpuMinutes": [
+    {
+      "at": "2026-11-11T08:31:00+00:00",
+      "taskId": "ce4146d8826b49509868d495d62a2bf9",
+      "cpuPercentOfTaskReservation": 100.01855087280273,
+      "memoryUtilizedMiB": 525
+    },
+    {
+      "at": "2026-11-11T08:29:00+00:00",
+      "taskId": "a449f1deb0464bfebcbe01e041491cae",
+      "cpuPercentOfTaskReservation": 99.6009432474772,
+      "memoryUtilizedMiB": 811
+    },
+    {
+      "at": "2026-11-11T08:28:00+00:00",
+      "taskId": "a449f1deb0464bfebcbe01e041491cae",
+      "cpuPercentOfTaskReservation": 91.57271114985149,
+      "memoryUtilizedMiB": 565
+    },
+    {
+      "at": "2026-11-11T08:30:00+00:00",
+      "taskId": "d4eb22190e4d4d82abc3671d4cc37a75",
+      "cpuPercentOfTaskReservation": 79.34953037897746,
+      "memoryUtilizedMiB": 324
+    },
+    {
+      "at": "2026-11-11T08:34:00+00:00",
+      "taskId": "cc09ca6688d24e4f93818250ebc1b7db",
+      "cpuPercentOfTaskReservation": 67.7703955123822,
+      "memoryUtilizedMiB": 273
+    },
+    {
+      "at": "2026-11-11T08:30:00+00:00",
+      "taskId": "ce4146d8826b49509868d495d62a2bf9",
+      "cpuPercentOfTaskReservation": 62.92749540011088,
+      "memoryUtilizedMiB": 149
+    },
+    {
+      "at": "2026-11-11T08:27:00+00:00",
+      "taskId": "a449f1deb0464bfebcbe01e041491cae",
+      "cpuPercentOfTaskReservation": 61.12191104888915,
+      "memoryUtilizedMiB": 156
+    },
+    {
+      "at": "2026-11-11T08:31:00+00:00",
+      "taskId": "33412e05d83e4e6587fed9b2f8e890a2",
+      "cpuPercentOfTaskReservation": 57.88949216405551,
+      "memoryUtilizedMiB": 183
+    },
+    {
+      "at": "2026-11-11T08:27:00+00:00",
+      "taskId": "6d6b00a16ec14e1e84a6f3eb4f1861b6",
+      "cpuPercentOfTaskReservation": 54.08189837137858,
+      "memoryUtilizedMiB": 451
+    },
+    {
+      "at": "2026-11-11T08:31:00+00:00",
+      "taskId": "d4eb22190e4d4d82abc3671d4cc37a75",
+      "cpuPercentOfTaskReservation": 52.858745892842606,
+      "memoryUtilizedMiB": 525
+    },
+    {
+      "at": "2026-11-11T08:26:00+00:00",
+      "taskId": "6d6b00a16ec14e1e84a6f3eb4f1861b6",
+      "cpuPercentOfTaskReservation": 52.268974304199226,
+      "memoryUtilizedMiB": 431
+    },
+    {
+      "at": "2026-11-11T08:32:00+00:00",
+      "taskId": "ce4146d8826b49509868d495d62a2bf9",
+      "cpuPercentOfTaskReservation": 51.17538007100424,
+      "memoryUtilizedMiB": 562
+    }
+  ],
+  "existingObservability": {
+    "edgeSettings": {
+      "loggingEnabled": false,
+      "httpVersion": "http2",
+      "origins": [
+        {
+          "id": "s3-spa",
+          "connectionAttempts": 3,
+          "connectionTimeout": 10,
+          "readTimeout": null,
+          "keepaliveTimeout": null
+        },
+        {
+          "id": "alb-runtime",
+          "connectionAttempts": 3,
+          "connectionTimeout": 10,
+          "readTimeout": 30,
+          "keepaliveTimeout": 5
+        }
+      ]
+    },
+    "albSettings": [
+      {
+        "Key": "access_logs.s3.enabled",
+        "Value": "false"
+      },
+      {
+        "Key": "idle_timeout.timeout_seconds",
+        "Value": "60"
+      },
+      {
+        "Key": "client_keep_alive.seconds",
+        "Value": "3600"
+      }
+    ],
+    "monitoringSubscription": {
+      "state": "absent",
+      "awsErrorCode": "NoSuchMonitoringSubscription",
+      "readPerformedOnce": true
+    },
+    "originLatencyMetricPoints": 0
+  },
+  "calendarMinuteTimeline": [
+    {
+      "minuteUtc": "2026-11-11T08:16:00+00:00",
+      "completed": 3137,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 24.22439479999999,
+      "clientWaitingP95Ms": 24.042878599999984,
+      "albTargetP95Ms": 13.321605480898691,
+      "albTargetMaxMs": 619.432,
+      "serviceCpuAveragePercent": 22.326471130053203,
+      "maxObservedTaskCpuPercent": null,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 3136.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:17:00+00:00",
+      "completed": 5177,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 19.476394599999995,
+      "clientWaitingP95Ms": 19.353574,
+      "albTargetP95Ms": 6.759499886226998,
+      "albTargetMaxMs": 118.434,
+      "serviceCpuAveragePercent": 15.729494452476501,
+      "maxObservedTaskCpuPercent": 30.44396877288818,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 5179.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:18:00+00:00",
+      "completed": 7106,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 18.25224175,
+      "clientWaitingP95Ms": 18.14063875,
+      "albTargetP95Ms": 5.123948482410101,
+      "albTargetMaxMs": 102.04599999999999,
+      "serviceCpuAveragePercent": 16.66828505198161,
+      "maxObservedTaskCpuPercent": 16.66828505198161,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 7100.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:19:00+00:00",
+      "completed": 9014,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 18.396913800000004,
+      "clientWaitingP95Ms": 18.282026400000003,
+      "albTargetP95Ms": 5.37831254274946,
+      "albTargetMaxMs": 82.145,
+      "serviceCpuAveragePercent": 22.5276304880778,
+      "maxObservedTaskCpuPercent": 22.527630488077797,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 9020.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:20:00+00:00",
+      "completed": 10947,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 28.97298299999992,
+      "clientWaitingP95Ms": 28.846673099999908,
+      "albTargetP95Ms": 8.122119959574002,
+      "albTargetMaxMs": 157.304,
+      "serviceCpuAveragePercent": 22.563316822052002,
+      "maxObservedTaskCpuPercent": 22.563316822052002,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 10939.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:21:00+00:00",
+      "completed": 13072,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 18.909933499999998,
+      "clientWaitingP95Ms": 18.797296449999994,
+      "albTargetP95Ms": 5.705897165309318,
+      "albTargetMaxMs": 119.05300000000001,
+      "serviceCpuAveragePercent": 26.577399412790935,
+      "maxObservedTaskCpuPercent": 26.577399412790932,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 13077.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:22:00+00:00",
+      "completed": 15472,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 21.175172999999987,
+      "clientWaitingP95Ms": 21.07741259999999,
+      "albTargetP95Ms": 7.467350035762247,
+      "albTargetMaxMs": 283.44,
+      "serviceCpuAveragePercent": 31.01346492767334,
+      "maxObservedTaskCpuPercent": 31.013464927673347,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 15475.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:23:00+00:00",
+      "completed": 17887,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 24.286102200000013,
+      "clientWaitingP95Ms": 24.19017550000001,
+      "albTargetP95Ms": 7.2338298385527136,
+      "albTargetMaxMs": 196.33,
+      "serviceCpuAveragePercent": 34.20564937591553,
+      "maxObservedTaskCpuPercent": 34.20564937591553,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 17875.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:24:00+00:00",
+      "completed": 20272,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 24.995857200000007,
+      "clientWaitingP95Ms": 24.896420950000024,
+      "albTargetP95Ms": 8.302317605278121,
+      "albTargetMaxMs": 153.469,
+      "serviceCpuAveragePercent": 38.404709815979004,
+      "maxObservedTaskCpuPercent": 38.404709815979004,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 20276.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:25:00+00:00",
+      "completed": 21787,
+      "non200": 985,
+      "drops": 5,
+      "clientDurationP95Ms": 7197.6410866000015,
+      "clientWaitingP95Ms": 7142.0939579000005,
+      "albTargetP95Ms": 27.455261364934536,
+      "albTargetMaxMs": 328.434,
+      "serviceCpuAveragePercent": 45.11909548441569,
+      "maxObservedTaskCpuPercent": 45.11909548441569,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 22530.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:26:00+00:00",
+      "completed": 25753,
+      "non200": 2850,
+      "drops": 0,
+      "clientDurationP95Ms": 10000.3252628,
+      "clientWaitingP95Ms": 10000.272167199999,
+      "albTargetP95Ms": 112.2535798511876,
+      "albTargetMaxMs": 640.2099999999999,
+      "serviceCpuAveragePercent": 52.26897430419922,
+      "maxObservedTaskCpuPercent": 52.268974304199226,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 25204.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:27:00+00:00",
+      "completed": 27656,
+      "non200": 471,
+      "drops": 0,
+      "clientDurationP95Ms": 271.3792115,
+      "clientWaitingP95Ms": 271.258191,
+      "albTargetP95Ms": 23.936958548994873,
+      "albTargetMaxMs": 347.642,
+      "serviceCpuAveragePercent": 57.601904710133866,
+      "maxObservedTaskCpuPercent": 61.12191104888915,
+      "healthyTargetsMinimum": 1.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 27484.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:28:00+00:00",
+      "completed": 23347,
+      "non200": 215,
+      "drops": 5796,
+      "clientDurationP95Ms": 7182.518583400001,
+      "clientWaitingP95Ms": 7182.4222304,
+      "albTargetP95Ms": 6972.766812256331,
+      "albTargetMaxMs": 9885.148,
+      "serviceCpuAveragePercent": 57.836048762003585,
+      "maxObservedTaskCpuPercent": 91.57271114985149,
+      "healthyTargetsMinimum": 2.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 23319.0,
+      "cloudfront5xxPercentAllPaths": 0.4845833869376903
+    },
+    {
+      "minuteUtc": "2026-11-11T08:29:00+00:00",
+      "completed": 33028,
+      "non200": 31,
+      "drops": 0,
+      "clientDurationP95Ms": 2367.0519568,
+      "clientWaitingP95Ms": 2366.95484305,
+      "albTargetP95Ms": 2336.1406796881083,
+      "albTargetMaxMs": 4338.659,
+      "serviceCpuAveragePercent": 44.09043502807617,
+      "maxObservedTaskCpuPercent": 99.6009432474772,
+      "healthyTargetsMinimum": 2.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 33038.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:30:00+00:00",
+      "completed": 34687,
+      "non200": 5,
+      "drops": 0,
+      "clientDurationP95Ms": 3870.3077294,
+      "clientWaitingP95Ms": 3870.2144995,
+      "albTargetP95Ms": 3823.0822963151177,
+      "albTargetMaxMs": 5403.339,
+      "serviceCpuAveragePercent": 54.250391940275826,
+      "maxObservedTaskCpuPercent": 79.34953037897746,
+      "healthyTargetsMinimum": 4.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 34678.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:31:00+00:00",
+      "completed": 35891,
+      "non200": 4,
+      "drops": 57,
+      "clientDurationP95Ms": 6344.051170500001,
+      "clientWaitingP95Ms": 6343.9657835,
+      "albTargetP95Ms": 6266.794666506889,
+      "albTargetMaxMs": 8747.339,
+      "serviceCpuAveragePercent": 51.71934136748314,
+      "maxObservedTaskCpuPercent": 100.01855087280273,
+      "healthyTargetsMinimum": 5.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 35902.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:32:00+00:00",
+      "completed": 36050,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 51.951988599999744,
+      "clientWaitingP95Ms": 51.66457824999982,
+      "albTargetP95Ms": 9.299716157010883,
+      "albTargetMaxMs": 150.602,
+      "serviceCpuAveragePercent": 30.908481407165528,
+      "maxObservedTaskCpuPercent": 51.17538007100424,
+      "healthyTargetsMinimum": 5.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 36043.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:33:00+00:00",
+      "completed": 36012,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 39.062473449999985,
+      "clientWaitingP95Ms": 38.761287149999994,
+      "albTargetP95Ms": 7.708739206921497,
+      "albTargetMaxMs": 253.012,
+      "serviceCpuAveragePercent": 17.770077705383304,
+      "maxObservedTaskCpuPercent": 27.84637514750163,
+      "healthyTargetsMinimum": 5.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 35999.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:34:00+00:00",
+      "completed": 35990,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 32.93090549999999,
+      "clientWaitingP95Ms": 32.56482219999998,
+      "albTargetP95Ms": 8.412238512073728,
+      "albTargetMaxMs": 484.328,
+      "serviceCpuAveragePercent": 27.495401262409157,
+      "maxObservedTaskCpuPercent": 67.7703955123822,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 36004.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:35:00+00:00",
+      "completed": 36012,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 23.74933695,
+      "clientWaitingP95Ms": 23.62069444999998,
+      "albTargetP95Ms": 7.25320799362137,
+      "albTargetMaxMs": 246.02599999999998,
+      "serviceCpuAveragePercent": 18.810418605804443,
+      "maxObservedTaskCpuPercent": 26.78805049260457,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 36003.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:36:00+00:00",
+      "completed": 35989,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 24.53303679999999,
+      "clientWaitingP95Ms": 24.397481,
+      "albTargetP95Ms": 7.403059087205287,
+      "albTargetMaxMs": 142.40900000000002,
+      "serviceCpuAveragePercent": 16.692260265350342,
+      "maxObservedTaskCpuPercent": 22.218226591746014,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 36003.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:37:00+00:00",
+      "completed": 36001,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 23.680729,
+      "clientWaitingP95Ms": 23.566983,
+      "albTargetP95Ms": 7.346798894558682,
+      "albTargetMaxMs": 170.707,
+      "serviceCpuAveragePercent": 16.540012982156544,
+      "maxObservedTaskCpuPercent": 22.054378509521484,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 36000.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:38:00+00:00",
+      "completed": 36012,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 24.075629999999997,
+      "clientWaitingP95Ms": 23.924736499999998,
+      "albTargetP95Ms": 7.009535562725214,
+      "albTargetMaxMs": 197.794,
+      "serviceCpuAveragePercent": 15.930298500590853,
+      "maxObservedTaskCpuPercent": 21.32508214314779,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 36003.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:39:00+00:00",
+      "completed": 35990,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 34.69576744999997,
+      "clientWaitingP95Ms": 34.53535279999985,
+      "albTargetP95Ms": 7.332715032895176,
+      "albTargetMaxMs": 121.682,
+      "serviceCpuAveragePercent": 16.166243195533752,
+      "maxObservedTaskCpuPercent": 22.321010907491047,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 35996.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:40:00+00:00",
+      "completed": 36006,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 26.63943625,
+      "clientWaitingP95Ms": 26.50675575,
+      "albTargetP95Ms": 7.902935800757717,
+      "albTargetMaxMs": 234.86399999999998,
+      "serviceCpuAveragePercent": 16.315763447019787,
+      "maxObservedTaskCpuPercent": 22.007396856943764,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 36007.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:41:00+00:00",
+      "completed": 32760,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 24.207525899999982,
+      "clientWaitingP95Ms": 24.076036199999994,
+      "albTargetP95Ms": 7.030729106241191,
+      "albTargetMaxMs": 160.208,
+      "serviceCpuAveragePercent": 15.348065786891516,
+      "maxObservedTaskCpuPercent": 20.533934116363525,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 32761.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:42:00+00:00",
+      "completed": 25576,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 24.404052,
+      "clientWaitingP95Ms": 24.2931265,
+      "albTargetP95Ms": 7.881112740349236,
+      "albTargetMaxMs": 181.54999999999998,
+      "serviceCpuAveragePercent": 12.512879199451872,
+      "maxObservedTaskCpuPercent": 16.067143281300865,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 25572.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:43:00+00:00",
+      "completed": 18365,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 20.075049,
+      "clientWaitingP95Ms": 19.9376952,
+      "albTargetP95Ms": 7.004362678408983,
+      "albTargetMaxMs": 68.40100000000001,
+      "serviceCpuAveragePercent": 9.577825135654873,
+      "maxObservedTaskCpuPercent": 11.616856892903645,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 18369.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:44:00+00:00",
+      "completed": 11168,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 24.30012705,
+      "clientWaitingP95Ms": 24.144554699999997,
+      "albTargetP95Ms": 7.398265462880228,
+      "albTargetMaxMs": 125.166,
+      "serviceCpuAveragePercent": 6.673064470291138,
+      "maxObservedTaskCpuPercent": 8.14936105410258,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 11169.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:45:00+00:00",
+      "completed": 3968,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 26.053799149999936,
+      "clientWaitingP95Ms": 25.769675099999947,
+      "albTargetP95Ms": 10.537720843420045,
+      "albTargetMaxMs": 257.058,
+      "serviceCpuAveragePercent": null,
+      "maxObservedTaskCpuPercent": 3.88033390045166,
+      "healthyTargetsMinimum": 6.0,
+      "unhealthyTargetsMaximum": 0.0,
+      "cloudfrontRequestsAllPaths": 3969.0,
+      "cloudfront5xxPercentAllPaths": 0.0
+    },
+    {
+      "minuteUtc": "2026-11-11T08:46:00+00:00",
+      "completed": 9,
+      "non200": 0,
+      "drops": 0,
+      "clientDurationP95Ms": 82.84566519999997,
+      "clientWaitingP95Ms": 82.43564619999998,
+      "albTargetP95Ms": null,
+      "albTargetMaxMs": null,
+      "serviceCpuAveragePercent": null,
+      "maxObservedTaskCpuPercent": 0.94441652794679,
+      "healthyTargetsMinimum": null,
+      "unhealthyTargetsMaximum": null,
+      "cloudfrontRequestsAllPaths": null,
+      "cloudfront5xxPercentAllPaths": null
+    }
+  ],
+  "conclusion": "Late scaling and VU exhaustion are established; newly added-task CPU contention is observed. Earlier scaling alone fixing zero drops/p95 is NOT proven, because early client/origin timing mismatch and missing per-request edge/access/JVM evidence remain.",
+  "runtimeMutationPerformed": false
+}

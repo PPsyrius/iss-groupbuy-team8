@@ -1,0 +1,2 @@
+{"at":"2026-11-10T08:12:42.058Z","description":"Inject 3500 ms downstream Redis latency"}
+{"at":"2026-11-10T08:13:07.054Z","description":"Remove Redis latency; observe recovery"}

@@ -1,0 +1,42 @@
+{
+  "kind": "local-v3-full-verification-failures-not-acceptance",
+  "runs": [
+    {
+      "prefix": "cache-backoff",
+      "exitCode": 1,
+      "failedModule": "blocbuy-infrastructure",
+      "gate": "SpotBugs US_USELESS_SUPPRESSION_ON_METHOD",
+      "finding": "Unused EI_EXPOSE_REP2 annotation on package-private clock constructor",
+      "privateLog": {
+        "path": "cache-backoff-full-verify.log",
+        "bytes": 836839,
+        "sha256": "68bd67d6043addc806209ca3dc8534f3162f4d9033ae021a54e00c37bd6a7286"
+      },
+      "limits": "Reactor aborted; skipped downstream clean goals could leave older targets/reports. Do not cite its mixed totals/aggregate as fresh v3 coverage."
+    },
+    {
+      "prefix": "cache-backoff2",
+      "exitCode": 1,
+      "failedModule": "blocbuy-bootstrap",
+      "gate": "Failsafe integration tests",
+      "suite": "BestOpenDealCacheIT",
+      "suiteTests": 11,
+      "suiteFailures": 8,
+      "freshPartialReactorTotals": {
+        "tests": 1996,
+        "failures": 8,
+        "errors": 0,
+        "skipped": 1
+      },
+      "aggregatePresent": false,
+      "finding": "Outage leaves singleton cooldown for subsequent population/invalidation tests; Spring context isolation under correction",
+      "privateLog": {
+        "path": "cache-backoff2-full-verify.log",
+        "bytes": 3252422,
+        "sha256": "c839a19e76aabd0b1908d5dbc2eacff09c461d3c02f5d3f5f231ece335ad30ab"
+      },
+      "limits": "Preclean removed stale targets; downstream modules skipped after failure. This is not full verification or coverage acceptance."
+    }
+  ],
+  "status": "Both failures retained. Independent review also identified stale failure-publication ordering; fixes/tests need their own evidence."
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "local-v3-focused-red-green",
+  "limits": "Focused/package only; fresh runtime/full verification required. No deployment or acceptance.",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 762,
+      "sha256": "4728801b89e6edc05547f95137fbdbff2ebe7183421ab95ec99bd3d082e19c93"
+    },
+    {
+      "path": "red-green.json",
+      "bytes": 1560,
+      "sha256": "b92b5784f4a919967194d9e3030e78725f3f1a88047dd15d3bf04589fa5fdb5c"
+    }
+  ]
+}

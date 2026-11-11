@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-11T10:39:07.006099+00:00",
+  "taskArn": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/ce4146d8826b49509868d495d62a2bf9",
+  "taskStartedAt": "2026-11-11T08:30:31.249000+00:00",
+  "taskAgeSeconds": 7715.757099,
+  "healthyTargets": 1,
+  "slowStartSeconds": 120,
+  "cpuAlarmState": "OK",
+  "recentServiceCpu": [
+    {
+      "Timestamp": "2026-11-11T10:36:00+00:00",
+      "Average": 0.641018345952034,
+      "Unit": "Percent"
+    },
+    {
+      "Timestamp": "2026-11-11T10:37:00+00:00",
+      "Average": 0.6935325190424919,
+      "Unit": "Percent"
+    }
+  ],
+  "noReportingTaskRunning": true,
+  "ready": true,
+  "limits": "Existing warm task, not a special high-rate warm-up. Idle service averages are not per-task load capacity proof."
+}

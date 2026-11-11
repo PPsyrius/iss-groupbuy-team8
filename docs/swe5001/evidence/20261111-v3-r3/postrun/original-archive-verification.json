@@ -1,0 +1,193 @@
+{
+  "at": "2026-11-11T11:21:20.561246+00:00",
+  "archive": "load.tar.gz",
+  "filesVerified": 37,
+  "allArchivedFileBytesMatchRetainedOriginals": true,
+  "entries": [
+    {
+      "path": "load/acceptance-precheck-refusal.json",
+      "bytes": 343,
+      "sha256": "95e7d3dd6d0cb134778924cbbddcc2a3d1b962a37e624699c5e12d8ae4ec5996"
+    },
+    {
+      "path": "load/alarm-control-history.json",
+      "bytes": 21528,
+      "sha256": "c5556b37c219536b2394c0dabb6a8e87d048b59c50218a8f8ab77239dbeedb49"
+    },
+    {
+      "path": "load/before.json",
+      "bytes": 50914,
+      "sha256": "4387b0f2f39f250628ebde313905ae10380f06ab68799b92c9d15c45a1bfbbc6"
+    },
+    {
+      "path": "load/commerce-svc-connection-errors.json",
+      "bytes": 124,
+      "sha256": "ccf377fe295933a5e7aa6e45da2d220e68efa0531ff23d32de465f87a0d71824"
+    },
+    {
+      "path": "load/completion.json",
+      "bytes": 203,
+      "sha256": "89fcde519e98db2e1bbe0e3395ee13d4ef2bb319ec8202a538427c2e99cc0d69"
+    },
+    {
+      "path": "load/create.log",
+      "bytes": 66,
+      "sha256": "5f7aa60a6522f4b11c33fa67e6a8f01d5411beeb52c471a32190240f65a6a556"
+    },
+    {
+      "path": "load/credential-window.json",
+      "bytes": 82,
+      "sha256": "73b8b1903c396cf4a83a6770598004b57e51fe1ef038a4a8e41492ceb7b48eb6"
+    },
+    {
+      "path": "load/diagnostic-metric-queries.json",
+      "bytes": 2755,
+      "sha256": "64b038d05e5cfeff66a92a8dcd458da5c917931d254f312855fedb6e6da2a684"
+    },
+    {
+      "path": "load/diagnostic-scaling-activities.json",
+      "bytes": 30410,
+      "sha256": "b1b48e3568eb0b5519823989249e52355e1a7d2710ad6bf9b388b145469b57df"
+    },
+    {
+      "path": "load/diagnostic-server-metrics.json",
+      "bytes": 12391,
+      "sha256": "0e9e48b9ab284effeadfe51f09ed4db202e07838c36591080a8d366cb33a2277"
+    },
+    {
+      "path": "load/execution.json",
+      "bytes": 1022,
+      "sha256": "b4a045947b2c7a1589257ab83fae0b4584834e5193255bdb6942defb6b671dfb"
+    },
+    {
+      "path": "load/generator-final-state.json",
+      "bytes": 226,
+      "sha256": "c0dc75e8df0f8cfa6b2e964c1bfd38ec27dd028b117d6b8185bebaa233eda20c"
+    },
+    {
+      "path": "load/generator.jsonl",
+      "bytes": 147326,
+      "sha256": "01f8d4429a025a4aa062c3d68d3d55b2b2938b5eca25949bafd2f5c78b3c4a0f"
+    },
+    {
+      "path": "load/identity-svc-connection-errors.json",
+      "bytes": 124,
+      "sha256": "ccf377fe295933a5e7aa6e45da2d220e68efa0531ff23d32de465f87a0d71824"
+    },
+    {
+      "path": "load/independent-floor-restoration.json",
+      "bytes": 2840,
+      "sha256": "7286be59326e0f7d700a86204adc2c47f19ffc02109998d9aeaecf9c9f183e66"
+    },
+    {
+      "path": "load/k6-exit-code.txt",
+      "bytes": 4,
+      "sha256": "2dd9964aa7c59c01362061846da85dcf727bb9f7f25e6b1c67ff342e6ef8c69c"
+    },
+    {
+      "path": "load/k6.log",
+      "bytes": 1707361,
+      "sha256": "08782e3e1fb2bd516d5d73f6ba2755bfd7997888bb07da8129ae0ce123dc7c2b"
+    },
+    {
+      "path": "load/metric-queries.json",
+      "bytes": 7841,
+      "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+    },
+    {
+      "path": "load/metrics.json",
+      "bytes": 36195,
+      "sha256": "1e29deb26d9e61331c9941410bc53755b4b9645d82d074fe7a8c73fa31320e93"
+    },
+    {
+      "path": "load/monitor-create.log",
+      "bytes": 66,
+      "sha256": "d80214f8e2e81e85604c68e0ea70d9b8ed21269337eb3ace0b802c0c8dad57de"
+    },
+    {
+      "path": "load/monitor-exit-code.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "load/monitor.log",
+      "bytes": 110,
+      "sha256": "414f7974ac3a1f9717d86605ddd6914a1c5d0ee322c909575b817236818b0faf"
+    },
+    {
+      "path": "load/network-create.log",
+      "bytes": 66,
+      "sha256": "57f9fe4f1c5822bb7ff6b24bae797ef25d5243f4722f182797b6f394cc497144"
+    },
+    {
+      "path": "load/notification-svc-connection-errors.json",
+      "bytes": 124,
+      "sha256": "ccf377fe295933a5e7aa6e45da2d220e68efa0531ff23d32de465f87a0d71824"
+    },
+    {
+      "path": "load/observations.jsonl",
+      "bytes": 227253,
+      "sha256": "c30a9af8f47df4c0ce6d5b9b69689626e56a58c42206abd0b6430718425ced62"
+    },
+    {
+      "path": "load/observer-context.json",
+      "bytes": 341,
+      "sha256": "04b944a1b4401e07a998a5bf999169560740991e7b6341323dd2e658b2d9cd17"
+    },
+    {
+      "path": "load/observer-heartbeat.json",
+      "bytes": 125,
+      "sha256": "8d6eaf6d093d3b173437631411b166496703fe4078080ebf4b39eb22af7b3fa1"
+    },
+    {
+      "path": "load/observer-result.json",
+      "bytes": 905,
+      "sha256": "9124846d4b6bd711616fd91a1ffcee76d29d55ac02ae1324310482eda4db5487"
+    },
+    {
+      "path": "load/preflight-validation.log",
+      "bytes": 68,
+      "sha256": "1a46a90141e76cc288a834e4b60f2e66882bae3ecc5a1ea3d2860784ba58683d"
+    },
+    {
+      "path": "load/preflight.json",
+      "bytes": 12975,
+      "sha256": "4f61ce8439db70af300a5d46d443b29383e5ad1d41337f2589071980a4a208f3"
+    },
+    {
+      "path": "load/raw-audit.json",
+      "bytes": 1324,
+      "sha256": "66a7661fff19f241c309b91c398df11436858b5445228d39bb833d8e9ea8f5a3"
+    },
+    {
+      "path": "load/samples.jsonl",
+      "bytes": 2623435228,
+      "sha256": "094ff696abaf913853bbbc7545d705db0bbce3ca027bc8c5ae3eddd48aac5bf1"
+    },
+    {
+      "path": "load/scaling-activities.json",
+      "bytes": 30410,
+      "sha256": "b1b48e3568eb0b5519823989249e52355e1a7d2710ad6bf9b388b145469b57df"
+    },
+    {
+      "path": "load/server-diagnostic-review.json",
+      "bytes": 10509,
+      "sha256": "2bdba2435448522451fc460aa413db66a6049034c7955cdef6afb50e1548e4a6"
+    },
+    {
+      "path": "load/start.log",
+      "bytes": 36,
+      "sha256": "f453d18d86bb88ee7b433214b0941ab183e0c7d1aa306882b25f8cc8eaaba84d"
+    },
+    {
+      "path": "load/summary.json",
+      "bytes": 20862,
+      "sha256": "399f7cd2373b959123d1ac23d126e862fae988f11863ac5ae39e45af9e86e6df"
+    },
+    {
+      "path": "load/wait-exit.txt",
+      "bytes": 4,
+      "sha256": "2dd9964aa7c59c01362061846da85dcf727bb9f7f25e6b1c67ff342e6ef8c69c"
+    }
+  ]
+}

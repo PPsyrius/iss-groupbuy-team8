@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="470pt" height="458pt" viewBox="0 0 470 458">
+<rect width="100%" height="100%" fill="white"/>
+<g font-family="Arial, sans-serif" font-size="8.5" fill="#1B1A18">
+<text x="48.00" y="12.00" font-weight="bold">10 November 2026 SGT • failed AWS campaign</text>
+<text x="48.00" y="26.00" >Dashed verticals: scale-out activity starts; shading: original ECS observer missing</text>
+<text x="48.00" y="44.00" font-weight="bold">Throughput (requests/s): blue = completed; grey dashed = offered reference</text>
+<rect x="304.82" y="51" width="153.18" height="66" fill="#f0ece5"/>
+<line x1="48.00" y1="117.00" x2="458.00" y2="117.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="120.00" text-anchor="end">0</text>
+<line x1="48.00" y1="96.69" x2="458.00" y2="96.69" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="99.69" text-anchor="end">200</text>
+<line x1="48.00" y1="76.38" x2="458.00" y2="76.38" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="79.38" text-anchor="end">400</text>
+<line x1="48.00" y1="56.08" x2="458.00" y2="56.08" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="59.08" text-anchor="end">600</text>
+<line x1="207.24" y1="51.00" x2="207.24" y2="117.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<line x1="248.23" y1="51.00" x2="248.23" y2="117.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<line x1="289.23" y1="51.00" x2="289.23" y2="117.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<polyline points="68.50,110.58 82.17,107.33 95.83,104.08 109.50,100.83 123.17,97.56 136.83,93.74 150.50,89.72 164.17,88.58 177.83,86.73 191.50,88.26 205.17,89.65 218.83,86.02 232.50,87.62 246.17,87.23 259.83,85.06 273.50,64.60 287.17,55.30 300.83,55.35 314.50,60.73 328.17,67.66 341.83,55.82 355.50,56.07 369.17,56.07 382.83,56.07 396.50,56.39 410.17,64.94 423.83,77.13 437.50,89.32 451.17,101.50" fill="none" stroke="#3E5CD9" stroke-width="1.5"/>
+<polyline points="68.50,110.47 82.17,107.22 95.83,103.97 109.50,100.72 123.17,97.44 136.83,93.60 150.50,89.54 164.17,85.48 177.83,81.42 191.50,77.36 205.17,73.30 218.83,69.23 232.50,65.17 246.17,61.11 259.83,57.19 273.50,56.08 287.17,56.08 300.83,56.08 314.50,56.08 328.17,56.08 341.83,56.08 355.50,56.08 369.17,56.08 382.83,56.08 396.50,56.49 410.17,65.34 423.83,77.53 437.50,89.71 451.17,101.90" fill="none" stroke="#6B655C" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="48.00" y1="117.00" x2="48.00" y2="120.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="48.00" y="130.00" text-anchor="middle">03:45</text>
+<line x1="116.33" y1="117.00" x2="116.33" y2="120.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="116.33" y="130.00" text-anchor="middle">03:50</text>
+<line x1="184.67" y1="117.00" x2="184.67" y2="120.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="184.67" y="130.00" text-anchor="middle">03:55</text>
+<line x1="253.00" y1="117.00" x2="253.00" y2="120.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="253.00" y="130.00" text-anchor="middle">04:00</text>
+<line x1="321.33" y1="117.00" x2="321.33" y2="120.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="321.33" y="130.00" text-anchor="middle">04:05</text>
+<line x1="389.67" y1="117.00" x2="389.67" y2="120.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="389.67" y="130.00" text-anchor="middle">04:10</text>
+<line x1="458.00" y1="117.00" x2="458.00" y2="120.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="458.00" y="130.00" text-anchor="middle">04:15</text>
+<text x="48.00" y="140.00" font-weight="bold">Client p95 per minute (ms; not an average of percentiles)</text>
+<rect x="304.82" y="147" width="153.18" height="66" fill="#f0ece5"/>
+<line x1="48.00" y1="213.00" x2="458.00" y2="213.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="216.00" text-anchor="end">0</text>
+<line x1="48.00" y1="183.00" x2="458.00" y2="183.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="186.00" text-anchor="end">5,000</text>
+<line x1="48.00" y1="153.00" x2="458.00" y2="153.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="156.00" text-anchor="end">10,000</text>
+<line x1="207.24" y1="147.00" x2="207.24" y2="213.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<line x1="248.23" y1="147.00" x2="248.23" y2="213.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<line x1="289.23" y1="147.00" x2="289.23" y2="213.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<polyline points="68.50,211.90 82.17,212.48 95.83,212.87 109.50,212.86 123.17,212.71 136.83,212.74 150.50,210.74 164.17,188.89 177.83,187.87 191.50,184.82 205.17,183.34 218.83,188.25 232.50,185.36 246.17,152.99 259.83,171.80 273.50,153.00 287.17,191.62 300.83,204.14 314.50,212.51 328.17,152.99 341.83,212.59 355.50,212.66 369.17,212.87 382.83,212.89 396.50,212.89 410.17,212.90 423.83,212.90 437.50,212.90 451.17,212.89" fill="none" stroke="#3E5CD9" stroke-width="1.5"/>
+<line x1="48.00" y1="213.00" x2="48.00" y2="216.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="48.00" y="226.00" text-anchor="middle">03:45</text>
+<line x1="116.33" y1="213.00" x2="116.33" y2="216.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="116.33" y="226.00" text-anchor="middle">03:50</text>
+<line x1="184.67" y1="213.00" x2="184.67" y2="216.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="184.67" y="226.00" text-anchor="middle">03:55</text>
+<line x1="253.00" y1="213.00" x2="253.00" y2="216.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="253.00" y="226.00" text-anchor="middle">04:00</text>
+<line x1="321.33" y1="213.00" x2="321.33" y2="216.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="321.33" y="226.00" text-anchor="middle">04:05</text>
+<line x1="389.67" y1="213.00" x2="389.67" y2="216.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="389.67" y="226.00" text-anchor="middle">04:10</text>
+<line x1="458.00" y1="213.00" x2="458.00" y2="216.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="458.00" y="226.00" text-anchor="middle">04:15</text>
+<text x="48.00" y="236.00" font-weight="bold">Commerce CPU per minute (%)</text>
+<rect x="304.82" y="243" width="153.18" height="66" fill="#f0ece5"/>
+<line x1="48.00" y1="309.00" x2="458.00" y2="309.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="312.00" text-anchor="end">0</text>
+<line x1="48.00" y1="279.00" x2="458.00" y2="279.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="282.00" text-anchor="end">50</text>
+<line x1="48.00" y1="249.00" x2="458.00" y2="249.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="252.00" text-anchor="end">100</text>
+<line x1="207.24" y1="243.00" x2="207.24" y2="309.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<line x1="248.23" y1="243.00" x2="248.23" y2="309.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<line x1="289.23" y1="243.00" x2="289.23" y2="309.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<polyline points="68.50,280.34 82.17,263.89 95.83,271.09 109.50,268.90 123.17,261.27 136.83,253.93 150.50,249.12 164.17,249.03 177.83,249.05 191.50,248.94 205.17,249.08 218.83,257.97 232.50,263.84 246.17,284.25 259.83,253.36 273.50,265.01 287.17,272.81 300.83,275.43 314.50,266.86 328.17,275.42 341.83,271.28 355.50,273.74 369.17,280.06 382.83,283.42 396.50,283.35 410.17,285.87 423.83,290.15 437.50,294.39 451.17,299.30" fill="none" stroke="#28744d" stroke-width="1.5"/>
+<line x1="48.00" y1="309.00" x2="48.00" y2="312.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="48.00" y="322.00" text-anchor="middle">03:45</text>
+<line x1="116.33" y1="309.00" x2="116.33" y2="312.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="116.33" y="322.00" text-anchor="middle">03:50</text>
+<line x1="184.67" y1="309.00" x2="184.67" y2="312.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="184.67" y="322.00" text-anchor="middle">03:55</text>
+<line x1="253.00" y1="309.00" x2="253.00" y2="312.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="253.00" y="322.00" text-anchor="middle">04:00</text>
+<line x1="321.33" y1="309.00" x2="321.33" y2="312.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="321.33" y="322.00" text-anchor="middle">04:05</text>
+<line x1="389.67" y1="309.00" x2="389.67" y2="312.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="389.67" y="322.00" text-anchor="middle">04:10</text>
+<line x1="458.00" y1="309.00" x2="458.00" y2="312.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="458.00" y="322.00" text-anchor="middle">04:15</text>
+<text x="48.00" y="332.00" font-weight="bold">Counts per minute: red = browse failures; grey dashed = dropped arrivals</text>
+<rect x="304.82" y="339" width="153.18" height="66" fill="#f0ece5"/>
+<line x1="48.00" y1="405.00" x2="458.00" y2="405.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="408.00" text-anchor="end">0</text>
+<line x1="48.00" y1="375.67" x2="458.00" y2="375.67" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="378.67" text-anchor="end">8,000</text>
+<line x1="48.00" y1="346.33" x2="458.00" y2="346.33" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="43.00" y="349.33" text-anchor="end">16,000</text>
+<line x1="207.24" y1="339.00" x2="207.24" y2="405.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<line x1="248.23" y1="339.00" x2="248.23" y2="405.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<line x1="289.23" y1="339.00" x2="289.23" y2="405.00" stroke="#6B655C" stroke-width="0.7" stroke-dasharray="3 3"/>
+<polyline points="68.50,405.00 82.17,405.00 95.83,405.00 109.50,405.00 123.17,405.00 136.83,405.00 150.50,405.00 164.17,404.52 177.83,405.00 191.50,405.00 205.17,404.99 218.83,405.00 232.50,402.94 246.17,385.61 259.83,404.62 273.50,396.81 287.17,400.67 300.83,404.66 314.50,404.34 328.17,384.36 341.83,404.94 355.50,405.00 369.17,405.00 382.83,405.00 396.50,405.00 410.17,405.00 423.83,405.00 437.50,405.00 451.17,405.00" fill="none" stroke="#bf3022" stroke-width="1.5"/>
+<polyline points="68.50,405.00 82.17,405.00 95.83,405.00 109.50,405.00 123.17,405.00 136.83,405.00 150.50,405.00 164.17,402.13 177.83,393.73 191.50,381.70 205.17,369.90 218.83,368.91 232.50,356.55 246.17,348.79 259.83,344.78 273.50,386.49 287.17,404.71 300.83,405.00 314.50,398.49 328.17,376.84 341.83,405.00 355.50,405.00 369.17,405.00 382.83,405.00 396.50,405.00 410.17,405.00 423.83,405.00 437.50,405.00 451.17,405.00" fill="none" stroke="#6B655C" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="48.00" y1="405.00" x2="48.00" y2="408.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="48.00" y="418.00" text-anchor="middle">03:45</text>
+<line x1="116.33" y1="405.00" x2="116.33" y2="408.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="116.33" y="418.00" text-anchor="middle">03:50</text>
+<line x1="184.67" y1="405.00" x2="184.67" y2="408.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="184.67" y="418.00" text-anchor="middle">03:55</text>
+<line x1="253.00" y1="405.00" x2="253.00" y2="408.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="253.00" y="418.00" text-anchor="middle">04:00</text>
+<line x1="321.33" y1="405.00" x2="321.33" y2="408.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="321.33" y="418.00" text-anchor="middle">04:05</text>
+<line x1="389.67" y1="405.00" x2="389.67" y2="408.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="389.67" y="418.00" text-anchor="middle">04:10</text>
+<line x1="458.00" y1="405.00" x2="458.00" y2="408.00" stroke="#b8bec5" stroke-width="0.7"/>
+<text x="458.00" y="418.00" text-anchor="middle">04:15</text>
+<text x="48.00" y="449.00" >Complete buckets 03:46–04:14; observer ended 04:03:47. No task-count interpolation.</text>
+</g>
+</svg>

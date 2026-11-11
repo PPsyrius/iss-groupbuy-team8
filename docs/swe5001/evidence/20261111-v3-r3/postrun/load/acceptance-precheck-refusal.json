@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11T11:10:58.906Z",
+  "analyser": "scaling.mjs v3Accumulator",
+  "source": "Explicitly hashed policy-binding source; acceptance gates unchanged",
+  "refusal": "Generator drops invalidate V3 evidence",
+  "acceptance": false,
+  "limits": "Early refusal preserves the drop gate; full CLI and collector review remain separate."
+}

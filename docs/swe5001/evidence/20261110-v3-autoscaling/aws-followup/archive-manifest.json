@@ -1,0 +1,46 @@
+{
+  "archive": "C:\\Users\\sirip\\Downloads\\swe5001-v3-causes-in85rhy1.tar.gz",
+  "sha256": "dccc02e618fe6e34fb8f9bf408acc70b676332e49ecc104e942506d82ecd9e65",
+  "files": [
+    {
+      "name": "additional-metrics.json",
+      "bytes": 20436,
+      "sha256": "bf4536d6f3ea78c8d02a7bfedf4b71475545b3c6d3090b17eaa48bf4d75f2f8a"
+    },
+    {
+      "name": "alarm-config.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "name": "alarm-history-0.json",
+      "bytes": 3393,
+      "sha256": "90f645bad2ee22f2bedcb1a686fb99e38ccd7ab1b5074db4735577c50cd43e95"
+    },
+    {
+      "name": "alarm-history-1.json",
+      "bytes": 2871,
+      "sha256": "37cba0a1ab584772a4de7373ec005c2e9ffa9264ba95125163474d20cc8a0c37"
+    },
+    {
+      "name": "context.json",
+      "bytes": 699,
+      "sha256": "bc5133edf3c86b9b3b83236f22191bddd358350e9feb44d618c822d68a3a5e53"
+    },
+    {
+      "name": "current-commerce.json",
+      "bytes": 382,
+      "sha256": "748bcf1798933fb0df7dcab3ace199c8130d03ac1733f46e278e16763fb41668"
+    },
+    {
+      "name": "current-floor.json",
+      "bytes": 27,
+      "sha256": "cecaeba9a53447ff034ffae46e86a907936ad1a26be50c4d7141d8f97d8ce71f"
+    },
+    {
+      "name": "metric-queries.json",
+      "bytes": 7192,
+      "sha256": "cbf59b225f3a13ec41ade25fdc8f939575134c07a9e8386cd53e6c315256dccd"
+    }
+  ]
+}

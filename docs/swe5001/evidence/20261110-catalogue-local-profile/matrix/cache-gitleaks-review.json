@@ -1,0 +1,7 @@
+{
+  "rule": "stripe-access-token",
+  "file": "backend/blocbuy-infrastructure/src/test/java/com/blocbuy/payment/gateway/StripeClientProviderTest.java",
+  "line": 14,
+  "classification": "Pre-existing clearly synthetic fake/unused test-key marker; file identical to released 93984f61",
+  "action": "No unrelated edit, allowlist or gate suppression; changed files scanned separately"
+}
