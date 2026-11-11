@@ -40,4 +40,4 @@
 #include "sections/04-quality-attributes.typ"
 #include "sections/05-devops.typ"
 #include "sections/06-highlights.typ"
-#include "sections/07-appendix-a.typ"
+#include "sections/source-book.typ"

@@ -4,7 +4,7 @@ reviews:
   path_filters:
     # SWE5001 Appendix A diagrams: 137 Mermaid sources and the Typst drawings generated from them.
     # Together they put a report PR over CodeRabbit's 150-file limit, so it skips the whole PR.
-    # The generator rejects unsupported Mermaid, `appendix-diagrams.mjs --check` keeps gen/ in step
+    # The generator rejects unsupported Mermaid, `uml-diagrams.mjs --check` keeps gen/ in step
     # with src/, and the diagrams are reviewed as rendered pages, not as text.
-    - "!docs/swe5001/report/diagrams/appendix-a/src/**"
-    - "!docs/swe5001/report/diagrams/appendix-a/gen/**"
+    - "!docs/swe5001/report/diagrams/uml/src/**"
+    - "!docs/swe5001/report/diagrams/uml/gen/**"
