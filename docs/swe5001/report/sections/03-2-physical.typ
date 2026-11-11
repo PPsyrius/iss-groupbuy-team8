@@ -236,7 +236,7 @@ The solution uses managed AWS services wherever one exists, so we run no servers
 
 *Encryption and secrets.* Configured, not tested: the data stores, the domain-event topic (`alias/aws/sns`), the queues, ECR and the state bucket are encrypted at rest; the alarm topic `blocbuy-swe5001-alerts` is not. The CloudFront → ALB hop is plain HTTP (AISS-08), and the Valkey AUTH token and the origin secret are in Terraform state (AISS-09). Database passwords are generated as ephemeral values and written with write-only arguments, so they never reach Terraform state. @tbl-security-boundaries gives each boundary, its control and its limit (§4.3).
 
-*Cost.* Estimated: while it is up, the runtime costs about US\$0.17 to US\$0.20 an hour (AD-12), and nothing for the rest of the week except the permanent edge. Estimated from Cost Explorer: every session billed to 10 November cost about US\$13.4 in total (read on 11 November; the 11 November session was not yet billed). §6.3 shows the method.
+*Cost.* Estimated: while it is up, the runtime costs about US\$0.17 to US\$0.20 an hour (AD-12), and nothing for the rest of the week except the permanent edge. Estimated from Cost Explorer: every session billed to 10 November cost about US\$11.6 in total (read on 11 and 12 November; the 11 November session is not yet billed). §6.3 shows the method.
 
 *Workloads and compute.* @tbl-workload-compute shows which compute runs each kind of workload and what scales it.
 
