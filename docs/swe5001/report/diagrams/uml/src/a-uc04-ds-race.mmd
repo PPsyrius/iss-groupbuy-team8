@@ -1,4 +1,4 @@
-%% frame: UC4 A7: two payments race for the last seat (design)
+%% frame: UC4: two payments race for the last seat (design)
 sequenceDiagram
     participant App as :StripePaymentAppService
     participant A as txA : StripeCheckoutService
@@ -8,7 +8,7 @@ sequenceDiagram
     participant Repo as :CheckoutPaymentRepository
 
     activate App
-    Note over App,B: A7, at B7: two verified webhooks (@fig-a-pay-ds-webhook), one thread each
+    Note over App,B: two verified webhooks, one thread each
     par buyer X's webhook
         App->>A: handleWebhook(rawX, sigX)
         activate A
