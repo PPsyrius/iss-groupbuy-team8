@@ -1,0 +1,10 @@
+{
+  "attempt": "r2-timing-v1",
+  "exit": 1,
+  "reason": "Raw export timestamp plus retained tags is not globally unique across separate HTTP metric batches. The first offline diagnostic incorrectly required uniqueness and stopped.",
+  "originalSourcePreservedAt": "timing-analysis-v1-failed-source.py",
+  "correction": "Validate the exact eight-point export order per HTTP metric batch; retain repeated complete batches instead of deduplicating them. Refuse ambiguous within-batch order, and verify full counts/means/p95 against the untouched original summary and raw SHA-256.",
+  "httpRetried": false,
+  "rawEvidenceChanged": false,
+  "acceptanceGatesChanged": false
+}

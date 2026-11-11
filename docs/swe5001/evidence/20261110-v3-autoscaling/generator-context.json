@@ -1,0 +1,21 @@
+{
+  "runLabel": "20261110-v3-194543",
+  "generatorContainer": "blocbuy-20261110-v3-194543",
+  "monitorContainer": "blocbuy-20261110-v3-194543-monitor",
+  "driverSourceSha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1",
+  "deployedSourceSha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1",
+  "commerceDigest": "sha256:c8ba2a7a09115a0d459f648d3ea57faf13709975a0c1e960d7f385372cd351d9",
+  "scriptState": "uncommitted operator orchestration; workload files match recorded committed source",
+  "scriptSha256": "c2dadab744a00b65358579d54dda269c4a5216fbb286f33c374b6a7308d92efa",
+  "location": "Operator local Windows Docker Desktop workstation; physical network location not independently measured",
+  "cpuLimit": 8,
+  "memoryLimitBytes": 8589934592,
+  "preallocatedVUs": 1000,
+  "maxVUs": 1000,
+  "candidateRps": 200,
+  "candidateBasis": "Existing 12000/min policy and retained historical baseline, not a fresh monolith V2",
+  "loadStarted": true,
+  "startedAtUtc": "2026-11-09T19:45:44.366Z",
+  "finishedAtUtc": "2026-11-09T20:15:47.809Z",
+  "k6ExitCode": 99
+}

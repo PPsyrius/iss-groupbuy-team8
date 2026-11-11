@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-11T10:35:13.214562+00:00",
+  "bucket": "blocbuy-swe5001-alb-logs-402178232802",
+  "objects": [
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1035Z_47.131.83.97_27gww4n2.log.gz",
+      "bytes": 473,
+      "sha256": "39c4aa7a1ff152027613829d1c4caf6da6711c9239134a54a0bd9ac659a1a623"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1035Z_52.74.35.182_2xvu2jxx.log.gz",
+      "bytes": 398,
+      "sha256": "78171d098a405d3fcc32a7d4a6a055ba660307301e3a10a177b92285ca4e66cd"
+    }
+  ],
+  "records": 3,
+  "rawLogsRetainedPrivatelyInS3": true,
+  "clientIpUrlUserAgentRetained": false,
+  "deliveryVerified": true,
+  "limits": "ALB delivery is best effort and delayed; this is not proof of complete request capture."
+}

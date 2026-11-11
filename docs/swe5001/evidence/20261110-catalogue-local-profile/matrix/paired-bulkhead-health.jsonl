@@ -1,0 +1,31 @@
+{"at":"2026-11-10T06:52:35.920Z","durationMs":1,"error":"connect ECONNREFUSED 172.18.0.27:8589"}
+{"at":"2026-11-10T06:52:50.930Z","durationMs":1,"error":"connect ECONNREFUSED 172.18.0.27:8589"}
+{"at":"2026-11-10T06:53:05.935Z","durationMs":2450,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:53:23.389Z","durationMs":5003,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:53:43.394Z","durationMs":5002,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:54:03.403Z","durationMs":5002,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:54:23.408Z","durationMs":5003,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:54:43.414Z","durationMs":5001,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:55:03.416Z","durationMs":5006,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:55:23.425Z","durationMs":5003,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:55:43.437Z","durationMs":1045,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:55:59.490Z","durationMs":1586,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:56:16.086Z","durationMs":91,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:56:31.185Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:56:46.193Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:57:01.200Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:57:16.208Z","durationMs":6,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:57:31.215Z","durationMs":5,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:57:46.222Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:58:01.230Z","durationMs":3065,"httpStatus":503,"status":"DOWN"}
+{"at":"2026-11-10T06:58:19.298Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:58:34.302Z","durationMs":75,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:58:49.380Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:59:04.388Z","durationMs":3106,"httpStatus":503,"status":"DOWN"}
+{"at":"2026-11-10T06:59:22.500Z","durationMs":3092,"httpStatus":503,"status":"DOWN"}
+{"at":"2026-11-10T06:59:40.593Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:59:55.600Z","durationMs":8,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T07:00:10.613Z","durationMs":3,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T07:00:25.624Z","durationMs":3,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T07:00:40.629Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T07:00:55.636Z","durationMs":31,"httpStatus":200,"status":"UP"}

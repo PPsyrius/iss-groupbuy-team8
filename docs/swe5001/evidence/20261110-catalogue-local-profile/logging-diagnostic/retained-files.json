@@ -1,0 +1,156 @@
+{
+  "kind": "local-logging-cost-negative-control-not-runtime-acceptance",
+  "files": [
+    {
+      "path": "case-receipts.json",
+      "bytes": 2745,
+      "sha256": "805075ab4431a96d4900264d3c980c996a6a15a5cb297a5ba4269c36758135cf"
+    },
+    {
+      "path": "cases/logging-bounded-v2-control/context.json",
+      "bytes": 802,
+      "sha256": "18ac1f9207255d7017c0f8eabe2ccd397044805b0f02efbfc46707ca6b1ab270"
+    },
+    {
+      "path": "cases/logging-bounded-v2-control/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/logging-bounded-v2-control/summary.json",
+      "bytes": 6913,
+      "sha256": "40fced0c571b884b130ec0e952cacac0c58125960b2ebcfe7b486c12fbf7f00d"
+    },
+    {
+      "path": "cases/logging-bounded-v2-down/actions.jsonl",
+      "bytes": 154,
+      "sha256": "573990dc8e2012d3919be2440c6c94932bf3d54a757a2e8f5527da1770635ac9"
+    },
+    {
+      "path": "cases/logging-bounded-v2-down/context.json",
+      "bytes": 979,
+      "sha256": "f966f29ef56ab1fe6840d53524c8cf82cb797868072c3ebcda93d65e304d2294"
+    },
+    {
+      "path": "cases/logging-bounded-v2-down/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/logging-bounded-v2-down/summary.json",
+      "bytes": 6816,
+      "sha256": "dfb89480de44ea0106b88b30f7c56937a781679abc269280f571eacaa8060704"
+    },
+    {
+      "path": "cases/logging-bounded-v2-flush/actions.jsonl",
+      "bytes": 86,
+      "sha256": "4db831240669c90ae053edb7f7cfb7ca359563c3b050eb6388b6367bf7dcacfd"
+    },
+    {
+      "path": "cases/logging-bounded-v2-flush/context.json",
+      "bytes": 900,
+      "sha256": "84b7c2f6212a58276ea010c059cc10f85435905a702b7356a813680eee25d543"
+    },
+    {
+      "path": "cases/logging-bounded-v2-flush/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/logging-bounded-v2-flush/summary.json",
+      "bytes": 6826,
+      "sha256": "5ef705dc42526cfb3bcbbc7850c21daa3165654151058ba2570c11d35afb4427"
+    },
+    {
+      "path": "cases/logging-bounded-v2-recovery/context.json",
+      "bytes": 803,
+      "sha256": "18674329f9a6321ffab531b0eabfd91d76ff653313b433b7f6ddb36826477197"
+    },
+    {
+      "path": "cases/logging-bounded-v2-recovery/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/logging-bounded-v2-recovery/summary.json",
+      "bytes": 6717,
+      "sha256": "f7afe02dcbed72ecee98d84a52a5c87b7cc3daa421c1eaea3fd726eb0f0f17c0"
+    },
+    {
+      "path": "cases/logging-bounded-v2-slow/actions.jsonl",
+      "bytes": 179,
+      "sha256": "dd3861de26c27df0b8a7d472a3a0a9ae38fc1f679bdd02bd0f76ce390bab231a"
+    },
+    {
+      "path": "cases/logging-bounded-v2-slow/context.json",
+      "bytes": 1004,
+      "sha256": "2bc794526b1552c767529b41999fd780ffb26f836ab09b697688bb8200e49a7a"
+    },
+    {
+      "path": "cases/logging-bounded-v2-slow/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/logging-bounded-v2-slow/summary.json",
+      "bytes": 6742,
+      "sha256": "b9fe9e37ca2f8150165f0503415873ee18349d6aab7ed19c023cde72350e3fa4"
+    },
+    {
+      "path": "cases/logging-bounded-v2-warmup/context.json",
+      "bytes": 802,
+      "sha256": "6f6f340bb96f9612540a272796d35aeb833f9d14bb4e34aa9099259bbe4af08b"
+    },
+    {
+      "path": "cases/logging-bounded-v2-warmup/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/logging-bounded-v2-warmup/summary.json",
+      "bytes": 6907,
+      "sha256": "86584450e88cb293134f675018b239f4901d0d61d93170fb4f5da3242f0dfdbd"
+    },
+    {
+      "path": "external-artifacts.json",
+      "bytes": 1404,
+      "sha256": "7bd3f7f6901368149defdc0ca6022dc6474e78260466218534f401ef486412be"
+    },
+    {
+      "path": "logging-bounded-v2-jfr-analysis.json",
+      "bytes": 42565,
+      "sha256": "8c30c279c55779d4b7e5d97e987645ec60721267ae9c2f5d56f5b2dda86d0958"
+    },
+    {
+      "path": "logging-diagnostic-analysis.json",
+      "bytes": 96259,
+      "sha256": "1f583e2350a9b2de9517a9695c1c40bc9469c8ad65e388bebaaeb09c13054699"
+    },
+    {
+      "path": "logging-diagnostic-log-counts.json",
+      "bytes": 2302,
+      "sha256": "1d2e1960692c3c839fa5682c13321f9c1ea101265aeb0657fda64ae0a2588bd8"
+    },
+    {
+      "path": "scripts/JfrFailureSummary.java",
+      "bytes": 7582,
+      "sha256": "bf5702df7f7efa9fd534db0a1ce94f5bd054e3e6c8d43f05cfcf5e49ca423a2b"
+    },
+    {
+      "path": "scripts/analyze-logging-diagnostic.py",
+      "bytes": 7049,
+      "sha256": "933fd52ee6dc9fc2629923cd7a41e64133330ef4e0efc954fe28019829999efc"
+    },
+    {
+      "path": "scripts/review-logging-diagnostic.mjs",
+      "bytes": 2875,
+      "sha256": "d1c1fdeff6402dd40ba2d6523c1442a6620f6596c4a54d3e0d7d575a6d7f259d"
+    },
+    {
+      "path": "scripts/run-logging-diagnostic.mjs",
+      "bytes": 14696,
+      "sha256": "8b14d74711864c73522a8c2f3702503f58a1c9b9e2ddac6a80fcdf445726ae44"
+    }
+  ],
+  "status": "Cold startup unresolved; neither production logging nor acceptance gates changed."
+}

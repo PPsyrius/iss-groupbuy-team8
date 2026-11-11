@@ -1,0 +1,61 @@
+{
+  "kind": "safe-log-volume-diagnosis-not-causal-proof",
+  "cases": [
+    {
+      "label": "startup-base-a-warmup",
+      "records": 1911,
+      "bytes": 16934056,
+      "errorRecords": 1905,
+      "cacheUnavailableRecords": 0,
+      "stackTraceCharacters": 15399800,
+      "largestStackTraceCharacters": 12828,
+      "errorClasses": {
+        "org.springframework.transaction.CannotCreateTransactionException": 1767,
+        "org.mybatis.spring.MyBatisSystemException": 132,
+        "org.springframework.web.context.request.async.AsyncRequestNotUsableException": 6,
+        "org.springframework.http.converter.HttpMessageNotWritableException": 6
+      }
+    },
+    {
+      "label": "startup-base-a-control",
+      "records": 0,
+      "bytes": 0,
+      "errorRecords": 0,
+      "cacheUnavailableRecords": 0,
+      "stackTraceCharacters": 0,
+      "largestStackTraceCharacters": 0,
+      "errorClasses": {}
+    },
+    {
+      "label": "startup-scope-a-warmup",
+      "records": 2349,
+      "bytes": 20850524,
+      "errorRecords": 2339,
+      "cacheUnavailableRecords": 3,
+      "stackTraceCharacters": 18958175,
+      "largestStackTraceCharacters": 12846,
+      "errorClasses": {
+        "org.springframework.transaction.CannotCreateTransactionException": 2160,
+        "org.mybatis.spring.MyBatisSystemException": 172,
+        "org.springframework.web.context.request.async.AsyncRequestNotUsableException": 7,
+        "org.springframework.http.converter.HttpMessageNotWritableException": 7
+      }
+    },
+    {
+      "label": "startup-scope-a-control",
+      "records": 52,
+      "bytes": 451174,
+      "errorRecords": 51,
+      "cacheUnavailableRecords": 0,
+      "stackTraceCharacters": 410178,
+      "largestStackTraceCharacters": 12846,
+      "errorClasses": {
+        "org.springframework.transaction.CannotCreateTransactionException": 48,
+        "org.mybatis.spring.MyBatisSystemException": 2,
+        "org.springframework.web.context.request.async.AsyncRequestNotUsableException": 1,
+        "org.springframework.http.converter.HttpMessageNotWritableException": 1
+      }
+    }
+  ],
+  "limits": "Byte counts include JSON log envelopes and stack traces. Counts are logs, not independent request counts; no raw log body is retained here."
+}

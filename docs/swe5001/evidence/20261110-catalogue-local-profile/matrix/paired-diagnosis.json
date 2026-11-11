@@ -1,0 +1,2416 @@
+{
+  "kind": "paired-diagnostic-review-not-AWS-acceptance",
+  "cases": [
+    {
+      "label": "paired-base-warmup",
+      "start": "2026-11-10T06:45:05.786Z",
+      "end": "2026-11-10T06:47:11.975Z",
+      "cpuMedianPercentOneCore": 49.963499450523194,
+      "cpuMaxPercentOneCore": 50.28511087645195,
+      "memoryMaxBytes": 866996224,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 188,
+          "max": 191
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 5,
+          "max": 5
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 0,
+          "last": 1798,
+          "max": 1798
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 0.000805679,
+          "last": 20560.701852976,
+          "max": 20560.701852976
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 4,
+          "last": 15280,
+          "max": 15280
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 0.000783075,
+          "last": 3.899683835,
+          "max": 3.899683835
+        },
+        "jvm_threads_live_threads": {
+          "first": 33,
+          "last": 226,
+          "max": 227
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 10,
+          "last": 71,
+          "max": 71
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 0.215,
+          "last": 2.7030000000000003,
+          "max": 2.7030000000000003
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.183,
+          "last": 0.503,
+          "max": 0.503
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 7507070976,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 7
+    },
+    {
+      "label": "paired-base-control",
+      "start": "2026-11-10T06:47:12.166Z",
+      "end": "2026-11-10T06:48:12.564Z",
+      "cpuMedianPercentOneCore": 28.505632411067193,
+      "cpuMaxPercentOneCore": 50.02977086141405,
+      "memoryMaxBytes": 901652480,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 10
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 5
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 1800,
+          "last": 1800,
+          "max": 1800
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 20732.511049562,
+          "last": 20739.55201224,
+          "max": 20739.55201224
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 15466,
+          "last": 26702,
+          "max": 26702
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 3.899683835,
+          "last": 3.303453573,
+          "max": 3.899683835
+        },
+        "jvm_threads_live_threads": {
+          "first": 226,
+          "last": 225,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 71,
+          "last": 90,
+          "max": 90
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 2.7030000000000003,
+          "last": 2.851,
+          "max": 2.851
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.503,
+          "last": 0.387,
+          "max": 0.503
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 6985183232,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 0
+    },
+    {
+      "label": "paired-base-flush",
+      "start": "2026-11-10T06:48:12.747Z",
+      "end": "2026-11-10T06:49:13.164Z",
+      "cpuMedianPercentOneCore": 19.680930309043553,
+      "cpuMaxPercentOneCore": 24.354707752506723,
+      "memoryMaxBytes": 909905920,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 12
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 5
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 1800,
+          "last": 1800,
+          "max": 1800
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 20739.552660381,
+          "last": 20741.945255589,
+          "max": 20741.945255589
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 27636,
+          "last": 39707,
+          "max": 39707
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 3.303453573,
+          "last": 3.000255268,
+          "max": 3.303453573
+        },
+        "jvm_threads_live_threads": {
+          "first": 225,
+          "last": 225,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 92,
+          "last": 113,
+          "max": 113
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 2.857,
+          "last": 3.117,
+          "max": 3.117
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.106,
+          "last": 0.28,
+          "max": 0.305
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 6945611776,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 0
+    },
+    {
+      "label": "paired-base-slow",
+      "start": "2026-11-10T06:49:13.350Z",
+      "end": "2026-11-10T06:50:23.785Z",
+      "cpuMedianPercentOneCore": 20.305742870508567,
+      "cpuMaxPercentOneCore": 49.9493992248062,
+      "memoryMaxBytes": 923660288,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 178
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 4
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 1800,
+          "last": 1800,
+          "max": 1800
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 20741.945255589,
+          "last": 21994.138740204,
+          "max": 21994.138740204
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 39707,
+          "last": 52611,
+          "max": 52611
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 3.000255268,
+          "last": 2.10188187,
+          "max": 3.000255268
+        },
+        "jvm_threads_live_threads": {
+          "first": 225,
+          "last": 225,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 113,
+          "last": 135,
+          "max": 135
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 3.117,
+          "last": 3.315,
+          "max": 3.315
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.28,
+          "last": 0.29100000000000004,
+          "max": 0.29100000000000004
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 6938009600,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 2
+    },
+    {
+      "label": "paired-base-down",
+      "start": "2026-11-10T06:50:23.964Z",
+      "end": "2026-11-10T06:51:34.433Z",
+      "cpuMedianPercentOneCore": 20.728572849328692,
+      "cpuMaxPercentOneCore": 49.999809523809525,
+      "memoryMaxBytes": 934539264,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 191
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 4
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 1800,
+          "last": 1805,
+          "max": 1805
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 21994.144062098,
+          "last": 24445.986803163,
+          "max": 24445.986803163
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 53404,
+          "last": 66440,
+          "max": 66440
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 2.10188187,
+          "last": 3.000148279,
+          "max": 3.000148279
+        },
+        "jvm_threads_live_threads": {
+          "first": 225,
+          "last": 226,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 136,
+          "last": 159,
+          "max": 159
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 3.318,
+          "last": 3.68,
+          "max": 3.68
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.29100000000000004,
+          "last": 0.302,
+          "max": 0.302
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 7026741248,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 2
+    },
+    {
+      "label": "paired-base-recovery",
+      "start": "2026-11-10T06:51:34.615Z",
+      "end": "2026-11-10T06:52:34.976Z",
+      "cpuMedianPercentOneCore": 19.80598931843898,
+      "cpuMaxPercentOneCore": 22.023019943019943,
+      "memoryMaxBytes": 931106816,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 0
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 1
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 1805,
+          "last": 1805,
+          "max": 1805
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 24445.986894178,
+          "last": 24445.998424382,
+          "max": 24445.998424382
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 66582,
+          "last": 78648,
+          "max": 78648
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 3.000148279,
+          "last": 3.000148279,
+          "max": 3.000148279
+        },
+        "jvm_threads_live_threads": {
+          "first": 226,
+          "last": 225,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 159,
+          "last": 180,
+          "max": 180
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 3.68,
+          "last": 3.7460000000000004,
+          "max": 3.7460000000000004
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.302,
+          "last": 0.223,
+          "max": 0.302
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 6980562944,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 0
+    },
+    {
+      "label": "paired-bulkhead-warmup",
+      "start": "2026-11-10T06:53:09.612Z",
+      "end": "2026-11-10T06:55:22.542Z",
+      "cpuMedianPercentOneCore": 49.853864048768344,
+      "cpuMaxPercentOneCore": 50.187395888498386,
+      "memoryMaxBytes": 809394176,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 0
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 0
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 0,
+          "last": 0,
+          "max": 0
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 0.001560684,
+          "last": 0.001560684,
+          "max": 0.001560684
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 4,
+          "last": 4,
+          "max": 4
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 0.000884168,
+          "last": 0.000884168,
+          "max": 0.000884168
+        },
+        "jvm_threads_live_threads": {
+          "first": 34,
+          "last": 34,
+          "max": 34
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 9,
+          "last": 9,
+          "max": 9
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 0.292,
+          "last": 0.292,
+          "max": 0.292
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.267,
+          "last": 0.267,
+          "max": 0.267
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 6620229632,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 10
+    },
+    {
+      "label": "paired-bulkhead-control",
+      "start": "2026-11-10T06:55:22.740Z",
+      "end": "2026-11-10T06:56:32.664Z",
+      "cpuMedianPercentOneCore": 49.81078818323167,
+      "cpuMaxPercentOneCore": 50.427639263515886,
+      "memoryMaxBytes": 831201280,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 74,
+          "last": 0,
+          "max": 191
+        },
+        "hikaricp_connections_active": {
+          "first": 5,
+          "last": 0,
+          "max": 5
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 2791,
+          "last": 2854,
+          "max": 2854
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 20553.078388483,
+          "last": 26502.806002194,
+          "max": 26502.806002194
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 13382,
+          "last": 24540,
+          "max": 24540
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 4.101446329,
+          "last": 4.0969641,
+          "max": 4.101446329
+        },
+        "jvm_threads_live_threads": {
+          "first": 226,
+          "last": 226,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 74,
+          "last": 91,
+          "max": 91
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 3.2960000000000003,
+          "last": 3.814,
+          "max": 3.814
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.591,
+          "last": 0.40099999999999997,
+          "max": 0.591
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 4797648896,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 1
+    },
+    {
+      "label": "paired-bulkhead-flush",
+      "start": "2026-11-10T06:56:32.865Z",
+      "end": "2026-11-10T06:57:33.304Z",
+      "cpuMedianPercentOneCore": 24.640219057085304,
+      "cpuMaxPercentOneCore": 37.4543120179149,
+      "memoryMaxBytes": 839688192,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 0
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 1
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 2854,
+          "last": 2854,
+          "max": 2854
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 26502.807181691,
+          "last": 26503.05426576,
+          "max": 26503.05426576
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 25185,
+          "last": 37249,
+          "max": 37249
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 4.0969641,
+          "last": 3.110661067,
+          "max": 4.0969641
+        },
+        "jvm_threads_live_threads": {
+          "first": 226,
+          "last": 225,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 92,
+          "last": 109,
+          "max": 109
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 3.817,
+          "last": 3.873,
+          "max": 3.873
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.40099999999999997,
+          "last": 0.102,
+          "max": 0.40099999999999997
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 5234204672,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 0
+    },
+    {
+      "label": "paired-bulkhead-slow",
+      "start": "2026-11-10T06:57:33.528Z",
+      "end": "2026-11-10T06:58:44.022Z",
+      "cpuMedianPercentOneCore": 25.961709567751335,
+      "cpuMaxPercentOneCore": 40.959062042012704,
+      "memoryMaxBytes": 855531520,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 10
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 5
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 2854,
+          "last": 2854,
+          "max": 2854
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 26503.05426576,
+          "last": 26515.301127997,
+          "max": 26515.301127997
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 37249,
+          "last": 55326,
+          "max": 55326
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 3.110661067,
+          "last": 3.092896146,
+          "max": 3.110661067
+        },
+        "jvm_threads_live_threads": {
+          "first": 225,
+          "last": 226,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 109,
+          "last": 130,
+          "max": 130
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 3.873,
+          "last": 3.967,
+          "max": 3.967
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.102,
+          "last": 0.09,
+          "max": 0.102
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 5135630336,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 0
+    },
+    {
+      "label": "paired-bulkhead-down",
+      "start": "2026-11-10T06:58:44.209Z",
+      "end": "2026-11-10T06:59:54.607Z",
+      "cpuMedianPercentOneCore": 30.720251785498125,
+      "cpuMaxPercentOneCore": 47.0549047560526,
+      "memoryMaxBytes": 863703040,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 19
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 5
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 2854,
+          "last": 2854,
+          "max": 2854
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 26515.301940565,
+          "last": 26556.358471712,
+          "max": 26556.358471712
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 56314,
+          "last": 76188,
+          "max": 76188
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 3.092896146,
+          "last": 0.405358704,
+          "max": 3.092896146
+        },
+        "jvm_threads_live_threads": {
+          "first": 225,
+          "last": 226,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 131,
+          "last": 153,
+          "max": 153
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 3.971,
+          "last": 4.319999999999999,
+          "max": 4.319999999999999
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.09,
+          "last": 0.252,
+          "max": 0.252
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 5149417472,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 0
+    },
+    {
+      "label": "paired-bulkhead-recovery",
+      "start": "2026-11-10T06:59:54.822Z",
+      "end": "2026-11-10T07:00:55.289Z",
+      "cpuMedianPercentOneCore": 20.768816736329555,
+      "cpuMaxPercentOneCore": 39.791692844677144,
+      "memoryMaxBytes": 866217984,
+      "gauges": {
+        "hikaricp_connections_pending": {
+          "first": 0,
+          "last": 0,
+          "max": 0
+        },
+        "hikaricp_connections_active": {
+          "first": 0,
+          "last": 0,
+          "max": 1
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 2854,
+          "last": 2854,
+          "max": 2854
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 26556.364141385,
+          "last": 26556.545411239,
+          "max": 26556.545411239
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 77133,
+          "last": 89187,
+          "max": 89187
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 0.405358704,
+          "last": 0.405358704,
+          "max": 0.405358704
+        },
+        "jvm_threads_live_threads": {
+          "first": 226,
+          "last": 225,
+          "max": 226
+        },
+        "jvm_gc_pause_seconds_count": {
+          "first": 155,
+          "last": 172,
+          "max": 172
+        },
+        "jvm_gc_pause_seconds_sum": {
+          "first": 4.327,
+          "last": 4.3839999999999995,
+          "max": 4.3839999999999995
+        },
+        "jvm_gc_pause_seconds_max": {
+          "first": 0.252,
+          "last": 0.252,
+          "max": 0.252
+        }
+      },
+      "hostMemoryAtLaunch": {
+        "MemTotal": 16510500864,
+        "MemAvailable": 4628221952,
+        "SwapTotal": 4294967296,
+        "SwapFree": 4294959104
+      },
+      "metricReadFailures": 0
+    }
+  ],
+  "health": {
+    "paired-base": [
+      {
+        "label": "paired-base-warmup",
+        "samples": 6,
+        "outcomes": {
+          "request-error/unknown": 5,
+          "200/UP": 1
+        },
+        "maxDurationMs": 5005
+      },
+      {
+        "label": "paired-base-control",
+        "samples": 4,
+        "outcomes": {
+          "200/UP": 4
+        },
+        "maxDurationMs": 91
+      },
+      {
+        "label": "paired-base-flush",
+        "samples": 4,
+        "outcomes": {
+          "200/UP": 4
+        },
+        "maxDurationMs": 4
+      },
+      {
+        "label": "paired-base-slow",
+        "samples": 4,
+        "outcomes": {
+          "200/UP": 3,
+          "request-error/unknown": 1
+        },
+        "maxDurationMs": 5002
+      },
+      {
+        "label": "paired-base-down",
+        "samples": 4,
+        "outcomes": {
+          "200/UP": 2,
+          "request-error/unknown": 2
+        },
+        "maxDurationMs": 5003
+      },
+      {
+        "label": "paired-base-recovery",
+        "samples": 4,
+        "outcomes": {
+          "200/UP": 4
+        },
+        "maxDurationMs": 4
+      }
+    ],
+    "paired-bulkhead": [
+      {
+        "label": "paired-bulkhead-warmup",
+        "samples": 6,
+        "outcomes": {
+          "request-error/unknown": 6
+        },
+        "maxDurationMs": 5006
+      },
+      {
+        "label": "paired-bulkhead-control",
+        "samples": 5,
+        "outcomes": {
+          "request-error/unknown": 1,
+          "200/UP": 4
+        },
+        "maxDurationMs": 5003
+      },
+      {
+        "label": "paired-bulkhead-flush",
+        "samples": 4,
+        "outcomes": {
+          "200/UP": 4
+        },
+        "maxDurationMs": 6
+      },
+      {
+        "label": "paired-bulkhead-slow",
+        "samples": 4,
+        "outcomes": {
+          "200/UP": 3,
+          "503/DOWN": 1
+        },
+        "maxDurationMs": 3065
+      },
+      {
+        "label": "paired-bulkhead-down",
+        "samples": 4,
+        "outcomes": {
+          "200/UP": 2,
+          "503/DOWN": 2
+        },
+        "maxDurationMs": 3106
+      },
+      {
+        "label": "paired-bulkhead-recovery",
+        "samples": 4,
+        "outcomes": {
+          "200/UP": 4
+        },
+        "maxDurationMs": 8
+      }
+    ]
+  },
+  "paired-base-jfr": {
+    "cpuSamplesWithinWorkload": 2106,
+    "gc": {
+      "maxPauseMs": 280.834424,
+      "totalPauseMs": 3536.743352,
+      "count": 171
+    },
+    "compilation": {
+      "cumulativeEventDurationMs": 122953.29114100005,
+      "count": 349
+    },
+    "phaseInclusiveMethods": {
+      "paired-base-control": [
+        {
+          "value": 232,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 230,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 217,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 215,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 214,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 214,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 212,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 210,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 209,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 209,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 209,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 207,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 207,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 206,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 206,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 205,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 205,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 205,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 203,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 203,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 200,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 198,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 179,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 179,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 177,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 177,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 176,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 174,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 174,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 174,
+          "name": "org.springframework.web.servlet.FrameworkServlet.doGet"
+        }
+      ],
+      "paired-base-down": [
+        {
+          "value": 164,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 161,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 148,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 148,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 148,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 146,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 145,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 145,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 145,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 144,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 144,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 144,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 143,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 143,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 142,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 142,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 141,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 141,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 139,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 139,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 138,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 136,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 130,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 129,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 129,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 129,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 129,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 129,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 129,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 129,
+          "name": "org.springframework.web.servlet.FrameworkServlet.doGet"
+        }
+      ],
+      "paired-base-flush": [
+        {
+          "value": 167,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 167,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 150,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 150,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 150,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 149,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 148,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 148,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 147,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 147,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 146,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 145,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 145,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 145,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 143,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 143,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 143,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 142,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 140,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 139,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 139,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 138,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 131,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 130,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 126,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 126,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 126,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 126,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 126,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 126,
+          "name": "org.springframework.web.servlet.FrameworkServlet.doGet"
+        }
+      ],
+      "paired-base-recovery": [
+        {
+          "value": 142,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 141,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 141,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 141,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 141,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 140,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 140,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 140,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 140,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 139,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 139,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 138,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 137,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 137,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 136,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 134,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 134,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 134,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 132,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 130,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 129,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 126,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 124,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 123,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 122,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 122,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 122,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 122,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 122,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 122,
+          "name": "org.springframework.web.servlet.DispatcherServlet.doService"
+        }
+      ],
+      "paired-base-slow": [
+        {
+          "value": 168,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 165,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 158,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 157,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 156,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 155,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 155,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 155,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 154,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 154,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 154,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 154,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 153,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 153,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 152,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 151,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 150,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 149,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 148,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 147,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 147,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 145,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 140,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 140,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 140,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 140,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 140,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 139,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 139,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 139,
+          "name": "org.springframework.web.servlet.FrameworkServlet.doGet"
+        }
+      ],
+      "paired-base-warmup": [
+        {
+          "value": 1004,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 989,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 875,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 872,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 865,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 857,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 854,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 854,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 842,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 834,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 825,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 820,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 819,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 814,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 814,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 812,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 811,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 810,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 809,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 807,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 802,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 800,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 769,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 767,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 766,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 764,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 764,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 756,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 754,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 754,
+          "name": "org.springframework.web.servlet.FrameworkServlet.service"
+        }
+      ]
+    }
+  },
+  "paired-bulkhead-jfr": {
+    "cpuSamplesWithinWorkload": 2734,
+    "gc": {
+      "maxPauseMs": 298.462888,
+      "count": 163,
+      "totalPauseMs": 4094.5719589999994
+    },
+    "compilation": {
+      "cumulativeEventDurationMs": 169829.407936,
+      "count": 476
+    },
+    "phaseInclusiveMethods": {
+      "paired-bulkhead-control": [
+        {
+          "value": 562,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 553,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 472,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 471,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 471,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 471,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 468,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 464,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 458,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 457,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 448,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 430,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 430,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 429,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 426,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 425,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 424,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 420,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 420,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 418,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 407,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 404,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 389,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 388,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 387,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 386,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 385,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 380,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 380,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 380,
+          "name": "org.springframework.web.servlet.FrameworkServlet.service"
+        }
+      ],
+      "paired-bulkhead-down": [
+        {
+          "value": 312,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 311,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 310,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 307,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 306,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 304,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 303,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 303,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 297,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 297,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 297,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 296,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 295,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 295,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 293,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 293,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 290,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 290,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 290,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 288,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 281,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 280,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 266,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 266,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 266,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 266,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 266,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 265,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 265,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 265,
+          "name": "org.springframework.web.servlet.FrameworkServlet.doGet"
+        }
+      ],
+      "paired-bulkhead-flush": [
+        {
+          "value": 238,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 235,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 220,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 219,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 219,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 219,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 218,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 216,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 216,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 216,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 214,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 213,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 213,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 213,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 212,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 210,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 210,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 204,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 204,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 203,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 198,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 198,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 185,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 185,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 185,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 185,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 185,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 185,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 185,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 185,
+          "name": "org.springframework.web.servlet.FrameworkServlet.doGet"
+        }
+      ],
+      "paired-bulkhead-recovery": [
+        {
+          "value": 176,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 173,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 172,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 171,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 171,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 171,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 171,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 170,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 169,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 169,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 169,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 169,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 168,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 167,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 167,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 166,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 163,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 163,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 162,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 161,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 159,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 156,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 141,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 141,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 138,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 138,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 138,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 137,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 137,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 137,
+          "name": "org.springframework.web.servlet.FrameworkServlet.doGet"
+        }
+      ],
+      "paired-bulkhead-slow": [
+        {
+          "value": 305,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 304,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 301,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 295,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 295,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 294,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 294,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 294,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 293,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 291,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 291,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 291,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 291,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 289,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 288,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 288,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 286,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 285,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 285,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 279,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 275,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 275,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 274,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 272,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 272,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 272,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 272,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 272,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 271,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 271,
+          "name": "org.springframework.web.servlet.FrameworkServlet.doGet"
+        }
+      ],
+      "paired-bulkhead-warmup": [
+        {
+          "value": 866,
+          "name": "java.lang.Thread.runWith"
+        },
+        {
+          "value": 853,
+          "name": "java.lang.Thread.run"
+        },
+        {
+          "value": 781,
+          "name": "org.apache.coyote.http11.Http11Processor.service"
+        },
+        {
+          "value": 780,
+          "name": "org.apache.coyote.AbstractProtocol$ConnectionHandler.process"
+        },
+        {
+          "value": 776,
+          "name": "org.apache.coyote.AbstractProcessorLight.process"
+        },
+        {
+          "value": 775,
+          "name": "org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun"
+        },
+        {
+          "value": 770,
+          "name": "org.apache.tomcat.util.net.SocketProcessorBase.run"
+        },
+        {
+          "value": 768,
+          "name": "org.apache.catalina.connector.CoyoteAdapter.service"
+        },
+        {
+          "value": 762,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker"
+        },
+        {
+          "value": 755,
+          "name": "org.apache.catalina.core.ApplicationFilterChain.doFilter"
+        },
+        {
+          "value": 755,
+          "name": "org.springframework.web.filter.OncePerRequestFilter.doFilter"
+        },
+        {
+          "value": 751,
+          "name": "org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run"
+        },
+        {
+          "value": 746,
+          "name": "org.apache.catalina.authenticator.AuthenticatorBase.invoke"
+        },
+        {
+          "value": 746,
+          "name": "org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal"
+        },
+        {
+          "value": 745,
+          "name": "org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal"
+        },
+        {
+          "value": 744,
+          "name": "org.apache.catalina.core.StandardContextValve.invoke"
+        },
+        {
+          "value": 744,
+          "name": "org.apache.catalina.core.StandardWrapperValve.invoke"
+        },
+        {
+          "value": 743,
+          "name": "com.blocbuy.bootstrap.config.TraceIdFilter.doFilterInternal"
+        },
+        {
+          "value": 742,
+          "name": "org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run"
+        },
+        {
+          "value": 741,
+          "name": "org.apache.catalina.core.StandardHostValve.invoke"
+        },
+        {
+          "value": 736,
+          "name": "org.apache.catalina.valves.ErrorReportValve.invoke"
+        },
+        {
+          "value": 733,
+          "name": "org.apache.catalina.core.StandardEngineValve.invoke"
+        },
+        {
+          "value": 720,
+          "name": "org.springframework.web.filter.FormContentFilter.doFilterInternal"
+        },
+        {
+          "value": 719,
+          "name": "cn.dev33.satoken.filter.SaTokenContextFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 719,
+          "name": "cn.dev33.satoken.filter.SaTokenCorsFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 719,
+          "name": "org.springframework.web.filter.RequestContextFilter.doFilterInternal"
+        },
+        {
+          "value": 718,
+          "name": "cn.dev33.satoken.filter.SaFirewallCheckFilterForJakartaServlet.doFilter"
+        },
+        {
+          "value": 711,
+          "name": "org.apache.tomcat.websocket.server.WsFilter.doFilter"
+        },
+        {
+          "value": 710,
+          "name": "jakarta.servlet.http.HttpServlet.service"
+        },
+        {
+          "value": 710,
+          "name": "org.springframework.web.servlet.FrameworkServlet.doGet"
+        }
+      ]
+    }
+  },
+  "limits": [
+    "One sequential sample per arm; colder candidate outcome is adverse evidence, not isolated causality.",
+    "Full Maven verification ran 06:54\u201307:00 UTC on the same Docker host with a 2-CPU / 4-GiB builder; Testcontainers child containers have separate limits. Retain overlap as a confound, not proof of harmlessness.",
+    "Redis health remains in the existing health endpoint. Health probes do not distinguish optional display-cache fallback from authentication-store availability.",
+    "JFR inclusive counts overlap; Java execution samples are not measured CPU percentages. No profiler demonstrates that holding permits through JSON caused cold overload.",
+    "Candidate holds slots during JSON decoding/serialization as well as Redis I/O. That is an unisolated fallback-amplification risk under CPU-bound startup; do not deploy or claim startup non-regression."
+  ]
+}

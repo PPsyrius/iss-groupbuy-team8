@@ -1,0 +1,5 @@
+{
+  "at": "2026-11-11T09:42:11.797248+00:00",
+  "runtimeMutationPerformed": false,
+  "limitations": "Live observability settings read after the run, not historical per-request traces. Distribution-level CloudFront metrics include all paths/viewers, not exclusively k6 browse requests. Missing optional metrics are not zero latency."
+}

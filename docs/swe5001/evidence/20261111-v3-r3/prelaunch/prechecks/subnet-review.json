@@ -1,0 +1,20 @@
+{
+  "checkedAtUtc": "2026-11-11T10:28:11.363472+00:00",
+  "metadataPlacementAndControls": "pass",
+  "applicationSubnetIds": [
+    "subnet-0788a6104ab05d771",
+    "subnet-0bc51bc4721b18721"
+  ],
+  "dataSubnetIds": [
+    "subnet-070e5b060dfdb0570",
+    "subnet-0aa8fc3db205d8f91"
+  ],
+  "actualTaskEniCount": 4,
+  "actualDataEniCount": 2,
+  "commerceTaskAzsBeforeOneTaskPreparation": [
+    "ap-southeast-1a",
+    "ap-southeast-1b"
+  ],
+  "connectivity": "Startup/smoke passed separately; this offline metadata review does not test signed-in identity/notification paths or negative packet isolation.",
+  "scope": "Fresh pre-budget snapshot; no db-init task was running during collection."
+}

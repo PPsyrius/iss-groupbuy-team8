@@ -1,0 +1,556 @@
+{
+  "evidenceKind": "local-diagnostic-not-acceptance",
+  "phases": {
+    "warmup": {
+      "nominalRequests": 750,
+      "requests": null,
+      "errors": {},
+      "latencyMs": {},
+      "drops": null,
+      "rawAudit": {
+        "requests": 751,
+        "errors": 0,
+        "list": 526,
+        "detail": 225,
+        "first": "2026-11-10T05:20:15.440770235Z",
+        "last": "2026-11-10T05:20:45.043121971Z",
+        "p95Ms": 62.818805499999996
+      },
+      "resources": {
+        "commerce": {
+          "samples": 6,
+          "cpuPercentOneCoreMedian": 20.027748392291272,
+          "cpuPercentOneCoreMax": 37.31545808966862,
+          "memoryBytesMax": 374648832,
+          "throttledPeriodsDelta": 22
+        },
+        "postgres": {
+          "samples": 6,
+          "cpuPercentOneCoreMedian": 1.7610500852793578,
+          "cpuPercentOneCoreMax": 1.802651213328504,
+          "memoryBytesMax": 189915136,
+          "throttledPeriodsDelta": 0
+        },
+        "redis": {
+          "samples": 6,
+          "cpuPercentOneCoreMedian": 0.3807264470410979,
+          "cpuPercentOneCoreMax": 0.40584133155145186,
+          "memoryBytesMax": 30171136,
+          "throttledPeriodsDelta": 0
+        },
+        "generator": {
+          "samples": 6,
+          "cpuPercentOneCoreMedian": 2.8855139173394386,
+          "cpuPercentOneCoreMax": 3.573076088267213,
+          "memoryBytesMax": 123854848,
+          "throttledPeriodsDelta": 0
+        }
+      },
+      "poolMetrics": {
+        "hikaricp_connections": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 96.0,
+          "last": 758.0,
+          "max": 758.0
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 0.003818561,
+          "last": 0.007938365,
+          "max": 0.007938365
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 0.000852289,
+          "last": 0.000852289,
+          "max": 0.000852289
+        },
+        "hikaricp_connections_active": {
+          "first": 1.0,
+          "last": 0.0,
+          "max": 1.0
+        },
+        "hikaricp_connections_creation_seconds_count": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_creation_seconds_sum": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_creation_seconds_max": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_idle": {
+          "first": 4.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_max": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_min": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_pending": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_usage_seconds_count": {
+          "first": 96.0,
+          "last": 758.0,
+          "max": 758.0
+        },
+        "hikaricp_connections_usage_seconds_sum": {
+          "first": 2.792,
+          "last": 3.856,
+          "max": 3.856
+        },
+        "hikaricp_connections_usage_seconds_max": {
+          "first": 0.176,
+          "last": 0.176,
+          "max": 0.176
+        }
+      }
+    },
+    "r100": {
+      "nominalRequests": 6000,
+      "requests": 6001,
+      "errors": {
+        "passes": 0,
+        "fails": 6001,
+        "rate": 0
+      },
+      "latencyMs": {
+        "p(99)": 58.159038,
+        "avg": 4.834459282952828,
+        "min": 0.043111,
+        "med": 2.241541,
+        "max": 196.013645,
+        "p(50)": 2.241541,
+        "p(95)": 26.874331
+      },
+      "drops": 0,
+      "rawAudit": {
+        "requests": 6001,
+        "errors": 0,
+        "list": 4201,
+        "detail": 1800,
+        "first": "2026-11-10T05:20:45.043123376Z",
+        "last": "2026-11-10T05:21:45.038703696Z",
+        "p95Ms": 26.874331
+      },
+      "resources": {
+        "commerce": {
+          "samples": 11,
+          "cpuPercentOneCoreMedian": 30.06473505104521,
+          "cpuPercentOneCoreMax": 38.19357653617743,
+          "memoryBytesMax": 430088192,
+          "throttledPeriodsDelta": 102
+        },
+        "postgres": {
+          "samples": 11,
+          "cpuPercentOneCoreMedian": 4.285484818805093,
+          "cpuPercentOneCoreMax": 4.593415998054947,
+          "memoryBytesMax": 190963712,
+          "throttledPeriodsDelta": 0
+        },
+        "redis": {
+          "samples": 11,
+          "cpuPercentOneCoreMedian": 0.8092000972526137,
+          "cpuPercentOneCoreMax": 0.8554018782778388,
+          "memoryBytesMax": 30814208,
+          "throttledPeriodsDelta": 0
+        },
+        "generator": {
+          "samples": 11,
+          "cpuPercentOneCoreMedian": 7.549495891083037,
+          "cpuPercentOneCoreMax": 7.905734028367075,
+          "memoryBytesMax": 140754944,
+          "throttledPeriodsDelta": 0
+        }
+      },
+      "poolMetrics": {
+        "hikaricp_connections": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 1216.0,
+          "last": 6385.0,
+          "max": 6385.0
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 0.009469902,
+          "last": 0.094604249,
+          "max": 0.094604249
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 0.000852289,
+          "last": 0.016257432,
+          "max": 0.016257432
+        },
+        "hikaricp_connections_active": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_creation_seconds_count": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_creation_seconds_sum": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_creation_seconds_max": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_idle": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_max": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_min": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_pending": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_usage_seconds_count": {
+          "first": 1216.0,
+          "last": 6385.0,
+          "max": 6385.0
+        },
+        "hikaricp_connections_usage_seconds_sum": {
+          "first": 4.721,
+          "last": 13.624,
+          "max": 13.624
+        },
+        "hikaricp_connections_usage_seconds_max": {
+          "first": 0.176,
+          "last": 0.176,
+          "max": 0.176
+        }
+      }
+    },
+    "r200": {
+      "nominalRequests": 18000,
+      "requests": 18001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 18001
+      },
+      "latencyMs": {
+        "avg": 1.6139589990556018,
+        "min": 0.15883,
+        "med": 1.37118,
+        "max": 73.243784,
+        "p(50)": 1.37118,
+        "p(95)": 2.232407,
+        "p(99)": 4.155893
+      },
+      "drops": 0,
+      "rawAudit": {
+        "requests": 18001,
+        "errors": 0,
+        "list": 12601,
+        "detail": 5400,
+        "first": "2026-11-10T05:21:45.038703753Z",
+        "last": "2026-11-10T05:23:15.03411033Z",
+        "p95Ms": 2.232407
+      },
+      "resources": {
+        "commerce": {
+          "samples": 18,
+          "cpuPercentOneCoreMedian": 18.19521444818699,
+          "cpuPercentOneCoreMax": 22.260894071914482,
+          "memoryBytesMax": 473255936,
+          "throttledPeriodsDelta": 15
+        },
+        "postgres": {
+          "samples": 18,
+          "cpuPercentOneCoreMedian": 6.4305560407822515,
+          "cpuPercentOneCoreMax": 7.119294809010773,
+          "memoryBytesMax": 191787008,
+          "throttledPeriodsDelta": 0
+        },
+        "redis": {
+          "samples": 18,
+          "cpuPercentOneCoreMedian": 1.1623363194356613,
+          "cpuPercentOneCoreMax": 1.3504761904761904,
+          "memoryBytesMax": 31805440,
+          "throttledPeriodsDelta": 0
+        },
+        "generator": {
+          "samples": 18,
+          "cpuPercentOneCoreMedian": 11.839503882100772,
+          "cpuPercentOneCoreMax": 13.301388821679167,
+          "memoryBytesMax": 144764928,
+          "throttledPeriodsDelta": 0
+        }
+      },
+      "poolMetrics": {
+        "hikaricp_connections": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 6963.0,
+          "last": 24439.0,
+          "max": 24439.0
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 0.095239814,
+          "last": 0.118444413,
+          "max": 0.118444413
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 0.016257432,
+          "last": 0.016257432,
+          "max": 0.016257432
+        },
+        "hikaricp_connections_active": {
+          "first": 1.0,
+          "last": 0.0,
+          "max": 3.0
+        },
+        "hikaricp_connections_creation_seconds_count": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_creation_seconds_sum": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_creation_seconds_max": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_idle": {
+          "first": 4.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_max": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_min": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_pending": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_usage_seconds_count": {
+          "first": 6963.0,
+          "last": 24438.0,
+          "max": 24438.0
+        },
+        "hikaricp_connections_usage_seconds_sum": {
+          "first": 13.745,
+          "last": 15.737,
+          "max": 15.737
+        },
+        "hikaricp_connections_usage_seconds_max": {
+          "first": 0.176,
+          "last": 0.076,
+          "max": 0.176
+        }
+      }
+    },
+    "r400": {
+      "nominalRequests": 24000,
+      "requests": 24001,
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 24001
+      },
+      "latencyMs": {
+        "max": 64.062619,
+        "p(50)": 1.077114,
+        "p(95)": 1.840615,
+        "p(99)": 3.740161,
+        "avg": 1.22797226807216,
+        "min": 0.495068,
+        "med": 1.077114
+      },
+      "drops": 0,
+      "rawAudit": {
+        "requests": 24001,
+        "errors": 0,
+        "list": 16801,
+        "detail": 7200,
+        "first": "2026-11-10T05:23:15.034631352Z",
+        "last": "2026-11-10T05:24:15.031125818Z",
+        "p95Ms": 1.840615
+      },
+      "resources": {
+        "commerce": {
+          "samples": 12,
+          "cpuPercentOneCoreMedian": 25.802722562728913,
+          "cpuPercentOneCoreMax": 27.01839102876645,
+          "memoryBytesMax": 485867520,
+          "throttledPeriodsDelta": 4
+        },
+        "postgres": {
+          "samples": 12,
+          "cpuPercentOneCoreMedian": 10.045934367543875,
+          "cpuPercentOneCoreMax": 10.18889748549323,
+          "memoryBytesMax": 209383424,
+          "throttledPeriodsDelta": 0
+        },
+        "redis": {
+          "samples": 12,
+          "cpuPercentOneCoreMedian": 1.7522880106771328,
+          "cpuPercentOneCoreMax": 1.7902739393939393,
+          "memoryBytesMax": 32030720,
+          "throttledPeriodsDelta": 0
+        },
+        "generator": {
+          "samples": 12,
+          "cpuPercentOneCoreMedian": 18.346661539153754,
+          "cpuPercentOneCoreMax": 18.813070885158798,
+          "memoryBytesMax": 153124864,
+          "throttledPeriodsDelta": 0
+        }
+      },
+      "poolMetrics": {
+        "hikaricp_connections": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_acquire_seconds_count": {
+          "first": 26002.0,
+          "last": 48550.0,
+          "max": 48550.0
+        },
+        "hikaricp_connections_acquire_seconds_sum": {
+          "first": 0.119185731,
+          "last": 0.154836825,
+          "max": 0.154836825
+        },
+        "hikaricp_connections_acquire_seconds_max": {
+          "first": 0.016257432,
+          "last": 0.002750967,
+          "max": 0.016257432
+        },
+        "hikaricp_connections_active": {
+          "first": 0.0,
+          "last": 1.0,
+          "max": 1.0
+        },
+        "hikaricp_connections_creation_seconds_count": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_creation_seconds_sum": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_creation_seconds_max": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_idle": {
+          "first": 4.0,
+          "last": 4.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_max": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_min": {
+          "first": 5.0,
+          "last": 5.0,
+          "max": 5.0
+        },
+        "hikaricp_connections_pending": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_timeout_total": {
+          "first": 0.0,
+          "last": 0.0,
+          "max": 0.0
+        },
+        "hikaricp_connections_usage_seconds_count": {
+          "first": 26002.0,
+          "last": 48550.0,
+          "max": 48550.0
+        },
+        "hikaricp_connections_usage_seconds_sum": {
+          "first": 15.841,
+          "last": 16.525,
+          "max": 16.525
+        },
+        "hikaricp_connections_usage_seconds_max": {
+          "first": 0.076,
+          "last": 0.071,
+          "max": 0.076
+        }
+      }
+    }
+  },
+  "monitorSamples": 53,
+  "prometheusFailures": 0,
+  "limits": "Local x86 Docker CPU quotas, warmup/schedule and JFR overhead differ from AWS; not capacity/linearity acceptance."
+}

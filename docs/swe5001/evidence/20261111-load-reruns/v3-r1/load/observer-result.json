@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-11T06:57:13.643379Z",
+  "samples": 160,
+  "timerCompleted": true,
+  "maximumSampleGapSeconds": 29.241045,
+  "errors": [
+    {
+      "at": "2026-11-11T06:32:29.760400Z",
+      "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+    }
+  ],
+  "collectionComplete": false,
+  "restorationPerformed": false,
+  "restoration": "Explicit short load-capture.py restore command required; no observer mutation or teardown"
+}

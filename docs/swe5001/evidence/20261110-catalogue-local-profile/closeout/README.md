@@ -1,0 +1,7 @@
+# Local cache investigation closeout
+
+Retain reviewed-v3 failure backoff, ordered failure publication and isolated outage-test state. Current source equals its independently verified **2,073-test** snapshot: complete touched-cache line/branch coverage, unchanged OpenAPI, no lost JVMs and all original/reviewed assertions preserved. [Final checks](final-checks.json); [full verification](../verification-v3-reviewed/README.md).
+
+**The overall performance fix is not complete.** Earlier runtime still fails cold startup and fault-transition latency; health remains Redis-dependent and AWS capacity/linearity remain unaccepted. The later codec candidate failed both healthy controls despite its separate static pass, was rejected, and is [preserved rather than deployed](../codec-rejected-source/README.md). All 84 usable local measurements and separately classified failed attempts remain in the [matrix](../MATRIX.md).
+
+Scoped default-rule secret scans, retained hashes, source equality, Python/JSON syntax, local links, whitespace and build-policy checks passed; no project-wide docs allowlist was used for these scans. The pre-closeout audit is a captured earlier scope; final audit is rerun after creating this bundle. No hosted CI/image-delivery gate, commit, push, PR, merge, deployment, AWS startup or teardown is claimed or authorized. All changes remain uncommitted; unrelated work remains separate.

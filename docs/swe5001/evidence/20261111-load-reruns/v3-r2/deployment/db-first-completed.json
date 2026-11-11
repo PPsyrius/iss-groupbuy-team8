@@ -1,0 +1,33 @@
+{
+  "completedAtUtc": "2026-11-11T08:02:45.594064+00:00",
+  "database": {
+    "class": "db.t4g.small",
+    "status": "available",
+    "pending": {},
+    "engineVersion": "18.3"
+  },
+  "observedSqlLimits": {
+    "maxConnections": 181,
+    "reservedConnections": 5
+  },
+  "replacementEnvelope": {
+    "taskCounts": {
+      "identity-svc": 2,
+      "commerce-svc": 12,
+      "notification-svc": 8
+    },
+    "pooledConnections": 110,
+    "ownerConnections": 3,
+    "operatorConnections": 2,
+    "headroomConnections": 10,
+    "reservedConnections": 5,
+    "required": 130,
+    "remaining": 51,
+    "fits": true
+  },
+  "servicesStillPaused": true,
+  "taskSizeRolloutPerformed": false,
+  "guardActivated": false,
+  "httpLoadStarted": false,
+  "teardownPerformed": false
+}

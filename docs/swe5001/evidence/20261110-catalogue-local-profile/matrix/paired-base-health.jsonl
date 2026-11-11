@@ -1,0 +1,29 @@
+{"at":"2026-11-10T06:44:32.505Z","durationMs":5,"error":"connect ECONNREFUSED 172.18.0.26:8589"}
+{"at":"2026-11-10T06:44:47.515Z","durationMs":1,"error":"connect ECONNREFUSED 172.18.0.26:8589"}
+{"at":"2026-11-10T06:45:02.523Z","durationMs":1959,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:45:19.492Z","durationMs":5003,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:45:39.498Z","durationMs":5002,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:45:59.509Z","durationMs":5005,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:46:19.517Z","durationMs":5004,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:46:39.528Z","durationMs":5004,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:46:59.536Z","durationMs":4432,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:47:18.972Z","durationMs":91,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:47:34.066Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:47:49.074Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:48:04.082Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:48:19.089Z","durationMs":3,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:48:34.094Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:48:49.104Z","durationMs":3,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:49:04.108Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:49:19.114Z","durationMs":3,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:49:34.121Z","durationMs":5002,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:49:54.133Z","durationMs":3525,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:50:12.662Z","durationMs":3,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:50:27.668Z","durationMs":3,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:50:42.675Z","durationMs":5003,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:51:02.680Z","durationMs":5002,"error":"Five-second local health deadline exceeded"}
+{"at":"2026-11-10T06:51:22.693Z","durationMs":1659,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:51:39.357Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:51:54.365Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:52:09.374Z","durationMs":4,"httpStatus":200,"status":"UP"}
+{"at":"2026-11-10T06:52:24.384Z","durationMs":4,"httpStatus":200,"status":"UP"}

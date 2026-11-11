@@ -1,0 +1,21 @@
+{
+  "kind": "reviewed-v3-verification-source-snapshot",
+  "sources": [
+    {
+      "path": "formatted-cache-backoff3-main.java",
+      "bytes": 9644,
+      "sha256": "3013d99375a64765d24ea3c220a82acb01c7d97b08582cdc20c7d0588321a392"
+    },
+    {
+      "path": "formatted-cache-backoff3-test.java",
+      "bytes": 32142,
+      "sha256": "4557fedabdaaa5ae3013ab94b9f16bfec52237593d7525d2c4170bbaea4403ae"
+    },
+    {
+      "path": "formatted-cache-backoff3-it.java",
+      "bytes": 13108,
+      "sha256": "94ea103b25dc410411efeef9ae285c354cbde79c0e55f9137559acfca51732ab"
+    }
+  ],
+  "limits": "Snapshot precedes the optional eager-codec candidate. Do not cite it as verification of later edits or attribute earlier runtime measurements to this reviewed snapshot."
+}

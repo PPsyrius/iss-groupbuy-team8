@@ -1,0 +1,28 @@
+{
+  "at": "2026-11-11T10:26:54.323978+00:00",
+  "targetPerMinute": 6000,
+  "groups": [
+    {
+      "service": "commerce-svc",
+      "arn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "slowStartSeconds": 120
+    },
+    {
+      "service": "identity-svc",
+      "arn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-identity-svc/181ddc55f963f2b6",
+      "slowStartSeconds": 0
+    },
+    {
+      "service": "notification-svc",
+      "arn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-notification-svc/dd1b97e66cefa876",
+      "slowStartSeconds": 0
+    }
+  ],
+  "albArn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:loadbalancer/app/blocbuy-swe5001/643fcaad1990ae88",
+  "privateLogBucket": "blocbuy-swe5001-alb-logs-402178232802",
+  "publicAccessBlocked": true,
+  "encryption": "AES256",
+  "deliveryTestFileVerified": true,
+  "loadStarted": false,
+  "teardownPerformed": false
+}

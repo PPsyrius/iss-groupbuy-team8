@@ -1,0 +1,3802 @@
+{
+  "scope": "DIAGNOSTIC ONLY; R4 HARD HOLD; zero commerce/API load; no acceptance claim",
+  "controlsAssignment": "Request/ping start timestamp inside actual Docker StartedAt..FinishedAt (including initialization and grace); idle uses controller intervals; cross-boundary probes separately counted",
+  "cases": [
+    {
+      "id": "20261111T115744Z-vus100-rps600",
+      "configuredRate": 600,
+      "fixedVus": 100,
+      "actualDockerStart": "2026-11-11T11:58:02.217763+00:00",
+      "actualDockerEnd": "2026-11-11T11:58:47.858770+00:00",
+      "containerExit": "0",
+      "requestCount": 26780,
+      "k6ReportedRequestsPerSecond": 594.9754254845017,
+      "requestsDividedBy45Seconds": 595.1111111111111,
+      "noteRate": "k6 reported rate includes grace; count/45 includes completions during grace and is not exact in-window completion throughput",
+      "errors": {
+        "fails": 26780,
+        "rate": 0,
+        "passes": 0
+      },
+      "timeouts": 0,
+      "eof": 0,
+      "statusZero": 0,
+      "otherTransportErrors": 0,
+      "droppedIterations": 221,
+      "dropFractionOfScheduled": 0.008184882041405874,
+      "scheduledCount": 27001,
+      "successfulResponses": 26780,
+      "http2": 26780,
+      "http1": 0,
+      "noResponseProtocol": 0,
+      "vusEverUsed": 100,
+      "maxObservedActiveVus": 100,
+      "connectionPositiveRequestCount": 100,
+      "receivedBytes": 208927872,
+      "reportedReceiveMbps": 37.13426423861733,
+      "receiveMbpsDividedBy45Seconds": 37.1427328,
+      "sentBytes": 2425620,
+      "latencyMs": {
+        "avg": 9.464539460492956,
+        "med": 6.8241145,
+        "max": 1255.767033,
+        "p(95)": 13.553930749999997,
+        "p(99)": 41.68495199999999
+      },
+      "successfulLatencyMs": {
+        "med": 6.8241145,
+        "max": 1255.767033,
+        "p(95)": 13.553930749999997,
+        "p(99)": 41.68495199999999,
+        "avg": 9.464539460492956
+      },
+      "iterationMs": {
+        "avg": 14.875013040776663,
+        "med": 6.963449499999999,
+        "max": 7192.662895,
+        "p(95)": 13.7518336,
+        "p(99)": 44.03828261999998
+      },
+      "blockedMs": {
+        "avg": 5.273735324682689,
+        "med": 0.000195,
+        "max": 7182.827171,
+        "p(95)": 0.000285,
+        "p(99)": 0.00039
+      },
+      "connectMs": {
+        "avg": 4.081948197274084,
+        "med": 0,
+        "max": 3030.379962,
+        "p(95)": 0,
+        "p(99)": 0
+      },
+      "positiveConnectMs": {
+        "avg": 1093.1457272299997,
+        "med": 1020.155799,
+        "max": 3030.379962,
+        "p(95)": 3020.0642626500003,
+        "p(99)": 3024.5824428
+      },
+      "tlsMs": {
+        "max": 6136.921925,
+        "p(95)": 0,
+        "p(99)": 0,
+        "avg": 1.1840512161314414,
+        "med": 0
+      },
+      "positiveTlsMs": {
+        "avg": 317.08891568,
+        "med": 42.055816,
+        "max": 6136.921925,
+        "p(95)": 971.7629670499999,
+        "p(99)": 4146.99320807001
+      },
+      "firstRequestMs": {
+        "p(99)": 5184.34040381001,
+        "avg": 1585.1561593900003,
+        "med": 1278.0107014999999,
+        "max": 7192.540733,
+        "p(95)": 3162.4816937999994
+      },
+      "logErrorCounts": {},
+      "resources": {
+        "samples": 14,
+        "cpuPercentOneCore": {
+          "count": 14,
+          "avg": 32.21714285714286,
+          "med": 30.015,
+          "p95": 43.6005,
+          "p99": 49.336099999999995,
+          "max": 50.77
+        },
+        "peakPercentOf8CpuQuota": 6.34625,
+        "peakMemoryMiB": 119.109375,
+        "peakDockerMemoryPercent": 0.77,
+        "maxCgroupNrThrottled": 0,
+        "maxCgroupThrottledUsec": 0,
+        "maxCgroupOomEvents": 0,
+        "maxCgroupMemoryMaxEvents": 0,
+        "maxFullCpuPressureAvg10": 0.0,
+        "dockerBackendCpuPercentOneCore": {
+          "count": 14,
+          "avg": 46.35625960614057,
+          "med": 46.60778195714171,
+          "p95": 58.24024186739127,
+          "p99": 61.227542601308535,
+          "max": 61.97436778478786
+        }
+      },
+      "tcpSnapshots": [
+        {
+          "at": "2026-11-11T11:58:04.9919521+00:00",
+          "secondsFromDockerStart": 2.774189,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:07.9928898+00:00",
+          "secondsFromDockerStart": 5.775126,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:10.9926048+00:00",
+          "secondsFromDockerStart": 8.774841,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:13.9925258+00:00",
+          "secondsFromDockerStart": 11.774762,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:16.9919555+00:00",
+          "secondsFromDockerStart": 14.774192,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:19.9921782+00:00",
+          "secondsFromDockerStart": 17.774415,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:22.9932770+00:00",
+          "secondsFromDockerStart": 20.775514,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:25.9932907+00:00",
+          "secondsFromDockerStart": 23.775527,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:29.0082337+00:00",
+          "secondsFromDockerStart": 26.79047,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:32.0083499+00:00",
+          "secondsFromDockerStart": 29.790586,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:35.0232758+00:00",
+          "secondsFromDockerStart": 32.805512,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:38.0245545+00:00",
+          "secondsFromDockerStart": 35.806791,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:41.0256451+00:00",
+          "secondsFromDockerStart": 38.807882,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:58:44.0261726+00:00",
+          "secondsFromDockerStart": 41.808409,
+          "Tcp.ActiveOpens": 100,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 100,
+          "Tcp.RetransSegs": 72,
+          "TcpExt.TCPSynRetrans": 72,
+          "TcpExt.TCPTimeouts": 72,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 101,
+          "socket.tw": 0
+        }
+      ],
+      "nativeControlFiveSecondBins": [
+        {
+          "startSeconds": 0,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 15.4,
+                "med": 7.0,
+                "p95": 38.39999999999999,
+                "p99": 42.08,
+                "max": 43
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 190.49766666666667,
+                "med": 109.581,
+                "p95": 354.9498,
+                "p99": 376.76036,
+                "max": 382.213
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 387.3786666666667,
+                "med": 43.426,
+                "p95": 981.8893,
+                "p99": 1065.30826,
+                "max": 1086.163
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 9.2,
+                "med": 2.0,
+                "p95": 22.799999999999997,
+                "p99": 23.759999999999998,
+                "max": 24
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 5,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.6,
+                "med": 3.0,
+                "p95": 8.799999999999999,
+                "p99": 9.76,
+                "max": 10
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 82.22200000000001,
+                "med": 82.22200000000001,
+                "p95": 84.84460000000001,
+                "p99": 85.07772000000001,
+                "max": 85.13600000000001
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 34.413,
+                "med": 34.413,
+                "p95": 36.737700000000004,
+                "p99": 36.944340000000004,
+                "max": 36.996
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 2.8,
+                "med": 2.0,
+                "p95": 5.999999999999999,
+                "p99": 6.8,
+                "max": 7
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 10,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.4,
+                "med": 3.0,
+                "p95": 4.6,
+                "p99": 4.92,
+                "max": 5
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 71.034,
+                "med": 75.253,
+                "p95": 80.95360000000001,
+                "p99": 81.46032,
+                "max": 81.587
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 36.73766666666666,
+                "med": 38.159,
+                "p95": 41.7923,
+                "p99": 42.11526,
+                "max": 42.196
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 2.6,
+                "med": 2.0,
+                "p95": 4.6,
+                "p99": 4.92,
+                "max": 5
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 15,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.0,
+                "med": 4.0,
+                "p95": 5.6,
+                "p99": 5.92,
+                "max": 6
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 95.1705,
+                "med": 95.1705,
+                "p95": 102.00375,
+                "p99": 102.61115,
+                "max": 102.76299999999999
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 41.8205,
+                "med": 41.8205,
+                "p95": 51.56975,
+                "p99": 52.43635,
+                "max": 52.653
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 2.4,
+                "med": 2.0,
+                "p95": 5.199999999999999,
+                "p99": 5.84,
+                "max": 6
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 20,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.4,
+                "med": 5.0,
+                "p95": 5.0,
+                "p99": 5.0,
+                "max": 5
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 89.06166666666667,
+                "med": 86.044,
+                "p95": 99.2479,
+                "p99": 100.42158,
+                "max": 100.715
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 45.20733333333334,
+                "med": 45.981,
+                "p95": 55.3293,
+                "p99": 56.16026,
+                "max": 56.368
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 2.2,
+                "med": 2.0,
+                "p95": 3.0,
+                "p99": 3.0,
+                "max": 3
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 25,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 6.6,
+                "med": 5.0,
+                "p95": 13.2,
+                "p99": 14.64,
+                "max": 15
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 57.6495,
+                "med": 57.6495,
+                "p95": 59.34285,
+                "p99": 59.49337,
+                "max": 59.531
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 41.721000000000004,
+                "med": 41.721000000000004,
+                "p95": 43.413,
+                "p99": 43.5634,
+                "max": 43.601
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.4,
+                "med": 3.0,
+                "p95": 6.3999999999999995,
+                "p99": 6.88,
+                "max": 7
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 30,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.6,
+                "med": 3.0,
+                "p95": 5.6,
+                "p99": 5.92,
+                "max": 6
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 82.94866666666667,
+                "med": 89.497,
+                "p95": 93.97990000000001,
+                "p99": 94.37838,
+                "max": 94.47800000000001
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 42.24466666666667,
+                "med": 42.388000000000005,
+                "p95": 47.7844,
+                "p99": 48.26408,
+                "max": 48.384
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 2.4,
+                "med": 1.0,
+                "p95": 5.999999999999999,
+                "p99": 6.8,
+                "max": 7
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 35,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.4,
+                "med": 5.0,
+                "p95": 5.8,
+                "p99": 5.96,
+                "max": 6
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 72.72099999999999,
+                "med": 72.72099999999999,
+                "p95": 78.65379999999999,
+                "p99": 79.18115999999999,
+                "max": 79.31299999999999
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 52.290499999999994,
+                "med": 52.290499999999994,
+                "p95": 65.54614999999998,
+                "p99": 66.72442999999998,
+                "max": 67.01899999999999
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 2.8,
+                "med": 2.0,
+                "p95": 5.6,
+                "p99": 5.92,
+                "max": 6
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 40,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 2.8,
+                "med": 3.0,
+                "p95": 3.0,
+                "p99": 3.0,
+                "max": 3
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 78.34533333333333,
+                "med": 82.04,
+                "p95": 84.4799,
+                "p99": 84.69678,
+                "max": 84.751
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 38.538666666666664,
+                "med": 40.908,
+                "p95": 45.5736,
+                "p99": 45.98832,
+                "max": 46.092
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.0,
+                "med": 4.0,
+                "p95": 5.8,
+                "p99": 5.96,
+                "max": 6
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 45,
+          "targets": {
+            "external-dns": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            },
+            "non-aws-control": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            },
+            "regional-aws-control": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            },
+            "wifi-gateway": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "20261111T115744Z-vus1000-rps60",
+      "configuredRate": 60,
+      "fixedVus": 1000,
+      "actualDockerStart": "2026-11-11T11:59:03.454247+00:00",
+      "actualDockerEnd": "2026-11-11T11:59:48.980281+00:00",
+      "containerExit": "0",
+      "requestCount": 2701,
+      "k6ReportedRequestsPerSecond": 60.012566366995344,
+      "requestsDividedBy45Seconds": 60.022222222222226,
+      "noteRate": "k6 reported rate includes grace; count/45 includes completions during grace and is not exact in-window completion throughput",
+      "errors": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 2701
+      },
+      "timeouts": 0,
+      "eof": 0,
+      "statusZero": 0,
+      "otherTransportErrors": 0,
+      "droppedIterations": 0,
+      "dropFractionOfScheduled": 0.0,
+      "scheduledCount": 2701,
+      "successfulResponses": 2701,
+      "http2": 2701,
+      "http1": 0,
+      "noResponseProtocol": 0,
+      "vusEverUsed": 1000,
+      "maxObservedActiveVus": 5,
+      "connectionPositiveRequestCount": 1000,
+      "receivedBytes": 27211970,
+      "reportedReceiveMbps": 4.836905310926875,
+      "receiveMbpsDividedBy45Seconds": 4.837683555555556,
+      "sentBytes": 1987884,
+      "latencyMs": {
+        "max": 100.128573,
+        "p(95)": 18.970634,
+        "p(99)": 47.734623,
+        "avg": 11.086101002591631,
+        "med": 9.680626
+      },
+      "successfulLatencyMs": {
+        "avg": 11.086101002591631,
+        "med": 9.680626,
+        "max": 100.128573,
+        "p(95)": 18.970634,
+        "p(99)": 47.734623
+      },
+      "iterationMs": {
+        "avg": 17.40396719770457,
+        "med": 11.673338,
+        "max": 136.095765,
+        "p(95)": 36.757346,
+        "p(99)": 70.784821
+      },
+      "blockedMs": {
+        "avg": 6.060537220288772,
+        "med": 0.000246,
+        "max": 110.726642,
+        "p(95)": 18.458272,
+        "p(99)": 42.772059
+      },
+      "connectMs": {
+        "avg": 2.8017233076638255,
+        "med": 0,
+        "max": 83.467665,
+        "p(95)": 8.9209,
+        "p(99)": 25.088725
+      },
+      "positiveConnectMs": {
+        "avg": 7.5674546539999925,
+        "med": 5.745077500000001,
+        "max": 83.467665,
+        "p(95)": 15.47403349999999,
+        "p(99)": 49.239481639999994
+      },
+      "tlsMs": {
+        "avg": 3.204066115142537,
+        "med": 0,
+        "max": 69.123593,
+        "p(95)": 10.554499,
+        "p(99)": 16.998575
+      },
+      "positiveTlsMs": {
+        "avg": 8.654182576999993,
+        "med": 7.7364225,
+        "max": 69.123593,
+        "p(95)": 13.604762499999998,
+        "p(99)": 22.95769231
+      },
+      "firstRequestMs": {
+        "avg": 28.700977619000017,
+        "med": 24.6506215,
+        "max": 135.81304599999999,
+        "p(95)": 56.80132824999996,
+        "p(99)": 109.69318558999998
+      },
+      "logErrorCounts": {},
+      "resources": {
+        "samples": 15,
+        "cpuPercentOneCore": {
+          "count": 15,
+          "avg": 8.877333333333333,
+          "med": 5.69,
+          "p95": 17.390999999999988,
+          "p99": 24.15019999999999,
+          "max": 25.84
+        },
+        "peakPercentOf8CpuQuota": 3.23,
+        "peakMemoryMiB": 300.28125,
+        "peakDockerMemoryPercent": 3.61,
+        "maxCgroupNrThrottled": 0,
+        "maxCgroupThrottledUsec": 0,
+        "maxCgroupOomEvents": 0,
+        "maxCgroupMemoryMaxEvents": 0,
+        "maxFullCpuPressureAvg10": 0.0,
+        "dockerBackendCpuPercentOneCore": {
+          "count": 15,
+          "avg": 15.640771107496361,
+          "med": 14.582774813057995,
+          "p95": 28.0642551618416,
+          "p99": 31.852081577511573,
+          "max": 32.79903818142907
+        }
+      },
+      "tcpSnapshots": [
+        {
+          "at": "2026-11-11T11:59:05.0418987+00:00",
+          "secondsFromDockerStart": 1.587651,
+          "Tcp.ActiveOpens": 154,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 153,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 155,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:08.0430414+00:00",
+          "secondsFromDockerStart": 4.588794,
+          "Tcp.ActiveOpens": 336,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 336,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 337,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:11.0433652+00:00",
+          "secondsFromDockerStart": 7.589118,
+          "Tcp.ActiveOpens": 513,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 513,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 514,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:14.0579597+00:00",
+          "secondsFromDockerStart": 10.603712,
+          "Tcp.ActiveOpens": 694,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 694,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 695,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:17.0579651+00:00",
+          "secondsFromDockerStart": 13.603718,
+          "Tcp.ActiveOpens": 874,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 874,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 875,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:20.0591964+00:00",
+          "secondsFromDockerStart": 16.604949,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:23.0599574+00:00",
+          "secondsFromDockerStart": 19.60571,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:26.0764687+00:00",
+          "secondsFromDockerStart": 22.622221,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:29.0767396+00:00",
+          "secondsFromDockerStart": 25.622492,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:32.0918323+00:00",
+          "secondsFromDockerStart": 28.637585,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:35.0918833+00:00",
+          "secondsFromDockerStart": 31.637636,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:38.0933714+00:00",
+          "secondsFromDockerStart": 34.639124,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:41.0982108+00:00",
+          "secondsFromDockerStart": 37.643963,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:44.1081406+00:00",
+          "secondsFromDockerStart": 40.653893,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T11:59:47.1082555+00:00",
+          "secondsFromDockerStart": 43.654008,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1000,
+          "Tcp.RetransSegs": 0,
+          "TcpExt.TCPSynRetrans": 0,
+          "TcpExt.TCPTimeouts": 0,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        }
+      ],
+      "nativeControlFiveSecondBins": [
+        {
+          "startSeconds": 0,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.2,
+                "med": 5.0,
+                "p95": 5.0,
+                "p99": 5.0,
+                "max": 5
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 72.2375,
+                "med": 72.2375,
+                "p95": 78.71435,
+                "p99": 79.29007,
+                "max": 79.434
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 32.6,
+                "med": 32.6,
+                "p95": 32.984300000000005,
+                "p99": 33.018460000000005,
+                "max": 33.027
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 2.4,
+                "med": 2.0,
+                "p95": 4.6,
+                "p99": 4.92,
+                "max": 5
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 5,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.6,
+                "med": 6.0,
+                "p95": 6.0,
+                "p99": 6.0,
+                "max": 6
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 69.81033333333333,
+                "med": 70.23400000000001,
+                "p95": 80.41749999999999,
+                "p99": 81.3227,
+                "max": 81.54899999999999
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 37.907333333333334,
+                "med": 42.19,
+                "p95": 42.5032,
+                "p99": 42.53104,
+                "max": 42.538
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 1.4,
+                "med": 1.0,
+                "p95": 2.0,
+                "p99": 2.0,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 10,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.2,
+                "med": 4.0,
+                "p95": 5.8,
+                "p99": 5.96,
+                "max": 6
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 89.309,
+                "med": 89.309,
+                "p95": 102.2357,
+                "p99": 103.38474,
+                "max": 103.672
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 36.414,
+                "med": 36.414,
+                "p95": 41.0571,
+                "p99": 41.46982,
+                "max": 41.573
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 1.4,
+                "med": 1.0,
+                "p95": 2.0,
+                "p99": 2.0,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 15,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.0,
+                "med": 3.0,
+                "p95": 3.8,
+                "p99": 3.96,
+                "max": 4
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 71.22566666666667,
+                "med": 76.729,
+                "p95": 83.7967,
+                "p99": 84.42494,
+                "max": 84.58200000000001
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 37.22933333333334,
+                "med": 39.408,
+                "p95": 44.663999999999994,
+                "p99": 45.1312,
+                "max": 45.248
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.8,
+                "med": 3.0,
+                "p95": 7.3999999999999995,
+                "p99": 7.88,
+                "max": 8
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 20,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.8,
+                "med": 3.0,
+                "p95": 6.999999999999999,
+                "p99": 7.8,
+                "max": 8
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 55.443,
+                "med": 55.443,
+                "p95": 58.1592,
+                "p99": 58.400639999999996,
+                "max": 58.461
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 35.6315,
+                "med": 35.6315,
+                "p95": 40.82315,
+                "p99": 41.28463,
+                "max": 41.4
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 1.6,
+                "med": 1.0,
+                "p95": 2.8,
+                "p99": 2.96,
+                "max": 3
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 25,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.4,
+                "med": 3.0,
+                "p95": 4.8,
+                "p99": 4.96,
+                "max": 5
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 84.29599999999999,
+                "med": 83.598,
+                "p95": 92.3703,
+                "p99": 93.15006,
+                "max": 93.345
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 28.709999999999997,
+                "med": 27.561,
+                "p95": 30.8244,
+                "p99": 31.11448,
+                "max": 31.187
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 1.4,
+                "med": 1.0,
+                "p95": 2.0,
+                "p99": 2.0,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 30,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.4,
+                "med": 3.0,
+                "p95": 7.999999999999999,
+                "p99": 8.8,
+                "max": 9
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 74.309,
+                "med": 74.309,
+                "p95": 81.6953,
+                "p99": 82.35186,
+                "max": 82.516
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 29.017,
+                "med": 29.017,
+                "p95": 30.1861,
+                "p99": 30.29002,
+                "max": 30.316
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.8,
+                "med": 3.0,
+                "p95": 6.0,
+                "p99": 6.0,
+                "max": 6
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 35,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 4.2,
+                "med": 3.0,
+                "p95": 6.8,
+                "p99": 6.96,
+                "max": 7
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 70.76266666666668,
+                "med": 69.027,
+                "p95": 79.0017,
+                "p99": 79.88834,
+                "max": 80.11
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 43.019666666666666,
+                "med": 45.909,
+                "p95": 46.9035,
+                "p99": 46.9919,
+                "max": 47.014
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.2,
+                "med": 4.0,
+                "p95": 5.0,
+                "p99": 5.0,
+                "max": 5
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 40,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 3.8,
+                "med": 4.0,
+                "p95": 4.8,
+                "p99": 4.96,
+                "max": 5
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 80.6075,
+                "med": 80.6075,
+                "p95": 95.16815,
+                "p99": 96.46243,
+                "max": 96.786
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 42.662499999999994,
+                "med": 42.662499999999994,
+                "p95": 44.122749999999996,
+                "p99": 44.25255,
+                "max": 44.285
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 1.2,
+                "med": 1.0,
+                "p95": 1.7999999999999998,
+                "p99": 1.96,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 45,
+          "targets": {
+            "external-dns": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            },
+            "non-aws-control": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            },
+            "regional-aws-control": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            },
+            "wifi-gateway": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "20261111T115744Z-vus1000-rps300",
+      "configuredRate": 300,
+      "fixedVus": 1000,
+      "actualDockerStart": "2026-11-11T12:00:04.527797+00:00",
+      "actualDockerEnd": "2026-11-11T12:01:00.185635+00:00",
+      "containerExit": "0",
+      "requestCount": 13347,
+      "k6ReportedRequestsPerSecond": 242.71503687693857,
+      "requestsDividedBy45Seconds": 296.6,
+      "noteRate": "k6 reported rate includes grace; count/45 includes completions during grace and is not exact in-window completion throughput",
+      "errors": {
+        "rate": 0.21293174496141454,
+        "passes": 2842,
+        "fails": 10505
+      },
+      "timeouts": 2831,
+      "eof": 9,
+      "statusZero": 2842,
+      "otherTransportErrors": 2,
+      "droppedIterations": 153,
+      "dropFractionOfScheduled": 0.011333333333333334,
+      "scheduledCount": 13500,
+      "successfulResponses": 10505,
+      "http2": 10505,
+      "http1": 0,
+      "noResponseProtocol": 2842,
+      "vusEverUsed": 1000,
+      "maxObservedActiveVus": 999,
+      "connectionPositiveRequestCount": 1227,
+      "receivedBytes": 99512302,
+      "reportedReceiveMbps": 14.477040263513329,
+      "receiveMbpsDividedBy45Seconds": 17.691075911111113,
+      "sentBytes": 3340060,
+      "latencyMs": {
+        "avg": 2393.1824849109744,
+        "med": 270.705153,
+        "max": 10002.899817,
+        "p(95)": 10000.4199768,
+        "p(99)": 10000.91969874
+      },
+      "successfulLatencyMs": {
+        "p(99)": 8263.644497439995,
+        "avg": 806.016063958685,
+        "med": 84.363862,
+        "max": 9934.260266,
+        "p(95)": 4756.4661823999995
+      },
+      "iterationMs": {
+        "avg": 2874.7748344855795,
+        "med": 311.741605,
+        "max": 10004.013392,
+        "p(95)": 10000.9330991,
+        "p(99)": 10001.19271892
+      },
+      "blockedMs": {
+        "p(95)": 526.0353000999878,
+        "p(99)": 7054.6463846999995,
+        "avg": 188.3450064186002,
+        "med": 0.000197,
+        "max": 9910.676778
+      },
+      "connectMs": {
+        "max": 9181.630199,
+        "p(95)": 46.93761859999985,
+        "p(99)": 6156.839514679977,
+        "avg": 147.30275395017605,
+        "med": 0
+      },
+      "positiveConnectMs": {
+        "p(99)": 7256.85406006,
+        "avg": 1602.3226218198856,
+        "med": 146.706631,
+        "max": 9181.630199,
+        "p(95)": 7043.545951100001
+      },
+      "tlsMs": {
+        "med": 0,
+        "max": 9795.491867,
+        "p(95)": 35.23935629999986,
+        "p(99)": 1991.5550149999956,
+        "avg": 68.81218200516965
+      },
+      "positiveTlsMs": {
+        "avg": 947.8185688575844,
+        "med": 306.115748,
+        "max": 9795.491867,
+        "p(95)": 4638.953951199999,
+        "p(99)": 7129.791009679999
+      },
+      "firstRequestMs": {
+        "p(99)": 10001.11603372,
+        "avg": 3974.6351461909985,
+        "med": 1814.1689835000002,
+        "max": 10001.566952,
+        "p(95)": 10000.898943549999
+      },
+      "logErrorCounts": {
+        "request timeout": 2831,
+        "EOF": 9,
+        "http2: client conn could not be established": 2
+      },
+      "resources": {
+        "samples": 18,
+        "cpuPercentOneCore": {
+          "count": 18,
+          "avg": 20.297777777777778,
+          "med": 19.549999999999997,
+          "p95": 39.769,
+          "p99": 41.0338,
+          "max": 41.35
+        },
+        "peakPercentOf8CpuQuota": 5.16875,
+        "peakMemoryMiB": 383.09765625,
+        "peakDockerMemoryPercent": 4.62,
+        "maxCgroupNrThrottled": 0,
+        "maxCgroupThrottledUsec": 0,
+        "maxCgroupOomEvents": 0,
+        "maxCgroupMemoryMaxEvents": 0,
+        "maxFullCpuPressureAvg10": 0.0,
+        "dockerBackendCpuPercentOneCore": {
+          "count": 18,
+          "avg": 28.494524649735133,
+          "med": 27.855769665527063,
+          "p95": 46.97797986636413,
+          "p99": 49.80221351415707,
+          "max": 50.50827192610531
+        }
+      },
+      "tcpSnapshots": [
+        {
+          "at": "2026-11-11T12:00:05.1248436+00:00",
+          "secondsFromDockerStart": 0.597046,
+          "Tcp.ActiveOpens": 465,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 274,
+          "Tcp.RetransSegs": 38,
+          "TcpExt.TCPSynRetrans": 44,
+          "TcpExt.TCPTimeouts": 44,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 466,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T12:00:08.1255897+00:00",
+          "secondsFromDockerStart": 3.597792,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 660,
+          "Tcp.RetransSegs": 919,
+          "TcpExt.TCPSynRetrans": 919,
+          "TcpExt.TCPTimeouts": 919,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T12:00:11.1258175+00:00",
+          "secondsFromDockerStart": 6.59802,
+          "Tcp.ActiveOpens": 1000,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 781,
+          "Tcp.RetransSegs": 1615,
+          "TcpExt.TCPSynRetrans": 1615,
+          "TcpExt.TCPTimeouts": 1615,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1001,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T12:00:14.1266230+00:00",
+          "secondsFromDockerStart": 9.598826,
+          "Tcp.ActiveOpens": 1021,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 889,
+          "Tcp.RetransSegs": 1805,
+          "TcpExt.TCPSynRetrans": 1805,
+          "TcpExt.TCPTimeouts": 1805,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1022,
+          "socket.tw": 0
+        },
+        {
+          "at": "2026-11-11T12:00:17.1416643+00:00",
+          "secondsFromDockerStart": 12.613867,
+          "Tcp.ActiveOpens": 1261,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1021,
+          "Tcp.RetransSegs": 2021,
+          "TcpExt.TCPSynRetrans": 2021,
+          "TcpExt.TCPTimeouts": 2021,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1258,
+          "socket.tw": 2
+        },
+        {
+          "at": "2026-11-11T12:00:20.1423795+00:00",
+          "secondsFromDockerStart": 15.614582,
+          "Tcp.ActiveOpens": 1304,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1102,
+          "Tcp.RetransSegs": 2384,
+          "TcpExt.TCPSynRetrans": 2384,
+          "TcpExt.TCPTimeouts": 2384,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1291,
+          "socket.tw": 2
+        },
+        {
+          "at": "2026-11-11T12:00:23.1566869+00:00",
+          "secondsFromDockerStart": 18.628889,
+          "Tcp.ActiveOpens": 1304,
+          "Tcp.AttemptFails": 0,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1130,
+          "Tcp.RetransSegs": 2522,
+          "TcpExt.TCPSynRetrans": 2521,
+          "TcpExt.TCPTimeouts": 2521,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1269,
+          "socket.tw": 6
+        },
+        {
+          "at": "2026-11-11T12:00:26.1583445+00:00",
+          "secondsFromDockerStart": 21.630547,
+          "Tcp.ActiveOpens": 1341,
+          "Tcp.AttemptFails": 23,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1155,
+          "Tcp.RetransSegs": 2628,
+          "TcpExt.TCPSynRetrans": 2627,
+          "TcpExt.TCPTimeouts": 2627,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1269,
+          "socket.tw": 9
+        },
+        {
+          "at": "2026-11-11T12:00:29.1585668+00:00",
+          "secondsFromDockerStart": 24.630769,
+          "Tcp.ActiveOpens": 1380,
+          "Tcp.AttemptFails": 66,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1172,
+          "Tcp.RetransSegs": 2730,
+          "TcpExt.TCPSynRetrans": 2729,
+          "TcpExt.TCPTimeouts": 2729,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1258,
+          "socket.tw": 9
+        },
+        {
+          "at": "2026-11-11T12:00:32.1589665+00:00",
+          "secondsFromDockerStart": 27.631169,
+          "Tcp.ActiveOpens": 1383,
+          "Tcp.AttemptFails": 66,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1179,
+          "Tcp.RetransSegs": 2776,
+          "TcpExt.TCPSynRetrans": 2775,
+          "TcpExt.TCPTimeouts": 2775,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1227,
+          "socket.tw": 10
+        },
+        {
+          "at": "2026-11-11T12:00:35.1589134+00:00",
+          "secondsFromDockerStart": 30.631116,
+          "Tcp.ActiveOpens": 1383,
+          "Tcp.AttemptFails": 71,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1168,
+          "Tcp.RetransSegs": 2808,
+          "TcpExt.TCPSynRetrans": 2807,
+          "TcpExt.TCPTimeouts": 2807,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1203,
+          "socket.tw": 11
+        },
+        {
+          "at": "2026-11-11T12:00:38.1735625+00:00",
+          "secondsFromDockerStart": 33.645765,
+          "Tcp.ActiveOpens": 1387,
+          "Tcp.AttemptFails": 88,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1160,
+          "Tcp.RetransSegs": 2832,
+          "TcpExt.TCPSynRetrans": 2831,
+          "TcpExt.TCPTimeouts": 2831,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1179,
+          "socket.tw": 10
+        },
+        {
+          "at": "2026-11-11T12:00:41.1747401+00:00",
+          "secondsFromDockerStart": 36.646943,
+          "Tcp.ActiveOpens": 1395,
+          "Tcp.AttemptFails": 94,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1159,
+          "Tcp.RetransSegs": 2848,
+          "TcpExt.TCPSynRetrans": 2847,
+          "TcpExt.TCPTimeouts": 2847,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1172,
+          "socket.tw": 9
+        },
+        {
+          "at": "2026-11-11T12:00:44.1760464+00:00",
+          "secondsFromDockerStart": 39.648249,
+          "Tcp.ActiveOpens": 1395,
+          "Tcp.AttemptFails": 94,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1149,
+          "Tcp.RetransSegs": 2857,
+          "TcpExt.TCPSynRetrans": 2856,
+          "TcpExt.TCPTimeouts": 2856,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1158,
+          "socket.tw": 10
+        },
+        {
+          "at": "2026-11-11T12:00:47.1763990+00:00",
+          "secondsFromDockerStart": 42.648602,
+          "Tcp.ActiveOpens": 1396,
+          "Tcp.AttemptFails": 95,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1147,
+          "Tcp.RetransSegs": 2862,
+          "TcpExt.TCPSynRetrans": 2861,
+          "TcpExt.TCPTimeouts": 2861,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1156,
+          "socket.tw": 10
+        },
+        {
+          "at": "2026-11-11T12:00:50.1903727+00:00",
+          "secondsFromDockerStart": 45.662575,
+          "Tcp.ActiveOpens": 1396,
+          "Tcp.AttemptFails": 99,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1130,
+          "Tcp.RetransSegs": 2871,
+          "TcpExt.TCPSynRetrans": 2870,
+          "TcpExt.TCPTimeouts": 2870,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1134,
+          "socket.tw": 9
+        },
+        {
+          "at": "2026-11-11T12:00:53.1929052+00:00",
+          "secondsFromDockerStart": 48.665108,
+          "Tcp.ActiveOpens": 1396,
+          "Tcp.AttemptFails": 99,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1095,
+          "Tcp.RetransSegs": 2872,
+          "TcpExt.TCPSynRetrans": 2871,
+          "TcpExt.TCPTimeouts": 2871,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1098,
+          "socket.tw": 10
+        },
+        {
+          "at": "2026-11-11T12:00:56.1929272+00:00",
+          "secondsFromDockerStart": 51.66513,
+          "Tcp.ActiveOpens": 1396,
+          "Tcp.AttemptFails": 99,
+          "Tcp.EstabResets": 0,
+          "Tcp.CurrEstab": 1081,
+          "Tcp.RetransSegs": 2872,
+          "TcpExt.TCPSynRetrans": 2871,
+          "TcpExt.TCPTimeouts": 2871,
+          "TcpExt.TCPBacklogDrop": 0,
+          "TcpExt.TCPMemoryPressures": 0,
+          "socket.inuse": 1082,
+          "socket.tw": 11
+        }
+      ],
+      "nativeControlFiveSecondBins": [
+        {
+          "startSeconds": 0,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 2,
+              "successRttMs": {
+                "count": 3,
+                "avg": 20.333333333333332,
+                "med": 21.0,
+                "p95": 21.0,
+                "p99": 21.0,
+                "max": 21
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 1,
+              "totalMs": {
+                "count": 3,
+                "avg": 1246.4876666666667,
+                "med": 1376.398,
+                "p95": 1942.8319,
+                "p99": 1993.18158,
+                "max": 2005.769
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 1,
+              "totalMs": {
+                "count": 3,
+                "avg": 1998.4096666666667,
+                "med": 2005.084,
+                "p95": 2211.3802,
+                "p99": 2229.7176400000003,
+                "max": 2234.302
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 14.6,
+                "med": 12.0,
+                "p95": 27.199999999999996,
+                "p99": 29.439999999999998,
+                "max": 30
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 5,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 2,
+              "successRttMs": {
+                "count": 3,
+                "avg": 20.666666666666668,
+                "med": 21.0,
+                "p95": 22.8,
+                "p99": 22.96,
+                "max": 23
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 1,
+              "totalMs": {
+                "count": 2,
+                "avg": 1284.5384999999999,
+                "med": 1284.5385,
+                "p95": 1930.16295,
+                "p99": 1987.55179,
+                "max": 2001.899
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 2,
+              "totalMs": {
+                "count": 2,
+                "avg": 2002.63,
+                "med": 2002.63,
+                "p95": 2003.7037,
+                "p99": 2003.79914,
+                "max": 2003.823
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 3,
+              "successRttMs": {
+                "count": 2,
+                "avg": 17.5,
+                "med": 17.5,
+                "p95": 17.95,
+                "p99": 17.99,
+                "max": 18
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 10,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 2,
+              "successRttMs": {
+                "count": 3,
+                "avg": 38.666666666666664,
+                "med": 10.0,
+                "p95": 88.3,
+                "p99": 95.26,
+                "max": 97
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 1,
+              "totalMs": {
+                "count": 3,
+                "avg": 1168.8673333333334,
+                "med": 924.909,
+                "p95": 1896.3105,
+                "p99": 1982.6572999999999,
+                "max": 2004.244
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 3,
+              "totalMs": {
+                "count": 3,
+                "avg": 2001.8150000000003,
+                "med": 2001.6340000000002,
+                "p95": 2002.1947,
+                "p99": 2002.2445400000001,
+                "max": 2002.257
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 4,
+              "successRttMs": {
+                "count": 1,
+                "avg": 23.0,
+                "med": 23.0,
+                "p95": 23.0,
+                "p99": 23.0,
+                "max": 23
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 15,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 4,
+              "successRttMs": {
+                "count": 1,
+                "avg": 19.0,
+                "med": 19.0,
+                "p95": 19.0,
+                "p99": 19.0,
+                "max": 19
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 1,
+              "totalMs": {
+                "count": 2,
+                "avg": 1663.7015000000001,
+                "med": 1663.7015000000001,
+                "p95": 1968.63815,
+                "p99": 1995.74363,
+                "max": 2002.52
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 1,
+              "totalMs": {
+                "count": 2,
+                "avg": 2226.8145,
+                "med": 2226.8145,
+                "p95": 2428.6966500000003,
+                "p99": 2446.6417300000003,
+                "max": 2451.128
+              }
+            },
+            "wifi-gateway": {
+              "n": 4,
+              "failures": 0,
+              "successRttMs": {
+                "count": 4,
+                "avg": 9.25,
+                "med": 9.0,
+                "p95": 12.7,
+                "p99": 12.94,
+                "max": 13
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 20,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 10.8,
+                "med": 13.0,
+                "p95": 17.2,
+                "p99": 17.84,
+                "max": 18
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 2,
+              "totalMs": {
+                "count": 3,
+                "avg": 1371.7783333333334,
+                "med": 2001.153,
+                "p95": 2006.1516000000001,
+                "p99": 2006.5959200000002,
+                "max": 2006.707
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 599.3985,
+                "med": 599.3985,
+                "p95": 880.28535,
+                "p99": 905.25307,
+                "max": 911.495
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 5,
+              "successRttMs": null
+            }
+          }
+        },
+        {
+          "startSeconds": 25,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 4,
+              "successRttMs": {
+                "count": 1,
+                "avg": 3.0,
+                "med": 3.0,
+                "p95": 3.0,
+                "p99": 3.0,
+                "max": 3
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 1,
+              "totalMs": {
+                "count": 2,
+                "avg": 1709.9060000000002,
+                "med": 1709.906,
+                "p95": 2872.85,
+                "p99": 2976.2228,
+                "max": 3002.0660000000003
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 1,
+              "totalMs": {
+                "count": 3,
+                "avg": 1628.7523333333331,
+                "med": 1605.604,
+                "p95": 1962.8086,
+                "p99": 1994.56012,
+                "max": 2002.498
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 2,
+              "successRttMs": {
+                "count": 3,
+                "avg": 7.666666666666667,
+                "med": 9.0,
+                "p95": 10.8,
+                "p99": 10.96,
+                "max": 11
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 30,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 12.2,
+                "med": 9.0,
+                "p95": 24.799999999999997,
+                "p99": 27.36,
+                "max": 28
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 2,
+              "totalMs": {
+                "count": 2,
+                "avg": 2503.9314999999997,
+                "med": 2503.9314999999997,
+                "p95": 2956.4222499999996,
+                "p99": 2996.6436499999995,
+                "max": 3006.6989999999996
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 1249.9859999999999,
+                "med": 1249.9859999999999,
+                "p95": 1251.2811,
+                "p99": 1251.3962199999999,
+                "max": 1251.425
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 2,
+              "successRttMs": {
+                "count": 3,
+                "avg": 18.333333333333332,
+                "med": 16.0,
+                "p95": 23.2,
+                "p99": 23.84,
+                "max": 24
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 35,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 3,
+              "successRttMs": {
+                "count": 2,
+                "avg": 12.5,
+                "med": 12.5,
+                "p95": 15.649999999999999,
+                "p99": 15.93,
+                "max": 16
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 1,
+              "totalMs": {
+                "count": 2,
+                "avg": 1152.6085,
+                "med": 1152.6085,
+                "p95": 1917.80335,
+                "p99": 1985.82067,
+                "max": 2002.825
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 1085.2023333333334,
+                "med": 1065.558,
+                "p95": 2047.0142999999998,
+                "p99": 2134.25486,
+                "max": 2156.065
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 1,
+              "successRttMs": {
+                "count": 4,
+                "avg": 6.5,
+                "med": 6.0,
+                "p95": 9.549999999999999,
+                "p99": 9.91,
+                "max": 10
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 40,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 3,
+              "successRttMs": {
+                "count": 2,
+                "avg": 31.5,
+                "med": 31.5,
+                "p95": 40.95,
+                "p99": 41.79,
+                "max": 42
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 1,
+              "totalMs": {
+                "count": 2,
+                "avg": 1908.3905,
+                "med": 1908.3905,
+                "p95": 2895.62255,
+                "p99": 2983.37651,
+                "max": 3005.315
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 1,
+              "totalMs": {
+                "count": 2,
+                "avg": 1155.9895,
+                "med": 1155.9895000000001,
+                "p95": 1917.31435,
+                "p99": 1984.98767,
+                "max": 2001.906
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 1,
+              "successRttMs": {
+                "count": 4,
+                "avg": 9.5,
+                "med": 9.0,
+                "p95": 13.399999999999999,
+                "p99": 13.879999999999999,
+                "max": 14
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 45,
+          "targets": {
+            "external-dns": {
+              "n": 4,
+              "failures": 0,
+              "successRttMs": {
+                "count": 4,
+                "avg": 19.75,
+                "med": 5.5,
+                "p95": 55.29999999999998,
+                "p99": 62.259999999999984,
+                "max": 64
+              }
+            },
+            "non-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 98.10233333333333,
+                "med": 81.94,
+                "p95": 126.12280000000001,
+                "p99": 130.05016,
+                "max": 131.032
+              }
+            },
+            "regional-aws-control": {
+              "n": 3,
+              "failures": 0,
+              "totalMs": {
+                "count": 3,
+                "avg": 560.4499999999999,
+                "med": 31.046,
+                "p95": 1463.3743999999997,
+                "p99": 1590.69248,
+                "max": 1622.522
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 1,
+              "successRttMs": {
+                "count": 4,
+                "avg": 9.5,
+                "med": 2.0,
+                "p95": 28.349999999999987,
+                "p99": 32.06999999999999,
+                "max": 33
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 50,
+          "targets": {
+            "external-dns": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 7.6,
+                "med": 3.0,
+                "p95": 20.999999999999996,
+                "p99": 24.2,
+                "max": 25
+              }
+            },
+            "non-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 90.23599999999999,
+                "med": 90.23599999999999,
+                "p95": 103.32109999999999,
+                "p99": 104.48422,
+                "max": 104.77499999999999
+              }
+            },
+            "regional-aws-control": {
+              "n": 2,
+              "failures": 0,
+              "totalMs": {
+                "count": 2,
+                "avg": 44.625,
+                "med": 44.625,
+                "p95": 63.5493,
+                "p99": 65.23146,
+                "max": 65.652
+              }
+            },
+            "wifi-gateway": {
+              "n": 5,
+              "failures": 0,
+              "successRttMs": {
+                "count": 5,
+                "avg": 2.0,
+                "med": 2.0,
+                "p95": 3.0,
+                "p99": 3.0,
+                "max": 3
+              }
+            }
+          }
+        },
+        {
+          "startSeconds": 55,
+          "targets": {
+            "external-dns": {
+              "n": 1,
+              "failures": 0,
+              "successRttMs": {
+                "count": 1,
+                "avg": 54.0,
+                "med": 54.0,
+                "p95": 54.0,
+                "p99": 54.0,
+                "max": 54
+              }
+            },
+            "non-aws-control": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            },
+            "regional-aws-control": {
+              "n": 0,
+              "failures": 0,
+              "successRttMs": null
+            },
+            "wifi-gateway": {
+              "n": 1,
+              "failures": 0,
+              "successRttMs": {
+                "count": 1,
+                "avg": 30.0,
+                "med": 30.0,
+                "p95": 30.0,
+                "p99": 30.0,
+                "max": 30
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "nativeControls": {
+    "20261111T115744Z-vus100-rps600": {
+      "external-dns": {
+        "n": 45,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 45
+        },
+        "successRttMs": {
+          "count": 45,
+          "avg": 5.466666666666667,
+          "med": 4.0,
+          "p95": 13.999999999999986,
+          "p99": 32.88000000000005,
+          "max": 43
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "non-aws-control": {
+        "n": 23,
+        "failures": 0,
+        "statusCounts": {
+          "200": 23
+        },
+        "exitCounts": {
+          "0": 23
+        },
+        "dnsMs": {
+          "count": 23,
+          "avg": 8.539434782608696,
+          "med": 5.126,
+          "p95": 19.8402,
+          "p99": 21.242780000000003,
+          "max": 21.606
+        },
+        "connectMs": {
+          "count": 23,
+          "avg": 16.654695652173913,
+          "med": 12.534,
+          "p95": 29.9473,
+          "p99": 35.23894000000001,
+          "max": 36.696
+        },
+        "tlsMs": {
+          "count": 23,
+          "avg": 33.809347826086956,
+          "med": 30.153,
+          "p95": 51.7966,
+          "p99": 69.77432000000003,
+          "max": 74.756
+        },
+        "ttfbMs": {
+          "count": 23,
+          "avg": 92.14830434782608,
+          "med": 80.35000000000001,
+          "p95": 108.8343,
+          "p99": 312.59156000000036,
+          "max": 369.869
+        },
+        "totalMs": {
+          "count": 23,
+          "avg": 93.52991304347826,
+          "med": 81.587,
+          "p95": 108.8992,
+          "p99": 322.2339600000003,
+          "max": 382.213
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "regional-aws-control": {
+        "n": 23,
+        "failures": 0,
+        "statusCounts": {
+          "302": 23
+        },
+        "exitCounts": {
+          "0": 23
+        },
+        "dnsMs": {
+          "count": 23,
+          "avg": 9.857521739130435,
+          "med": 5.55,
+          "p95": 20.7183,
+          "p99": 21.39558,
+          "max": 21.563
+        },
+        "connectMs": {
+          "count": 23,
+          "avg": 61.81743478260869,
+          "med": 13.742,
+          "p95": 36.47349999999999,
+          "p99": 819.388640000001,
+          "max": 1039.936
+        },
+        "tlsMs": {
+          "count": 23,
+          "avg": 77.20634782608695,
+          "med": 31.187,
+          "p95": 50.753899999999994,
+          "p99": 839.5255600000012,
+          "max": 1061.99
+        },
+        "ttfbMs": {
+          "count": 23,
+          "avg": 86.52895652173913,
+          "med": 40.882000000000005,
+          "p95": 65.92339999999999,
+          "p99": 861.9234400000012,
+          "max": 1086.136
+        },
+        "totalMs": {
+          "count": 23,
+          "avg": 86.557,
+          "med": 40.908,
+          "p95": 65.95389999999998,
+          "p99": 861.9513200000011,
+          "max": 1086.163
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "wifi-gateway": {
+        "n": 45,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 45
+        },
+        "successRttMs": {
+          "count": 45,
+          "avg": 3.533333333333333,
+          "med": 2.0,
+          "p95": 7.0,
+          "p99": 21.360000000000014,
+          "max": 24
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      }
+    },
+    "20261111T115744Z-vus1000-rps60": {
+      "external-dns": {
+        "n": 45,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 45
+        },
+        "successRttMs": {
+          "count": 45,
+          "avg": 3.9555555555555557,
+          "med": 3.0,
+          "p95": 6.799999999999997,
+          "p99": 8.560000000000002,
+          "max": 9
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "non-aws-control": {
+        "n": 22,
+        "failures": 0,
+        "statusCounts": {
+          "200": 22
+        },
+        "exitCounts": {
+          "0": 22
+        },
+        "dnsMs": {
+          "count": 22,
+          "avg": 5.708590909090909,
+          "med": 5.396,
+          "p95": 7.0678,
+          "p99": 12.637489999999993,
+          "max": 14.113999999999999
+        },
+        "connectMs": {
+          "count": 22,
+          "avg": 12.918045454545455,
+          "med": 11.556999999999999,
+          "p95": 20.407049999999998,
+          "p99": 21.32424,
+          "max": 21.567
+        },
+        "tlsMs": {
+          "count": 22,
+          "avg": 26.062409090909092,
+          "med": 24.904,
+          "p95": 33.240649999999995,
+          "p99": 34.777159999999995,
+          "max": 35.177
+        },
+        "ttfbMs": {
+          "count": 22,
+          "avg": 73.69022727272727,
+          "med": 75.2625,
+          "p95": 92.96745000000001,
+          "p99": 101.40050000000001,
+          "max": 103.59500000000001
+        },
+        "totalMs": {
+          "count": 22,
+          "avg": 74.18618181818182,
+          "med": 75.4455,
+          "p95": 96.61395,
+          "p99": 102.22594,
+          "max": 103.672
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "regional-aws-control": {
+        "n": 22,
+        "failures": 0,
+        "statusCounts": {
+          "302": 22
+        },
+        "exitCounts": {
+          "0": 22
+        },
+        "dnsMs": {
+          "count": 22,
+          "avg": 6.3077272727272735,
+          "med": 4.5715,
+          "p95": 16.305149999999998,
+          "p99": 18.97983,
+          "max": 19.647000000000002
+        },
+        "connectMs": {
+          "count": 22,
+          "avg": 16.31740909090909,
+          "med": 13.002,
+          "p95": 25.5653,
+          "p99": 26.565459999999998,
+          "max": 26.811999999999998
+        },
+        "tlsMs": {
+          "count": 22,
+          "avg": 29.858499999999996,
+          "med": 28.0415,
+          "p95": 39.664199999999994,
+          "p99": 40.74521,
+          "max": 41.018
+        },
+        "ttfbMs": {
+          "count": 22,
+          "avg": 36.02881818181818,
+          "med": 34.554,
+          "p95": 45.85365,
+          "p99": 46.757580000000004,
+          "max": 46.989000000000004
+        },
+        "totalMs": {
+          "count": 22,
+          "avg": 36.05677272727273,
+          "med": 34.581500000000005,
+          "p95": 45.875949999999996,
+          "p99": 46.78195,
+          "max": 47.014
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "wifi-gateway": {
+        "n": 45,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 45
+        },
+        "successRttMs": {
+          "count": 45,
+          "avg": 2.2444444444444445,
+          "med": 2.0,
+          "p95": 5.799999999999997,
+          "p99": 7.1200000000000045,
+          "max": 8
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      }
+    },
+    "20261111T115744Z-vus1000-rps300": {
+      "external-dns": {
+        "n": 55,
+        "failures": 20,
+        "statusCounts": {
+          "TimedOut": 20,
+          "Success": 35
+        },
+        "successRttMs": {
+          "count": 35,
+          "avg": 18.142857142857142,
+          "med": 13.0,
+          "p95": 56.99999999999997,
+          "p99": 85.77999999999989,
+          "max": 97
+        },
+        "failureTimes": [
+          "2026-11-11T12:00:05.2932702+00:00",
+          "2026-11-11T12:00:06.2935027+00:00",
+          "2026-11-11T12:00:13.3409366+00:00",
+          "2026-11-11T12:00:14.3414307+00:00",
+          "2026-11-11T12:00:17.3425695+00:00",
+          "2026-11-11T12:00:18.3430885+00:00",
+          "2026-11-11T12:00:21.3581715+00:00",
+          "2026-11-11T12:00:22.3587709+00:00",
+          "2026-11-11T12:00:23.3597887+00:00",
+          "2026-11-11T12:00:24.3600783+00:00",
+          "2026-11-11T12:00:30.4067989+00:00",
+          "2026-11-11T12:00:31.4087087+00:00",
+          "2026-11-11T12:00:32.4236495+00:00",
+          "2026-11-11T12:00:33.4256076+00:00",
+          "2026-11-11T12:00:41.4738326+00:00",
+          "2026-11-11T12:00:43.4755490+00:00",
+          "2026-11-11T12:00:44.4753070+00:00",
+          "2026-11-11T12:00:45.4887505+00:00",
+          "2026-11-11T12:00:46.4898435+00:00",
+          "2026-11-11T12:00:47.4920601+00:00"
+        ],
+        "crossBoundaryCompletions": 0
+      },
+      "non-aws-control": {
+        "n": 26,
+        "failures": 11,
+        "statusCounts": {
+          "200": 18,
+          "000": 8
+        },
+        "exitCounts": {
+          "0": 15,
+          "28": 11
+        },
+        "dnsMs": {
+          "count": 26,
+          "avg": 11.881230769230768,
+          "med": 10.930499999999999,
+          "p95": 20.5525,
+          "p99": 25.56775,
+          "max": 27.053
+        },
+        "connectMs": {
+          "count": 26,
+          "avg": 124.34638461538461,
+          "med": 23.665,
+          "p95": 293.718,
+          "p99": 844.183,
+          "max": 1024.684
+        },
+        "tlsMs": {
+          "count": 26,
+          "avg": 203.32726923076922,
+          "med": 53.882999999999996,
+          "p95": 868.28775,
+          "p99": 1171.5105,
+          "max": 1268.6170000000002
+        },
+        "ttfbMs": {
+          "count": 26,
+          "avg": 1059.5930769230768,
+          "med": 844.07,
+          "p95": 2006.47,
+          "p99": 2119.44775,
+          "max": 2157.029
+        },
+        "totalMs": {
+          "count": 26,
+          "avg": 1241.6281538461537,
+          "med": 1124.896,
+          "p95": 3004.50275,
+          "p99": 3006.3529999999996,
+          "max": 3006.6989999999996
+        },
+        "failureTimes": [
+          "2026-11-11T12:00:09.1579820+00:00",
+          "2026-11-11T12:00:11.1798488+00:00",
+          "2026-11-11T12:00:17.2092821+00:00",
+          "2026-11-11T12:00:23.2434006+00:00",
+          "2026-11-11T12:00:25.2636637+00:00",
+          "2026-11-11T12:00:29.2916720+00:00",
+          "2026-11-11T12:00:31.3134956+00:00",
+          "2026-11-11T12:00:36.3408307+00:00",
+          "2026-11-11T12:00:39.3637750+00:00",
+          "2026-11-11T12:00:41.3794593+00:00",
+          "2026-11-11T12:00:47.4092610+00:00"
+        ],
+        "crossBoundaryCompletions": 0
+      },
+      "regional-aws-control": {
+        "n": 27,
+        "failures": 9,
+        "statusCounts": {
+          "302": 18,
+          "000": 9
+        },
+        "exitCounts": {
+          "0": 18,
+          "28": 9
+        },
+        "dnsMs": {
+          "count": 27,
+          "avg": 12.949407407407408,
+          "med": 6.958,
+          "p95": 22.418699999999998,
+          "p99": 44.51993999999996,
+          "max": 52.068000000000005
+        },
+        "connectMs": {
+          "count": 27,
+          "avg": 135.46,
+          "med": 16.994,
+          "p95": 1019.5929,
+          "p99": 1082.55306,
+          "max": 1103.943
+        },
+        "tlsMs": {
+          "count": 27,
+          "avg": 317.2029259259259,
+          "med": 50.879,
+          "p95": 1310.9587,
+          "p99": 1362.41864,
+          "max": 1364.508
+        },
+        "ttfbMs": {
+          "count": 27,
+          "avg": 1347.4928888888887,
+          "med": 1622.4959999999999,
+          "p95": 2210.7955,
+          "p99": 2394.7253799999994,
+          "max": 2451.1029999999996
+        },
+        "totalMs": {
+          "count": 27,
+          "avg": 1347.5101851851853,
+          "med": 1622.522,
+          "p95": 2210.8309,
+          "p99": 2394.75324,
+          "max": 2451.128
+        },
+        "failureTimes": [
+          "2026-11-11T12:00:07.1407240+00:00",
+          "2026-11-11T12:00:11.4122664+00:00",
+          "2026-11-11T12:00:13.4313687+00:00",
+          "2026-11-11T12:00:15.4469321+00:00",
+          "2026-11-11T12:00:17.4635500+00:00",
+          "2026-11-11T12:00:19.4798818+00:00",
+          "2026-11-11T12:00:23.9601924+00:00",
+          "2026-11-11T12:00:31.9926704+00:00",
+          "2026-11-11T12:00:46.2134271+00:00"
+        ],
+        "crossBoundaryCompletions": 0
+      },
+      "wifi-gateway": {
+        "n": 55,
+        "failures": 19,
+        "statusCounts": {
+          "Success": 36,
+          "TimedOut": 19
+        },
+        "successRttMs": {
+          "count": 36,
+          "avg": 10.777777777777779,
+          "med": 9.0,
+          "p95": 30.0,
+          "p99": 31.949999999999996,
+          "max": 33
+        },
+        "failureTimes": [
+          "2026-11-11T12:00:12.4734298+00:00",
+          "2026-11-11T12:00:13.4751388+00:00",
+          "2026-11-11T12:00:14.4768832+00:00",
+          "2026-11-11T12:00:15.4903225+00:00",
+          "2026-11-11T12:00:16.4915984+00:00",
+          "2026-11-11T12:00:17.4917533+00:00",
+          "2026-11-11T12:00:18.4925448+00:00",
+          "2026-11-11T12:00:24.5395627+00:00",
+          "2026-11-11T12:00:25.5403591+00:00",
+          "2026-11-11T12:00:26.5420607+00:00",
+          "2026-11-11T12:00:27.5418135+00:00",
+          "2026-11-11T12:00:28.5421527+00:00",
+          "2026-11-11T12:00:29.5420619+00:00",
+          "2026-11-11T12:00:30.5431434+00:00",
+          "2026-11-11T12:00:37.6083960+00:00",
+          "2026-11-11T12:00:38.6090429+00:00",
+          "2026-11-11T12:00:39.6089559+00:00",
+          "2026-11-11T12:00:48.6579142+00:00",
+          "2026-11-11T12:00:49.6582107+00:00"
+        ],
+        "crossBoundaryCompletions": 0
+      }
+    },
+    "idle-before": {
+      "external-dns": {
+        "n": 15,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 15
+        },
+        "successRttMs": {
+          "count": 15,
+          "avg": 3.4,
+          "med": 3.0,
+          "p95": 5.0,
+          "p99": 5.0,
+          "max": 5
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "non-aws-control": {
+        "n": 8,
+        "failures": 0,
+        "statusCounts": {
+          "200": 8
+        },
+        "exitCounts": {
+          "0": 8
+        },
+        "dnsMs": {
+          "count": 8,
+          "avg": 10.683375,
+          "med": 7.6815,
+          "p95": 19.804699999999997,
+          "p99": 21.064139999999995,
+          "max": 21.378999999999998
+        },
+        "connectMs": {
+          "count": 8,
+          "avg": 19.6315,
+          "med": 19.1235,
+          "p95": 30.355499999999996,
+          "p99": 32.318299999999994,
+          "max": 32.809
+        },
+        "tlsMs": {
+          "count": 8,
+          "avg": 33.8575,
+          "med": 33.363,
+          "p95": 45.40839999999999,
+          "p99": 46.717679999999994,
+          "max": 47.044999999999995
+        },
+        "ttfbMs": {
+          "count": 8,
+          "avg": 72.82600000000001,
+          "med": 69.3115,
+          "p95": 91.41255,
+          "p99": 96.24731,
+          "max": 97.456
+        },
+        "totalMs": {
+          "count": 8,
+          "avg": 73.36862500000001,
+          "med": 70.307,
+          "p95": 92.3352,
+          "p99": 97.51184,
+          "max": 98.80600000000001
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "regional-aws-control": {
+        "n": 8,
+        "failures": 0,
+        "statusCounts": {
+          "302": 8
+        },
+        "exitCounts": {
+          "0": 8
+        },
+        "dnsMs": {
+          "count": 8,
+          "avg": 8.02875,
+          "med": 6.3605,
+          "p95": 15.07705,
+          "p99": 15.83221,
+          "max": 16.021
+        },
+        "connectMs": {
+          "count": 8,
+          "avg": 19.590875,
+          "med": 17.015,
+          "p95": 31.6921,
+          "p99": 32.586420000000004,
+          "max": 32.81
+        },
+        "tlsMs": {
+          "count": 8,
+          "avg": 33.923375,
+          "med": 32.0475,
+          "p95": 45.4959,
+          "p99": 46.11918,
+          "max": 46.275
+        },
+        "ttfbMs": {
+          "count": 8,
+          "avg": 41.181125,
+          "med": 40.631,
+          "p95": 51.5791,
+          "p99": 51.87422,
+          "max": 51.948
+        },
+        "totalMs": {
+          "count": 8,
+          "avg": 41.207125,
+          "med": 40.6555,
+          "p95": 51.60505,
+          "p99": 51.90101,
+          "max": 51.975
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "wifi-gateway": {
+        "n": 15,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 15
+        },
+        "successRttMs": {
+          "count": 15,
+          "avg": 2.066666666666667,
+          "med": 2.0,
+          "p95": 4.0,
+          "p99": 4.0,
+          "max": 4
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      }
+    },
+    "idle-after-vus100-rps600": {
+      "external-dns": {
+        "n": 15,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 15
+        },
+        "successRttMs": {
+          "count": 15,
+          "avg": 3.933333333333333,
+          "med": 3.0,
+          "p95": 8.69999999999999,
+          "p99": 13.739999999999995,
+          "max": 15
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "non-aws-control": {
+        "n": 8,
+        "failures": 0,
+        "statusCounts": {
+          "200": 8
+        },
+        "exitCounts": {
+          "0": 8
+        },
+        "dnsMs": {
+          "count": 8,
+          "avg": 5.56825,
+          "med": 5.480499999999999,
+          "p95": 6.44885,
+          "p99": 6.52417,
+          "max": 6.543
+        },
+        "connectMs": {
+          "count": 8,
+          "avg": 12.8745,
+          "med": 10.322499999999998,
+          "p95": 22.554949999999998,
+          "p99": 23.222189999999998,
+          "max": 23.389
+        },
+        "tlsMs": {
+          "count": 8,
+          "avg": 28.019625,
+          "med": 24.597499999999997,
+          "p95": 43.36879999999999,
+          "p99": 45.66256,
+          "max": 46.236
+        },
+        "ttfbMs": {
+          "count": 8,
+          "avg": 71.74187500000001,
+          "med": 64.9185,
+          "p95": 104.1583,
+          "p99": 112.49726,
+          "max": 114.58200000000001
+        },
+        "totalMs": {
+          "count": 8,
+          "avg": 73.452125,
+          "med": 69.7265,
+          "p95": 104.28474999999999,
+          "p99": 112.62174999999999,
+          "max": 114.706
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 1
+      },
+      "regional-aws-control": {
+        "n": 8,
+        "failures": 0,
+        "statusCounts": {
+          "302": 8
+        },
+        "exitCounts": {
+          "0": 8
+        },
+        "dnsMs": {
+          "count": 8,
+          "avg": 23.997125,
+          "med": 5.4115,
+          "p95": 103.10279999999992,
+          "p99": 144.97735999999995,
+          "max": 155.446
+        },
+        "connectMs": {
+          "count": 8,
+          "avg": 35.4155,
+          "med": 11.1745,
+          "p95": 124.51904999999994,
+          "p99": 162.43021,
+          "max": 171.90800000000002
+        },
+        "tlsMs": {
+          "count": 8,
+          "avg": 47.648375,
+          "med": 23.812,
+          "p95": 137.41364999999993,
+          "p99": 174.29552999999999,
+          "max": 183.51600000000002
+        },
+        "ttfbMs": {
+          "count": 8,
+          "avg": 53.7805,
+          "med": 29.58,
+          "p95": 143.31589999999994,
+          "p99": 179.04557999999997,
+          "max": 187.978
+        },
+        "totalMs": {
+          "count": 8,
+          "avg": 53.8065,
+          "med": 29.6045,
+          "p95": 143.34084999999993,
+          "p99": 179.06576999999993,
+          "max": 187.99699999999999
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "wifi-gateway": {
+        "n": 14,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 14
+        },
+        "successRttMs": {
+          "count": 14,
+          "avg": 1.7142857142857142,
+          "med": 2.0,
+          "p95": 2.3499999999999996,
+          "p99": 2.869999999999999,
+          "max": 3
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      }
+    },
+    "idle-after-vus1000-rps60": {
+      "external-dns": {
+        "n": 15,
+        "failures": 1,
+        "statusCounts": {
+          "TimedOut": 1,
+          "Success": 14
+        },
+        "successRttMs": {
+          "count": 14,
+          "avg": 3.5714285714285716,
+          "med": 3.0,
+          "p95": 5.35,
+          "p99": 5.869999999999999,
+          "max": 6
+        },
+        "failureTimes": [
+          "2026-11-11T11:59:49.2756730+00:00"
+        ],
+        "crossBoundaryCompletions": 0
+      },
+      "non-aws-control": {
+        "n": 7,
+        "failures": 0,
+        "statusCounts": {
+          "200": 7
+        },
+        "exitCounts": {
+          "0": 7
+        },
+        "dnsMs": {
+          "count": 7,
+          "avg": 7.523000000000001,
+          "med": 6.742999999999999,
+          "p95": 12.910499999999994,
+          "p99": 14.915699999999996,
+          "max": 15.417
+        },
+        "connectMs": {
+          "count": 7,
+          "avg": 23.456,
+          "med": 21.564,
+          "p95": 47.31639999999997,
+          "p99": 55.462479999999985,
+          "max": 57.499
+        },
+        "tlsMs": {
+          "count": 7,
+          "avg": 43.72314285714286,
+          "med": 35.861,
+          "p95": 80.17869999999998,
+          "p99": 89.89653999999999,
+          "max": 92.32600000000001
+        },
+        "ttfbMs": {
+          "count": 7,
+          "avg": 84.60742857142857,
+          "med": 86.188,
+          "p95": 112.98719999999997,
+          "p99": 120.98303999999999,
+          "max": 122.982
+        },
+        "totalMs": {
+          "count": 7,
+          "avg": 86.85528571428571,
+          "med": 86.284,
+          "p95": 118.97209999999998,
+          "p99": 129.00001999999998,
+          "max": 131.507
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "regional-aws-control": {
+        "n": 7,
+        "failures": 0,
+        "statusCounts": {
+          "302": 7
+        },
+        "exitCounts": {
+          "0": 7
+        },
+        "dnsMs": {
+          "count": 7,
+          "avg": 11.662571428571429,
+          "med": 6.096,
+          "p95": 21.5815,
+          "p99": 22.7035,
+          "max": 22.984
+        },
+        "connectMs": {
+          "count": 7,
+          "avg": 26.572857142857142,
+          "med": 24.172,
+          "p95": 46.885999999999996,
+          "p99": 49.22359999999999,
+          "max": 49.808
+        },
+        "tlsMs": {
+          "count": 7,
+          "avg": 81.43057142857143,
+          "med": 35.736,
+          "p95": 250.1637999999998,
+          "p99": 314.3719599999999,
+          "max": 330.424
+        },
+        "ttfbMs": {
+          "count": 7,
+          "avg": 90.485,
+          "med": 45.192,
+          "p95": 259.4712999999998,
+          "p99": 320.03985999999986,
+          "max": 335.18199999999996
+        },
+        "totalMs": {
+          "count": 7,
+          "avg": 90.51785714285714,
+          "med": 45.216,
+          "p95": 259.49969999999985,
+          "p99": 320.0663399999999,
+          "max": 335.208
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "wifi-gateway": {
+        "n": 15,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 15
+        },
+        "successRttMs": {
+          "count": 15,
+          "avg": 1.6666666666666667,
+          "med": 1.0,
+          "p95": 3.299999999999999,
+          "p99": 3.8599999999999994,
+          "max": 4
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      }
+    },
+    "idle-after-vus1000-rps300": {
+      "external-dns": {
+        "n": 14,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 14
+        },
+        "successRttMs": {
+          "count": 14,
+          "avg": 3.7857142857142856,
+          "med": 3.0,
+          "p95": 8.099999999999998,
+          "p99": 11.219999999999995,
+          "max": 12
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "non-aws-control": {
+        "n": 7,
+        "failures": 0,
+        "statusCounts": {
+          "200": 7
+        },
+        "exitCounts": {
+          "0": 7
+        },
+        "dnsMs": {
+          "count": 7,
+          "avg": 5.232285714285715,
+          "med": 5.242,
+          "p95": 6.0203,
+          "p99": 6.08486,
+          "max": 6.101
+        },
+        "connectMs": {
+          "count": 7,
+          "avg": 14.998285714285714,
+          "med": 13.105,
+          "p95": 22.4878,
+          "p99": 22.55836,
+          "max": 22.576
+        },
+        "tlsMs": {
+          "count": 7,
+          "avg": 30.67385714285714,
+          "med": 30.259,
+          "p95": 42.43339999999999,
+          "p99": 44.327479999999994,
+          "max": 44.801
+        },
+        "ttfbMs": {
+          "count": 7,
+          "avg": 81.36142857142856,
+          "med": 73.27,
+          "p95": 116.07269999999998,
+          "p99": 122.80254,
+          "max": 124.485
+        },
+        "totalMs": {
+          "count": 7,
+          "avg": 82.09771428571428,
+          "med": 73.397,
+          "p95": 116.70909999999998,
+          "p99": 123.11301999999998,
+          "max": 124.714
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "regional-aws-control": {
+        "n": 7,
+        "failures": 0,
+        "statusCounts": {
+          "302": 7
+        },
+        "exitCounts": {
+          "0": 7
+        },
+        "dnsMs": {
+          "count": 7,
+          "avg": 5.746428571428572,
+          "med": 5.877000000000001,
+          "p95": 6.5546999999999995,
+          "p99": 6.67254,
+          "max": 6.702
+        },
+        "connectMs": {
+          "count": 7,
+          "avg": 14.03257142857143,
+          "med": 11.661,
+          "p95": 21.5557,
+          "p99": 21.73834,
+          "max": 21.784000000000002
+        },
+        "tlsMs": {
+          "count": 7,
+          "avg": 26.49757142857143,
+          "med": 25.558999999999997,
+          "p95": 33.5154,
+          "p99": 33.68628,
+          "max": 33.729
+        },
+        "ttfbMs": {
+          "count": 7,
+          "avg": 31.299714285714284,
+          "med": 29.898999999999997,
+          "p95": 37.8013,
+          "p99": 38.04826,
+          "max": 38.11
+        },
+        "totalMs": {
+          "count": 7,
+          "avg": 31.324,
+          "med": 29.922,
+          "p95": 37.8241,
+          "p99": 38.07202,
+          "max": 38.134
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      },
+      "wifi-gateway": {
+        "n": 15,
+        "failures": 0,
+        "statusCounts": {
+          "Success": 15
+        },
+        "successRttMs": {
+          "count": 15,
+          "avg": 1.6,
+          "med": 1.0,
+          "p95": 3.1999999999999957,
+          "p99": 5.439999999999998,
+          "max": 6
+        },
+        "failureTimes": [],
+        "crossBoundaryCompletions": 0
+      }
+    }
+  },
+  "resourceLimitations": "Docker stats and read-only cgroup/proc snapshots every ~3s, not full-host perf counters or packet capture; snapshots miss first/last seconds; process CPU only where unprivileged access returned values",
+  "sourceIntegrity": [
+    {
+      "path": "C:\\Users\\sirip\\Documents\\NUS\\Sem1\\GroupProject\\iss-groupbuy-team8\\perf\\k6\\browse.js",
+      "before": "68B3D6624802A145B211521E3A8B44A9DA0AF230EC1B0B6101225488134186F4",
+      "after": "68B3D6624802A145B211521E3A8B44A9DA0AF230EC1B0B6101225488134186F4"
+    },
+    {
+      "path": "C:\\Users\\sirip\\Documents\\NUS\\Sem1\\GroupProject\\iss-groupbuy-team8\\perf\\k6\\lib.mjs",
+      "before": "E58D67966F8ED2945E44D60931A495DDDF24A926551340FEF10341129995D267",
+      "after": "E58D67966F8ED2945E44D60931A495DDDF24A926551340FEF10341129995D267"
+    },
+    {
+      "path": "C:\\Users\\sirip\\Documents\\NUS\\Sem1\\GroupProject\\iss-groupbuy-team8\\perf\\k6\\scaling.mjs",
+      "before": "2DDE635653A10C0F6C56B3319B93A9C7836F1658CE7D2C22ED67C26C7D02209D",
+      "after": "2DDE635653A10C0F6C56B3319B93A9C7836F1658CE7D2C22ED67C26C7D02209D"
+    },
+    {
+      "path": "C:\\Users\\sirip\\AppData\\Local\\Temp\\opencode\\swe5001-rerun-prep-20261111\\r3-network-diagnosis-20261111\\static-concurrency.js",
+      "before": "D34CDD4FE537F5EA4E56A76C2B99FC49095F47C393C491B64C1A20273D24FD94",
+      "after": "D34CDD4FE537F5EA4E56A76C2B99FC49095F47C393C491B64C1A20273D24FD94"
+    }
+  ],
+  "allCapturedSourcesUnchanged": true
+}

@@ -1,0 +1,268 @@
+{
+  "checkedAtUtc": "2026-11-11T08:56:14.067081+00:00",
+  "samples": 160,
+  "first": "2026-11-11T08:15:11.948199Z",
+  "last": "2026-11-11T08:55:11.858797Z",
+  "maximumGapSeconds": 37.943512,
+  "sampleGapsWithin45Seconds": true,
+  "reportedGapMatchesCollector": true,
+  "bracketsExecution": true,
+  "sampleCountMatchesCollector": true,
+  "sampledRevisionStable": true,
+  "unstableRevisionOrDeploymentSamples": [],
+  "countChanges": [
+    {
+      "observedAt": "2026-11-11T08:15:11.948199Z",
+      "desired": 2,
+      "running": 2,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T08:15:41.981693Z",
+      "desired": 1,
+      "running": 1,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T08:26:58.628530Z",
+      "desired": 2,
+      "running": 1,
+      "pending": 1
+    },
+    {
+      "observedAt": "2026-11-11T08:27:42.105204Z",
+      "desired": 2,
+      "running": 2,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T08:29:13.093545Z",
+      "desired": 3,
+      "running": 2,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T08:29:27.030242Z",
+      "desired": 3,
+      "running": 2,
+      "pending": 1
+    },
+    {
+      "observedAt": "2026-11-11T08:29:57.084753Z",
+      "desired": 4,
+      "running": 2,
+      "pending": 2
+    },
+    {
+      "observedAt": "2026-11-11T08:30:12.092153Z",
+      "desired": 4,
+      "running": 3,
+      "pending": 1
+    },
+    {
+      "observedAt": "2026-11-11T08:30:42.033399Z",
+      "desired": 4,
+      "running": 4,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T08:30:57.030375Z",
+      "desired": 5,
+      "running": 4,
+      "pending": 1
+    },
+    {
+      "observedAt": "2026-11-11T08:31:27.032731Z",
+      "desired": 5,
+      "running": 5,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T08:33:12.039321Z",
+      "desired": 6,
+      "running": 5,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T08:33:27.061346Z",
+      "desired": 6,
+      "running": 5,
+      "pending": 1
+    },
+    {
+      "observedAt": "2026-11-11T08:34:27.041922Z",
+      "desired": 6,
+      "running": 6,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T08:52:41.935292Z",
+      "desired": 5,
+      "running": 5,
+      "pending": 0
+    }
+  ],
+  "originalAnalyzerCountBoundViolations": [],
+  "unhealthyTaskReplacementEvents": [],
+  "timerCompleted": true,
+  "collectionComplete": false,
+  "collectorErrorsPreserved": [
+    {
+      "at": "2026-11-11T08:26:18.578867Z",
+      "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+    }
+  ],
+  "scalingActivities": [
+    {
+      "activityId": "040d58b7-b019-4bd1-8e3d-a2a9e8f50e67",
+      "at": "2026-11-11T08:26:44.977000+00:00",
+      "status": "Successful",
+      "policy": "blocbuy-swe5001-commerce-requests-per-target",
+      "description": "Setting desired count to 2."
+    },
+    {
+      "activityId": "843fec53-41fe-42f1-9d45-16cc04affc95",
+      "at": "2026-11-11T08:29:11.212000+00:00",
+      "status": "Overridden",
+      "policy": "blocbuy-swe5001-commerce-cpu-headroom",
+      "description": "Setting desired count to 3."
+    },
+    {
+      "activityId": "92d27207-182a-45e2-a8b4-57deb537bf83",
+      "at": "2026-11-11T08:29:44.971000+00:00",
+      "status": "Successful",
+      "policy": "blocbuy-swe5001-commerce-requests-per-target",
+      "description": "Setting desired count to 4."
+    },
+    {
+      "activityId": "81e4e423-f7d2-4cac-b454-48becaafaed7",
+      "at": "2026-11-11T08:30:44.952000+00:00",
+      "status": "Successful",
+      "policy": "blocbuy-swe5001-commerce-requests-per-target",
+      "description": "Setting desired count to 5."
+    },
+    {
+      "activityId": "110f3e8c-2088-42e9-8378-df37f39b585c",
+      "at": "2026-11-11T08:33:11.249000+00:00",
+      "status": "Successful",
+      "policy": "blocbuy-swe5001-commerce-cpu-headroom",
+      "description": "Setting desired count to 6."
+    }
+  ],
+  "normalizationBlockers": [
+    {
+      "activityId": "843fec53-41fe-42f1-9d45-16cc04affc95",
+      "reason": "Non-successful activity; original retained for review"
+    }
+  ],
+  "connectionLogs": {
+    "identity-svc": {
+      "collectionWindowMatchedLogEvents": 0,
+      "loadWindowMatchedLogEvents": 0,
+      "loadWindowCategoryCounts": {}
+    },
+    "commerce-svc": {
+      "collectionWindowMatchedLogEvents": 0,
+      "loadWindowMatchedLogEvents": 0,
+      "loadWindowCategoryCounts": {}
+    },
+    "notification-svc": {
+      "collectionWindowMatchedLogEvents": 0,
+      "loadWindowMatchedLogEvents": 0,
+      "loadWindowCategoryCounts": {}
+    }
+  },
+  "metricReadbacks": [
+    {
+      "id": "m0",
+      "label": "AWS/ApplicationELB/RequestCount/Sum/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m1",
+      "label": "AWS/ApplicationELB/RequestCountPerTarget/Sum/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m2",
+      "label": "AWS/ApplicationELB/TargetResponseTime/p50/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 31
+    },
+    {
+      "id": "m3",
+      "label": "AWS/ApplicationELB/TargetResponseTime/p95/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 31
+    },
+    {
+      "id": "m4",
+      "label": "AWS/ApplicationELB/TargetResponseTime/p99/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 31
+    },
+    {
+      "id": "m5",
+      "label": "AWS/ApplicationELB/HTTPCode_Target_5XX_Count/Sum/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 1
+    },
+    {
+      "id": "m6",
+      "label": "AWS/RDS/DatabaseConnections/Maximum/blocbuy-swe5001",
+      "status": "Complete",
+      "points": 42
+    },
+    {
+      "id": "m7",
+      "label": "AWS/RDS/CPUUtilization/Average/blocbuy-swe5001",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m8",
+      "label": "AWS/RDS/FreeableMemory/Minimum/blocbuy-swe5001",
+      "status": "Complete",
+      "points": 42
+    },
+    {
+      "id": "m9",
+      "label": "AWS/ECS/CPUUtilization/Average/identity-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m10",
+      "label": "AWS/ECS/MemoryUtilization/Average/identity-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m11",
+      "label": "AWS/ECS/CPUUtilization/Average/commerce-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m12",
+      "label": "AWS/ECS/MemoryUtilization/Average/commerce-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m13",
+      "label": "AWS/ECS/CPUUtilization/Average/notification-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m14",
+      "label": "AWS/ECS/MemoryUtilization/Average/notification-svc",
+      "status": "Complete",
+      "points": 41
+    }
+  ],
+  "limits": "Diagnostic coverage does not override the original collector receipt or committed analyser. Log counts are matching events, not distinct failed requests. Offered load/scale-out does not prove separate 80%-linearity."
+}

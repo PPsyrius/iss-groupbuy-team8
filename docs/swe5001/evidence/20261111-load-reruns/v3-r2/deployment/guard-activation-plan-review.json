@@ -1,0 +1,13 @@
+{
+  "planSha256": "d5f0bf9ed0f286220b947b1501e9c554081316c867b07a3f1c7fb14feb61c02c",
+  "changes": [
+    {
+      "address": "aws_cloudwatch_metric_alarm.commerce_cpu_headroom[0]",
+      "actions": [
+        "update"
+      ],
+      "attribute": "actions_enabled false to true"
+    }
+  ],
+  "review": "pass"
+}

@@ -1,0 +1,355 @@
+{
+  "schema": 1,
+  "runLabel": "20261110-v3-194543",
+  "awsArchiveSha256": "324dcb7022acf4821dc0d716c0ebfe2ae678afa9014a60363a96fdc75bdd4f4d",
+  "interval": {
+    "start": "2026-11-09T19:45:44.366Z",
+    "end": "2026-11-09T20:15:47.809Z"
+  },
+  "ecs": {
+    "samples": 74,
+    "first": "2026-11-09T19:44:33.325543Z",
+    "last": "2026-11-09T20:03:47.522113Z",
+    "changes": [
+      {
+        "at": "2026-11-09T19:44:33.325543Z",
+        "desired": 1,
+        "running": 1,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T19:56:40.610091Z",
+        "desired": 2,
+        "running": 1,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T19:56:56.395191Z",
+        "desired": 2,
+        "running": 1,
+        "pending": 1,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T19:57:43.841393Z",
+        "desired": 2,
+        "running": 2,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T19:59:50.353698Z",
+        "desired": 3,
+        "running": 2,
+        "pending": 2,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T20:00:21.951928Z",
+        "desired": 3,
+        "running": 3,
+        "pending": 1,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T20:00:37.751391Z",
+        "desired": 3,
+        "running": 4,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T20:01:09.392655Z",
+        "desired": 3,
+        "running": 3,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T20:02:44.363600Z",
+        "desired": 4,
+        "running": 3,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T20:03:00.190991Z",
+        "desired": 4,
+        "running": 3,
+        "pending": 1,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      },
+      {
+        "at": "2026-11-09T20:03:47.522113Z",
+        "desired": 4,
+        "running": 4,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+      }
+    ],
+    "maximumSampledRunning": 4,
+    "incompleteAfter": "2026-11-09T20:03:47.522113Z",
+    "fullRunStabilityVerified": false
+  },
+  "automaticScaleOutActivities": [
+    {
+      "id": "4e9b09ac-8e5f-4653-8f8f-44960178d9d0",
+      "description": "Setting desired count to 2.",
+      "start": "2026-11-09T19:56:39.087000+00:00",
+      "end": "2026-11-09T19:57:40.531000+00:00",
+      "status": "Successful"
+    },
+    {
+      "id": "484c41be-af30-497f-9e82-fd85157785a0",
+      "description": "Setting desired count to 3.",
+      "start": "2026-11-09T19:59:39.060000+00:00",
+      "end": "2026-11-09T20:00:43.440000+00:00",
+      "status": "Successful"
+    },
+    {
+      "id": "1ca58f10-06ce-4d7d-aa5e-319595134249",
+      "description": "Setting desired count to 4.",
+      "start": "2026-11-09T20:02:39.080000+00:00",
+      "end": "2026-11-09T20:04:13.629000+00:00",
+      "status": "Successful"
+    }
+  ],
+  "metricWindowNote": "UTC CloudWatch one-minute buckets overlapping the test, including partial first/last buckets. Average CPU/maximum connections use their declared per-minute statistics; not instantaneous guarantees.",
+  "metrics": [
+    {
+      "id": "m0",
+      "label": "AWS/ApplicationELB/RequestCount/Sum/targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+      "status": "Complete",
+      "points": 31,
+      "min": 616,
+      "max": 36371
+    },
+    {
+      "id": "m1",
+      "label": "AWS/ApplicationELB/RequestCountPerTarget/Sum/targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+      "status": "Complete",
+      "points": 31,
+      "min": 522.25,
+      "max": 18289
+    },
+    {
+      "id": "m2",
+      "label": "AWS/ApplicationELB/TargetResponseTime/p50/targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+      "status": "Complete",
+      "points": 31,
+      "min": 0.0036434090290235507,
+      "max": 3.796598764919241
+    },
+    {
+      "id": "m3",
+      "label": "AWS/ApplicationELB/TargetResponseTime/p95/targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+      "status": "Complete",
+      "points": 31,
+      "min": 0.005875630990430077,
+      "max": 6.638552428817542
+    },
+    {
+      "id": "m4",
+      "label": "AWS/ApplicationELB/TargetResponseTime/p99/targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+      "status": "Complete",
+      "points": 31,
+      "min": 0.010958034053660163,
+      "max": 7.258142996053147
+    },
+    {
+      "id": "m5",
+      "label": "AWS/ApplicationELB/HTTPCode_Target_5XX_Count/Sum/targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+      "status": "Complete",
+      "points": 7,
+      "min": 2,
+      "max": 888
+    },
+    {
+      "id": "m6",
+      "label": "AWS/RDS/DatabaseConnections/Maximum/blocbuy-swe5001",
+      "status": "Complete",
+      "points": 31,
+      "min": 15,
+      "max": 30
+    },
+    {
+      "id": "m7",
+      "label": "AWS/RDS/CPUUtilization/Average/blocbuy-swe5001",
+      "status": "Complete",
+      "points": 31,
+      "min": 4.72673313548301,
+      "max": 23.977974303353914
+    },
+    {
+      "id": "m8",
+      "label": "AWS/RDS/FreeableMemory/Minimum/blocbuy-swe5001",
+      "status": "Complete",
+      "points": 31,
+      "min": 63393792,
+      "max": 85209088
+    },
+    {
+      "id": "m9",
+      "label": "AWS/ECS/CPUUtilization/Average/identity-svc",
+      "status": "Complete",
+      "points": 31,
+      "min": 0.8868244215846062,
+      "max": 1.5034851357340813
+    },
+    {
+      "id": "m10",
+      "label": "AWS/ECS/MemoryUtilization/Average/identity-svc",
+      "status": "Complete",
+      "points": 31,
+      "min": 30.46875,
+      "max": 30.76171875
+    },
+    {
+      "id": "m11",
+      "label": "AWS/ECS/CPUUtilization/Average/commerce-svc",
+      "status": "Complete",
+      "points": 31,
+      "min": 2.194016416867574,
+      "max": 100.10759099324544
+    },
+    {
+      "id": "m12",
+      "label": "AWS/ECS/MemoryUtilization/Average/commerce-svc",
+      "status": "Complete",
+      "points": 31,
+      "min": 20.662434895833332,
+      "max": 58.06884765625
+    },
+    {
+      "id": "m13",
+      "label": "AWS/ECS/CPUUtilization/Average/notification-svc",
+      "status": "Complete",
+      "points": 31,
+      "min": 1.720710813999176,
+      "max": 2.9910597006479898
+    },
+    {
+      "id": "m14",
+      "label": "AWS/ECS/MemoryUtilization/Average/notification-svc",
+      "status": "Complete",
+      "points": 31,
+      "min": 32.32421875,
+      "max": 33.040364583333336
+    }
+  ],
+  "connectionPatternMatches": {
+    "identity-svc": [],
+    "commerce-svc": [
+      {
+        "at": "2026-11-09T19:56:05.624Z",
+        "eventId": "40013204968982987457798076037361691944563358660890787840"
+      },
+      {
+        "at": "2026-11-09T19:56:05.725Z",
+        "eventId": "40013204971235362722849668974656799490100843172994809857"
+      },
+      {
+        "at": "2026-11-09T20:00:02.031Z",
+        "eventId": "40013210241035257606827101342511428166464278797186301952"
+      },
+      {
+        "at": "2026-11-09T20:00:02.319Z",
+        "eventId": "40013210247457872224003920807273715028987006910908661761"
+      },
+      {
+        "at": "2026-11-09T20:00:03.512Z",
+        "eventId": "40013210274062661245850954221123310694936685318706495488"
+      },
+      {
+        "at": "2026-11-09T20:00:03.513Z",
+        "eventId": "40013210274084961991049484844264846413209333680212475905"
+      }
+    ],
+    "notification-svc": []
+  },
+  "connectionPatternLimit": "One combined OR query for too many clients / remaining connection slots / Connection is not available; six commerce matches are not individually classified. Cannot claim no connection exhaustion errors.",
+  "recovery": {
+    "at": "2026-11-09T20:31:37.165948Z",
+    "targets": {
+      "ScalableTargets": [
+        {
+          "ServiceNamespace": "ecs",
+          "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+          "ScalableDimension": "ecs:service:DesiredCount",
+          "MinCapacity": 2,
+          "MaxCapacity": 6,
+          "RoleARN": "arn:aws:iam::402178232802:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService",
+          "CreationTime": "2026-11-09T17:39:35.591000+00:00",
+          "SuspendedState": {
+            "DynamicScalingInSuspended": false,
+            "DynamicScalingOutSuspended": false,
+            "ScheduledScalingSuspended": false
+          },
+          "ScalableTargetARN": "arn:aws:application-autoscaling:ap-southeast-1:402178232802:scalable-target/0ec5abd087886f6246ec83566c0b97889a53"
+        }
+      ]
+    },
+    "observation": {
+      "services": [
+        {
+          "name": "commerce-svc",
+          "status": "ACTIVE",
+          "desired": 2,
+          "running": 3,
+          "pending": 0,
+          "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32",
+          "deployments": [
+            {
+              "rolloutState": "COMPLETED"
+            }
+          ],
+          "events": [
+            {
+              "id": "2a98c11f-f214-4712-b4bc-c39b806a195a",
+              "createdAt": "2026-11-09T20:27:46.603000+00:00",
+              "message": "(service commerce-svc) has reached a steady state."
+            },
+            {
+              "id": "f33aca90-d232-4de2-a837-62a78f47d980",
+              "createdAt": "2026-11-09T20:27:46.529000+00:00",
+              "message": "(service commerce-svc, taskSet ecs-svc/9262474610117844056) has begun draining connections on 1 tasks."
+            },
+            {
+              "id": "4b80f7e2-93af-4c68-a372-a80208a1d5ec",
+              "createdAt": "2026-11-09T20:27:46.526000+00:00",
+              "message": "(service commerce-svc) deregistered 1 targets in (target-group arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3)"
+            },
+            {
+              "id": "75616921-5294-4de0-afd1-4bd312629505",
+              "createdAt": "2026-11-09T20:27:37.192000+00:00",
+              "message": "(service commerce-svc) has stopped 1 running tasks: (task c8eeffffb8504ba3b4c0bc782f8ebadf)."
+            },
+            {
+              "id": "428c6a8c-6bd0-4126-aa10-bad952bae4df",
+              "createdAt": "2026-11-09T20:04:51.320000+00:00",
+              "message": "(service commerce-svc) has reached a steady state."
+            }
+          ]
+        }
+      ],
+      "failures": [],
+      "observedAt": "2026-11-09T20:31:37.965144Z"
+    },
+    "problems": [],
+    "missingObservationsAfter": "2026-11-09T20:03:47.522113Z",
+    "collection": "Recovery of stored metrics/history only; no replacement observation timeline or load"
+  },
+  "assessment": {
+    "httpAcceptance": "failed independently of event-relative exclusions: errors 2.4219% and 89175 drops",
+    "scaling": "Successful 1 -> 2 -> 3 -> 4 target-tracking adjustments, with four running sampled at final observation; not continuous post-scale-out readiness evidence",
+    "bottleneck": "Commerce CPU saturation and multi-second ALB latency support an application-side overload contribution before capacity caught up. RDS sampled maximum 30 connections and average CPU below 24%; no proof of full causal isolation.",
+    "linearity": "Not established by this under-delivered ramp; no matched one/four-capacity experiment",
+    "floor": "Minimum two / maximum six and desired two restored; recovery snapshot running three, so settled two-task placement not verified",
+    "collector": "Process absent; last observation 20:03:47 UTC, empty log, no automatic archive/restoration. Idle shutdown plausible but unproven; stored metrics/history recovered without replacement load",
+    "acceptanceComplete": false,
+    "repeatPerformed": false,
+    "teardownPerformed": false
+  }
+}

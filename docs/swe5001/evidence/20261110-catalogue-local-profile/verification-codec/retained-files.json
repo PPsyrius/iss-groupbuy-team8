@@ -1,0 +1,33 @@
+{
+  "kind": "codec-candidate-local-full-verification",
+  "exitCode": 0,
+  "cacheCoverageComplete": true,
+  "files": [
+    {
+      "path": "contract-summary.json",
+      "bytes": 494,
+      "sha256": "d0a1e19f92287c8e2d673db809138ba1a5e231c4bb9c84515bacff4bc1ef555e"
+    },
+    {
+      "path": "full-verification-summary.json",
+      "bytes": 84713,
+      "sha256": "e0ed489f2be51b7503751ef7ac30419476f3ccb7c9c52bb7d023eda41442ce3d"
+    },
+    {
+      "path": "inspect-codec-verification.py",
+      "bytes": 4829,
+      "sha256": "1110a93c43d5041aa94d4c681784f13137aa82ac1ed3ef188e8c30d9735e01a8"
+    },
+    {
+      "path": "run-codec-full-verification.sh",
+      "bytes": 2327,
+      "sha256": "e933bc26bf13d7798dd1c12e007bce4ea61d3767138aac821c59b234e37af7c6"
+    },
+    {
+      "path": "source-snapshot.json",
+      "bytes": 848,
+      "sha256": "454af261d83ec67c6262e571e8aa4a28ba8b718dcbe483f1e432ff63c9fb2100"
+    }
+  ],
+  "limits": "All failures/coverage gaps remain explicit. No hosted CI/Sonar or performance acceptance claimed."
+}

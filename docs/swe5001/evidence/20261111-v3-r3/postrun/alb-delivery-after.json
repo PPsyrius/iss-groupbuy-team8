@@ -1,0 +1,211 @@
+{
+  "at": "2026-11-11T11:16:29.545903+00:00",
+  "bucket": "blocbuy-swe5001-alb-logs-402178232802",
+  "objects": [
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1035Z_47.131.83.97_27gww4n2.log.gz",
+      "bytes": 473,
+      "sha256": "39c4aa7a1ff152027613829d1c4caf6da6711c9239134a54a0bd9ac659a1a623"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1035Z_52.74.35.182_2xvu2jxx.log.gz",
+      "bytes": 398,
+      "sha256": "78171d098a405d3fcc32a7d4a6a055ba660307301e3a10a177b92285ca4e66cd"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1040Z_47.131.83.97_74xq7d3b.log.gz",
+      "bytes": 30711,
+      "sha256": "5491d1bb7d0fb8fff1a184880d2b62ec1d73aece51010f542504df28b8e710f2"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1040Z_52.74.35.182_4u7qygf9.log.gz",
+      "bytes": 31828,
+      "sha256": "1069265e68403cad2b76e0ceec8b816683ff9dd5ce290924f901777d4f3761b4"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1045Z_47.131.83.97_6u4pcq13.log.gz",
+      "bytes": 886733,
+      "sha256": "943f30e3cac48485f77ebbdbbb018f459f8ad9c85657a5a0c7b524e68c3d17ad"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1045Z_52.74.35.182_1qjhb5em.log.gz",
+      "bytes": 897132,
+      "sha256": "e3715238da99cb4f22495ce5089cca3f6b7b78e9f48a8c41a461d6a7249c560a"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_47.131.83.97_2lfn7mkj.log.gz",
+      "bytes": 1067675,
+      "sha256": "c7af323e3407693b5e9dcb6e9a53782555f5885231e6f0a065285c1b5bcee81e"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_47.131.83.97_2q8pnqra.log.gz",
+      "bytes": 123257,
+      "sha256": "3b6b104f93ee7b1529c2e2d4d295decaee6e1fdcb1712280d03ef3dc03da9364"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_47.131.83.97_5wrky3jj.log.gz",
+      "bytes": 120656,
+      "sha256": "df7f00f6be71db270cabfb8300df55c9dd7ac2aebac4b7bea77ed850cc7b8720"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_47.131.83.97_vsgzr301.log.gz",
+      "bytes": 968718,
+      "sha256": "eb1a9c48659b66caeddeb2192d1da907586692b46e9052b85b8b71faecfa0434"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_47.131.83.97_wvv91if3.log.gz",
+      "bytes": 85093,
+      "sha256": "bf45178018dfd4149312d793711b17af7a3d86df3e552a0693e4426472a781e4"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_52.74.35.182_3dxlja38.log.gz",
+      "bytes": 81456,
+      "sha256": "fb1dd3695714b168b897100b5e6821daf2e21ece457d3b3ffae0b91f87c61b48"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_52.74.35.182_4kx6elvt.log.gz",
+      "bytes": 954215,
+      "sha256": "1ceb2c48f641930865ba3217af80626eb22dedffdbf81456b209048b0ba72e8d"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_52.74.35.182_m029tat0.log.gz",
+      "bytes": 119954,
+      "sha256": "ab7b5cf80c34ba1ebda9d77a262dd3e4f4e85334ba39bc4d4801fa01e35ec9c7"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_52.74.35.182_rlt6yh56.log.gz",
+      "bytes": 116821,
+      "sha256": "6546d93054173d6a952222120650f59f02ebafc658524f2b4478e5a5a0fabf1a"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1050Z_52.74.35.182_y6ps0bz5.log.gz",
+      "bytes": 1055049,
+      "sha256": "f0cd30d41e8578a41ef64ef3c4ba3eab756c4247a922f234cca4cce7b5d97cc6"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_47.131.83.97_234hh699.log.gz",
+      "bytes": 1901224,
+      "sha256": "917eee096c7ec2ce3932bd323acda587ecade28335b40f3b4ba3c208fe7c3e66"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_47.131.83.97_2feuazg1.log.gz",
+      "bytes": 186800,
+      "sha256": "8068c44e6f026d2a580c8f4c0272e0cf6d894a5b5016ceede850da8b5606577b"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_47.131.83.97_3ifi2tu1.log.gz",
+      "bytes": 179794,
+      "sha256": "d10ca19a31f30eca1e9f2476a0bf008af4b868edb30a45e8bd3f5bfc4b0b4c97"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_47.131.83.97_5r91pyj5.log.gz",
+      "bytes": 1824997,
+      "sha256": "30f33c69c061d3d9dc7f247118ce7bd25c1d74ed690923c2663b34d88bec6454"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_47.131.83.97_ecwn5rbk.log.gz",
+      "bytes": 89274,
+      "sha256": "68d557c50f02b96aa8456ddfd376b548fd17d9ac998075759675149da7961936"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_52.74.35.182_36cpe2cd.log.gz",
+      "bytes": 1885677,
+      "sha256": "5c6dd1c32453f18415bbff3a221cecd1ea09a09891d1f6e36b93eaa09014eff4"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_52.74.35.182_5b2e2o3u.log.gz",
+      "bytes": 184495,
+      "sha256": "8860d8878c5b35c7ff4757a82349fbeca8783e74786542a1d8f2c56a00294c9a"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_52.74.35.182_5fl1krld.log.gz",
+      "bytes": 1835650,
+      "sha256": "1bee0dca3b3ab3bf451951bd5083415863690087c273dc0efb4f09eda2edf750"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_52.74.35.182_5sd5wehz.log.gz",
+      "bytes": 88606,
+      "sha256": "25bde501143d7c1b9cb7ed7c48181c5a2de0d1ff5b91e2bd99338143d30a9a48"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1055Z_52.74.35.182_dkovwe9r.log.gz",
+      "bytes": 186319,
+      "sha256": "8c2c32280db3e0a7152ace5e8ad35088cb7da954d3ee9d2d2d231e9bdba5a13e"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1100Z_47.131.83.97_5cygkcwz.log.gz",
+      "bytes": 4936485,
+      "sha256": "8c57983f4ebc2da34fd36914bf6836fa09b5afc31f7432c8a6a62d5d4a0ab0ed"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1100Z_52.74.35.182_3fuvas44.log.gz",
+      "bytes": 4939340,
+      "sha256": "dc625789da0bf913c98fdbca3d9c3cbc77f003963ea171a6fec3b4239feebe73"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_47.131.83.97_1kxgjo6h.log.gz",
+      "bytes": 1162870,
+      "sha256": "131c67eb12e73d261cdff4d49b93bc90971f0b10c3162486469f59b8898cb741"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_47.131.83.97_3ng902v4.log.gz",
+      "bytes": 583610,
+      "sha256": "63bdd6a981f4ce735cad676fa360de4726086f68c26493591930142ec6a8ad4a"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_47.131.83.97_66qm9rj6.log.gz",
+      "bytes": 186602,
+      "sha256": "14a7ac16069753bed2363373d38658a0b14b29ae6f7692c020422834650626fb"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_47.131.83.97_6czgrufh.log.gz",
+      "bytes": 2805665,
+      "sha256": "17fe9d5c877b267dab97d80bac57d4443c1fe5a25cbe5ab08d3f60a21464bbdd"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_47.131.83.97_saxaigrx.log.gz",
+      "bytes": 183231,
+      "sha256": "faad94f073d37e96644dc253d501ef96f0b5fdcf193a7550d4a895be43267fba"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_52.74.35.182_2zg5wek7.log.gz",
+      "bytes": 1141857,
+      "sha256": "a6c7d192fe118641884c30b58b1f1f7581f8a29be4355918a07ee8f6b2cc2107"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_52.74.35.182_3q3pv4oi.log.gz",
+      "bytes": 186284,
+      "sha256": "2b59f8f2665880b93267011987e4f4228fae68821f7ad609d2a2b7953adc7a18"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_52.74.35.182_3sarqz88.log.gz",
+      "bytes": 2786410,
+      "sha256": "74367f57d12c8842bcb7de174e48be061446c0bb5cab986888744a26e29ba89f"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_52.74.35.182_49v1y7ku.log.gz",
+      "bytes": 600360,
+      "sha256": "3483ac6f0ebbd67cf1f8011d5dee10d8c39bcc0f223db1d39c37319ae724d46f"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1105Z_52.74.35.182_5ser7fxf.log.gz",
+      "bytes": 181813,
+      "sha256": "d20c8ab83f56fd4632e513ff344ea32f2a9c76857d89b22c49de1503ca3c3971"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1110Z_47.131.83.97_1mmi3tf3.log.gz",
+      "bytes": 1940209,
+      "sha256": "dc3c4fda007db0b5c664c3503c7e90a2b7bac3a0964c6f343eee1fb389ddca0d"
+    },
+    {
+      "key": "r3/AWSLogs/402178232802/elasticloadbalancing/ap-southeast-1/2026/11/11/402178232802_elasticloadbalancing_ap-southeast-1_app.blocbuy-swe5001.643fcaad1990ae88_20261111T1110Z_52.74.35.182_1b1i2vrs.log.gz",
+      "bytes": 1928590,
+      "sha256": "972c96943e78141d4cdcf09e8dadc2214c502b1684f75c0533a298ebd8e54129"
+    }
+  ],
+  "records": 725901,
+  "rawLogsRetainedPrivatelyInS3": true,
+  "clientIpUrlUserAgentRetained": false,
+  "deliveryVerified": true,
+  "limits": "ALB delivery is best effort and delayed; this is not proof of complete request capture."
+}

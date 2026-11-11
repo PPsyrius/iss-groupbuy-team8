@@ -1,0 +1,12 @@
+{
+  "target": "docs/swe5001/report/main.typ, including Appendix A",
+  "runtime": "Docker; existing Linux Typst binary, existing fonts/package cache; network disabled",
+  "cpuLimit": 4,
+  "memoryLimitBytes": 8589934592,
+  "exit": 137,
+  "oomKilled": true,
+  "startedAtUtc": "2026-11-11T09:06:40.355491757Z",
+  "finishedAtUtc": "2026-11-11T09:08:36.832214445Z",
+  "compilerDiagnostics": "No diagnostic text retained before cgroup OOM kill; original stdout/stderr and exit receipt preserved.",
+  "disposition": "Full-report build remains failed. A separate chapters-1-to-6 compile is a narrower check, not a repaired full build. No other owner's appendix was edited, no repeated full build or unbounded resource escalation was launched."
+}

@@ -1,0 +1,26 @@
+{
+  "kind": "codec-candidate-source-snapshot",
+  "sources": [
+    {
+      "path": "formatted-cache-codec-main.java",
+      "bytes": 9629,
+      "sha256": "6539f53a8014a493a66f101bbacca857de3977a37fdb164bf665195f5f53d556"
+    },
+    {
+      "path": "formatted-cache-codec-test.java",
+      "bytes": 35263,
+      "sha256": "2dfc3e1e1122313d62bc3d89d3f6a8f0692acd43f69a6f4a302854bd2d14f381"
+    },
+    {
+      "path": "formatted-cache-codec-it.java",
+      "bytes": 13108,
+      "sha256": "94ea103b25dc410411efeef9ae285c354cbde79c0e55f9137559acfca51732ab"
+    }
+  ],
+  "artifact": {
+    "path": "commerce-cache-codec.jar",
+    "bytes": 90952984,
+    "sha256": "0cdf2416f7784331542f21d977d80d9c9208863965d4948716ab2b9814090bff"
+  },
+  "limits": "Only this exact snapshot is covered. Static success does not imply any runtime/health/AWS gate passed."
+}

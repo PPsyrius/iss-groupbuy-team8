@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "source": "operator-pasted CloudShell stderr and observer exit receipt",
+  "observerExitCode": 255,
+  "errorCategory": "AWS CLI container-role credential retrieval failed",
+  "metadataHttpStatus": 500,
+  "errorMessage": "Error retrieving metadata: Received non 200 response 500 from container metadata",
+  "credentialExpiryConfirmed": false,
+  "failureTimestamp": null,
+  "lastObservationTimestamp": null,
+  "observationsTransferred": false,
+  "cloudShellResultsDirectory": "/home/cloudshell-user/swe5001-v2-20261111-xFD9R7",
+  "loadIntervalUtc": {
+    "firstBrowseCompletion": "2026-11-11T04:34:23.518538101Z",
+    "lastBrowseCompletion": "2026-11-11T04:44:23.291424116Z"
+  },
+  "disposition": "HTTP gates passed; full baseline acceptance remains pending partial-observation coverage review. No repeat, V3 or teardown authorised.",
+  "preparationGap": "CloudShell account access was verified, but remaining credential validity was not measured before the short V2 observer."
+}

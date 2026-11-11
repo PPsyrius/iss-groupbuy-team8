@@ -1,0 +1,176 @@
+{
+  "kind": "local-jit-diagnostic-diagnostic-not-AWS-acceptance",
+  "limits": "Failures remain failures; no startup/capacity/linearity or hosted quality-gate acceptance follows.",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 662,
+      "sha256": "f72f2e2635a2acf885177bf938c7d028d906fd20372ab29499a51fa9bc4a344e"
+    },
+    {
+      "path": "analysis.json",
+      "bytes": 108130,
+      "sha256": "f6c50f9c912420e6de21f51396015372ad962c130baa810b42d4c19d4115867f"
+    },
+    {
+      "path": "cases/jit-base-control/audit.json",
+      "bytes": 11261,
+      "sha256": "4a2b0b409a6de67a8c8f59ad64e49a77bab4471ea25743d9a318cfaa69fec7d2"
+    },
+    {
+      "path": "cases/jit-base-control/context.json",
+      "bytes": 782,
+      "sha256": "6758b6c654bb6be9d6875719329bf8bed6c7a3b3380efe4027bc6ae706f242e9"
+    },
+    {
+      "path": "cases/jit-base-control/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/jit-base-control/summary.json",
+      "bytes": 6825,
+      "sha256": "0c6435d116103f06eb75574518405847c3673c9ffd5ca998e21f6a7dd8101cee"
+    },
+    {
+      "path": "cases/jit-base-warm400/audit.json",
+      "bytes": 12246,
+      "sha256": "18ba00d0ed69583f18f3776fb91a73778d3bf51f5326bf3fb2455337ecb910d1"
+    },
+    {
+      "path": "cases/jit-base-warm400/context.json",
+      "bytes": 782,
+      "sha256": "65160f50f2260090639aac411e3b1f3f5c7642e745b1911e336dee872247c881"
+    },
+    {
+      "path": "cases/jit-base-warm400/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/jit-base-warm400/summary.json",
+      "bytes": 6897,
+      "sha256": "94735daebb31e1cbc87565f930d27a046049a14fdc2942a7286302c766b59f7a"
+    },
+    {
+      "path": "cases/jit-base-warmup/audit.json",
+      "bytes": 19530,
+      "sha256": "cb37d9920ff0a28b6bf9344e92fe953d5c27491558c8c125cb8a5d352a582a00"
+    },
+    {
+      "path": "cases/jit-base-warmup/context.json",
+      "bytes": 782,
+      "sha256": "d69ad00284926f032407dca313a117591a95c72f8d54548a45b83dcb6b6d746f"
+    },
+    {
+      "path": "cases/jit-base-warmup/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/jit-base-warmup/summary.json",
+      "bytes": 6920,
+      "sha256": "d81c94e35cf4700d2b6a87a327d73528c00196d5564299f1dd5cd333cb27d3fa"
+    },
+    {
+      "path": "cases/jit-scope-control/audit.json",
+      "bytes": 12707,
+      "sha256": "5aacff29f2b1ded771ca658d86cfd591cbfdbd7c9e1a0f93f4541683dbd66770"
+    },
+    {
+      "path": "cases/jit-scope-control/context.json",
+      "bytes": 784,
+      "sha256": "b8b33e798b6861b4fd9bab66c3b13add1c997fd2fa84fd9c85a01ddeb520b556"
+    },
+    {
+      "path": "cases/jit-scope-control/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/jit-scope-control/summary.json",
+      "bytes": 6865,
+      "sha256": "48a713b21f84fb88cbfaf0a9463ed4cfb7d39abbb522c2ea5bca8df4125a59be"
+    },
+    {
+      "path": "cases/jit-scope-warm400/audit.json",
+      "bytes": 12909,
+      "sha256": "bef6b2f2dfbb5e22b2ae39e8aeefdd274f305dfb7109a3c8e3337cf6a5dda914"
+    },
+    {
+      "path": "cases/jit-scope-warm400/context.json",
+      "bytes": 784,
+      "sha256": "72e5a4f9446fcb6217dc846988c5900300d99e49fc34c77c926812b0718315b8"
+    },
+    {
+      "path": "cases/jit-scope-warm400/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/jit-scope-warm400/summary.json",
+      "bytes": 6918,
+      "sha256": "63ef7958c69da219cb0bf2ab8344044c1843ec7d0d8abb7d287c03a46b2e9a7c"
+    },
+    {
+      "path": "cases/jit-scope-warmup/audit.json",
+      "bytes": 21070,
+      "sha256": "a39fb573b1e70a2f11ba48dc8ba4c810aaf96cb07426c76732d57b44bb132417"
+    },
+    {
+      "path": "cases/jit-scope-warmup/context.json",
+      "bytes": 784,
+      "sha256": "4d6af23b1a97ad9a542a8a0c9a279459f47ee5c5376cb4cc192a5c687e646eb6"
+    },
+    {
+      "path": "cases/jit-scope-warmup/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/jit-scope-warmup/summary.json",
+      "bytes": 6877,
+      "sha256": "2e58e749bb6e9eadc4bc7ee56f4b18f2cdbd09b0e5a5b4ac27302ed963b65fce"
+    },
+    {
+      "path": "jit-base-jfr-analysis.json",
+      "bytes": 35139,
+      "sha256": "ae37806fb98fe17504eccc2fcc20ad391b024d4a8d09d2d23262087cc1c35eb1"
+    },
+    {
+      "path": "jit-scope-jfr-analysis.json",
+      "bytes": 35044,
+      "sha256": "f1d9d133b3d8bb8e4118087df4831277dab0fdb0e4fd2ada0368951277a57c5d"
+    },
+    {
+      "path": "private-artifacts.json",
+      "bytes": 2158,
+      "sha256": "25a15af53056f1034f9462d05cd3dc1749e4c294df10761908c272ee9ab61d27"
+    },
+    {
+      "path": "receipts.json",
+      "bytes": 4899,
+      "sha256": "f761a6c4cb40c375e56915359c84a5013145f6a78e45e66cef3f48949af3da20"
+    },
+    {
+      "path": "scripts/JfrFailureSummary.java",
+      "bytes": 7582,
+      "sha256": "bf5702df7f7efa9fd534db0a1ce94f5bd054e3e6c8d43f05cfcf5e49ca423a2b"
+    },
+    {
+      "path": "scripts/analyze-jit-diagnostic.py",
+      "bytes": 7167,
+      "sha256": "1c9b0623cd3d4c3c80f4e485783b6ee39f05c355cbf8152e949d8753b2a40562"
+    },
+    {
+      "path": "scripts/driver-resources.js",
+      "bytes": 2636,
+      "sha256": "7602510ba95b8de04b41405558662904cb73ca2fffdf7a5919bd1025d7222b45"
+    },
+    {
+      "path": "scripts/run-jit-diagnostic.mjs",
+      "bytes": 15236,
+      "sha256": "882ab859f34d1fa6d5e0b1254e6e8b677f8c42ae06eccb8af5edd00e008d95a4"
+    }
+  ]
+}

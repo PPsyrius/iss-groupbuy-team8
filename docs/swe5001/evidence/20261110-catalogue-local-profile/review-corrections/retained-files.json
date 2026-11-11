@@ -1,0 +1,26 @@
+{
+  "kind": "reviewed-source-and-metric-corrections",
+  "files": [
+    {
+      "path": "analyze-backoff-v3-corrected.py",
+      "bytes": 7368,
+      "sha256": "61b96d57fd5350ade70086cd1a9feaf55110c36cd34160d5898fea05a84e75fa"
+    },
+    {
+      "path": "backoff-v3-gc-max-correction.json",
+      "bytes": 27236,
+      "sha256": "d6801176ca8c73be17ab7273063d00bd4d00f5e189fda38b3b25fe75f7a9fd12"
+    },
+    {
+      "path": "correct-backoff-gc-max.py",
+      "bytes": 8860,
+      "sha256": "ecb10c0da6ebe38af85286cc4585c29c4fe73488a57706972f5810ed8e5a9461"
+    },
+    {
+      "path": "race-red-green.json",
+      "bytes": 2013,
+      "sha256": "3d488d391204ab0beef22b07c49295fdff169587cd4b17a9d38daddfbc1e1bff"
+    }
+  ],
+  "limits": "Original evidence remains immutable. GC maxima correction changes derived gauge interpretation only, never request counts, latency or gate outcomes."
+}

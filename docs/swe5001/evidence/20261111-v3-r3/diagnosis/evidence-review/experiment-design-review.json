@@ -1,0 +1,99 @@
+{
+  "reviewDate": "2026-11-11",
+  "scope": "Additive read-only experiment-design review; no live workload or cloud changes; GitHub issue GETs only",
+  "outcome": "Linearity remains unestablished; denominator and comparison protocol need owner decision. Current dynamic V3 is not a guaranteed one/four-task comparison; the criterion is not established to be universally impossible.",
+  "sourceOfAcceptance": "docs/swe5001/impl-verification-observability.md:78-97",
+  "supportingSources": [
+    "perf/k6/SCALING.md:8,22",
+    "perf/k6/README.md:76,110-116",
+    "docs/swe5001/http-load-retest.md:109-113",
+    "docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md:23-40"
+  ],
+  "githubReadbacks": [
+    {
+      "issue": 458,
+      "state": "OPEN",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/458",
+      "interpretation": "Incorporates verification-plan scenarios/thresholds; abbreviated checkbox names error rate and visible scale-out, not an exact linearity formula; no denominator clarification or waiver in retrieved comment."
+    },
+    {
+      "issue": 591,
+      "state": "OPEN",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/591",
+      "interpretation": "Requires metric/threshold definitions, offered versus achieved distinction, accurate failed/inconclusive labels and limitations. No rerun/infrastructure authorization."
+    },
+    {
+      "issue": 457,
+      "state": "CLOSED",
+      "url": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/457",
+      "interpretation": "Infrastructure/dashboard/two-AZ placement closure is not a measured linearity pass."
+    }
+  ],
+  "criterion": {
+    "wording": "Achieved throughput at four tasks at least 80% of ideal scaling from one task",
+    "conventionalFormulaRequiringOwnerRatification": "efficiency = T4 / (4 * T1) >= 0.8",
+    "equivalentRequirement": "T4 >= 3.2 * T1",
+    "T1": "Comparable measured achieved throughput with exactly one current commerce task; capacity versus finite workload reference is not specified precisely enough",
+    "T4": "Comparable measured achieved throughput with exactly four healthy routable current commerce tasks",
+    "separateFromDynamicAnalyzerGates": true,
+    "stillPartOfOverallV3EvidenceClosure": true,
+    "separateExperimentExplicitlyFullySpecified": false
+  },
+  "currentWorkload": {
+    "candidateKneeRps": 200,
+    "peakOfferedRps": 600,
+    "candidateMeaning": "Historical monolith largest tested passing rate; saturation unobserved; not current distributed one-task achieved capacity",
+    "r3PolicyRequestsPerTargetPerMinute": 6000,
+    "r3PolicyTargetRpsEquivalent": 100,
+    "oldPolicyRequestsPerTargetPerMinute": 12000,
+    "oldPolicyTargetRpsEquivalent": 200,
+    "simplePeakPolicyDemandEstimateR3Tasks": 6,
+    "simplePeakPolicyDemandEstimateOldTasks": 3,
+    "policyEstimateLimit": "Steady-state arithmetic only; not ECS trajectory guarantee, task capacity, or linearity evidence"
+  },
+  "conditionalCalculations": [
+    {"T1Rps": 150, "requiredT4Rps": 480, "efficiencyIfActualT4Equals600": 1.0},
+    {"T1Rps": 187.5, "requiredT4Rps": 600, "efficiencyIfActualT4Equals600": 0.8},
+    {"T1Rps": 200, "requiredT4Rps": 640, "efficiencyIfActualT4Equals600": 0.75},
+    {"T1Rps": 250, "requiredT4Rps": 800, "efficiencyIfActualT4Equals600": 0.6}
+  ],
+  "ceilingInterpretation": {
+    "maximumReferenceRpsAtActualT4Of600": 187.5,
+    "assumptions": "Sustained settled window, offered load <=600 RPS, no backlog-draining completion burst; actual goodput may be lower",
+    "ifApprovedComparableT1Equals200": "Unchanged 600-RPS experiment cannot demonstrate required 640 achieved RPS",
+    "ifComparableCurrentCapacityIndependentlyAtLeast200": "600-RPS experiment cannot establish 80% capacity efficiency; 640 would be a minimum and could be insufficient for higher true capacity",
+    "notPermitted": "Treat monolith candidate as current T1, pick a lower demand-limited denominator after the fact, or use transient completion bursts as sustainable capacity",
+    "universalImpossibilityEstablished": false
+  },
+  "r3Evidence": {
+    "normalizedGrowth": [1, 2, 3, 6],
+    "stableFourTaskWindowObserved": false,
+    "T4Established": false,
+    "linearityEstablished": false,
+    "dynamicAcceptance": "Failed independently: errors, drops, incomplete collection",
+    "notPermitted": ["Interpolate three/six-task throughput into four-task measurement", "Normalize six-task throughput by 1.5", "Count manual setup as automatic scale-out", "Use separate comparison to repair original failures"]
+  },
+  "ownerDecisions": [
+    "Ratify formula and capacity-versus-finite-reference claim",
+    "Select current distributed one-commerce-task denominator; explicitly disposition any monolith comparison",
+    "Agree successful valid browse goodput versus total ALB handled throughput and reconcile both",
+    "Agree common quality conditions, including V2 500-ms versus V3 800-ms threshold distinction without changing dynamic V3 gates",
+    "Predeclare stable-window length, warmup, health/count/identity checks, repetitions and uncertainty",
+    "Choose explicit limitation or separately authorize a controlled experiment; no authorization implied"
+  ],
+  "proposedSeparateEvidence": [
+    "Unchanged dynamic V3 proves its own automatic-scale/recovery gates only",
+    "Separately reviewed fixed-one/fixed-four controlled comparison with explicit manual/autoscaling control provenance",
+    "Own preflight/collector/restoration design; current one-task active-1..6 V3 preflight is not a fixed-four baseline protocol",
+    "Matched current image/resource/pool/workload/data/cache/backing-service conditions",
+    "Defensible sustainable one-task capacity reference or explicitly limited finite-workload claim",
+    "Adequate offered load and independent generator/network/database headroom",
+    "Complete raw client, ALB Sum-per-period, healthy-target/task, collector, resource, route/digest and dashboard evidence",
+    "Predeclared aligned windows and explicit T1/T4 efficiency with uncertainty; retain failed trials and all original gates"
+  ],
+  "currentV3WorkloadOrGatesChanged": false,
+  "codeIssuesCloudOrExistingReceiptsModified": false,
+  "liveLoadPerformed": false,
+  "recommendedReporting": "One-to-four >=80% linearity not established; comparison design pending owner decision",
+  "recommendation": "Resolve denominator and claim scope before comparison/closure; do not rerun or alter dynamic V3 solely to manufacture a four-task window."
+}

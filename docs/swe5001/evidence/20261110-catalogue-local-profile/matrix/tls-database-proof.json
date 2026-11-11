@@ -1,0 +1,1 @@
+{"ssl_enabled" : "on", "tls_versions" : ["TLSv1.3"], "encrypted_connections" : 30}

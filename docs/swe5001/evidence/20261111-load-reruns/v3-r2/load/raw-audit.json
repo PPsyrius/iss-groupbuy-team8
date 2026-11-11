@@ -1,0 +1,37 @@
+{
+  "checkedAtUtc": "2026-11-11T08:48:15.646945+00:00",
+  "runLabel": "20261111-v3-distributed-r2",
+  "rawSha256": "9f120188b3afa3c01e9d488f80feb3eb8a44acc97d81325a028ef63dcda95c2f",
+  "rawBytes": 2603433426,
+  "rawSummaryConsistency": "pass",
+  "totals": {
+    "browse_requests": 720141,
+    "browse_errors": 4561,
+    "http_reqs": 720142,
+    "dropped_iterations": 5858
+  },
+  "firstBrowseCompletion": "2026-11-11T08:16:03.208838947Z",
+  "lastBrowseCompletion": "2026-11-11T08:46:02.018458722Z",
+  "browseErrorPercent": 0.6333481915347133,
+  "clientLatencyMs": {
+    "avg": 250.86043844191624,
+    "min": 7,
+    "med": 14,
+    "max": 10011,
+    "p(95)": 851,
+    "p(99)": 6758
+  },
+  "originalK6Exit": 99,
+  "generatorOomKilled": false,
+  "allRunErrorGatePass": true,
+  "zeroDropGatePass": false,
+  "generator": {
+    "samples": 508,
+    "first": "2026-11-11T08:16:03.617Z",
+    "last": "2026-11-11T08:46:04.227Z",
+    "maximumGapSeconds": 3.616,
+    "peakDockerCpuPercent": 135.9,
+    "peakMemoryPercentOf8GiBLimit": 10.09
+  },
+  "limits": "Diagnostic consistency only. Unchanged committed analyser separately evaluates full delivery, observations and event-relative latency. Original k6 exit remains authoritative for all-run thresholds. Independent host/network capacity and 80%-linearity remain unproven."
+}

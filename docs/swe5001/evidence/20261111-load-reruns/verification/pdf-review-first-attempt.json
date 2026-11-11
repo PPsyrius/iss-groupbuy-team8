@@ -1,0 +1,8 @@
+{
+  "exit": 1,
+  "scope": "Offline PDF inspection tooling; chapter compilation itself exited zero",
+  "cause": "The operational-provenance search phrase crossed a PDF text line break. Exact raw-string matching missed it.",
+  "readOnlyFollowUp": "Whitespace-normalized extraction confirmed all four expected passages, on pages 54, 54, 60 and 73 of the 78-page chapters PDF.",
+  "correction": "Normalize extracted whitespace before searching, without changing source text, the PDF or the required result assertions.",
+  "originalFailurePreserved": true
+}

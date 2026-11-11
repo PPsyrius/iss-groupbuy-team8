@@ -1,0 +1,109 @@
+{
+  "evidenceKind": "local-diagnostic-not-AWS-acceptance",
+  "rawDirectory": "C:\\Users\\sirip\\AppData\\Local\\Temp\\opencode\\swe5001-profile-20261110",
+  "retained": [
+    {
+      "name": "local-context.json",
+      "bytes": 1543,
+      "sha256": "c4836640c9b4f750190aabddb624dc51cfef0c01a5430bc0ac711910268f99fe"
+    },
+    {
+      "name": "local-summary.json",
+      "bytes": 10654,
+      "sha256": "e73347f8fb7dbb8202d2687849a1876f63801930024df4fa8e6767467be65e34"
+    },
+    {
+      "name": "local-analysis.json",
+      "bytes": 15202,
+      "sha256": "13d82beacd9c097027a213adc401add4170b98af62817d15d6c30cc86bbde6b3"
+    },
+    {
+      "name": "jfr-analysis.json",
+      "bytes": 34694,
+      "sha256": "145815786a5c2bca629aec0247feda8ef49752673c785f7a644f462ce26ac09c"
+    },
+    {
+      "name": "postgres-statements.json",
+      "bytes": 4180,
+      "sha256": "080af273362d97fc284cf8129b7de3dc1b7d901404109bfa64d3b9a5d92982c6"
+    },
+    {
+      "name": "redis-stats.txt",
+      "bytes": 2943,
+      "sha256": "e8beeab78d1831b86ab86b1295e34b5b9509dd2e100c59ee20d85c55f7cb861a"
+    },
+    {
+      "name": "vm-flags.txt",
+      "bytes": 561,
+      "sha256": "d4ea0cb9fd4545cb7aba79121eb4b2ebdd7f672fbd889e1cae2c962f50d11f7b"
+    },
+    {
+      "name": "java-version.txt",
+      "bytes": 252,
+      "sha256": "7b1d1e17b0fea448d56ca91d24719752962b8113d4d86d1387696b32e3c19a52"
+    },
+    {
+      "name": "container-states.txt",
+      "bytes": 510,
+      "sha256": "2d1308b9eb4e01bc65e4d2a08d2aa7818323150e2780240e7cfb222f990c482b"
+    },
+    {
+      "name": "profile-catalog.js",
+      "bytes": 2656,
+      "sha256": "87b2e34ef489723a23ca7ab5741c873be0845fef279b1587bcd7eef22cf5957e"
+    },
+    {
+      "name": "monitor-local.mjs",
+      "bytes": 3013,
+      "sha256": "275aad6a7233d36e30ce8e0aee482025f59cd407cfdfc6abf005b2bd8bbbe842"
+    },
+    {
+      "name": "analyze-local.py",
+      "bytes": 4540,
+      "sha256": "a6c7cb139e7bd93730eede00b330e153144b9bc33089f5e3a7d0b8c0f7c81868"
+    },
+    {
+      "name": "JfrSummarize.java",
+      "bytes": 7386,
+      "sha256": "643a037c98889c20148e3676e726dab9bd4213d2c4c733bfb51e67321f418e19"
+    },
+    {
+      "name": "phase-windows.txt",
+      "bytes": 269,
+      "sha256": "1f93a441c463b4c3e622a315364c2bb56d5992b2cd5d190e0cc722713ba85f97"
+    },
+    {
+      "name": "generator-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    }
+  ],
+  "externalRaw": [
+    {
+      "name": "baseline.jfr",
+      "bytes": 15640717,
+      "sha256": "57b10f4b4bbd1e41a3373851c1e6758f0dd0de76903c1cafbd4d9468043c7966"
+    },
+    {
+      "name": "baseline-gc.snapshot.log",
+      "bytes": 312783,
+      "sha256": "f762f2a85bdbfc7cf149dcf0867675685988e8dcf7091f320e054ea4f863fe04"
+    },
+    {
+      "name": "local-samples.jsonl",
+      "bytes": 150739557,
+      "sha256": "9e6b6c61547f3998c18eee66c43955a1e5181a16efef6376c7d40ab288e8c999"
+    },
+    {
+      "name": "local-monitor.jsonl",
+      "bytes": 130336,
+      "sha256": "e344319672972c86bded9bbdbdc5a93399695d851e911caed5c2b377afdc7ee8"
+    },
+    {
+      "name": "baseline-jfr-summary.txt",
+      "bytes": 16850,
+      "sha256": "969867ba08b75aae0eb0364443ac90ef4bf492a9d3e3a69e72e6329c9ed8cef7"
+    }
+  ],
+  "limits": "Incomplete timed-out JFR JSON export is not evidence; original JFR analyzed with streaming JDK consumer. Ephemeral credentials excluded."
+}

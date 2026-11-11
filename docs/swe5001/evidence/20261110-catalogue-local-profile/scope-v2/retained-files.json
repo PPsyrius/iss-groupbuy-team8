@@ -1,0 +1,167 @@
+{
+  "kind": "v2-local-scope-regression-and-aborted-startup-evidence",
+  "files": [
+    {
+      "path": "case-receipts.json",
+      "bytes": 1453,
+      "sha256": "f24ef783ed3aab31f8f9eb90924f2219c1da4652e9874febd2a44fe8f89e9c79"
+    },
+    {
+      "path": "cases/startup-base-a-control/context.json",
+      "bytes": 794,
+      "sha256": "9948acf1cd33431a2ca102436ac7a54f711b66c5f5f3b9c638ee868cdc6e1ee2"
+    },
+    {
+      "path": "cases/startup-base-a-control/exit.txt",
+      "bytes": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    {
+      "path": "cases/startup-base-a-control/generator.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "cases/startup-base-a-control/summary.json",
+      "bytes": 6825,
+      "sha256": "4f1f35fe1a5a90709eb9132f9a8d0fe08e587aacf30cc302affbf4d7349497f7"
+    },
+    {
+      "path": "cases/startup-base-a-warmup/context.json",
+      "bytes": 794,
+      "sha256": "c8c6bac5b3affb1a972cebd8380e7857020b6b190e2458a690bf89f0a6a9659c"
+    },
+    {
+      "path": "cases/startup-base-a-warmup/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/startup-base-a-warmup/generator.log",
+      "bytes": 1327007,
+      "sha256": "29791bda63c57bec788beb6bb8bafe14a9326b790796171991445e5692533fe7"
+    },
+    {
+      "path": "cases/startup-base-a-warmup/summary.json",
+      "bytes": 6927,
+      "sha256": "3958ffb343891e1a748d56d2b82eca1f409acd5ec2b98a1830bd7c0629a394ec"
+    },
+    {
+      "path": "cases/startup-scope-a-control/context.json",
+      "bytes": 796,
+      "sha256": "70b359364b6c77cf509b3805c8dfdce11c4844dd3e7a10840a53d64bcdfb3dbf"
+    },
+    {
+      "path": "cases/startup-scope-a-control/exit.txt",
+      "bytes": 3,
+      "sha256": "3346f2bbf6c34bd2dbe28bd1bb657d0e9c37392a1d5ec9929e6a5df4763ddc2d"
+    },
+    {
+      "path": "cases/startup-scope-a-control/generator.log",
+      "bytes": 401,
+      "sha256": "1d34d824309e1099b3432805ca434c4117c8f4768af894973f316b9a7ee8c02a"
+    },
+    {
+      "path": "cases/startup-scope-a-control/summary.json",
+      "bytes": 4689,
+      "sha256": "41bdb0173bcbcec810f3d4b0f96576c13aa634aecab7506ba9fc4a6fd9b4cd18"
+    },
+    {
+      "path": "cases/startup-scope-a-warmup/context.json",
+      "bytes": 796,
+      "sha256": "631e2824857f0fc0ed9568acc1a9deb356e5e5152404b9161fd9b31ad8849337"
+    },
+    {
+      "path": "cases/startup-scope-a-warmup/exit.txt",
+      "bytes": 2,
+      "sha256": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+    },
+    {
+      "path": "cases/startup-scope-a-warmup/generator.log",
+      "bytes": 1857310,
+      "sha256": "b3b01f0a633fed547af498ec8140f2bb781c012690a7f6f9cbf95a7c8caeb187"
+    },
+    {
+      "path": "cases/startup-scope-a-warmup/summary.json",
+      "bytes": 6838,
+      "sha256": "e0c3ae3adae580edafcbd028e0fcd266fe37e923e6a3c3413efb8877705de060"
+    },
+    {
+      "path": "external-artifacts.json",
+      "bytes": 1327,
+      "sha256": "c1159e6ca0d03965f2634445425741a65071aaab7f651e6670082f904bc5a85a"
+    },
+    {
+      "path": "inputs/RedisOpenDealOfferCache.java.txt",
+      "bytes": 6912,
+      "sha256": "4f445de20aa3cc7c78cc360f0804f574f6d8752d9f966c6904d491182199ea48"
+    },
+    {
+      "path": "inputs/RedisOpenDealOfferCacheTest.java.txt",
+      "bytes": 15974,
+      "sha256": "3943b58d5a4dbade8aca8383b1ba8ba61f5cb5e701fd68ae4843e14a27901bf3"
+    },
+    {
+      "path": "scope-red-green.json",
+      "bytes": 1195,
+      "sha256": "d02606ab9ef1b3ed91e089494357bdc204cf7d5ac498c0399f83f2eb0c99eaa4"
+    },
+    {
+      "path": "scripts/JfrFailureSummary.java",
+      "bytes": 7582,
+      "sha256": "bf5702df7f7efa9fd534db0a1ce94f5bd054e3e6c8d43f05cfcf5e49ca423a2b"
+    },
+    {
+      "path": "scripts/analyze-startup-v2.py",
+      "bytes": 6986,
+      "sha256": "8e33be996ca1f013af52331535ad31016f55858d067e89c1c2813841aae95921"
+    },
+    {
+      "path": "scripts/review-startup-logs.mjs",
+      "bytes": 2565,
+      "sha256": "f782f52787b2743bd406f1c25e450b6393963897254c590eb14651c9e060ad8e"
+    },
+    {
+      "path": "scripts/run-logging-diagnostic.mjs",
+      "bytes": 14696,
+      "sha256": "8b14d74711864c73522a8c2f3702503f58a1c9b9e2ddac6a80fcdf445726ae44"
+    },
+    {
+      "path": "scripts/run-startup-v2.mjs",
+      "bytes": 14598,
+      "sha256": "833377473582d0a1869ac6c90cfa1ed891e9b4a376f05653a529e486b71f81d8"
+    },
+    {
+      "path": "startup-base-a-jfr-analysis.json",
+      "bytes": 32423,
+      "sha256": "ec96bc15fb91ae3704cb7e4c5e1a3cca66d1d69c9d11278f655be4f42fe05a66"
+    },
+    {
+      "path": "startup-scope-a-jfr-analysis.json",
+      "bytes": 32115,
+      "sha256": "4d32e575e1271de322c4ef31d9ec613b40b2ef76536c039e536f6091083d0da8"
+    },
+    {
+      "path": "startup-v2-analysis.json",
+      "bytes": 63905,
+      "sha256": "0b60a5f1d30fefed29a6629018e09651c5e1ef2da4352a4dfe338291278568a0"
+    },
+    {
+      "path": "startup-v2-log-counts.json",
+      "bytes": 2248,
+      "sha256": "796aa31a83559ff99545e287b5eb894605a89490a7692f9a405e999a349fdf15"
+    },
+    {
+      "path": "v1-full-verification-summary.json",
+      "bytes": 78057,
+      "sha256": "39266d080f7e0314d997e8fe34d35e392d9510347b5081f8f7d1228574583a0b"
+    }
+  ],
+  "excluded": [
+    "Full private logs/JFR/process metadata",
+    "Private credentials/TLS keys",
+    "Large raw streams",
+    "Database snapshots"
+  ],
+  "status": "Uncommitted v2 is unaccepted for deployment; cold overload remains unresolved. V1 full verify does not verify v2."
+}

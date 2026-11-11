@@ -1,0 +1,46 @@
+{
+  "kind": "codec-startup-postrun",
+  "analyzer": 0,
+  "jfr": [
+    {
+      "prefix": "codec-base-a",
+      "helper": "JfrFailureSummary.java",
+      "exitCode": 0
+    },
+    {
+      "prefix": "codec-base-a",
+      "helper": "JfrCodecSummary.java",
+      "exitCode": 0
+    },
+    {
+      "prefix": "codec-candidate-a",
+      "helper": "JfrFailureSummary.java",
+      "exitCode": 0
+    },
+    {
+      "prefix": "codec-candidate-a",
+      "helper": "JfrCodecSummary.java",
+      "exitCode": 0
+    },
+    {
+      "prefix": "codec-candidate-b",
+      "helper": "JfrFailureSummary.java",
+      "exitCode": 0
+    },
+    {
+      "prefix": "codec-candidate-b",
+      "helper": "JfrCodecSummary.java",
+      "exitCode": 0
+    },
+    {
+      "prefix": "codec-base-b",
+      "helper": "JfrFailureSummary.java",
+      "exitCode": 0
+    },
+    {
+      "prefix": "codec-base-b",
+      "helper": "JfrCodecSummary.java",
+      "exitCode": 0
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "label": "backoff-v3-a-warmup",
+  "app": "blocbuy-matrix2-backoff-v3-a",
+  "rate": 200,
+  "seconds": 120,
+  "port": 8589,
+  "startedAt": "2026-11-10T09:47:16.361Z",
+  "actions": [],
+  "actualLimits": {
+    "nanoCpus": 500000000,
+    "memoryBytes": 1073741824
+  },
+  "hostMemory": {
+    "MemTotal": 16510500864,
+    "MemAvailable": 5913968640,
+    "SwapTotal": 4294967296,
+    "SwapFree": 4177424384
+  },
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-candidate:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

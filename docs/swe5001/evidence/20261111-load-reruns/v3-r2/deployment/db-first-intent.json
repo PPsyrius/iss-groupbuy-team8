@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-11T07:54:23.652585+00:00",
+  "before": {
+    "class": "db.t4g.micro",
+    "status": "available",
+    "pending": {},
+    "engineVersion": "18.3"
+  },
+  "approvedClass": "db.t4g.small",
+  "savedPlanSha256": "5260e4a7080f00af974d8d1a96c40d22dabe0663e044218f63e9883f6ae6fedd",
+  "scope": "Pause services/scaling; in-place database class only; fixed read-only reporting task; no teardown"
+}

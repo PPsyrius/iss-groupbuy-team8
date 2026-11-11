@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "toolingSha": "b911ea63795c5ddb7db1f7918f7f7af03a2745ff",
+  "runLabel": "20261111-v3-distributed-r1",
+  "events": [
+    {
+      "at": "2026-11-11T06:28:44.965000+00:00",
+      "from": 1,
+      "to": 2,
+      "source": "application-autoscaling",
+      "activityId": "5444aeb1-4c44-4919-96bc-8941313731b4",
+      "activityCompletedAt": "2026-11-11T06:29:49.326000+00:00"
+    },
+    {
+      "at": "2026-11-11T06:31:44.945000+00:00",
+      "from": 2,
+      "to": 4,
+      "source": "application-autoscaling",
+      "activityId": "b3b5ff92-d438-4882-875f-7ae75dcc39e1",
+      "activityCompletedAt": "2026-11-11T06:32:49.344000+00:00"
+    },
+    {
+      "at": "2026-11-11T06:34:44.963000+00:00",
+      "from": 4,
+      "to": 6,
+      "source": "application-autoscaling",
+      "activityId": "35a65f33-2e05-494a-9557-c543f53dfbcc",
+      "activityCompletedAt": "2026-11-11T06:35:56.369000+00:00"
+    }
+  ],
+  "timestampMeaning": "Original successful Application Auto Scaling StartTime: initiation of desired-count change, not task readiness. Previous count comes from the confirmed one-task baseline and the chronological activity sequence."
+}

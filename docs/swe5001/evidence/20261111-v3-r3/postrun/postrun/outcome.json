@@ -1,0 +1,29 @@
+{
+  "at": "2026-11-11T11:11:29.119737+00:00",
+  "runLabel": "20261111-v3-distributed-r3",
+  "finishedAt": "2026-11-11T11:09:30.924Z",
+  "durationMs": 1800025.86229,
+  "browseRequests": 725924,
+  "browseErrors": 8429,
+  "errorPercent": 1.1611408356797681,
+  "droppedIterations": 75,
+  "allRunP95Ms": 450,
+  "k6Exit": 99,
+  "generatorOomKilled": false,
+  "errorGatePassed": false,
+  "zeroDropGatePassed": false,
+  "allRunP95ScreenPassed": true,
+  "acceptance": false,
+  "restoration": {
+    "at": "2026-11-11T11:09:54.510150Z",
+    "min": 2,
+    "max": 6,
+    "desired": 6,
+    "running": 6,
+    "pending": 0,
+    "settledTwoTaskPlacementClaimed": false
+  },
+  "noRetry": true,
+  "noTeardown": true,
+  "limits": "All-run summary only; raw consistency, final collector completeness, server logs, event-relative latency and separate 80%-linearity remain independent reviews. A passed p95 screen cannot repair error/drop failures."
+}

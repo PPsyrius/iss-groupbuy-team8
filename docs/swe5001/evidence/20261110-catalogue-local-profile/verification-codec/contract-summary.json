@@ -1,0 +1,9 @@
+{
+  "kind": "local-verified-JAR-contract-comparison",
+  "jsonEqual": true,
+  "textEqualAfterNewlineNormalization": true,
+  "generatedSha256": "822481f06f8948bff59d3d866ba2a22e5309aab35d49d36c8c41d80baedb0673",
+  "checkoutSha256": "822481f06f8948bff59d3d866ba2a22e5309aab35d49d36c8c41d80baedb0673",
+  "verifiedMonolithJarSha256": "75fae53e6d8f0efaecd2ea4c131b77f005a4dbec84a396a3561dad7ee81a6fed",
+  "limits": "Checkout contract not overwritten; no API/client change or hosted gate asserted."
+}

@@ -1,0 +1,51 @@
+{
+  "kind": "focused-tests-not-full-v2-verification",
+  "stages": [
+    {
+      "stage": "red",
+      "exitCode": 1,
+      "testSummaries": [
+        {
+          "tests": 18,
+          "failures": 2,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "tests": 18,
+          "failures": 2,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "privateLog": {
+        "bytes": 32560,
+        "sha256": "49745257bfaca72dfc8fe62f7e6bab6e6eba1cb185d541ec200af78d314fdefe"
+      },
+      "defect": "CPU-only codec work occupied the store slots in v1; I/O-only v2 passes both cases."
+    },
+    {
+      "stage": "green",
+      "exitCode": 0,
+      "testSummaries": [
+        {
+          "tests": 18,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "tests": 18,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "privateLog": {
+        "bytes": 38186,
+        "sha256": "812bc3b8265d3750195c2bdbca919d68abb1ea7d28559c18d3110767e22f28e4"
+      },
+      "defect": "CPU-only codec work occupied the store slots in v1; I/O-only v2 passes both cases."
+    }
+  ]
+}

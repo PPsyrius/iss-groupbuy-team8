@@ -1,0 +1,15 @@
+{
+  "runtime": "v24.22.2",
+  "command": [
+    "node",
+    "/repo/perf/k6/analyze-v3.mjs",
+    "/r3/load/summary.json",
+    "/r3/load/samples.jsonl",
+    "/r3/load/observations.jsonl",
+    "/coverage/scale-outs.json"
+  ],
+  "network": "none",
+  "status": 1,
+  "signal": null,
+  "error": null
+}

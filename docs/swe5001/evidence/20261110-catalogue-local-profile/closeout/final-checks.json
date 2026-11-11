@@ -1,0 +1,25 @@
+{
+  "kind": "local-cache-closeout-not-performance-acceptance",
+  "fullVerification": {
+    "tests": 2073,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "backendBuildPolicyTestsPassed": 8,
+  "cacheCoverageComplete": true,
+  "contractUnchanged": true,
+  "earlierBackoffRuntimeCases": 16,
+  "rejectedCodecRuntimeCases": 12,
+  "sourceSnapshotMatchesCheckout": true,
+  "scopedGitleaksFindings": 0,
+  "sourceSnapshot": "Current source exactly equals reviewed-v3 full snapshot. Rejected codec/profile source and its policy-specific test preserved separately; no measured runtime is falsely attributed to the later reviewed correction.",
+  "runtimeAcceptance": false,
+  "unresolved": [
+    "Cold-start overload",
+    "Slow/outage p95 above the unchanged local 800-ms screen",
+    "Redis-dependent health remains unchanged",
+    "AWS V3/capacity/linearity not accepted"
+  ],
+  "limits": "No hosted CI/Sonar result, commit, push, PR, deployment or AWS operation. Existing diagnostic failures remain retained."
+}

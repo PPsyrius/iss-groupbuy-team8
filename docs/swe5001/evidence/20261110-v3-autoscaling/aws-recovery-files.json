@@ -1,0 +1,51 @@
+{
+  "archive": "C:\\Users\\sirip\\Downloads\\swe5001-v3-b84uhoj0.tar.gz",
+  "archiveSha256": "324dcb7022acf4821dc0d716c0ebfe2ae678afa9014a60363a96fdc75bdd4f4d",
+  "files": [
+    {
+      "name": "metrics.json",
+      "bytes": 41037,
+      "sha256": "ec89994535a87f133bf8cfa463fc211f182aa7f35582c5ece2ffa7cf8a8c5451"
+    },
+    {
+      "name": "metric-queries.json",
+      "bytes": 7841,
+      "sha256": "596722778fb95aba09f9e4a9944c4bc0b2d91da03fc2273b1e67775fc44f8d41"
+    },
+    {
+      "name": "scaling-activities.json",
+      "bytes": 12967,
+      "sha256": "98b00895ccd5b14553fe9b4a95428c185da5321922e9fae4bfd1b1febda39a29"
+    },
+    {
+      "name": "recovery.json",
+      "bytes": 2868,
+      "sha256": "82f76b042e095b353b561622fdef864b3121b123273d1a31974e131951a48501"
+    },
+    {
+      "name": "observations.jsonl",
+      "bytes": 103749,
+      "sha256": "fa29a30dd19ebf378a40e6db470641f9ccdd15f906f78ec8efeb2a905553766d"
+    },
+    {
+      "name": "observer.json",
+      "bytes": 82,
+      "sha256": "1ea327eac681d7fb4fdb48c7996dfe8a328c55f54cdeb154d03cf6308c657e1d"
+    },
+    {
+      "name": "commerce-svc-connection-errors.json",
+      "bytes": 1269,
+      "sha256": "83e8abd967982aa2ef6ef0971cebe8bd03fd039354b32ba0f2edeadae3ebd3cd"
+    },
+    {
+      "name": "identity-svc-connection-errors.json",
+      "bytes": 19,
+      "sha256": "99e608ebe80e908e305366dd93a35274cdc42f5724d50a877e15bdcaa388ac6c"
+    },
+    {
+      "name": "notification-svc-connection-errors.json",
+      "bytes": 19,
+      "sha256": "99e608ebe80e908e305366dd93a35274cdc42f5724d50a877e15bdcaa388ac6c"
+    }
+  ]
+}

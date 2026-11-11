@@ -1,0 +1,47 @@
+{
+  "atUtc": "2026-11-11T11:58:33.600689+00:00",
+  "network": "none",
+  "manifestSha256": "4eeb7a22fc3d5ec9f1957cda0dc9edd631e9949fe8d9b00c98c70090c159fbfd",
+  "manifestFileCount": 144,
+  "verifiedFileCount": 144,
+  "manifestMismatches": [],
+  "unmanifestedPaths": [
+    "private/apply.log",
+    "private/budget-report-v2.log",
+    "private/budget-report.log",
+    "private/inputs.tfvars.json",
+    "private/plan.log",
+    "private/post-apply-plan.log",
+    "private/r3.tfplan",
+    "private/validate-v2.log",
+    "private/validate.log"
+  ],
+  "raw": {
+    "bytes": 2623435228,
+    "sha256": "094ff696abaf913853bbbc7545d705db0bbce3ca027bc8c5ae3eddd48aac5bf1"
+  },
+  "sourceState": "Explicit uncommitted policy-target binding on base source; not unchanged committed tooling",
+  "baseCommit": "b911ea63795c5ddb7db1f7918f7f7af03a2745ff",
+  "sourceLockSha256": "6ba778e3b5a4e7eb14aa07e0a30603e98f57883d0933569a007f75fea7c54cde",
+  "executionSourceLockMatches": true,
+  "sourceFileCount": 98,
+  "sourceMismatches": [],
+  "sourceHashes": {
+    "perf/k6/analyze-v3.mjs": "16601e9ee24d9d6ed1a5f5c56c071c5d74cc3598575679f5a432cd07e7ad2b9f",
+    "perf/k6/lib.mjs": "e58d67966f8ed2945e44d60931a495dddf24a926551340fef10341129995d267",
+    "perf/k6/scaling.mjs": "2dde635653a10c0f6c56b3319b93a9c7836f1658ce7d2c22ed67c26c7d02209d",
+    "infra/swe5001/scripts/observe-load.py": "bbe665ccb1b71b55731ddc76e1c471a45433a5a15613e5074c4d8d7db1d0b746"
+  },
+  "sessionFileCount": 19,
+  "sessionMismatches": [],
+  "indexSha256MatchesSourceLock": true,
+  "originalArchiveVerification": {
+    "at": "2026-11-11T11:21:20.561246+00:00",
+    "archive": "load.tar.gz",
+    "filesVerified": 37,
+    "allArchivedFileBytesMatchRetainedOriginals": true
+  },
+  "archiveVerificationLimit": "Existing sealed member-byte verification retained; this review verifies archive hash against the manifest, does not extract or recreate it.",
+  "adapterSha256": "cb45ddc9039d2f1fc892579f7bc34b706a370c2eff955995aac7e933ed6d9034",
+  "frozenCoverageReviewerSha256": "f87bdf7e19b75bd0dbc9445572523b078700842e99d648fd7e251339f1a78b3f"
+}

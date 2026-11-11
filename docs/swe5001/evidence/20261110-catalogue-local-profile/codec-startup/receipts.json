@@ -1,0 +1,456 @@
+{
+  "kind": "codec-startup",
+  "evidenceKind": "local-diagnostic-not-AWS-acceptance",
+  "startedAt": "2026-11-10T10:30:21.264Z",
+  "finishedAt": "2026-11-10T10:49:59.824Z",
+  "completed": true,
+  "conditions": {
+    "rate": 200,
+    "cpu": 0.5,
+    "memoryBytes": 1073741824,
+    "pool": 5,
+    "preAllocatedVUs": 1000,
+    "maxVUs": 1000,
+    "warmupSeconds": 120,
+    "notes": "ABBA codec-base-a / codec-candidate-a / codec-candidate-b / codec-base-b; released baseline versus separately hashed eager cache codec/immutable startup profile plus reviewed v3 backoff, not baseline source or a previous measured candidate JAR. Fresh JVM/cache per arm, same synthetic database, default JVM/full logging, Redis/PostgreSQL TLS. Identical 120-second cold load and 60-second healthy control; flush/slow/outage/recovery on A arms only after healthy control exit 0. Failed cold/control cases retained; no fault attribution on unhealthy controls. No concurrent build, scheduling, payment or cloud access. Only newly created comparison apps stopped after recordings; historical fixtures untouched."
+  },
+  "artifactHashes": {
+    "commerce-baseline.jar": "37c7c7332b5d40e5c940241e75a180d9cfb2b6df020663b233008e61ec7e2960",
+    "commerce-cache-codec.jar": "0cdf2416f7784331542f21d977d80d9c9208863965d4948716ab2b9814090bff"
+  },
+  "expectedCandidateHash": "0cdf2416f7784331542f21d977d80d9c9208863965d4948716ab2b9814090bff",
+  "refusedFaultCases": [
+    {
+      "arm": "codec-candidate-a",
+      "reason": "Healthy control failed; warmed fault attribution refused"
+    }
+  ],
+  "problems": [],
+  "startup": {
+    "codec-base-aStartup": {
+      "healthyAt": "2026-11-10T10:30:59.075Z",
+      "waitMs": 36429
+    },
+    "codec-candidate-aStartup": {
+      "healthyAt": "2026-11-10T10:39:04.749Z",
+      "waitMs": 32363
+    },
+    "codec-candidate-bStartup": {
+      "healthyAt": "2026-11-10T10:42:58.836Z",
+      "waitMs": 38435
+    },
+    "codec-base-bStartup": {
+      "healthyAt": "2026-11-10T10:46:47.489Z",
+      "waitMs": 34341
+    }
+  },
+  "cases": [
+    {
+      "label": "codec-base-a-warmup",
+      "app": "blocbuy-matrix2-codec-base-a",
+      "rate": 200,
+      "seconds": 120,
+      "startedAt": "2026-11-10T10:31:00.084Z",
+      "finishedAt": "2026-11-10T10:33:07.031Z",
+      "exitCode": 99,
+      "result": {
+        "requests": 14678,
+        "errors": {
+          "fails": 6555,
+          "rate": 0.5534132715628832,
+          "passes": 8123
+        },
+        "latency": {
+          "avg": 8089.580324294863,
+          "med": 9998,
+          "min": 57,
+          "max": 10052,
+          "p(95)": 10001,
+          "p(99)": 10002
+        },
+        "drops": 9323
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [],
+      "problem": null
+    },
+    {
+      "label": "codec-base-a-control",
+      "app": "blocbuy-matrix2-codec-base-a",
+      "rate": 200,
+      "seconds": 60,
+      "startedAt": "2026-11-10T10:33:07.218Z",
+      "finishedAt": "2026-11-10T10:34:07.635Z",
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 12001
+        },
+        "latency": {
+          "min": 1,
+          "max": 460,
+          "p(95)": 94,
+          "p(99)": 189,
+          "avg": 28.29997500208316,
+          "med": 4
+        },
+        "drops": 0
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [],
+      "problem": null
+    },
+    {
+      "label": "codec-base-a-flush",
+      "app": "blocbuy-matrix2-codec-base-a",
+      "rate": 200,
+      "seconds": 60,
+      "startedAt": "2026-11-10T10:34:07.942Z",
+      "finishedAt": "2026-11-10T10:35:08.536Z",
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 12001
+        },
+        "latency": {
+          "p(99)": 14,
+          "avg": 3.164652945587868,
+          "med": 2,
+          "min": 0,
+          "max": 285,
+          "p(95)": 4
+        },
+        "drops": 0
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [
+        {
+          "afterSeconds": 15,
+          "description": "Flush matrix-owned Redis cache once"
+        }
+      ],
+      "problem": null
+    },
+    {
+      "label": "codec-base-a-slow",
+      "app": "blocbuy-matrix2-codec-base-a",
+      "rate": 200,
+      "seconds": 70,
+      "startedAt": "2026-11-10T10:35:08.717Z",
+      "finishedAt": "2026-11-10T10:36:19.162Z",
+      "exitCode": 99,
+      "result": {
+        "requests": 11889,
+        "errors": {
+          "rate": 0.12919505425182942,
+          "passes": 1536,
+          "fails": 10353
+        },
+        "latency": {
+          "med": 3,
+          "min": 1,
+          "max": 10002,
+          "p(95)": 10001,
+          "p(99)": 10001,
+          "avg": 2259.421313819497
+        },
+        "drops": 2112
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [
+        {
+          "afterSeconds": 15,
+          "description": "Inject 3500 ms downstream Redis latency"
+        },
+        {
+          "afterSeconds": 40,
+          "description": "Remove Redis latency; observe recovery"
+        }
+      ],
+      "problem": null
+    },
+    {
+      "label": "codec-base-a-down",
+      "app": "blocbuy-matrix2-codec-base-a",
+      "rate": 200,
+      "seconds": 70,
+      "startedAt": "2026-11-10T10:36:19.345Z",
+      "finishedAt": "2026-11-10T10:37:29.843Z",
+      "exitCode": 99,
+      "result": {
+        "requests": 10554,
+        "errors": {
+          "rate": 0.25506916808792873,
+          "passes": 2692,
+          "fails": 7862
+        },
+        "latency": {
+          "p(95)": 10001,
+          "p(99)": 10001,
+          "avg": 4097.170172446466,
+          "med": 2800,
+          "min": 1,
+          "max": 10013
+        },
+        "drops": 3447
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [
+        {
+          "afterSeconds": 15,
+          "description": "Disable matrix Redis proxy"
+        },
+        {
+          "afterSeconds": 40,
+          "description": "Restore matrix Redis proxy"
+        }
+      ],
+      "problem": null
+    },
+    {
+      "label": "codec-base-a-recovery",
+      "app": "blocbuy-matrix2-codec-base-a",
+      "rate": 200,
+      "seconds": 60,
+      "startedAt": "2026-11-10T10:37:30.036Z",
+      "finishedAt": "2026-11-10T10:38:30.478Z",
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 12001
+        },
+        "latency": {
+          "min": 1,
+          "max": 32,
+          "p(95)": 4,
+          "p(99)": 5,
+          "avg": 2.215232063994667,
+          "med": 2
+        },
+        "drops": 0
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [],
+      "problem": null
+    },
+    {
+      "label": "codec-candidate-a-warmup",
+      "app": "blocbuy-matrix2-codec-candidate-a",
+      "rate": 200,
+      "seconds": 120,
+      "startedAt": "2026-11-10T10:39:05.929Z",
+      "finishedAt": "2026-11-10T10:41:17.670Z",
+      "exitCode": 99,
+      "result": {
+        "requests": 12321,
+        "errors": {
+          "rate": 0.9757324892460028,
+          "passes": 12022,
+          "fails": 299
+        },
+        "latency": {
+          "max": 10015,
+          "p(95)": 10001,
+          "p(99)": 10002,
+          "avg": 9823.863890917944,
+          "med": 10000,
+          "min": 704
+        },
+        "drops": 11679
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [],
+      "problem": null
+    },
+    {
+      "label": "codec-candidate-a-control",
+      "app": "blocbuy-matrix2-codec-candidate-a",
+      "rate": 200,
+      "seconds": 60,
+      "startedAt": "2026-11-10T10:41:17.924Z",
+      "finishedAt": "2026-11-10T10:42:18.499Z",
+      "exitCode": 99,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0.00916590284142988,
+          "passes": 110,
+          "fails": 11891
+        },
+        "latency": {
+          "avg": 1551.9964169652528,
+          "med": 1612,
+          "min": 1,
+          "max": 6897,
+          "p(95)": 3713,
+          "p(99)": 4518
+        },
+        "drops": 0
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [],
+      "problem": null
+    },
+    {
+      "label": "codec-candidate-b-warmup",
+      "app": "blocbuy-matrix2-codec-candidate-b",
+      "rate": 200,
+      "seconds": 120,
+      "startedAt": "2026-11-10T10:43:00.209Z",
+      "finishedAt": "2026-11-10T10:45:10.681Z",
+      "exitCode": 99,
+      "result": {
+        "requests": 12406,
+        "errors": {
+          "rate": 0.9251168789295502,
+          "passes": 11477,
+          "fails": 929
+        },
+        "latency": {
+          "avg": 9733.42503627277,
+          "med": 10000,
+          "min": 641,
+          "max": 10018,
+          "p(95)": 10001,
+          "p(99)": 10002
+        },
+        "drops": 11595
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [],
+      "problem": null
+    },
+    {
+      "label": "codec-candidate-b-control",
+      "app": "blocbuy-matrix2-codec-candidate-b",
+      "rate": 200,
+      "seconds": 60,
+      "startedAt": "2026-11-10T10:45:10.888Z",
+      "finishedAt": "2026-11-10T10:46:11.396Z",
+      "exitCode": 99,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "fails": 11932,
+          "rate": 0.005749520873260561,
+          "passes": 69
+        },
+        "latency": {
+          "avg": 908.8890092492293,
+          "med": 678,
+          "min": 1,
+          "max": 5613,
+          "p(95)": 2717,
+          "p(99)": 3608
+        },
+        "drops": 0
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [],
+      "problem": null
+    },
+    {
+      "label": "codec-base-b-warmup",
+      "app": "blocbuy-matrix2-codec-base-b",
+      "rate": 200,
+      "seconds": 120,
+      "startedAt": "2026-11-10T10:46:48.633Z",
+      "finishedAt": "2026-11-10T10:48:57.698Z",
+      "exitCode": 99,
+      "result": {
+        "requests": 12362,
+        "errors": {
+          "fails": 978,
+          "rate": 0.9208865879307555,
+          "passes": 11384
+        },
+        "latency": {
+          "p(95)": 10001,
+          "p(99)": 10002,
+          "avg": 9772.538343310143,
+          "med": 10000,
+          "min": 681,
+          "max": 10057
+        },
+        "drops": 11638
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [],
+      "problem": null
+    },
+    {
+      "label": "codec-base-b-control",
+      "app": "blocbuy-matrix2-codec-base-b",
+      "rate": 200,
+      "seconds": 60,
+      "startedAt": "2026-11-10T10:48:57.885Z",
+      "finishedAt": "2026-11-10T10:49:58.315Z",
+      "exitCode": 99,
+      "result": {
+        "requests": 12000,
+        "errors": {
+          "rate": 0.0003333333333333333,
+          "passes": 4,
+          "fails": 11996
+        },
+        "latency": {
+          "max": 3082,
+          "p(95)": 856,
+          "p(99)": 1503.0100000000002,
+          "avg": 229.06991666666667,
+          "med": 42,
+          "min": 1
+        },
+        "drops": 0
+      },
+      "actualLimits": {
+        "nanoCpus": 500000000,
+        "memoryBytes": 1073741824
+      },
+      "actions": [],
+      "problem": null
+    }
+  ]
+}

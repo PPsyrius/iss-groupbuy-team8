@@ -1,0 +1,126 @@
+{
+  "scope": "Allowlisted prelaunch metadata only; excludes private Terraform plans/state/inputs/logs, raw access logs, credentials and payloads",
+  "files": [
+    {
+      "bytes": 402,
+      "path": "authority.json",
+      "sha256": "ff837e99cbf69dd8f6ec74b68af02c9478c4f0a2f5e9ff81a29db584dabbaaeb"
+    },
+    {
+      "bytes": 2170,
+      "path": "overlay-recipe.json",
+      "sha256": "15a4311cd1b08837f4449451d2260029fc077f0f40fe547b519b711c199a91fb"
+    },
+    {
+      "bytes": 1159,
+      "path": "plan-review.json",
+      "sha256": "427fe58ff68beaf0ac28b2fd222b673062b3d959a54ec5db29ec6df6b7d2acdf"
+    },
+    {
+      "bytes": 1048,
+      "path": "applied-readback.json",
+      "sha256": "3fc44c2854f82476c91d93200d0115e0e5e463b64b508068a2ef50c4945b2294"
+    },
+    {
+      "bytes": 204,
+      "path": "post-apply-drift.json",
+      "sha256": "6044324644f6e16217bd883e17cf0aeb070c25ee99eb6f8b510e9372d418a022"
+    },
+    {
+      "bytes": 1012,
+      "path": "alb-delivery-before-final.json",
+      "sha256": "a8f4e5b0f75a03bf08ae11cede77fc4a253a9d6ee7531a5bc2582965730159ed"
+    },
+    {
+      "bytes": 3486,
+      "path": "policy-binding-source.diff",
+      "sha256": "0fd84bd720966c7569d203f32e71730385104c522b9bde865ae333d184b2ea99"
+    },
+    {
+      "bytes": 5187,
+      "path": "policy-binding-tests-v2.log",
+      "sha256": "2028071415acc4acc2ce44a4a28ea5e8d4080b7e3281bcd2d6dba4ada1c41c47"
+    },
+    {
+      "bytes": 109,
+      "path": "offline-controls-tests.log",
+      "sha256": "593e9e9d1d0cfc786e8bf6df874603f07feccafec406ece4bfe8193224f905c8"
+    },
+    {
+      "bytes": 262,
+      "path": "prechecks/connection-budget.json",
+      "sha256": "8c8f44ee367b31ec3bda3ad4a7c7e6430d94810b0d5e339c9b2008f11699f04e"
+    },
+    {
+      "bytes": 263,
+      "path": "prechecks/replacement-budget.json",
+      "sha256": "3a378a78a19a9f8d35e3fb73d7b62f8bc584e72db5edb765595bae77f6021cff"
+    },
+    {
+      "bytes": 357,
+      "path": "prechecks/budget-recovery.json",
+      "sha256": "397a8937c9222177318014260e98225472a6ee0e1cb6b0866c74b80b1d23a53b"
+    },
+    {
+      "bytes": 6186,
+      "path": "prechecks/runtime-settings.json",
+      "sha256": "0316b6ff97d6e5128a746221b82f317dd20e94e2719c07a0ca941ca14dcc0dfb"
+    },
+    {
+      "bytes": 2104,
+      "path": "prechecks/regional-quota-review.json",
+      "sha256": "52f3fef6d0d1f6425e54284f26d223b80b0fa4d1510560e9a0a124834155568c"
+    },
+    {
+      "bytes": 687,
+      "path": "prechecks/subnet-review.json",
+      "sha256": "5a85c4b229dadf4588ba2ad0f633bff7ee5a30c23efd1be00f501a6863cff10d"
+    },
+    {
+      "bytes": 1839,
+      "path": "prechecks/scaling-margin-review.json",
+      "sha256": "73c4662a6aa2a5c1e1975f26e1b39167d3a6f4c9cfae6eb794cfda17775d7482"
+    },
+    {
+      "bytes": 576,
+      "path": "prechecks/generator-readiness.json",
+      "sha256": "2636b0659e943dcd3e4d3e3b8e9858e0ef5d7b68e210d32d7cfb94655c94cecc"
+    },
+    {
+      "bytes": 592,
+      "path": "prechecks/tooling-tests.json",
+      "sha256": "84d78ae8ced480bff76f171226c305e4280cedd16e55d544b8c390ab39caf9cb"
+    },
+    {
+      "bytes": 461,
+      "path": "prechecks/prior-evidence-verification.json",
+      "sha256": "2252d67919d8ccf29cadd064c705220d54e6c753eb69c57baf88e50094eb5975"
+    },
+    {
+      "bytes": 769,
+      "path": "prechecks/one-task-readiness.json",
+      "sha256": "173745850fb19cf9eead34c1df2e8edb1dc8bd839ac1630c1f3e5cdb55401a21"
+    },
+    {
+      "bytes": 730,
+      "path": "prechecks/final-review.json",
+      "sha256": "a2db31f7eee8dfca34d46b527220e2bd11fed674df3c837724c9518be2f42798"
+    },
+    {
+      "bytes": 428,
+      "path": "prechecks/credential-window-before-observer.json",
+      "sha256": "167a910404902d1562c7d448ee0ce58adb14a3a6c7e09b773ece6e22b21dafab"
+    },
+    {
+      "bytes": 616,
+      "path": "prechecks/http-readiness.json",
+      "sha256": "a908f0fe0cadd1efd9163512bcca33599041fbb8cc3c777826bfdd6d9d5a4abd"
+    },
+    {
+      "bytes": 576,
+      "path": "prechecks/target-readiness-refusal-followup.json",
+      "sha256": "659511f78e31a9fbd36396509d428efeb0c2a841b0be2339fff410a0cdaf251f"
+    }
+  ],
+  "at": "2026-11-11T10:39:57.3594083+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "sourceSha": "b911ea63795c5ddb7db1f7918f7f7af03a2745ff",
+  "analyserExit": 1,
+  "at": "2026-11-11T08:56:31.1634500+00:00",
+  "normalizationBlocker": "CPU target-three activity remained Overridden; frozen reviewer refused full normalization. Successful-only diagnostic events must not be presented as the complete desired-count sequence.",
+  "interpretation": "Generator drops independently invalidate V3 evidence; no event-filtered p95 or acceptance claim.",
+  "sourceUnchanged": true
+}

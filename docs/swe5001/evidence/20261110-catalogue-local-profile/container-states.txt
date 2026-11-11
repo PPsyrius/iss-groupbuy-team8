@@ -1,0 +1,2 @@
+/blocbuy-profile-commerce-20261110 {"Status":"running","Running":true,"Paused":false,"Restarting":false,"OOMKilled":false,"Dead":false,"Pid":870,"ExitCode":0,"Error":"","StartedAt":"2026-11-10T05:19:10.93337317Z","FinishedAt":"0001-01-01T00:00:00Z"}
+/blocbuy-profile-generator-20261110 {"Status":"exited","Running":false,"Paused":false,"Restarting":false,"OOMKilled":false,"Dead":false,"Pid":0,"ExitCode":0,"Error":"","StartedAt":"2026-11-10T05:20:14.677772936Z","FinishedAt":"2026-11-10T05:24:15.075388866Z"}

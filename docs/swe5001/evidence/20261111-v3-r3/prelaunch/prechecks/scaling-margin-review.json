@@ -1,0 +1,57 @@
+{
+  "at": "2026-11-11T10:31:37.871219+00:00",
+  "requestPolicyAlarm": {
+    "Period": 60,
+    "EvaluationPeriods": 3,
+    "Threshold": 6000.0,
+    "ComparisonOperator": "GreaterThanThreshold",
+    "ActionsEnabled": true
+  },
+  "slowStartSeconds": 120,
+  "candidateRps": 200,
+  "triggerApproximateRpsPerTarget": 100,
+  "rampSecondsFrom100To200": 187.5,
+  "interpretation": "Conservative headroom, not a proved sufficient margin: alarm delay, startup and slow start can exceed time from 100 to 200 RPS. CPU guard acts independently. Six targets at peak have no request-policy spare capacity, while 200 RPS remains a measured task-candidate lower bound. No zero-drop promise.",
+  "recentActivities": [
+    {
+      "start": "2026-11-11T09:04:32.616000+00:00",
+      "end": "2026-11-11T09:05:03.783000+00:00",
+      "status": "Successful"
+    },
+    {
+      "start": "2026-11-11T09:00:32.625000+00:00",
+      "end": "2026-11-11T09:01:04.848000+00:00",
+      "status": "Successful"
+    },
+    {
+      "start": "2026-11-11T08:56:32.631000+00:00",
+      "end": "2026-11-11T08:57:07.862000+00:00",
+      "status": "Successful"
+    },
+    {
+      "start": "2026-11-11T08:52:32.638000+00:00",
+      "end": "2026-11-11T08:53:04.821000+00:00",
+      "status": "Successful"
+    },
+    {
+      "start": "2026-11-11T08:33:11.249000+00:00",
+      "end": "2026-11-11T08:34:19.657000+00:00",
+      "status": "Successful"
+    },
+    {
+      "start": "2026-11-11T08:30:44.952000+00:00",
+      "end": "2026-11-11T08:31:55.368000+00:00",
+      "status": "Successful"
+    },
+    {
+      "start": "2026-11-11T08:29:44.971000+00:00",
+      "end": "2026-11-11T08:30:51.489000+00:00",
+      "status": "Successful"
+    },
+    {
+      "start": "2026-11-11T08:29:11.212000+00:00",
+      "end": "2026-11-11T08:29:47.415000+00:00",
+      "status": "Overridden"
+    }
+  ]
+}

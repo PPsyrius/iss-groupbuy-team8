@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-11T20:53:07.8909421+08:00",
+  "verification": "Static PowerShell parsing, source-byte hashes and text inspection only; runner never executed",
+  "sourcePath": "C:\\Users\\sirip\\AppData\\Local\\Temp\\opencode\\swe5001-rerun-prep-20261111\\v3-20261111-distributed-r4\\tooling\\runner.ps1",
+  "originalSha256": "8719136a46e8bcb732c920fcbe7cfb66b5f74230e2dfe0636a635bb5bdcbdae8",
+  "originalOfflineCopySha256": "8719136a46e8bcb732c920fcbe7cfb66b5f74230e2dfe0636a635bb5bdcbdae8",
+  "proposedSha256": "b66b14d0693104f7ccf8442683e322bc984be587d6c22a41c2f30f4f36aa3e04",
+  "sourceMatchesOriginalOfflineCopy": true,
+  "originalHoldGuardPreserved": true,
+  "proposedPowerShellParseErrorCount": 0,
+  "proposedContainerMountsUseR4": true,
+  "proposedHasNoFixedDeadline": true,
+  "launchAuthorityCalls": 3,
+  "functionalTestsRun": false,
+  "runnerExecuted": false,
+  "dockerOperations": false,
+  "cloudCalls": false,
+  "originalRunnerModified": false,
+  "launchHoldModified": false,
+  "authorityCreatedOrGranted": false
+}

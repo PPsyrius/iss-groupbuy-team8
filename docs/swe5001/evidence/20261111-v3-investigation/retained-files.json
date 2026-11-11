@@ -1,0 +1,171 @@
+{
+  "retainedAtUtc": "2026-11-11T09:51:52.119273+00:00",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 11085,
+      "sha256": "1833eec39b8c99bbd212f2f3d6c8fd779a3e8da26deaf0d7d3caad2ca63c5a18"
+    },
+    {
+      "path": "cloud-read-v1/application-warning-metadata.json",
+      "bytes": 3498,
+      "sha256": "b28a5c83e71340cea68e9ff08ad0299a9ce70f826efd48decc4bcc2514153a5f"
+    },
+    {
+      "path": "cloud-read-v1/completion.json",
+      "bytes": 200,
+      "sha256": "5d845fc8adb4c2f1b0235130a680654e601f7708fba7c9ec2b4e81cfd980a9dd"
+    },
+    {
+      "path": "cloud-read-v1/container-performance-metadata.json",
+      "bytes": 222806,
+      "sha256": "d27f2389aeec6a9c668c961c6e0b4c91c584c0678536372f316aab9aa8bdcd8a"
+    },
+    {
+      "path": "cloud-read-v1/intent.json",
+      "bytes": 266,
+      "sha256": "9f7fc2fc3a518285df691a9e4e991239623dc91dab50d37513a39280babdcbdb"
+    },
+    {
+      "path": "cloud-read-v1/metric-queries.json",
+      "bytes": 8104,
+      "sha256": "8d7ed6e550e5e1c91481cb89f8b91cbed48c23a1f32fc5dc84c29dc294b151e8"
+    },
+    {
+      "path": "cloud-read-v1/metrics.json",
+      "bytes": 22059,
+      "sha256": "35a2e68c7303d38f69b7cb2e631199c480e9443ed1ac8ea9837f54b80dbdb053"
+    },
+    {
+      "path": "correlate_findings.py",
+      "bytes": 8559,
+      "sha256": "d6ed55a1da7fbbb2c865edaf91127760456a1822940596fc5cf6af20432c85bd"
+    },
+    {
+      "path": "correlation-v1/findings.json",
+      "bytes": 29540,
+      "sha256": "175fbbcde77a41557211fc56c8b6c51443b64e0394cbf7517da5b9971d3dd71b"
+    },
+    {
+      "path": "correlation-v1/minute-correlation.csv",
+      "bytes": 4984,
+      "sha256": "0f6c4a65a7e4fd38348071544685bae4e48037107ed723601206b5eb3a11da6c"
+    },
+    {
+      "path": "edge-read-v1/alb-observability-settings.json",
+      "bytes": 208,
+      "sha256": "a6bae0f2b48e2777b8fde4fca8e277f458c28971ed3043c289e381c6d8243774"
+    },
+    {
+      "path": "edge-read-v1/completed.json",
+      "bytes": 334,
+      "sha256": "1042aa0ed70018619d6eba2db231131c2132be44f3b64c9793a634f52598dc51"
+    },
+    {
+      "path": "edge-read-v1/intent.json",
+      "bytes": 235,
+      "sha256": "ef4088f0921af393037be31088c316503b45f9c5d56356c3e0df3646bca80abd"
+    },
+    {
+      "path": "edge-read-v1/metric-queries.json",
+      "bytes": 1940,
+      "sha256": "d1a114bdea36ec3360805bd6f2c397329dd07ad72c816358c194e59163a59bf3"
+    },
+    {
+      "path": "edge-read-v1/metrics.json",
+      "bytes": 5341,
+      "sha256": "41805ea9de42518c2d0b559ac1165ed480bca4af5599eb69186c83e24ea69bab"
+    },
+    {
+      "path": "edge-read-v1/monitoring-subscription.json",
+      "bytes": 102,
+      "sha256": "ca7c75f428041f21d4975f69f52689d4d2778cea9f261a10ccb2d1663fc9841d"
+    },
+    {
+      "path": "edge-read-v1/observability-settings.json",
+      "bytes": 384,
+      "sha256": "c5ab1318d76dd03764dda1843477c57c0f6e21c33948d77431d9b7285c3da587"
+    },
+    {
+      "path": "r1-timing-v2/second-timeline.jsonl",
+      "bytes": 360861,
+      "sha256": "92c4b6cbad66fa80df321429db0033124590c069f9012e13c2b804121bfb28c9"
+    },
+    {
+      "path": "r1-timing-v2/timing-analysis.json",
+      "bytes": 95649,
+      "sha256": "f0bd219bcc4a67507c77949704aa065de8a6df316c66d20791b47309b590452b"
+    },
+    {
+      "path": "r2-client-error-markers.json",
+      "bytes": 649,
+      "sha256": "62607fc5d8fe6a717d478d62d5796a6090dd0aa8e2ef9c12b95c91adcf8c2a43"
+    },
+    {
+      "path": "r2-timing-v2/second-timeline.jsonl",
+      "bytes": 349226,
+      "sha256": "3b41040f10e37c8ec9db6538bbe77b27563d530aefaa517735bb6dfdc6157ca2"
+    },
+    {
+      "path": "r2-timing-v2/timing-analysis.json",
+      "bytes": 96805,
+      "sha256": "748ce326ca26aba328c683024e582dece29e1ddc961334ea8e5df2aa94f559f0"
+    },
+    {
+      "path": "read_cloud_diagnostics.py",
+      "bytes": 8531,
+      "sha256": "24a0afac98f0e4f6253604efca96dd674fb8404a81a074607a740af0c8f09dad"
+    },
+    {
+      "path": "read_edge_diagnostics.py",
+      "bytes": 4844,
+      "sha256": "cef8309597c3a2e30873fcc2c59c7a1adab1091207f96d28a828d64d3e1674e5"
+    },
+    {
+      "path": "retain_investigation.py",
+      "bytes": 2378,
+      "sha256": "d1fd165d49d3793ca1d8a9bd7b2820c552cb2878056c1e99f306222a80b4a74d"
+    },
+    {
+      "path": "test_timing_analysis.py",
+      "bytes": 2261,
+      "sha256": "e8320b955e867429317f84cc5a003251b70107f1f040c5bc7d7fe82fa045e30b"
+    },
+    {
+      "path": "timing-analysis-v1-failed-source.py",
+      "bytes": 12263,
+      "sha256": "7c653719d685f29df4b997ddccbfdcae84d882f224ccbdd75562c68c688c4020"
+    },
+    {
+      "path": "timing-first-attempt-failure.json",
+      "bytes": 670,
+      "sha256": "5cd85a4afb601b6ae12f86d9fac478d403b9a7a534ff35a8accc89acefb67222"
+    },
+    {
+      "path": "timing-tests-v1-source.py",
+      "bytes": 1515,
+      "sha256": "cf4efff2d081d7ba83e46faa483e7b976a337322f51455cff316f43bdee99714"
+    },
+    {
+      "path": "timing-tests-v1.log",
+      "bytes": 691,
+      "sha256": "825d76360b6adc736c879a01b6683b46295fe8ad766842aec03f4d41dfb93a8f"
+    },
+    {
+      "path": "timing-tests-v2.log",
+      "bytes": 943,
+      "sha256": "a781a275d7926ec70026387c80717385c381a954564a74594ac06686c7c1c4e1"
+    },
+    {
+      "path": "timing_analysis.py",
+      "bytes": 12781,
+      "sha256": "cdaee4017ce2208f995f835f41f6e356e25390f300c02d13408f79898961e0c4"
+    }
+  ],
+  "scope": "Read-only investigation addendum; original campaign evidence remains separately sealed and unchanged. No raw application logs/payloads, credentials, Terraform state/plans/private inputs or new load retained here.",
+  "toolingTestsPassed": 7,
+  "earlierDiagnosticFailurePreserved": true,
+  "rootCauseCertainty": "Immediate VU limit and late action are supported; earlier scaling alone guaranteeing both gates is not proven.",
+  "runtimeMutationPerformed": false,
+  "publication": "Local/uncommitted draft only."
+}

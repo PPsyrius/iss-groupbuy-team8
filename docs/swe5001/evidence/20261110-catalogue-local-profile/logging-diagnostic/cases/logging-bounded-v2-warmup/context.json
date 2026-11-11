@@ -1,0 +1,37 @@
+{
+  "label": "logging-bounded-v2-warmup",
+  "app": "blocbuy-matrix2-logging-bounded-v2",
+  "rate": 200,
+  "seconds": 120,
+  "port": 8589,
+  "startedAt": "2026-11-10T08:08:14.980Z",
+  "actions": [],
+  "actualLimits": {
+    "nanoCpus": 500000000,
+    "memoryBytes": 1073741824
+  },
+  "hostMemory": {
+    "MemTotal": 16510500864,
+    "MemAvailable": 5822697472,
+    "SwapTotal": 4294967296,
+    "SwapFree": 4213268480
+  },
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-candidate:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

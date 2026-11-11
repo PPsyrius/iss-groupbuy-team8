@@ -1,0 +1,32 @@
+{
+  "gc": {
+    "events": 243,
+    "maxPauseMs": 403.873,
+    "totalPauseMs": 3519.862
+  },
+  "phases": {
+    "cold-first-traffic": {
+      "cpuMedianPercentOneCore": 50.2034413796435,
+      "cpuMaxPercentOneCore": 50.79950591141697,
+      "memoryMaxBytes": 581230592,
+      "metricReadFailures": 4,
+      "gauges": {
+        "hikaricp_connections_pending": 190,
+        "hikaricp_connections_timeout_total": 585,
+        "jvm_threads_live_threads": 223
+      }
+    },
+    "cold-warmed-traffic": {
+      "cpuMedianPercentOneCore": 41.66300867410161,
+      "cpuMaxPercentOneCore": 50.52701581027668,
+      "memoryMaxBytes": 590839808,
+      "metricReadFailures": 0,
+      "gauges": {
+        "hikaricp_connections_pending": 9,
+        "hikaricp_connections_timeout_total": 586,
+        "jvm_threads_live_threads": 223
+      }
+    }
+  },
+  "limits": "GC is cumulative through both cold and warm runs; maximum gauges are sampled, not continuous. CPU units are percent of one core; task quota is half a core."
+}
