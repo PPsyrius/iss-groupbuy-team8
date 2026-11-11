@@ -39,6 +39,6 @@ sequenceDiagram
             Px->>Out: onTeamExpired(event), lowest precedence
             Out-->>Px: TeamExpiredV1 row in sys_outbox
         end
-        Px-->>Sw: true after COMMIT; an exception rolls all back (E1)
+        Px-->>Sw: true after COMMIT; an exception rolls all back
     end
     Sw-->>Job: Result(due, expired, alreadyResolved, failed)

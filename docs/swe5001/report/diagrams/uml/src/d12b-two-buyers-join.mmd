@@ -18,8 +18,9 @@ sequenceDiagram
     App->>Svc: handleWebhook(rawBody, signature)
     critical settlement tx: REQUIRED, READ COMMITTED, 10 s
         Svc->>Svc: settle(session, eventId, type, operator, id)
+        Svc->>Pay: claimEvent(eventId, type)
         Svc->>Ofa: lockForSettlement(quote): lock 1 team, lock 2 intent
-        Svc->>Pay: lock(id): lock 4 payment
+        Svc->>Pay: lock(id): lock 3 payment
         Svc->>Ofa: fulfil(event)
         Ofa->>Grp: joinConfirmed(dealId, paid, sharerUserId)
         Grp->>Deal: joinPaid(paid, alreadyMember, now)
