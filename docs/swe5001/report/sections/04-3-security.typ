@@ -1,10 +1,10 @@
-// Security: part of 04-quality-attributes.typ (split for parallel editing; output unchanged).
+// Security: part of 04-quality-attributes.typ.
 #import "../lib.typ": *
 
 == Security
 <sec-security>
 
-BlocBuy layers organisation guardrails, federated access, restricted network paths, service-level authorisation and CI security gates. On 10 November on AWS, a dated record verified dedicated data-subnet placement and required connectivity for that session (§3.2). These controls do not give end-to-end encryption or complete least privilege: the origin path uses HTTP and some secrets enter Terraform state.
+BlocBuy layers organisation guardrails, federated access, restricted network paths, service-level authorisation and CI security gates. These controls do not give end-to-end encryption or complete least privilege: the origin path uses HTTP and some secrets enter Terraform state.
 
 === Assets, threats and assessment scope
 
@@ -42,13 +42,13 @@ Configured, not tested (read on 9 November): as AD-17 (§3.3) decided, GitHub Ac
 
 The plan role can read foundation state but denies other state-object reads, including the secret-bearing runtime and edge state. Workload roles created by apply must stay under `/swe5001/` with the permissions boundary that foundation manages (#src("infra/swe5001/foundation/boundary.tf")[workload boundary]). That boundary caps access; each execution or task role still needs its own grant. A shared ECS execution role (#src("infra/swe5001/modules/ecs-cluster/main.tf")[execution role]) reads the configured Parameter Store scopes at start-up, while each service task role carries runtime permissions such as event publication or queue consumption. These scopes are not complete least privilege: the apply role keeps broad managed policies, including `CloudWatchFullAccessV2` (AISS-15), and live secret-denial and cross-stack isolation checks remain outstanding under NFR-51 (#src("docs/swe5001/HANDOFF.md")[recorded isolation limits]).
 
-As AD-17 decided, application credentials are AWS Systems Manager (SSM) Parameter Store `SecureString` values that ECS injects through parameter references (#src("infra/swe5001/runtime/ecs.tf")[task secret injection]); none is copied into committed task configuration. Database passwords use ephemeral generation and Terraform write-only arguments (#src("infra/swe5001/modules/rds-postgres/main.tf")[write-only passwords]). The Valkey AUTH token (#src("infra/swe5001/modules/cache/main.tf")[Valkey token]) and the origin secret (#src("infra/swe5001/edge/main.tf")[origin-secret reference]) stay in Terraform state, so authorised state readers can see them despite encrypted storage (AISS-09). The origin secret is seeded once; rebuilding the runtime does not rotate it. Raw plans, state and full environment dumps therefore stay private.
+As AD-17 decided, application credentials are SSM Parameter Store `SecureString` values that ECS injects through parameter references (#src("infra/swe5001/runtime/ecs.tf")[task secret injection]); none is copied into committed task configuration. Database passwords use ephemeral generation and Terraform write-only arguments (#src("infra/swe5001/modules/rds-postgres/main.tf")[write-only passwords]). The Valkey AUTH token (#src("infra/swe5001/modules/cache/main.tf")[Valkey token]) and the origin secret (#src("infra/swe5001/edge/main.tf")[origin-secret reference]) stay in Terraform state, so authorised state readers can see them despite encrypted storage (AISS-09). The origin secret is seeded once; rebuilding the runtime does not rotate it. Raw plans, state and full environment dumps therefore stay private.
 
 === Network and database isolation
 
 Configured, not tested: the public ALB accepts HTTP only from CloudFront's origin-facing managed prefix list (#src("infra/swe5001/runtime/security-groups.tf")[network rules]), and service forwarding also requires the matching `X-Origin-Secret` header, refusing by default. ECS tasks have no public IP and accept their service port only from the ALB or a peer-service security group (#src("infra/swe5001/modules/ecs-service/main.tf")[task placement and forwarding]). An explicit ALB rule blocks `/internal/*` and `/api/internal/*` (#src("infra/swe5001/runtime/alb.tf")[listener refusals]), and CloudFront sends only `/api/*` to the API origin. Neither the prefix list nor the shared header authenticates an individual internal caller, so a compromised peer stays inside the trusted network (AISS-04).
 
-On 10 November on AWS, a dated record verified that application tasks and data stores used separate subnets with local-only data routes (AD-15 and AISS-07; the full statement and @fig-d6-network are in §3.2). On 11 November on AWS, before V3 r2, the committed read-only subnet collector and a separate local reviewer (#src("docs/swe5001/evidence/20261111-load-reruns/v3-r2/prechecks/subnet-review.json")[subnet review]) again matched all four application-task ENIs to the application subnets and both store ENIs to the disjoint data subnets; local-only data routes and restricted security-group sources passed. That collector did not retest signed-in connectivity or negative packet isolation. In that session RDS ran as `db.t4g.small`, a session setting used for V3 r2 and r3 and not merged; the committed design is `db.t4g.micro` (§3.2), and PostgreSQL 18.3 was unchanged. The session used the existing Identity Center `AdministratorAccess` assignment, so its read-only command allowlist was not IAM least privilege (#src("docs/swe5001/evidence/20261111-load-reruns/README.md")[session record]).
+Data-subnet placement was verified on AWS on 10 November (AD-15, AISS-07; full statement in §3.2). On 11 November on AWS, before V3 r2, the committed read-only subnet collector and a separate local reviewer (#src("docs/swe5001/evidence/20261111-load-reruns/v3-r2/prechecks/subnet-review.json")[subnet review]) again matched all four application-task ENIs to the application subnets and both store ENIs to the disjoint data subnets; local-only data routes and restricted security-group sources passed. That collector did not retest signed-in connectivity or negative packet isolation. In that session RDS ran as `db.t4g.small`, a session setting used for V3 r2, r3 and r4 and not merged; the committed design is `db.t4g.micro` (§3.2), and PostgreSQL 18.3 was unchanged. The session used the existing Identity Center `AdministratorAccess` assignment, so its read-only command allowlist was not IAM least privilege (#src("docs/swe5001/evidence/20261111-load-reruns/README.md")[session record]).
 
 Configured, not tested (read on 9 November): each service has its own database and app and owner roles on one RDS server (§3.2.3). The full Flyway migration stream runs in every database, and the grants callback (#src("backend/blocbuy-platform/src/main/resources/db/swe5001/afterMigrate__service_grants.sql")[grant callback]) restricts each app role to its own tables. This is an access-control boundary: foreign tables still exist, and the services share one server. Tested locally, not on AWS: the 12 October record (#src("docs/agile/sprint-04/log/2026-10-12.md")[local grant tests]) reports foreign-table permission denials. Flyway owner credentials are also injected into the service process for migration, so the app-role restriction alone does not contain a compromised process.
 
@@ -62,7 +62,7 @@ On 10 November on AWS, three anonymous static HTTPS responses at the Singapore e
   table(
     columns: (1.1fr, 2.2fr, 1.7fr),
     table.header([Boundary], [Configured protection], [Limit]),
-    [Browser to CloudFront], [HTTP redirects to HTTPS. The edge applies shared content-security, framing, content-type, referrer and transport-security headers.], [Viewer minimum remains TLSv1, not TLS 1.2 only. No web application firewall (WAF) is configured.],
+    [Browser to CloudFront], [HTTP redirects to HTTPS. The edge applies shared content-security, framing, content-type, referrer and transport-security headers.], [Viewer minimum remains TLSv1, not TLS 1.2 only. No WAF is configured.],
     [CloudFront to ALB to task], [CloudFront origin is `http-only`; the ALB listener and target group use HTTP. Origin prefix-list and header restrictions apply.], [These HTTP hops are not encrypted. The header restricts forwarding but gives no confidentiality (AISS-08).],
     [Task to PostgreSQL], [RDS sets `rds.force_ssl=1`; the task JDBC URL uses `sslmode=require`. Database storage encryption is enabled.], [This sets the encryption requirement; it does not verify the JDBC certificate or hostname.],
     [Task to Valkey], [Transit and at-rest encryption enabled, AUTH token required, Spring Redis SSL enabled.], [The token persists in Terraform state (AISS-09).],
@@ -91,7 +91,7 @@ The most consequential gaps are privileged control-plane access, secret-bearing 
     columns: (0.7fr, 2.1fr, 2.2fr),
     table.header([AISS], [Current limit], [Required follow-up]),
     [04], [Internal calls rely on network trust, without a service token or mutual TLS.], [Add authenticated service identity; test denial from an untrusted peer as well as an external source.],
-    [07 (resolved)], [Placement and connectivity verified on 10 November; no failover or negative packet test.], [Recheck effective placement for a future deployment; do not reuse destroyed subnet IDs as current state.],
+    [07 (resolved)], [Resolved for placement and connectivity (§3.2).], [Recheck effective placement for a future deployment; do not reuse destroyed subnet IDs as current state.],
     [08], [Origin and ALB-to-task HTTP hops are unencrypted.], [Deploy and verify TLS on these hops; a prefix list or secret header is not encryption.],
     [09], [Origin secret and Valkey token are visible to authorised state readers.], [Restrict state and plan access, rotate through an agreed procedure and adopt a write-only secret path where supported.],
     [15], [Apply-role CloudWatch privileges are not fenced to SWE5001.], [Narrow permissions and test the intended cross-stack denials.],
@@ -99,6 +99,7 @@ The most consequential gaps are privileged control-plane access, secret-bearing 
     [17], [A long-lived IAM access key exists beside the keyless pipeline.], [Remove the key or move its user to Identity Center.],
     [18], [No CloudTrail trail, GuardDuty, Config or Access Analyzer in the project account.], [Add an organisation trail, GuardDuty and Access Analyzer.],
     [19], [Two-factor sign-in to GitHub is unconfirmed for all five of us.], [Confirm it for everyone; decide on commit signing.],
+    [20], [The shared `dev` delivery deploys a rebuilt image without a fresh scan.], [Scan the rebuilt image before it is pushed, or promote the scanned pull-request image.],
   ),
   kind: table,
   caption: [Open security limitations and their follow-up. Source: the AISS register (§3.4).],

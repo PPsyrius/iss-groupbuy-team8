@@ -1,4 +1,4 @@
-// What Only the Real Cloud Revealed: part of 06-highlights.typ (split for parallel editing; output unchanged).
+// What Only the Real Cloud Revealed: part of 06-highlights.typ.
 #import "../lib.typ": *
 
 == What Only the Real Cloud Revealed

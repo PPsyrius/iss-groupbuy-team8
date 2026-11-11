@@ -1,4 +1,4 @@
-// Other Architectural Decisions: part of 03-solution-overview.typ (split for parallel editing; output unchanged).
+// Other Architectural Decisions: part of 03-solution-overview.typ.
 #import "../lib.typ": *
 
 // AD numbers come from ../registers.md.
@@ -10,7 +10,7 @@
 
 == Other Architectural Decisions
 
-Four further decisions shape how the platform runs and changes, rather than what it is made of: where scheduled work runs, how the pipeline reaches AWS, how module boundaries are enforced, and how a release reaches the cloud. Each is stated in full here; §4.3, §4.4 and §5.3 refer back to them.
+Four further decisions shape how the platform runs and changes, rather than what it is made of: where scheduled work runs, how the pipeline reaches AWS, how module boundaries are enforced, and how a release reaches the cloud. @tbl-ad-other states each in full; §4.3, §4.4 and §5.3 refer back to them.
 
 #figure(
   ad-table(
