@@ -163,7 +163,7 @@ Seller self-service is out of scope as well. SWE5006 excluded a merchant self-se
     table.header([Designed], [Status], [Where]),
     [Payment as its own service, with a saga for fulfilment and refund], [Designed, not built; payment shares commerce's settlement transaction today], [AISS-02, §4.4],
     [API gateway with partner keys, quotas and rate limits], [Designed, not built; external partners have no entry point], [§3.1.4.6, AISS-04],
-    [Service-to-service token or mutual TLS on internal calls], [Designed, not built; internal endpoints rely on network rules], [AISS-04],
+    [Service-to-service token or mutual Transport Layer Security (TLS) on internal calls], [Designed, not built; internal endpoints rely on network rules], [AISS-04],
     [Amazon Relational Database Service (RDS) across several Availability Zones (Multi-AZ), a Valkey replica and a NAT instance per zone], [Designed for production, not built; one of each today], [AISS-01],
     [Stock reservation], [Studied, not designed], [—],
     [Distributed tracing with AWS Distro for OpenTelemetry and X-Ray], [Studied, not designed; only a trace-ID header is propagated], [§4.4],
