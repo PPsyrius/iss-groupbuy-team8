@@ -2,7 +2,7 @@
 componentDiagram
     component Commerce["commerce-svc"] <<subsystem>> {
         component Writer["IntegrationOutboxWriter"] <<subscriber>>
-        database Outbox["sys_outbox"] <<table>>
+        database Outbox["Commerce data store\n(sys_outbox)"]
         component Relay["OutboxRelayService"] <<application service>> : run by OutboxRelayJob
     }
     component Topic["Domain event topic"] <<topic>> :::messaging
@@ -16,8 +16,8 @@ componentDiagram
     Writer ..> Outbox : inserts V1 envelope
     Relay ..> Outbox : claims due rows
     Relay ..> Topic : publishes V1 events
-    Topic ..> QN : eventType in three types
-    Topic ..> QA : eventType prefix Team
+    QN ..> Topic : subscribed; eventType in three types
+    QA ..> Topic : subscribed; eventType prefix Team
     Consumer ..> QN : polls
     Consumer ..> Handler : handle
     Later .. QA
