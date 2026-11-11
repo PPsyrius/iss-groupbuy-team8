@@ -57,6 +57,19 @@
   show table.cell.where(y: 0): set text(weight: "bold")
   show table: set text(8.8pt)
   show table: set par(justify: false, leading: 0.5em)
+  // A long code name in a table cell (`OAuthUserTxService.registerNewUser`,
+  // `internal_controllers_are_hidden_and_distributed_only`) may break after a dot, underscore,
+  // slash, opening parenthesis or comma, and between the words of a camelCase name, so it wraps
+  // inside its column instead of running into the next one or past the page edge. As in the
+  // SWE5006 template's `report-table` and the appendix's `figures.typ`.
+  show table: it => {
+    show raw.where(block: false): r => {
+      show regex("[_./(,]"): m => m.text + sym.zws
+      show regex("[a-z][A-Z]"): m => m.text.at(0) + sym.zws + m.text.at(1)
+      r
+    }
+    it
+  }
   show figure: set block(breakable: true)
   body
 }

@@ -1,6 +1,6 @@
 %% frame: CheckoutPayment lifecycle (Pay upfront)
 stateDiagram-v2
-    [*] --> CREATED : prepare [quote valid] / insert
+    [*] --> CREATED : «create» prepare / insert
     CREATED --> CREATED : session created / bind()
     CREATED --> SUCCEEDED : fact [paid, matches] / succeed()
     CREATED --> FAILED : fact [expired, intent canceled] / failTerminalUnpaid()
