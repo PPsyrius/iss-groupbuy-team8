@@ -16,7 +16,7 @@
 
 == Physical Architecture & Design
 
-The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the virtual private cloud (VPC) hold the data stores; their placement was verified on AWS on 10 November (AD-15, @fig-d6-network). Runtime is disposable; the permanent edge and foundation stacks remain between sessions (AD-12).
+The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the virtual private cloud (VPC) hold the data stores (AD-15, @fig-d6-network). Runtime is disposable; the permanent edge and foundation stacks remain between sessions (AD-12).
 
 @tbl-logical-physical maps each logical element of @tbl-logical-elements (§3.1.3) to the product that implements it. The last three rows have no logical counterpart: they exist only because of where the system runs.
 
@@ -37,14 +37,14 @@ The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`)
     [`UserAppService` (the one synchronous call)], [ECS Service Connect], [Commerce reaches identity by service name inside the VPC: `RemoteUserAppService` calls `InternalUserController` under `/internal/users` over HTTP (for example `/internal/users/{id}/active`)],
     [PublishedEvents V1], [`IntegrationEventEnvelope` JSON in `sys_outbox`], [`TeamSucceededV1`, `TeamExpiredV1` and `PaymentSucceededV1`; `OutboxRelayService` publishes them through `SnsOutboxEventTransport` (AD-04)],
     [Message broker], [Amazon SNS], [Topic `blocbuy-swe5001-domain-events`],
-    [Event queue (notification)], [Amazon SQS], [Queue `blocbuy-swe5001-notification` with the dead-letter queue (DLQ) `blocbuy-swe5001-notification-dlq`; read by `SqsNotificationEventConsumer`],
+    [Event queue (notification)], [Amazon SQS], [Queue `blocbuy-swe5001-notification` with the DLQ `blocbuy-swe5001-notification-dlq`; read by `SqsNotificationEventConsumer`],
     [Event queue (audit)], [Amazon SQS], [Queue `blocbuy-swe5001-audit` with a DLQ; the subscription takes event types that start with `Team`; no consumer (it demonstrates fan-out, ADR 0007)],
     [Identity, commerce and notification data stores], [Amazon RDS for PostgreSQL 18], [`db.t4g.micro`, 20 GiB gp3, one zone; three databases (`identity`, `commerce`, `notification`) on one server],
     [Session store], [Amazon ElastiCache for Valkey 8.0], [`cache.t4g.micro`, one node, TLS and an AUTH token; Sa-Token sessions and the role snapshot, read through `SessionStpInterface`],
     [Identity provider], [Google Sign-In (external)], [Called from identity through fck-nat],
     [Payment provider], [Stripe, test mode (external)], [Called from commerce through fck-nat; Stripe's webhook arrives through CloudFront],
     [— (outbound gateway)], [fck-nat on EC2 `t4g.nano`], [One instance with a static network interface and an Elastic IP],
-    [— (configuration and secrets)], [SSM Parameter Store], [Under `/blocbuy/swe5001/`; read by the task execution role at start-up],
+    [— (configuration and secrets)], [AWS Systems Manager (SSM) Parameter Store], [Under `/blocbuy/swe5001/`; read by the task execution role at start-up],
     [— (monitoring)], [Amazon CloudWatch], [Logs under `/blocbuy/swe5001/*` (7 days), one dashboard, two alarms on the notification queue (DLQ not empty, oldest-message age)],
   ),
   kind: table,
@@ -53,9 +53,9 @@ The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`)
 
 *Deployment view.* Two UML deployment diagrams show the physical layout. @fig-d5-deployment places each artefact in its region, VPC, availability zone and subnet; @fig-d5a-communication-paths shows the paths between the nodes.
 
-#afig("d5-physical-deployment", lbl: <fig-d5-deployment>, [Physical deployment view (UML deployment diagram). Each availability zone holds a public, a private application and a data subnet; ECS spreads the three services' tasks over both private subnets, while RDS and Valkey each run in one data subnet that AWS chooses.])
+#afig("d5-physical-deployment", lbl: <fig-d5-deployment>, [Physical deployment view (UML deployment diagram). Each availability zone holds a public, a private application and a data subnet. Each service's image is deployable in either zone's Fargate environment; the note gives the task count per service over both zones, so `identity-svc`, with one task, is not zone-redundant. RDS and Valkey each run in one data subnet that AWS chooses.])
 
-#afig("d5a-communication-paths", [Communication path view (UML deployment diagram). Only CloudFront reaches the load balancer, every outbound call to Stripe, Google, SNS and SQS leaves through fck-nat, and a path drawn to the private application subnets applies to all three services.])
+#afig("d5a-communication-paths", [Communication path view (UML deployment diagram). Each service is an artefact in the Fargate execution environment, as in @fig-d5-deployment. Only CloudFront reaches the load balancer, all three services reach Valkey and PostgreSQL, and every outbound call to Stripe, Google, SNS and SQS leaves through fck-nat.])
 
 The paths in @fig-d5a-communication-paths work as follows:
 
@@ -100,20 +100,20 @@ The VPC (`10.50.0.0/16`) spans two availability zones and has three subnet tiers
   caption: [Subnet tiers and what runs in each; the CIDRs are in @fig-d6-network. Source: `infra/swe5001/modules/network`; the data tier was added on 4 November 2026 (AD-15).],
 ) <tbl-subnets>
 
-*Separate data subnets (assessor remark F6).* Before the 4 November configuration change, the database, the cache and the services used the same eligible private application subnet set, separated only by security groups. AD-15 gives the data stores their own subnets and route table; the 10 November record verifies that layout for the recorded session. The configuration provides two independent barriers:
+*Separate data subnets (the lecturers’ remark F6).* Before the 4 November configuration change, the database, the cache and the services used the same eligible private application subnet set, separated only by security groups. AD-15 gives the data stores their own subnets and route table. The configuration provides two independent barriers:
 
 + *Routing.* A data subnet has no route out of the VPC, so a compromised or misconfigured data store cannot reach the internet, even through the NAT instance.
 + *Security groups.* RDS accepts TCP 5432 only from the service group and the `db-init` group. Valkey accepts TCP 6379 only from the service group. Neither group allows outbound traffic. Full rules: @tbl-security-groups.
 
 #d6-sg-table()
 
-Tested locally, not on AWS: module validation rejects reused data CIDRs, and `terraform test` `data_tier_has_its_own_subnets` checks disjoint sets (19 of 19 runtime runs passed, 4 November). On 10 November on AWS, the #src(subnet-record)[dated record] retained the actual application and data ENIs, subnet groups, effective routes and security groups and required connectivity. This resolves AISS-07's placement and connectivity gap and updates NFR-70, without claiming negative packet tests or failover. Scheduled cleanup later removed that runtime; its subnet IDs are historical, not reusable live-state assertions.
+Tested locally, not on AWS: module validation rejects reused data CIDRs, and `terraform test` `data_tier_has_its_own_subnets` checks disjoint sets (19 of 19 runtime runs passed, 4 November). On 10 November on AWS, the #src(subnet-record)[dated record] retained the actual application and data ENIs, subnet groups, effective routes and security groups and required connectivity. This resolves AISS-07’s placement and connectivity gap and updates NFR-70, without claiming negative packet tests or failover. Scheduled cleanup later removed that runtime; its subnet IDs are historical, not reusable live-state assertions.
 
 *Single points in the network.* Each zone has its own private route table, but both point at the single fck-nat instance in zone a. An Auto Scaling group of one replaces a failed instance, but only in zone a, because the static network interface lives there. If zone a fails, the services in zone b lose outbound access (for example to Stripe and Google) until the zone recovers. This is a cost decision (AD-10) and is listed as AISS-01.
 
 === Key Architectural Decisions
 
-The physical decisions buy isolation and a small bill rather than always-on capacity: managed containers on ARM (AD-07, AD-08), one guarded entry point (AD-09), single shared data and egress nodes (AD-10, AD-11), a runtime that exists only while used (AD-12), no Kubernetes (AD-13), a tag-fenced stack in the shared team account (AD-14), data subnets with no route out (AD-15) and scaling on requests per task (AD-20). Prices are on-demand list prices for `ap-southeast-1` from our cost estimate of 25 September 2026 (`04-aws-cost-estimate.md`), unless the row names another source.
+The physical decisions buy isolation and a small bill rather than always-on capacity: managed containers on ARM (AD-07, AD-08), one guarded entry point (AD-09), single shared data and egress nodes (AD-10, AD-11), a runtime that exists only while used (AD-12), no Kubernetes (AD-13), a tag-fenced stack in the shared team account (AD-14), data subnets with no route out (AD-15) and scaling on requests per task (AD-20); @tbl-ad-physical states each one. Prices are on-demand list prices for `ap-southeast-1` from our cost estimate of 25 September 2026 (`04-aws-cost-estimate.md`), unless the row names another source.
 
 #figure(
   ad-table(
@@ -192,19 +192,19 @@ The physical decisions buy isolation and a small bill rather than always-on capa
       *Driver:* Security (isolation between the two environments). \
       *Context:* The SWE5006 environment and the SWE5001 runtime share our member account 402178232802 in an AWS Organization; neither must be able to damage the other. \
       *Options considered:* (a) a separate member account (`swe5001-poc`, since closed); (b) the shared account with no fence, rejected because either project could change the other's resources; (c) the shared account with the SWE5001 apply role fenced to its own resources. \
-      *Choice:* (c). The SWE5001 apply role denies actions on resources without the SWE5001 tags or name prefix (#src("infra/swe5001/foundation/github-oidc.tf")[`github-oidc.tf`], "Guardrail for the shared account"); service control policies (SCPs) and Identity Center govern the whole account, and an account administrator cannot lift an SCP. \
+      *Choice:* (c). The SWE5001 apply role denies actions on resources without the SWE5001 tags or name prefix (#src("infra/swe5001/foundation/github-oidc.tf")[`github-oidc.tf`], "Guardrail for the shared account"); SCPs and Identity Center govern the whole account, and an account administrator cannot lift an SCP. \
       *Trade-off:* One account, one set of short-lived logins and one bill shared by both projects (§6.3); the fence is an IAM policy that an administrator can change, weaker than an account boundary. An SCP can also block legitimate calls, as a CloudFront metric read was on 16 October (§4.3, @tbl-findings). \
       *Consequence:* Access details are in §4.3. \
       *Record:* No ADR; `docs/deploy/aws-account-governance/README.md`.
     ]),
     ("AD-15", [
       *Separate data subnets for RDS and Valkey.* \
-      *Driver:* Security (assessor remark F6). \
-      *Context:* Assessor remark F6 (21 October): the database should be in its own subnet. \
+      *Driver:* Security (the lecturers’ remark F6). \
+      *Context:* The lecturers’ remark F6 (21 October): the database should be in its own subnet. \
       *Options considered:* (a) keep the shared private subnets and rely on security groups, rejected because it leaves one barrier; (b) add data subnets with their own route table. \
       *Choice:* (b): two data subnets, one per zone, with a route table that holds only the local VPC route. \
       *Trade-off:* No running cost and no code change; two more subnets and a route table to maintain, and a rebuild is needed to adopt it (free here, AD-12). \
-      *Consequence:* Tested locally, not on AWS, on 4 November; verified on AWS on 10 November (§3.2, AISS-07). The recorded runtime was later destroyed. \
+      *Consequence:* Tested locally, not on AWS, on 4 November; verified on AWS on 10 November (AISS-07). The recorded runtime was later destroyed. \
       *Record:* No ADR; \#589 and the #src(subnet-record)[10 November subnet record].
     ]),
     ("AD-20", [
@@ -231,7 +231,7 @@ The solution uses managed AWS services wherever one exists, so we run no servers
     columns: (0.8fr, 1.4fr, 2.2fr),
     table.header([Layer], [Technology and version], [Why this one, and what it costs us]),
     [Application runtime], [Java 21, Spring Boot 4.1.2, MyBatis; image `eclipse-temurin:21-jre-noble`, built for `linux/arm64`], [The SWE5006 code base, reused unchanged by the strangler migration (AD-01). One base image for all three services keeps patching in one place],
-    [Container platform], [ECS on Fargate, ARM64; 0.5 vCPU and 1 GiB per task], [No hosts to manage (AD-07). The task size is kept small on purpose, so the service scales out instead of up (AD-20). The 11 November load runs V3 r2, r3 and r4 gave commerce 1 vCPU and 2 GiB in a session-only setting, while identity and notification stayed at 0.5 vCPU and 1 GiB; §4.1 reports V3 r4's scale-out result, not a per-task capacity, and the committed size is unchanged],
+    [Container platform], [ECS on Fargate, ARM64; 0.5 vCPU and 1 GiB per task], [No hosts to manage (AD-07). The task size is kept small on purpose, so the service scales out instead of up (AD-20). The 11 November load runs V3 r2, r3 and r4 gave commerce 1 vCPU and 2 GiB in a session-only setting, while identity and notification stayed at 0.5 vCPU and 1 GiB; §4.1 reports V3 r4’s scale-out result, not a per-task capacity, and the committed size is unchanged],
     [Image registry], [Amazon ECR, one repository per service plus `swe5001/monolith`; immutable tags, scan on push, lifecycle policy], [Immutable tags make a release digest refer to exactly one image; Trivy in the pipeline is the blocking scan (§5.2). Configured, not tested: ECR also scans each pushed image; its findings are not part of the gate],
     [Edge], [Amazon CloudFront (`PriceClass_200`, HTTP/2) and a private S3 bucket], [HTTPS without a custom domain or certificate; the website and the API share one origin, so the browser needs no cross-origin settings (AD-09). The price class excludes the most expensive edge locations],
     [Load balancing], [Application Load Balancer, HTTP :80, path rules], [Path-based routing to three services without a separate API gateway product; API Gateway was rejected because it adds a hop and a per-request charge],
@@ -250,7 +250,7 @@ The solution uses managed AWS services wherever one exists, so we run no servers
 
 *Encryption and secrets.* Configured, not tested: the data stores, the domain-event topic (`alias/aws/sns`), the queues, ECR and the state bucket are encrypted at rest; the alarm topic `blocbuy-swe5001-alerts` is not. The CloudFront → ALB hop is plain HTTP (AISS-08), and the Valkey AUTH token and the origin secret are in Terraform state (AISS-09). Database passwords are generated as ephemeral values and written with write-only arguments, so they never reach Terraform state. @tbl-security-boundaries gives each boundary, its control and its limit (§4.3).
 
-*Cost.* Estimated: while it is up, the runtime costs about US\$0.17 to US\$0.20 an hour (AD-12), and nothing for the rest of the week except the permanent edge. Estimated from Cost Explorer: every session billed to 10 November cost about US\$11.6 in total (read on 11 and 12 November; the 11 November session is not yet billed). §6.3 shows the method.
+*Cost.* Estimated: while it is up, the runtime costs about US\$0.17 to US\$0.20 an hour (AD-12), and nothing for the rest of the week except the permanent edge. Calculated (one term estimated): every session billed to 10 November cost about US\$11.6 in total (read on 11 and 12 November; the 11 November session is not yet billed). §6.3 shows the method.
 
 *Workloads and compute.* @tbl-workload-compute shows which compute runs each kind of workload and what scales it.
 
@@ -340,12 +340,12 @@ Several business rules are enforced by unique indexes, so that a race between tw
 
 ==== Aggregates and their tables
 
-@tbl-aggregate-tables maps the twelve aggregates of @tbl-aggregates (§3.1.4), eleven roots with a domain class and the Refund aggregate, which has none, to their repositories and tables. The technical tables and the role reference data follow, so each of the 29 tables appears once.
+@tbl-aggregate-tables maps the 11 aggregate roots of @tbl-aggregates (§3.1.4) to their repositories and tables. The review case is a read model inside the `CheckoutPayment` boundary, so its tables sit in that row. The refund records, which are not a root, follow; then the technical tables and the role reference data, so each of the 29 tables appears once.
 
 #figure(
   table(
     columns: (auto, auto, auto, 1fr),
-    table.header([Aggregate (root)], [Context], [Repository], [Tables]),
+    table.header([Aggregate root or record], [Context], [Repository], [Tables]),
     [`User`], [`identity`], [`UserRepository`], [`sys_user`],
     [`OAuthIdentity`], [`identity`], [`UserOAuthRepository`], [`sys_user_oauth` (refers to `User` by `user_id`)],
     [`Product`], [`catalog`], [`ProductRepository`], [`biz_product`, `log_product_team_terms` (written in the same transaction)],
@@ -356,7 +356,7 @@ Several business rules are enforced by unique indexes, so that a race between tw
     [`PurchaseIntent`], [`order`], [`PurchaseIntentRepository`], [`biz_purchase_intent`],
     [`Order`], [`order`], [`OrderRepository`], [`biz_order`],
     [`CheckoutPayment`], [`payment`], [`CheckoutPaymentRepository`], [`biz_payment`, `log_payment_webhook_event`, `biz_payment_review_case` (read model `PaymentReviewCase`), `log_payment_review`],
-    [Refund (no domain class)], [`payment`], [`RefundRepository`], [`biz_refund`, `log_refund_attempt` (`RefundWork` is a claim snapshot of a `biz_refund` row)],
+    [Refund records (not a root)], [`payment`], [`RefundRepository`], [`biz_refund`, `log_refund_attempt` (`RefundWork` is a claim snapshot of a `biz_refund` row)],
     [`Notification`], [`notification`], [`NotificationRepository`], [`biz_notification`],
     [Technical (no aggregate)], [`notification`], [`ConsumedMessageRepository`], [`sys_consumed_message`],
     [Technical (no aggregate)], [commerce platform], [—], [`sys_outbox`, `sys_scheduler_lock` (`LeasedJobRunner`), `sys_scheduled_item_retry`, `sys_checkout_expiry_cursor`; see @tbl-technical],
@@ -384,13 +384,13 @@ Write transactions run at PostgreSQL's default READ COMMITTED with `SELECT … F
     [`sys_consumed_message`], [V28], [*Idempotent receiver.* The notification consumer inserts `(event_id, consumer)` in the same transaction as the notification; a duplicate delivery inserts nothing and is acknowledged],
     [`sys_scheduler_lock`], [V13], [*Lease.* `LeasedJobRunner` gives each of the five scheduled jobs (AD-16) one holder across all tasks; PostgreSQL is the lock of record],
     [`sys_scheduled_item_retry`], [V17], [Per-item retry back-off (`failure_count`, `retry_after`), so one failing item cannot block a job],
-    [`sys_checkout_expiry_cursor`], [V25], [The keyset position (`last_create_time`, `last_payment_id`) of the operator-run Checkout expiry sweep, so one run resumes where the last stopped],
+    [`sys_checkout_expiry_cursor`], [V25], [The keyset position (`last_create_time`, `last_payment_id`) of the manually run Checkout expiry sweep, so one run resumes where the last stopped],
   ),
   kind: table,
   caption: [Technical tables and the patterns they support. Source: Flyway migrations V13–V28.],
 ) <tbl-technical>
 
-Calculated: the relay publishes at most about 50 events/s (100 rows per 2 s tick), and only one copy runs because it holds the scheduler lease (AD-16, §3.3).
+Only one relay copy runs, because it holds the scheduler lease; its throughput limit is calculated in AD-16 (§3.3).
 
 ==== Non-relational stores and messages
 
@@ -436,7 +436,7 @@ The design rule is that Valkey is never the lock of record or the only copy of a
   caption: [Integration event envelope fields. Source: `IntegrationEventEnvelope` and `OutboxMessageFactory`.],
 ) <tbl-envelope>
 
-*Queues.* SNS delivers raw messages to SQS, and each subscription filters on the `eventType` attribute. The notification queue receives `TeamSucceeded`, `TeamExpired` and `PaymentSucceeded`; the audit queue receives every event whose type starts with `Team`. Each queue has a 60 s visibility timeout, 20 s long polling and 4-day retention; after five failed receives a message moves to the queue's DLQ, which keeps it for 14 days. Topic and queues are encrypted (AWS-managed SNS key, SQS-managed encryption).
+*Queues.* SNS delivers raw messages to SQS, and each subscription filters on the `eventType` attribute. The notification queue receives `TeamSucceeded`, `TeamExpired` and `PaymentSucceeded`; the audit queue receives every event whose type starts with `Team`. Each queue has a 60 s visibility timeout, 20 s long polling and 4-day retention; after five failed receives a message moves to the queue's DLQ, which keeps it for 14 days.
 
 ==== Data classification
 
