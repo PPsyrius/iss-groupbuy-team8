@@ -1,0 +1,460 @@
+{
+  "schema": 1,
+  "purpose": "Minimize repeat disclosure during review; original signed/hashed evidence remains the source of truth",
+  "projections": [
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-catalogue-local-profile/README.md",
+      "originalSha256": "1b1ee99ab4171869126117145454c7fa92d64cbf97ec9f86cfc77f1f3e254cad",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        15
+      ],
+      "lines": [
+        {
+          "line": 14,
+          "text": "- Data: fresh isolated PostgreSQL 18 (`max_connections=79`, `pg_stat_statements`, I/O timing) and Redis 8.10. Generated ephemeral local credentials remain outside Git. Internal Docker network, no published ports, no mounted AWS credentials, no external connectivity; k6 shares the local commerce network namespace and targets only loopback."
+        },
+        {
+          "line": 15,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 16,
+          "text": "- Workload: pinned k6 1.6.1, deterministic 70% list / 30% detail, rotating through seeded IDs, original ten-second request timeout and Result validation. Diagnostic phases: warmup 25 RPS \u00d730 s, 100 RPS \u00d760 s, 200 RPS \u00d790 s, 400 RPS \u00d760 s. The acceptance driver and its workload/gates are not changed."
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-catalogue-local-profile/codec-startup/scripts/post-codec-startup.ps1",
+      "originalSha256": "b98d3a9ab7781ab9455a1bfe1ec41aac15de5f66af6f686818471447bc410573",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        2,
+        4
+      ],
+      "lines": [
+        {
+          "line": 1,
+          "text": "$ErrorActionPreference = 'Stop'"
+        },
+        {
+          "line": 2,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 3,
+          "text": "$Matrix = Join-Path $Root 'matrix-v2'"
+        },
+        {
+          "line": 4,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 5,
+          "text": "$Jdk = 'eclipse-temurin:21-jdk-noble@sha256:114cabb73033ca4ce7ceec3deb62396bc1b716282bae051ed3c1d82e38fcab2d'"
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-catalogue-local-profile/matrix/paired-base-health.jsonl",
+      "originalSha256": "6d25b71b0276b7766d2c5d112aef2ce6225260d73865ede3ae455f2437373fda",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        1,
+        2
+      ],
+      "lines": [
+        {
+          "line": 1,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 2,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 3,
+          "text": "{\"at\":\"2026-11-10T06:45:02.523Z\",\"durationMs\":1959,\"httpStatus\":200,\"status\":\"UP\"}"
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-catalogue-local-profile/matrix/paired-bulkhead-health.jsonl",
+      "originalSha256": "32840a879ad7e6304de7472d7edfe36f2f170ca54cb91c080f408ef0ae775403",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        1,
+        2
+      ],
+      "lines": [
+        {
+          "line": 1,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 2,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 3,
+          "text": "{\"at\":\"2026-11-10T06:53:05.935Z\",\"durationMs\":2450,\"httpStatus\":200,\"status\":\"UP\"}"
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-catalogue-local-profile/retained-files.json",
+      "originalSha256": "15394324f3b65bb52e9118ed942ce356b4731abdb5a63475224011e6aabee6cc",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        3
+      ],
+      "lines": [
+        {
+          "line": 2,
+          "text": "  \"evidenceKind\": \"local-diagnostic-not-AWS-acceptance\","
+        },
+        {
+          "line": 3,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 4,
+          "text": "  \"retained\": ["
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-load-preflight/README.md",
+      "originalSha256": "9abdac7789b976370dcb717059e4172386141988d20786ec51b8c17644165fb0",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        27,
+        33
+      ],
+      "lines": [
+        {
+          "line": 26,
+          "text": ""
+        },
+        {
+          "line": 27,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 28,
+          "text": ""
+        },
+        {
+          "line": 32,
+          "text": ""
+        },
+        {
+          "line": 33,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 34,
+          "text": ""
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-load-preflight/pool-rollout.json",
+      "originalSha256": "b29d526afa853c55b17164696dfbd1d7fa64aaebc944e34ff26dddb85641de49",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        7
+      ],
+      "lines": [
+        {
+          "line": 6,
+          "text": "  \"cluster\": \"blocbuy-swe5001\","
+        },
+        {
+          "line": 7,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 8,
+          "text": "  \"services\": ["
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-v3-autoscaling/README.md",
+      "originalSha256": "9daa0a2cdc882ddafe61479da2bda6624226e4a2e78386502e75418e566d8ac7",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        31
+      ],
+      "lines": [
+        {
+          "line": 30,
+          "text": ""
+        },
+        {
+          "line": 31,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 32,
+          "text": ""
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-v3-autoscaling/aws-followup/archive-manifest.json",
+      "originalSha256": "54fb600d07cbd8a5e80aadee4d8d5efae159f646a7ba2231e42fb73a245fe0c4",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        2
+      ],
+      "lines": [
+        {
+          "line": 1,
+          "text": "{"
+        },
+        {
+          "line": 2,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 3,
+          "text": "  \"sha256\": \"dccc02e618fe6e34fb8f9bf408acc70b676332e49ecc104e942506d82ecd9e65\","
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-v3-autoscaling/aws-recovery-files.json",
+      "originalSha256": "f1052d0ae149d67c6b5c2a4d484eedd920c9a64f2c81a63acfe3031f3af268e9",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        2
+      ],
+      "lines": [
+        {
+          "line": 1,
+          "text": "{"
+        },
+        {
+          "line": 2,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 3,
+          "text": "  \"archiveSha256\": \"324dcb7022acf4821dc0d716c0ebfe2ae678afa9014a60363a96fdc75bdd4f4d\","
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261110-v3-autoscaling/retained-files.json",
+      "originalSha256": "b6b1c8c641139c6ec8c06952cbe4dad570a1cd0ed6ef3efb8b7caf104dac2cce",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        4
+      ],
+      "lines": [
+        {
+          "line": 3,
+          "text": "  \"runLabel\": \"20261110-v3-194543\","
+        },
+        {
+          "line": 4,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 5,
+          "text": "  \"files\": ["
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261111-load-reruns/v2/completion.json",
+      "originalSha256": "442288c8503bc914155febe685c260421e8aca71f795ebea585803a6d23b73bb",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        7
+      ],
+      "lines": [
+        {
+          "line": 6,
+          "text": "  \"calibrationExit\": 0,"
+        },
+        {
+          "line": 7,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 8,
+          "text": "}"
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261111-load-reruns/v2/observer-failure.json",
+      "originalSha256": "314bcb8ccacf983263e149efd873c642582dcd2eff87ef5cc987aef5cdce3ef5",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        12
+      ],
+      "lines": [
+        {
+          "line": 11,
+          "text": "  \"observationsTransferred\": false,"
+        },
+        {
+          "line": 12,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 13,
+          "text": "  \"loadIntervalUtc\": {"
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/minimal-collection-integration/INTEGRATION.md",
+      "originalSha256": "cbad8293f0f20664f847cc274fcb432e8c93a9db1aff5f16c4b35af379862145",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        15
+      ],
+      "lines": [
+        {
+          "line": 14,
+          "text": ""
+        },
+        {
+          "line": 15,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 16,
+          "text": ""
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/minimal-collection-integration/runner-review-receipt.json",
+      "originalSha256": "a98efc97c1416b427336f4b5587716ac38018400f0b1012096a1c9a17f730f94",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        4
+      ],
+      "lines": [
+        {
+          "line": 3,
+          "text": "  \"verification\": \"Static PowerShell parsing, source-byte hashes and text inspection only; runner never executed\","
+        },
+        {
+          "line": 4,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 5,
+          "text": "  \"originalSha256\": \"8719136a46e8bcb732c920fcbe7cfb66b5f74230e2dfe0636a635bb5bdcbdae8\","
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/rate-concurrency-review/analysis.json",
+      "originalSha256": "9a3935dc7c253e44b5f40304904c54cac733a2725146122c10fe2d437c4bb602",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        3781,
+        3786,
+        3791,
+        3796
+      ],
+      "lines": [
+        {
+          "line": 3780,
+          "text": "    {"
+        },
+        {
+          "line": 3781,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 3782,
+          "text": "      \"before\": \"68B3D6624802A145B211521E3A8B44A9DA0AF230EC1B0B6101225488134186F4\","
+        },
+        {
+          "line": 3785,
+          "text": "    {"
+        },
+        {
+          "line": 3786,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 3787,
+          "text": "      \"before\": \"E58D67966F8ED2945E44D60931A495DDDF24A926551340FEF10341129995D267\","
+        },
+        {
+          "line": 3790,
+          "text": "    {"
+        },
+        {
+          "line": 3791,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 3792,
+          "text": "      \"before\": \"2DDE635653A10C0F6C56B3319B93A9C7836F1658CE7D2C22ED67C26C7D02209D\","
+        },
+        {
+          "line": 3795,
+          "text": "    {"
+        },
+        {
+          "line": 3796,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 3797,
+          "text": "      \"before\": \"D34CDD4FE537F5EA4E56A76C2B99FC49095F47C393C491B64C1A20273D24FD94\","
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    },
+    {
+      "sourcePath": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/target-readiness-refusal-followup.json",
+      "originalSha256": "659511f78e31a9fbd36396509d428efeb0c2a841b0be2339fff410a0cdaf251f",
+      "format": "Line-numbered viewing excerpt, NOT a runnable script, JSON/JSONL source, complete receipt or replacement manifest member",
+      "omittedLines": [
+        6
+      ],
+      "lines": [
+        {
+          "line": 5,
+          "text": "      \"Target\": {"
+        },
+        {
+          "line": 6,
+          "omitted": "Private address or operator-home metadata; entire original line withheld"
+        },
+        {
+          "line": 7,
+          "text": "        \"Port\": 8589,"
+        }
+      ],
+      "contextPolicy": "Only flagged lines and one neighbor on each side; non-sensitive context capped at 600 characters. Not a full copy."
+    }
+  ]
+}

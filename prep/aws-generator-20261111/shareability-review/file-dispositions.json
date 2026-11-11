@@ -9,7 +9,7 @@
     "path": "docs/quality/nfr-register.md",
     "status": "READY-FOR-DRAFT-CANDIDATE",
     "categories": [],
-    "sha256": "9e683e728495ff228194787a1567bffee6fc4e623d5170247e058fbef688f45e"
+    "sha256": "268296955e6ab8133c6b204ac0dca37b17d795dd4fce98d456a292e515b5472b"
   },
   {
     "path": "docs/swe5001/evidence/20261111-v3-r3/AWS-GENERATOR.md",
@@ -77,7 +77,7 @@
     "path": "docs/swe5001/evidence/20261111-v3-r3/DIAGNOSIS.md",
     "status": "READY-FOR-DRAFT-CANDIDATE",
     "categories": [],
-    "sha256": "22a241e06acf779f4f8db3ef28e6449be8b0c4feaa5a2e054b8bc483ff4aa175"
+    "sha256": "aba71c2d0d824e2e040a8780361c080cf842dcde88597f869d04c4ab86ed1113"
   },
   {
     "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/APPROVAL-PROPOSAL.md",
@@ -534,7 +534,7 @@
     "path": "docs/swe5001/evidence/20261111-v3-r3/README.md",
     "status": "READY-FOR-DRAFT-CANDIDATE",
     "categories": [],
-    "sha256": "99312c9ad4906a8cbc4d96aa014ae32866d8763cb6fd1a94e2f88d60e558999a"
+    "sha256": "d738300c10f819efa74a7a595db34a0d1dd4c82fbbdd96cb765913a04333d69b"
   },
   {
     "path": "docs/swe5001/evidence/20261111-v3-r3/retained-files.json",

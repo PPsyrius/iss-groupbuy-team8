@@ -1,5 +1,7 @@
 flowchart LR
   %% EventStorming Timeline for UC3-UC6 (Team Formation, Settlement, Lifecycle & Refund)
+  %% Legend at the report revision: PaymentSucceeded, MemberJoined, TeamSucceeded and TeamExpired
+  %% are Java event records. Other event-style names model state/provider outcomes, not classes.
   subgraph Act1["UC3 & UC4: Quote & Pay-First Settlement (Order · Payment · GroupBuy)"]
     C1["Command: CreatePurchaseIntent\n(START / JOIN)"] --> A1["Aggregate: PurchaseIntent\n& CheckoutPayment"]
     A1 --> E1["Event: PurchaseIntentIssued\n& CheckoutSessionCreated"]

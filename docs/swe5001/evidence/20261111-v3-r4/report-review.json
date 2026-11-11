@@ -1,0 +1,182 @@
+{
+  "scope": "Current chapters 1-6 after all eight report-audit fixes and #772/#773/#774 wording; #775/R4 regressions retained; not full Appendix A or dev landing",
+  "pages": 82,
+  "sectionPages": {
+    "r4Results": [
+      57
+    ],
+    "scaleOut": [
+      58
+    ],
+    "timeline": [
+      59
+    ],
+    "toolOutcome": [
+      59
+    ],
+    "operationalProvenance": [
+      77
+    ],
+    "session775": [
+      77
+    ],
+    "durablePools": [
+      77
+    ]
+  },
+  "relativePdfUriCount": 0,
+  "oldV3ResultNeedlesAbsent": true,
+  "r4PageBoundaryOverflows": 0,
+  "otherPageBoundaryOverflows": [],
+  "protectedContent": {
+    "availabilityAndSecurityExactBytes": false,
+    "availabilityAndSecuritySameText": false,
+    "availabilityUnchanged": true,
+    "securityTailSameExceptPublishedSubnetCitation": true,
+    "v2BaselineSameText": true
+  },
+  "issue775": {
+    "introStatusFeedbackCitations": true,
+    "sqlReportAndExperimentDisposition": true,
+    "durablePoolAndMinimumDecision": true,
+    "operatorEdgeMethodAndAuditLimit": true,
+    "d10RenderedAndNoSlot": true,
+    "evidenceCommit": "a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137",
+    "devLandingClaimed": false,
+    "closedByOwnerNotAssistant": true
+  },
+  "unchangedCoreR4Files": 9,
+  "pdfSha256": "02c4435706539f2c77eabfc8873ae6be9e3744e4979206cceb6a7d89855f4ed5",
+  "auditFixPages": {
+    "logicalView": [
+      4,
+      5,
+      7,
+      17
+    ],
+    "chronology": [
+      18
+    ],
+    "topologyComparison": [
+      31
+    ],
+    "zoneView": [
+      33
+    ],
+    "workloadCompute": [
+      36
+    ],
+    "schemaPlatform": [
+      40
+    ],
+    "schemaCommerce": [
+      41
+    ],
+    "schemaSettlement": [
+      41
+    ]
+  },
+  "auditFindings": {
+    "A1": "source/PDF content corrected; publication/second-owner/whole-report acceptance separate",
+    "A2": "source/PDF content corrected; publication/second-owner/whole-report acceptance separate",
+    "A3": "source/PDF content corrected; publication/second-owner/whole-report acceptance separate",
+    "A4": "source/PDF content corrected; publication/second-owner/whole-report acceptance separate",
+    "A5": "source/PDF content corrected; publication/second-owner/whole-report acceptance separate",
+    "A6": "source/PDF content corrected; publication/second-owner/whole-report acceptance separate",
+    "A7": "source/PDF content corrected; publication/second-owner/whole-report acceptance separate",
+    "A8": "source/PDF content corrected; publication/second-owner/whole-report acceptance separate"
+  },
+  "dictionaryOwnedTables": 29,
+  "d3Renderer": {
+    "tool": "PlantUML 1.2026.10, Graphviz 2.43.0",
+    "jarSha256": "71972b58fe9208a78bbed614c806042b8404ca5f24022581d986bd9a1cc9463e",
+    "packages": "Graphviz/fonts in disposable Java container only; network used for package download, not a host/project installation"
+  },
+  "compile": {
+    "exitCode": 0,
+    "network": "none",
+    "memory": "8g",
+    "scope": "Chapters 1-6 including all report audit corrections, not full Appendix A",
+    "cpu": 2
+  },
+  "dictionaryVerification": {
+    "scope": "Static check of selected dictionary fields against CREATE/ADD/nullable-change clauses in V1-V28; not execution, complete DDL validation or AWS schema inspection",
+    "tables": 29,
+    "selectedFieldTypesAndNullabilityChecked": 132,
+    "migrations": {
+      "V1__init.sql": "8fd75305f64a6a77d12ce44317661e66a3b1a33270b99d513d323571cec4e986",
+      "V2__payment.sql": "d653c0fee8d0911bf2328f945bb399287f9425fcfa1238ae5b420a7befdb326d",
+      "V3__identity.sql": "fe377b0e5bcd5409db696be43e2ba66058a6d197abc92cf7cda9a3b824cf30a9",
+      "V4__catalog.sql": "690a23ba3c91d538969e3a323329668b10e51be976eb3b4ecc6b8fffb3a32015",
+      "V5__groupbuy.sql": "2a8e49eb7309c66f9076ad24148e89032a48534bad421a1c1c7f3d0ee17e4a3c",
+      "V6__catalog_team_price.sql": "31ca1dde68bb6ec3273031e2648d3b563113a612cc26de213cc1ee6742c4c6c7",
+      "V7__groupbuy_paid_participation.sql": "6c94d1dc2e4a9656a42d2e01f5970f7a7805c2c4d08ac3949b4d6d1b13b770b4",
+      "V8__catalog_listing_reference_indexes.sql": "c2ce74043422cb0534ba1419e865ff208f64f55f7ecb6f40c55f22295c962762",
+      "V9__stripe_checkout.sql": "4705f6940f2372a44ed2e27e0701844fa46b9b9fb8c0f5f06be0c316dcf3a483",
+      "V10__payment_review_case.sql": "00516aa3a55df07bd2e115341133553913babce68e996873fe2740d88b592a08",
+      "V11__refund_execution.sql": "a76c219b98951c63e6b19baabd0b46c99fa4b73cb4c0dd48147f141da40c0243",
+      "V12__order.sql": "568b47648b842e5c53bc6e9f3fa8a2843cc2e892ffc1ac0db52b937bc5885f89",
+      "V13__scheduler_lock.sql": "16e546db29a0837b0f9725fc10cef83246a89d434eb0428bcd8e18e3bf182585",
+      "V14__product_team_terms.sql": "21d590ade9f25f857812968c16270ecefd7b0b9b4f7e50380927a36211757504",
+      "V15__purchase_intent.sql": "a25580480bae810daca062596b4edc2ee7181b8182d88e4a4cd872afa1cd53ba",
+      "V16__refund_due_index.sql": "383cbdfe7151789fe610876dc4755661b881e3c90b6af1b13bf29f148814f17a",
+      "V17__scheduled_item_retry.sql": "c42d2806d67859e7df284b4d35efb370c34c90564e6a27bb13b4bc0551af0452",
+      "V18__share_attribution.sql": "0a7cef743fc94d6d16cc8a8c469cdb536f49e96b275941b59809069c9e9ababc",
+      "V19__purchase_intent_sharer.sql": "b2a8a7c7edf4195bc00989ea6cc526238ccdae572c82de8851d2376f3df1e457",
+      "V20__product_team_terms_log.sql": "cdd0c03a64a936c772338277f9c35517d09d3f90057c848d4a7965ec28232181",
+      "V21__product_number_sequence.sql": "d81dfa1d72b879b3af99bfb2fc3b3579b6378fd4896cbf97fe58448db5fa4c17",
+      "V22__purchase_intent_expiry.sql": "b03081ab8df54300cc06863f7961bd5d5b599be3cd78779e3743a76842508c60",
+      "V23__purchase_intent_expiry_index.sql": "9573ffdbc680f1b30260e95cf6a6562bbadd670bf427147e62204e6d8e79ee79",
+      "V24__admin_payment_read_permission.sql": "1b0a22e298bb4aa8cf00d05ef953333670f5e68a80ded11a3c0b9d39360706c5",
+      "V25__checkout_expiry_cursor.sql": "32725a7963a64e0c0afc3a3adb129810bf1f13a3d9d78d351f5ff976b3e3d664",
+      "V26__transactional_outbox.sql": "a9f57592b87f6cab422a6c81a3182b0e0702db5f299526a8b1eb54410066fec2",
+      "V27__notification.sql": "77ad55761421952888777e4b3a4afb753d8f295f165085542528b4092df02185",
+      "V28__sys_consumed_message.sql": "5d1d0449bde223bb24892b1cb530bec6c3f1c797379a16a38887c8a096087f4e"
+    }
+  },
+  "warnings": [
+    "Existing unavailable Menlo font fallback; no page-boundary text overflows in the freshly checked chapters"
+  ],
+  "visualReview": "Changed D3/D5 views, dictionary/workload pages, selected R4 and #775 pages checked; captions kept with new diagrams; Appendix A not rebuilt",
+  "sourceFiles": {
+    "docs/swe5001/report/AGENTS.md": "ba518b2519a9e3fc5656c7171fccf2127e20d769662bbe73193960e525bab1aa",
+    "docs/swe5001/report/diagrams/d10-cicd-pipeline.typ": "d17cac4b6c9bd2aa6af4db8fa8db8b5bebdeeae6731fafefcd2bc7da29357177",
+    "docs/swe5001/report/diagrams/d11-paid-participation-classes.puml": "5dbea9f3d5f0660b05a205a989ac4d72fa3f337b43e964940b087a8873595aa3",
+    "docs/swe5001/report/diagrams/d11-paid-participation-classes.svg": "b1696f5f60d779e47eb6da3e1a1a614fdbc3e8c39613d27de49b2a004e034aa6",
+    "docs/swe5001/report/diagrams/d12-two-buyers-sequence.puml": "f578da6f1dfa55ddcb294707e81124548db96d3cac85688a0db511949616d58c",
+    "docs/swe5001/report/diagrams/d12-two-buyers-sequence.svg": "5f6c6fb8b5b5f0c675816829ebe5a4f105900618d93d1fd4a34c383fcc5749ff",
+    "docs/swe5001/report/diagrams/d13-expiry-classes.puml": "8a54248522c035c906d9040f2e0cb385e659a8042d839cd9464ada9abe6d1c7c",
+    "docs/swe5001/report/diagrams/d13-expiry-classes.svg": "0d9e58ab6fbaf66d59a78f01ff5b77cd9974372c70b2ba9d734fb9aee9c52f18",
+    "docs/swe5001/report/diagrams/d14-expiry-refund-sequence.puml": "dab2b95c685d33a3b8e16ba4a4dc369e679b411e8fdbbb62e79874faa0d8f31a",
+    "docs/swe5001/report/diagrams/d14-expiry-refund-sequence.svg": "c63280a1a3fe4d60b30399430b62a7cd3119b1ebb71b5f0cdef37bf173fda873",
+    "docs/swe5001/report/diagrams/d3-logical-view.puml": "80a688d6ea1a23ba7d7330c1209acdf41e539d437e3be929c0b9efa635d1a669",
+    "docs/swe5001/report/diagrams/d3-logical-view.svg": "b458ba876148be493d0bbe90c3cfc3058149d12041d8911b7d1e294efeb95be4",
+    "docs/swe5001/report/diagrams/d4-context-map.puml": "c3f8c64779b710cff40aa8395a9fcb84fbc079cfe4db5229230fec66e8884090",
+    "docs/swe5001/report/diagrams/d4-context-map.svg": "d4b3b60bb1c706ef6b24e47640696682d64ab9afdf4e29420f7c5f6f03af05d6",
+    "docs/swe5001/report/diagrams/d4a-eventstorming-timeline.mmd": "0fa3e8ee4da43d1058e481dc7b99a2ceb2b244b2eeaba271a18b4729237da558",
+    "docs/swe5001/report/diagrams/d4a-eventstorming-timeline.svg": "21f0765960076ceee0676317368fff4486bd375fb7f1b8f8ab1c6c416110f987",
+    "docs/swe5001/report/diagrams/d5-physical-deployment.typ": "d8a94e234cefef0e2d49610a99e90812c553883e8e6f913a0d1bb59b701e7c84",
+    "docs/swe5001/report/diagrams/d5-topology-comparison.typ": "72ed27e24296d9f7284b6a703f43ef98af4c871772623a0486b62b32797cd4aa",
+    "docs/swe5001/report/diagrams/d6-network.typ": "aa8546316a15351a11e63cc0cf418c089b469e5fad7344f0f1a0817f451cce31",
+    "docs/swe5001/report/diagrams/d7-aggregates.puml": "8a83ed5df33f7edf1ff9c219ef1040c380eca40e3676f0c376d626799236fb75",
+    "docs/swe5001/report/diagrams/d7-aggregates.svg": "a5ab6b55c3fe0876d776c6d6ccd2a374f80b04b3242f222002980c21853c4399",
+    "docs/swe5001/report/diagrams/d8-domain-events.puml": "f918027c26b5b68c1d12a7683034d5ab3ab58cd22fa1c75f40b97bd2f0328188",
+    "docs/swe5001/report/diagrams/d8-domain-events.svg": "39cfec5c120ee839ee2bbae200b66bd9af281d9c68f2105d439364ca7c4ee1e9",
+    "docs/swe5001/report/diagrams/d9-data-models.typ": "5a1b66d6ebef29bda005abe9db496573de2f44e262dc239d52740db2d2a66d23",
+    "docs/swe5001/report/diagrams/d9-schema-dictionary.typ": "cf46bb0ab0de7f07f71ff3ee88aa863147467a8d7d74afa8d19aa75dd4ddd234",
+    "docs/swe5001/report/diagrams/performance-v3-timeline.py": "3742d4fabf05893bf5fdaa0a05c8f078acc1a441b5a4ed2b7fd50826a346d373",
+    "docs/swe5001/report/diagrams/performance-v3-timeline.svg": "2993ca87e2c2eea317b59f4589d50f9cefe62fc28cfa4452736246ffa536c01e",
+    "docs/swe5001/report/diagrams/performance-v3-timeline.typ": "d99101aedb70836385c2536dc690dd4e935273284ebdbddd22e1fc54b75c92bc",
+    "docs/swe5001/report/diagrams/style.typ": "d2ce7ee1e482f0332ec9a13f286a2bbb7c2a9858c3a9b1761c02df796226b374",
+    "docs/swe5001/report/lib.typ": "b2aedf0f453406e9c14c14aab17eadca866ff0b24c57eb249af54bee5eda80cc",
+    "docs/swe5001/report/README.md": "b23e4e7ab91e05f10d398ff20cd0fb76a675789b8426a32d48f95edc91f5bb29",
+    "docs/swe5001/report/registers.md": "37685a08d6931ae817ac5ec4b9cb45a2b79537076e0a417c26c06697a7b5d410",
+    "docs/swe5001/report/sections/01-introduction.typ": "79c7633021af5c7e67e068591200547066a32f78ce49557977ffe09e632127af",
+    "docs/swe5001/report/sections/02-project-conduct.typ": "26c6f34495960ddf325466f08319b75b69dec1b0127d6c45e2c0757166658b68",
+    "docs/swe5001/report/sections/03-solution-overview.typ": "b7866a57fa61ef05b6b92c84aebc4d8eaff9323b72f23f78b0ef542a7ed8976f",
+    "docs/swe5001/report/sections/04-quality-attributes.typ": "22092a5cbfe5d0156eea28d6e8fd4a772a0633badee7da7cd0a664896224e7de",
+    "docs/swe5001/report/sections/05-devops.typ": "a3520ecb3b1e13948026e52826fe0be40390ffa28374aacc2c9b6edab17da793",
+    "docs/swe5001/report/sections/06-highlights.typ": "69155b6432159046c99c2271dec1a642fcc5c32cf3b1624a089258591eb1e9a5"
+  },
+  "sourceHashScope": "Exact final checked working-tree chapter sources, framework, root diagram sources/imports and referenced chapter-3 SVGs; not an evidence-freeze commit or dev integration"
+}

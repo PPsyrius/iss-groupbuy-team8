@@ -1,7 +1,10 @@
 #import "../lib.typ": *
 #import "../diagrams/d5-physical-deployment.typ": d5
+#import "../diagrams/d5-topology-comparison.typ": d5-topologies, d5-zones
 #import "../diagrams/d6-network.typ": d6
 #import "../diagrams/d9-data-models.typ": d9-identity, d9-notification, d9-commerce-team, d9-commerce-payment
+#import "../diagrams/d9-schema-dictionary.typ": d9-dictionary
+#let checked-source(path, body) = link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/3a893036d70d028b29ae13ebf820283571c1ae00/" + path, body)
 
 // AD and AISS numbers come from ../registers.md. Replace each short description with
 // context, options, choice, trade-off and consequence (AGENTS.md writing rule 3).
@@ -33,36 +36,36 @@ Six architectural decisions (`AD-01` to `AD-06` in the canonical register) gover
   ]),
   ("AD-02", [
     *Split services along ACID transaction boundaries rather than by domain nouns: `identity-svc`, `commerce-svc`, and `notification-svc`* (#link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/backend/docs/adr/0001-payment-business-integration.md")[ADR 0001], #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/backend/docs/adr/0002-team-lifecycle-events.md")[ADR 0002], #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/backend/docs/adr/0008-dual-deployment-topology.md")[ADR 0008]). \
-    *Context:* EventStorming identified six bounded contexts (`identity`, `catalog`, `groupbuy`, `order`, `payment`, `notification`). However, settling a paid group-buy participation (`StripeCheckoutService.settle` → `OrderFulfilmentAdapter.fulfil`) must atomically verify payment status, lock and admit the buyer into `GroupDeal`, create the `Order`, mark `PurchaseIntent` fulfilled, decrement `Product` stock, and—when the last seat fills—confirm all team orders via `BEFORE_COMMIT` listeners. \
+    *Context:* The simulated study maps six contexts already present in code (`identity`, `catalog`, `groupbuy`, `order`, `payment`, `notification`). The earlier settlement design requires local payment/admission/order/intent/stock writes to commit together, including order confirmation when the last seat fills (§3.1.4 distinguishes this chronology). \
     *Options considered:* (a) _Five or six microservices (one per bounded context) coordinated by a distributed Saga Mediator/Orchestrator_—rejected after estimating 50–55 person-days (100% of team capacity) to build and verify compensating transactions (e.g., automated stock release and Stripe refund rollback on partial failure) across network boundaries; (b) _Split `groupbuy` and `order` into separate services_—rejected because an order's lifecycle (`PENDING → CONFIRMED | CANCELLED`) is wholly governed by the team's state transition in the same transaction; (c) _Co-locate the four transaction-sharing contexts (`catalog`, `groupbuy`, `order`, `payment`) in `commerce-svc`, and extract `identity-svc` and `notification-svc` where no transaction crosses the boundary_. \
     *Choice:* Option (c). \
-    *Trade-off & Consequence:* Financial invariants (zero double-charging, zero unrefunded rejections, deterministic last-seat arbitration) are guaranteed by a single local PostgreSQL ACID transaction (`StripeLocalIntegrationTest`, 20 concurrent buyers for 1 seat). The trade-off is a coarser scaling and deployment unit for `commerce-svc`, recorded as `AISS-02` with a planned post-course extraction path for `payment`.
+    *Trade-off & Consequence:* One local ACID transaction makes the admission/order/payment-state writes or the refusal/refund-obligation writes commit together; row locks and unique keys arbitrate competing seats and replayed local work. It does not atomically charge or refund Stripe. Provider idempotency, retries and operator review handle those external effects; a durable refund obligation is not proof that repayment has completed. The trade-off is a coarser scaling/deployment unit for commerce (`AISS-02`); §3.2.4 shows the separate refund execution and uncertain-outcome path.
   ]),
   ("AD-03", [
     *Database-per-service logical isolation via dedicated PostgreSQL databases, per-service runtime roles, Flyway grant callbacks, and ArchUnit mapper guards* (#link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/backend/docs/adr/0008-dual-deployment-topology.md")[ADR 0008]). \
     *Context:* Microservice autonomy requires that no service read or mutate another service's persistent tables directly, yet SWE5006 and SWE5001 share a single Flyway migration stream (`V1`–`V28`) during active development. \
     *Options considered:* (a) _One shared database schema accessed by all three services with the same credentials_—rejected because SQL joins across contexts (such as the legacy `PaymentAttentionMapper.xml` join on `sys_user`, removed in `#469`) silently couple service deployments; (b) _Three separate physical RDS instances with diverged Flyway streams_—rejected due to 3× database cost and migration drift before SWE5006 completion; (c) _Three logical databases (`identity`, `commerce`, `notification`) on one RDS instance, where each service's runtime role (`*_app`) is granted `SELECT, INSERT, UPDATE, DELETE` only on its owned tables via `afterMigrate__service_grants.sql`_. \
     *Choice:* Option (c), reinforced at build time by `ArchitectureTest.persistenceOwnedBy` and `IdentityTablesStayInIdentityMappersTest`. \
-    *Trade-off & Consequence:* Any cross-service SQL query fails immediately in CI and is denied by PostgreSQL privileges at runtime. Empty foreign tables remain present in each database until migration streams are baselined per service after SWE5006, and physical server capacity is shared (`AISS-05`).
+    *Trade-off & Consequence:* The checked mapper/architecture rules reject specified cross-service SQL dependencies, and app-role grants deny foreign-table access. This is not a complete compromised-process boundary: service processes also receive Flyway owner credentials (§4.3). Empty foreign tables remain present until migration streams are separated; server capacity is shared (`AISS-05`).
   ]),
   ("AD-04", [
     *Asynchronous cross-service integration via Transactional Outbox, Broker Choreography (SNS topic fan-out + per-consumer SQS queues with DLQs), and idempotent inbox consumers* (#link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/backend/docs/adr/0007-cross-service-events-sns-sqs.md")[ADR 0007]). \
     *Context:* When a team succeeds, expires, or settles a payment in `commerce-svc`, downstream platform services (`notification-svc` and future audit/analytics consumers) must react reliably without coupling the checkout transaction to downstream availability or losing events on process crashes. \
     *Options considered:* (a) _Synchronous REST callbacks from `commerce-svc` to `notification-svc` or `AFTER_COMMIT` broker publish without an outbox_—rejected because a crash between database commit and network send drops events (dual-write hazard), and synchronous calls propagate notification latency/outages to checkout; (b) _Central Saga Mediator / Step Functions or always-on Kafka (MSK) / RabbitMQ (Amazon MQ)_—rejected because post-commit notifications require fan-out choreography rather than multi-step orchestration, and always-on brokers violate our ephemeral cost model; (c) _Point-to-point SQS without SNS_—rejected because adding a second consumer would require modifying `commerce-svc`; (d) _`BEFORE_COMMIT` writes to `sys_outbox` + leased `OutboxRelayService` → SNS standard topic → per-consumer SQS queues with `maxReceiveCount = 5` DLQs + `sys_consumed_message` deduplication_. \
     *Choice:* Option (d). \
-    *Trade-off & Consequence:* Business state commits and event publication are atomic; the `audit` consumer, created with the notification queue in PR `#487`, costs 2 lines of Terraform and no change to `commerce-svc` (Section 4.4). The trade-off is eventual consistency with a ~2 s relay polling lag (`AISS-11`, by design) and a calculated single-relay ceiling of ~50 events/s under `LeasedJobRunner`.
+    *Trade-off & Consequence:* Business state and the outbox row commit atomically in PostgreSQL, not with SNS/SQS publication. The relay publishes afterwards and can duplicate delivery if its acknowledgement/database update fails; consumers therefore commit a deduplication marker with their effects. Adding the audit queue required no commerce change (§4.4); it has no worker yet. The relay's configured 2 s tick gives a calculated 100/2 = 50 events/s batch ceiling before processing/network overhead, not a measured throughput or guaranteed delivery lag (`AISS-11`).
   ]),
   ("AD-05", [
     *Shared authentication and immutable RBAC authorization snapshot in the distributed Session Store* (#link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/backend/docs/adr/0008-dual-deployment-topology.md")[ADR 0008], `#467`). \
     *Context:* Every authenticated request to `commerce-svc` or `notification-svc` requires token validation and role/permission checks (`buyer`, `admin`). In the original monolith, `StpInterfaceImpl` queried `identity` tables (`sys_role`, `sys_permission`) on every request. \
     *Options considered:* (a) _Synchronous RPC from `commerce-svc` and `notification-svc` to `identity-svc` on every HTTP request_—rejected because it adds network latency to every read/write call and makes `identity-svc` a hard availability bottleneck for browsing and notifications; (b) _Stateless JWTs verified at an external API Gateway or AWS Cognito_—rejected because immediate session revocation on logout and atomic OAuth state handling were already built on Sa-Token; (c) _Shared Valkey session store holding both the Sa-Token login session and a dedicated per-account RBAC snapshot (`${tokenName}:rbac:${loginType}:{${userId}}`) written atomically via Redis Lua with a 120 s refresh fence at login_. \
-    *Choice:* Option (c). Distributed assemblies use `SessionRbacAuthorizationService` to memoize one validated snapshot per request without SQL or remote calls. \
-    *Trade-off & Consequence:* Zero inter-service RPCs for authentication or RBAC checks across all endpoints. Two trade-offs are accepted: role changes take effect on the user's next login outside `identity-svc`, and a total Session Store outage invalidates active sessions (`AISS-10`).
+    *Choice:* Option (c). Distributed assemblies use `SessionStpInterface` to read and memoize the validated RBAC snapshot per request without identity SQL or an identity-service RPC. #checked-source("backend/blocbuy-infrastructure/src/main/java/com/blocbuy/common/config/SessionStpInterface.java", [Snapshot reader]). \
+    *Trade-off & Consequence:* This removes identity-service calls for snapshot-based authorization, not the active-user check on the money path (AD-06). Role changes outside identity take effect at next login; losing the shared session store invalidates active sessions (`AISS-10`).
   ]),
   ("AD-06", [
     *Single synchronous inter-service call (`commerce-svc` → `identity-svc` via `UserAppService`), failing closed on the money path* (#link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/backend/docs/adr/0008-dual-deployment-topology.md")[ADR 0008], `#468`, `#469`). \
     *Context:* While browsing and session checks need no synchronous call to `identity-svc`, purchase intent creation, payment settlement (`OrderFulfilmentAdapter.fulfil`), and operator payment-attention views must verify that a buyer account is currently `ACTIVE` (`UserAppService.requireActive`) or resolve public nicknames (`UserAppService.publicNicknames`). \
-    *Options considered:* (a) _Replicate `sys_user` asynchronously into `commerce-svc` via events_—rejected for the conduct window because a stale replica could admit a disabled user into a paid team; (b) _Fail open when `identity-svc` is unreachable_—rejected because admitting an unverified or disabled buyer violates payment compliance invariants; (c) _Synchronous HTTP adapter (`RemoteUserAppService`) over internal service discovery (`/internal/users/{id}/require-active` and `/internal/users/public-nicknames`) with strict 500 ms connect / 1,500 ms read timeouts, no retry, and fail-closed semantics_. \
+    *Options considered:* (a) _Replicate `sys_user` asynchronously into `commerce-svc` via events_—rejected because a stale replica could admit a disabled buyer; (b) _Fail open_—rejected on the money path; (c) _`RemoteUserAppService` over internal discovery using `GET /internal/users/{id}/active` and `/internal/users/public-nicknames`, with 500 ms connect / 1,500 ms read timeouts, no retry and fail-closed semantics_. #checked-source("backend/blocbuy-adapter/src/main/java/com/blocbuy/identity/web/internal/InternalUserController.java", [Internal route definitions]). \
     *Choice:* Option (c). Only HTTP 404 (`IDENTITY_404_001`) and HTTP 403 (`IDENTITY_403_001`) map to business rejections (which trigger an automatic refund obligation); any timeout, 5xx, or route error throws `IdentityUnavailableException` (HTTP 500), rolling back the settlement transaction so Stripe safely retries later. \
     *Trade-off & Consequence:* Keeps user PII strictly inside `identity-svc` and prevents false business refunds during transient network faults (verified locally in the 15 October 2026 identity-outage drill; `AISS-13`). The accepted limitation is that new checkouts and webhook settlements pause while `identity-svc` is down (`AISS-03`).
   ]),
@@ -142,7 +145,7 @@ BlocBuy's logical decomposition into subsystems, components, provided/required i
 
 #figure(
   image("../diagrams/d3-logical-view.svg", width: 100%),
-  caption: [Logical view (UML 2.5 component diagram, `D3`). Elements are arranged by logical tier with technology-neutral roles; `commerce-svc` makes only one synchronous inter-service call (`UserStatusPort` in red) and publishes all downstream state transitions asynchronously through the Message Broker.],
+  caption: [Logical view (UML 2.5 components and explicit interface classifiers, `D3`; dashed triangular arrows are interface realisations). Technology-neutral elements are arranged by tier; commerce → identity (`UserStatusPort`, red) is the only synchronous service dependency. Selected V1 events flow through the broker; the audit queue has no worker.],
 ) <fig-d3-logical-view>
 
 ==== Subsystem and Solution Element Catalogue
@@ -218,27 +221,27 @@ Every architecturally significant element in @fig-d3-logical-view is catalogued 
 
 === Platform Design
 
-BlocBuy is architected not as a single-purpose store, but as a *reusable two-sided group-buying platform* shaped by Domain-Driven Design (`F3`, `F4`, `F9`, `#587`, `#595`, `#741`). Domain modelling proceeded in four traceable stages: (1) a simulated EventStorming study across all use cases to expose domain events and concurrency hot spots; (2) strategic classification of subdomains and bounded contexts linked by explicit context-mapping patterns; (3) transaction-boundary analysis to map six bounded contexts onto three deployable services; and (4) tactical derivation of aggregate roots, state machines, and enriched integration events that allow new producers and consumers to plug in without modifying existing core code.
+BlocBuy is a reusable two-sided group-buying platform structured with Domain-Driven Design (`F3`, `F4`, `F9`). This section presents four modeling perspectives: the simulated study, subdomain/context classification, transaction-to-service mapping and tactical aggregates/events. This is an explanatory order, not a claim that all code and decisions followed the study chronologically; the dated method below distinguishes prior design from later service recommendations and implementation.
 
 ==== EventStorming Method and Decision Traceability
 
-Because the team operated on an intensive part-time development schedule across two concurrent modules, *we did not conduct a live in-person sticky-note workshop*. Instead, on 25 September 2026 we executed a *structured simulated EventStorming study* (#link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/architecture-options-study/06-eventstorming-ddd.md")[`06-eventstorming-ddd.md`]) following Alberto Brandolini's three-level progression (*Big Picture → Process Level → Software Design*). To ensure every modelled element reflected real system behaviour rather than retrospective invention, the study used six repository artefacts as its inputs: the business proposal (`UC1`–`UC9`), `blocbuy-domain` models and events, `blocbuy-application` services and subscribers, backend `ADRs 0001–0002`, Flyway migrations `V1`–`V17` (later extended to `V28`), and the 23 HTTP operations in `contracts/openapi.json`.
+*We did not conduct a live workshop.* The architecture study dated 25 September 2026 simulated EventStorming's *Big Picture → Process Level → Software Design* progression from the proposal, domain/application code, ADRs, migrations and then-current API contract (#checked-source("docs/swe5001/architecture-options-study/06-eventstorming-ddd.md", [Study method and historical inputs])). This was partly reconstruction and validation of existing design: ADRs 0001/0002 are dated 22 September, so the study did not originate their settlement transaction or subscriber timing. It used those prior decisions to test consistency boundaries and recommend the later service split. The present report also maps later implemented outbox/sharing mechanisms back to the study; that retrospective trace is not a claim they all existed on 25 September.
 
-1. *Level 1 — Big Picture & Hot Spots:* We placed 34 chronological domain events across six lifecycle phases (*Listing → Access & Discovery → Pay-First Team Formation → Team Resolution → Refund → Viral Growth*) and identified *four pivotal events* that divide the business lifecycle into distinct acts: `Product Published` (supply exists), `PaymentSucceeded` (buyer money is committed), `Team Started` (an open team window begins), and `TeamSucceeded` / `TeamExpired` (the team's collective fate is sealed). Crucially, annotating the timeline surfaced *10 concurrency and consistency hot spots (`HS-1` to `HS-10`)*—such as `HS-1` (20 buyers paying for the last seat simultaneously), `HS-2` (duplicate or out-of-order Stripe webhooks), `HS-4` (the expiry sweeper racing a settling webhook on the same team), and `HS-8` (order confirmation and refund recording running `BEFORE_COMMIT` inside the team transition transaction).
+1. *Big Picture:* The study arranged modeled business facts across listing, access, payment, team resolution, refund and sharing, then annotated concurrency/consistency hot spots. These include the last-seat race (`HS-1`), duplicate webhooks (`HS-2`), expiry racing settlement (`HS-4`) and before-commit consequences (`HS-8`). A modeled fact is not necessarily a published Java event.
 2. *Level 2 — Process Level (`UC3`–`UC6` Timeline):* For each core flow we traced the exact causal chain *Read Model → Actor/Time Trigger → Command → Aggregate → Domain Event → Policy (`BEFORE_COMMIT` / `AFTER_COMMIT` / Outbox) → Next Command*, illustrated in @fig-d4a-timeline.
-3. *Level 3 — Software Design & Grouping Test:* We clustered aggregates and policies around the hot spots and tested whether `groupbuy` and `order` could be separated into distinct services—proving from `HS-1` and `HS-8` that they share a single consistency boundary.
+3. *Software Design:* The grouping test compared separating order/groupbuy with retaining their shared transaction. It supported co-location for the chosen invariants and budget; it was not proof that a different saga-based design was impossible.
 
 #figure(
   image("../diagrams/d4a-eventstorming-timeline.svg", width: 100%),
-  caption: [EventStorming process-level timeline for `UC3`–`UC6` (`d4a-eventstorming-timeline.svg`). Pivotal Java event records (`PaymentSucceeded`, `MemberJoined`, `TeamSucceeded`, `TeamExpired`) and hot spots (`HS-1`, `HS-2`, `HS-4`, `HS-8`) directly determined the transaction boundaries and outbox choreography.],
+  caption: [EventStorming process-level model for UC3–UC6. At the inspected release, `PaymentSucceeded`, `MemberJoined`, `TeamSucceeded` and `TeamExpired` are Java records; the other event-style labels denote modeled state changes/provider outcomes, not additional implemented event classes. The model checks prior transaction decisions and supports the later service-boundary recommendation; it does not establish causal chronology.],
 ) <fig-d4a-timeline>
 
-@tbl-es-traceability traces how each major EventStorming finding drove a concrete architectural decision and code artefact (`#595`).
+@tbl-es-traceability traces each modeling finding to the earlier decision it validates or the later implementation/service recommendation it supports (`#595`). The linked ADR/study dates, not the table's row order, establish chronology.
 
 #figure(
   table(
     columns: (1.1fr, 1.6fr, 1.6fr, 1.2fr),
-    [EventStorming Finding], [Architectural Problem Exposed], [Design Decision Driven], [Recorded Artefact & Code],
+    [Modeling finding], [Consistency question], [Decision checked / recommendation], [Recorded artefact / code],
     [Pivotal Event `PaymentSucceeded` + `HS-8` (`BEFORE_COMMIT` consequences)],
     [Confirming payment, admitting the member, creating the order, and taking stock must either all commit or all roll back.],
     [Keep `catalog`, `groupbuy`, `order`, and `payment` in one deployable (`commerce-svc`, `AD-02`) instead of a 5-service Saga.],
@@ -259,7 +262,7 @@ Because the team operated on an intensive part-time development schedule across 
     [Insert enriched `V1` events into `sys_outbox` at `BEFORE_COMMIT` (`Ordered.LOWEST_PRECEDENCE`) and relay via SNS → SQS (`AD-04`).],
     [ADR 0007; `IntegrationOutboxWriter`, `OutboxRelayService`],
 
-    [`MemberJoined` → `UC7` Share Attribution],
+    [`MemberJoined` → `UC12` Share Attribution],
     [Crediting a referrer is non-financial; a credit failure must never roll back a paid buyer's seat.],
     [Publish `MemberJoined` in-process and handle credit insertion in an `AFTER_COMMIT` (`REQUIRES_NEW`) subscriber that catches all exceptions.],
     [ADR 0003; `ShareCreditSubscriber`, `ShareInvite`, `ShareCredit`],
@@ -269,7 +272,7 @@ Because the team operated on an intensive part-time development schedule across 
     [Execute refunds asynchronously outside DB transactions (`RefundWorkerJob`); after 23 h, search only and route to operator `review`.],
     [ADR 0002; `RefundService.processNext`, `PaymentReviewCase`],
   ),
-  caption: [Traceability from EventStorming findings to architectural decisions and implementation artefacts (`#595`).],
+  caption: [Traceability to prior design and later implementation; not a claim that the simulation originated every listed mechanism (`#595`).],
 ) <tbl-es-traceability>
 
 ==== Subdomain Classification and Build-versus-Buy Strategy
@@ -292,7 +295,7 @@ Using the strategic DDD lens, we partitioned BlocBuy's business capabilities int
     [Pay-first trust guarantee: every verified payment deterministically yields either one seat + one order, or a durable refund obligation.],
     [`com.blocbuy.order` + `groupbuy` (`commerce-svc`)],
 
-    [Share Attribution & Viral Growth (`UC7`)],
+    [Share Attribution & Viral Growth (`UC12`; invitations are UC7)],
     [*Core*],
     [Custom Build],
     [Drives the platform's buyer-led network effect by minting unguessable 128-bit invite links (`ShareInvite`) and attributing joins (`ShareCredit`).],
@@ -493,7 +496,7 @@ BlocBuy's event architecture (`AD-04`, #link("https://github.com/PPsyrius/iss-gr
     [Internal record],
     [`CheckoutPayment` (`payment`)],
     [`(paymentId, CheckoutQuote, confirmedAt)`],
-    [`OrderFulfilmentAdapter.fulfil` (same ACID txn); `IntegrationOutboxWriter.onPaymentSucceeded` (`BEFORE_COMMIT`, `@Order(LOWEST)`).],
+    [`OrderFulfilmentAdapter.fulfil` (same ACID txn); `IntegrationOutboxWriter` \ `.onPaymentSucceeded` (`BEFORE_COMMIT`, `@Order(LOWEST)`).],
 
     [`MemberJoined`],
     [Internal record],
@@ -543,12 +546,12 @@ Two courseware design principles shape this event pipeline (`#741`):
 
 BlocBuy's platform architecture serves two external participant sides and an expandable set of internal/external service consumers (`Q2`, `Q3`, `#741`):
 
-- *Producers (Supply & Demand Creators):* Sellers and administrators publish product listings, configure `TeamPricePolicy`, and seed `ProductTeamTerms` (`UC9`). Equally important, *team leaders act as demand producers*: by paying first to open a team (`UC3`) and minting a cryptographic `ShareInvite` link (`UC7`), they recruit buyers from external chat groups into the platform, driving its viral network effect.
-- *Consumers (Buyers & Event Subscribers):* Joining buyers (`UC1`, `UC4`, `UC8`) browse dual-priced listings, join open teams with automatic refund protection, and read in-app notifications. On the technical plane, downstream services (`notification-svc` and the `audit` queue's reader) act as *event consumers* that derive new user-facing or analytical value from `commerce-svc` facts.
+- *Producers:* The platform administrator publishes listings and configures their terms on sellers' behalf (UC9); sellers have no account role or console. Team leaders also produce demand by starting a team (UC3) and sharing an invitation (UC7); a referred admission is credited under UC12.
+- *Consumers:* Buyers browse listings, join teams and read notifications. Technically, `notification-svc` consumes integration events; the audit queue demonstrates another subscription, but has no reader or analytical output yet. Refund obligations and their separate execution are described in §3.2.4.
 
 *Demonstrated platform extensibility (measured reuse):*
 - *Zero-code event subscriber onboarding:* The `audit` queue and its dead-letter queue, which receive every `Team*` event, are *2 lines of Terraform configuration* in `infra/swe5001/modules/messaging/main.tf`. They were created with the notification queue in PR `#487` and have no worker yet, so they show by construction that a new subscriber needs *no code or configuration change* in `commerce-svc` (detailed in Section 4.4).
-- *Workload-isolated path for future high-compute and batch consumers (`#741`):* Because every team and payment fact is fanned out through SNS to independent SQS queues, future *compute-intensive or long-running batch workloads*—such as end-of-day financial settlement reconciliation, seller payout aggregation, or machine-learning deal-recommendation retraining that would exceed serverless FaaS 15-minute execution limits—can read the `audit` queue and run as isolated *ECS Scheduled Tasks or AWS Batch jobs* (`AD-07`, `AD-16`). This guarantees that heavy analytical or batch compute never contends with `commerce-svc` checkout tasks for CPU or PostgreSQL connection-pool capacity.
+- *Proposed batch offload (`#741`, not built):* The audit subscription receives `Team*` events, not every payment fact, and has no worker. A future consumer could use its own subscription/queue and ECS scheduled task or AWS Batch job for longer analytical work. Separate compute placement can protect online CPU only with appropriate quotas and admission controls; a shared RDS instance still permits contention. No batch offload or isolation guarantee was tested. @tbl-workload-compute gives the present and proposed runtime choices.
 
 *API contract and perimeter governance boundary:*
 - *Implemented and verified in CI/AWS today:* A single OpenAPI 3.1 specification (`contracts/openapi.json`, 31 operations in 27 paths under `/api/v1`) serves as the contract for all three services. The React SPA's TypeScript client is generated directly from `contracts/openapi.json` by hey-api (`@hey-api/openapi-ts`), and CI fails any pull request whose controller mappings drift from the committed spec or expose `/internal/*` (`InternalPathsContractTest`). At runtime, CloudFront and the ALB route only public `/api/v1/*` paths while `/internal/users/*` is reachable solely over internal ECS Service Connect within the VPC (`AD-06`, `AD-09`).
@@ -569,7 +572,7 @@ To maintain a single shared vocabulary across product requirements, Typst docume
 
     [Producer / Consumer],
     [Platform],
-    [*Producers:* Sellers/admins posting listings and team leaders recruiting members. *Consumers:* Joining buyers and downstream event subscribers.],
+    [*Producers:* The platform administrator publishing on sellers' behalf and team leaders recruiting members. *Consumers:* Joining buyers and downstream event subscribers.],
     [`ProductController`, `GroupDealController`, `SqsNotificationEventConsumer`],
 
     [Dual Pricing & Team Terms],
@@ -617,7 +620,7 @@ To maintain a single shared vocabulary across product requirements, Typst docume
 
 == Physical Architecture & Design
 
-The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one SNS topic with SQS queues. Only the ALB and the NAT instance are placed in public subnets. ECS uses private application subnets. Separate data subnets with no route out of the virtual private cloud (VPC) were configured and tested offline on 4 November 2026; their placement and required connectivity were verified in the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November SGT AWS record] (AD-15, AISS-07). Runtime is disposable; the permanent edge and foundation stacks remain between sessions (AD-12).
+The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one SNS topic with SQS queues. Only the ALB and the NAT instance are placed in public subnets. ECS uses private application subnets. Separate data subnets with no route out of the virtual private cloud (VPC) were configured and tested offline on 4 November 2026; their placement and required connectivity were verified in the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November SGT AWS record] (AD-15, AISS-07). Runtime is disposable; the permanent edge and foundation stacks remain between sessions (AD-12).
 
 @tbl-logical-physical maps each logical element of @tbl-logical-elements (3.1.3) to the product that implements it. The last three rows have no logical counterpart: they exist only because of where the system runs.
 
@@ -645,13 +648,19 @@ The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`)
 
 #heading(level: 3, numbering: none, outlined: false)[Deployment view]
 
-#figure(kind: image, scale(72%, reflow: true, d5), caption: [Physical deployment view (UML deployment diagram). Only CloudFront reaches the load balancer, and the only synchronous call between services is commerce → identity (red).]) <fig-d5-deployment>
+#figure(kind: image, scale(72%, reflow: true, d5), caption: [Configured distributed deployment (UML deployment diagram), not an observed task allocation. Only CloudFront reaches the ALB; commerce → identity is the one synchronous service dependency. Baseline sizes are not R4 overrides (§4.1).]) <fig-d5-deployment>
+
+#block(breakable: false)[
+  #figure(kind: image, d5-topologies, caption: [D5 topology comparison (UML deployment nodes). The historical EC2 monolith and configured ECS monolith fallback use local calls; only distributed ECS enables the remote identity and asynchronous notification paths.]) <fig-d5-topologies>
+]
+
+*Topology and revision boundary.* @fig-d5-topologies separates the SWE5006 recording (§6.6) from the two SWE5001 assemblies in #checked-source("backend/docs/adr/0008-dual-deployment-topology.md", [ADR 0008]) and #checked-source("infra/swe5001/runtime/services.tf", [released runtime topology map]). The ECS monolith is a configured fallback, not a newly exercised cloud deployment. `BLOCBUY_EVENTS_ENABLED` and the selected assembly disable the distributed relay/consumer path in monolith mode. Domain listeners inside the monolith remain active; disabled messaging does not mean disabled financial consequences.
 
 @fig-d5-deployment shows where each artefact runs and how the nodes talk:
 
 - *Browser traffic* reaches CloudFront over HTTPS. CloudFront serves the single-page application from S3 and forwards `/api/*` to the ALB. Stripe's webhook enters the same way.
 - *The ALB* picks the service by path. Identity takes `/api/v1/auth/*` and `/api/v1/users/*`, notification takes `/api/v1/notifications*`, and commerce takes the rest of `/api/*`. A high-priority rule (priority 5; the ALB evaluates lower numbers first) returns 404 for `/internal/*` and `/api/internal/*` before any routing rule matches, so internal endpoints are only reachable inside the VPC.
-- *Services* talk to each other only once, commerce → identity through Service Connect (AD-06). Everything else between services goes through events: commerce writes them to its outbox, a relay publishes them to SNS, and SNS delivers copies to the SQS queues that the notification service and the audit consumer read (AD-04).
+- *Services* have one synchronous dependency, commerce → identity through Service Connect (AD-06). Commerce's outbox relay publishes to SNS; notification polls its SQS queue. The separately filtered audit queue has no reader yet (AD-04).
 - *Every task* reads its database and session settings from SSM Parameter Store when it starts. Database passwords never pass through Terraform state (3.2.2).
 - *All three services* read the shared login session from Valkey over TLS with an AUTH token (AD-05).
 - *Outbound calls* leave through fck-nat: identity exchanges the Google OAuth code, and commerce calls the Stripe API. The same path carries the tasks' calls to AWS APIs; S3 traffic uses the gateway endpoint instead.
@@ -678,9 +687,15 @@ The VPC (`10.50.0.0/16`) spans two availability zones and has three subnet tiers
 + *Routing.* A data subnet has no route out of the VPC, so a compromised or misconfigured data store cannot reach the internet, even through the NAT instance.
 + *Security groups.* RDS accepts TCP 5432 only from the service group and the `db-init` group. Valkey accepts TCP 6379 only from the service group. Neither group allows outbound traffic.
 
-Verified offline: module validation rejects reused data CIDRs, and `terraform test` `data_tier_has_its_own_subnets` checks disjoint sets (19 of 19 runtime runs passed, 4 November 2026). Verified on AWS on 10 November SGT: the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-subnet-verification/README.md")[dated record] retains actual application/data ENIs, subnet groups, effective routes/security groups and required connectivity. This resolves AISS-07's placement/connectivity gap and updates NFR-70, without claiming negative packet tests or failover. Scheduled cleanup later removed that runtime; its subnet IDs are historical, not reusable live-state assertions.
+Verified offline: module validation rejects reused data CIDRs, and `terraform test` `data_tier_has_its_own_subnets` checks disjoint sets (19 of 19 runtime runs passed, 4 November 2026). Verified on AWS on 10 November SGT: the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261110-subnet-verification/README.md")[dated record] retains actual application/data ENIs, subnet groups, effective routes/security groups and required connectivity. This resolves AISS-07's placement/connectivity gap and updates NFR-70, without claiming negative packet tests or failover. Scheduled cleanup later removed that runtime; its subnet IDs are historical, not reusable live-state assertions.
 
 *Single points in the network.* Each zone has its own private route table, but both point at the single fck-nat instance in zone a. An Auto Scaling group of one replaces a failed instance, but only in zone a, because the static network interface lives there. If zone a fails, the services in zone b lose outbound access (for example to Stripe and Google) until the zone recovers. This is a cost decision (AD-10) and is listed as AISS-01.
+
+#block(breakable: false)[
+  #figure(kind: image, d5-zones, caption: [D5 dated zone allocation (UML deployment nodes). Task/data placement comes from the published 10 November subnet observations; NAT placement is configured. This is not the later R4 task inventory or failover evidence.]) <fig-d5-zones>
+]
+
+*View-gap review (\#586/\#742).* The presentation's deployment view omitted the monolith alternatives and blurred two-zone eligibility with actual placement. @fig-d5-topologies adds enabled/disabled paths and @fig-d5-zones allocates observed nodes to zones; D6 retains routing/security-group detail. The #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261110-subnet-verification/observations.json")[dated observations] are the placement source. These additions address the missing viewpoints, not second-owner sign-off, a current cloud readback or full-report acceptance.
 
 === Key Architectural Decisions
 
@@ -758,7 +773,7 @@ The key architectural decisions taken are as follows. Prices are on-demand list 
       *Options considered:* keep the shared private subnets and rely on security groups; add data subnets with their own route table. \
       *Choice:* two data subnets, one per zone, with a route table that holds only the local VPC route. \
       *Trade-off:* no running cost and no code change; two more subnets and a route table to maintain, and a rebuild is needed to adopt it (free here, AD-12). \
-      *Consequence:* configured and tested offline on 4 November 2026; placement and required connectivity verified in the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November SGT AWS record] (AISS-07). The recorded runtime was subsequently destroyed.
+      *Consequence:* configured and tested offline on 4 November 2026; placement and required connectivity verified in the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November SGT AWS record] (AISS-07). The recorded runtime was subsequently destroyed.
     ]),
   ),
   caption: [Physical architectural decisions (AD-07 to AD-15; numbering continues from 3.1.1 and is fixed in `registers.md`).],
@@ -766,36 +781,48 @@ The key architectural decisions taken are as follows. Prices are on-demand list 
 
 === Technology and Services
 
-The solution uses managed AWS services wherever one exists, so the team runs no servers of its own apart from one NAT instance. Every choice favours the lowest cost that still shows the architecture, because the runtime exists only for a few hours a week (AD-12). @tbl-tech lists the versions and sizes; the rationale for the main choices is in the AD rows of 3.2.1 and is not repeated here.
+The solution uses managed AWS services wherever one exists; its application deployment manages no host apart from the NAT instance. Every choice favours a small demonstration budget, because the runtime exists only for a few hours a week (AD-12). @tbl-tech distinguishes application defaults from the 11 November R4 session sizes. That session also used a separate temporary EC2 load generator, not a new application tier (§4.1). The rationale for the main choices is in the AD rows of 3.2.1.
 
 #figure(
   table(
     columns: (0.8fr, 1.4fr, 2.2fr),
     [Layer], [Technology and version], [Why this one, and what it costs us],
     [Application runtime], [Java 21, Spring Boot 4.1.1, MyBatis; image `eclipse-temurin:21-jre-noble`, built for `linux/arm64`], [The SWE5006 code base, reused unchanged by the strangler migration (AD-01). One base image for all three services keeps patching in one place],
-    [Container platform], [ECS on Fargate, ARM64; 0.5 vCPU and 1 GiB per task], [No hosts to manage (AD-07). The task size was kept small on purpose: one 0.5 vCPU commerce task saturated at about 280 req/s on AWS on 19 Oct 2026 (evidence `20261019-v3-autoscaling`, 4.1), so the service scales out instead of up],
+    [Container platform], [ECS on Fargate, ARM64; default 0.5 vCPU/1 GiB; R4 commerce 1 vCPU/2 GiB], [No application hosts to manage (AD-07). The 11 November R4 session retained the larger commerce size while identity/notification stayed at 0.5 vCPU/1 GiB; §4.1 gives its dynamic scale-out result, not a per-task saturation claim],
     [Image registry], [Amazon ECR, one repository per service; immutable tags, scan on push, lifecycle policy], [Immutable tags make a release digest refer to exactly one image; Trivy in the pipeline is the blocking scan (5.2) and ECR's scan is a second record],
     [Edge], [Amazon CloudFront (`PriceClass_200`, HTTP/2) and a private S3 bucket], [HTTPS without a custom domain or certificate; the website and the API share one origin, so the browser needs no cross-origin settings (AD-09). The price class excludes the most expensive edge locations],
     [Load balancing], [Application Load Balancer, HTTP :80, path rules], [Path-based routing to three services without a separate API gateway product; rejected API Gateway because it adds a hop and a per-request charge],
     [Service discovery], [ECS Service Connect], [Commerce calls identity by name inside the VPC with no load balancer or DNS records to manage],
-    [Relational database], [Amazon RDS for PostgreSQL 18, `db.t4g.micro`, 20 GiB gp3], [PostgreSQL 18 generates UUIDv7 keys natively (3.2.3). The smallest Graviton class is enough for demo load; the single database server is the next scaling limit (AISS-05)],
+    [Relational database], [Amazon RDS for PostgreSQL 18, 20 GiB gp3; default `db.t4g.micro`, R4 `db.t4g.small`], [PostgreSQL 18 generates UUIDv7 keys natively (3.2.3). R4 used the approved small-class session variant (§4.1), not a committed default resize. The shared server remains a capacity/failure boundary (AISS-05), not a measured next bottleneck],
     [Session store], [Amazon ElastiCache for Valkey 8.0, `cache.t4g.micro`, one node], [Redis-compatible, so Sa-Token and Spring Data Redis work unchanged; Valkey costs less than Redis OSS on ElastiCache. One node is a cost choice (AISS-01, AISS-10)],
     [Messaging], [Amazon SNS (one topic) and SQS (standard queues with DLQs)], [Fan-out to several consumers with no broker to run (AD-04); standard queues give at-least-once delivery, which the consumers handle with `sys_consumed_message`],
     [Outbound network], [fck-nat on `t4g.nano`], [About a tenth of a NAT Gateway's cost (AD-10)],
-    [Configuration and secrets], [SSM Parameter Store, SecureString with the AWS-managed key], [Free at this volume; tasks read values at start-up through their execution role. Secrets Manager was not needed, because rotation happens by rebuilding the runtime],
+    [Configuration and secrets], [SSM Parameter Store, SecureString with the AWS-managed key], [Tasks receive startup secret references through the execution role. Standard-tier storage avoids Secrets Manager's per-secret charge; rebuilding runtime is not a general rotation mechanism, particularly for the persistent origin secret (AISS-09)],
     [Monitoring], [CloudWatch Logs (7-day retention), one dashboard, alarms to an SNS alert topic], [Managed and cheap at demo volume; logs are kept only as long as a sprint review needs them],
     [Infrastructure as code], [Terraform 1.16, AWS provider 5.100; three stacks: `foundation`, `edge` and `runtime`], [The SWE5006 environment already used Terraform; `terraform test` runs offline in CI (5.2). Stack split by lifetime: `foundation` and `edge` are permanent, `runtime` is disposable],
   ),
   caption: [Technology and services, with versions and sizes from `backend/pom.xml`, `backend/Dockerfile` and `infra/swe5001` (checked on 5 November 2026).],
 ) <tbl-tech>
 
-*Encryption and secrets.* Data is encrypted at rest everywhere it is stored: RDS storage, the Valkey node, SNS (AWS-managed key), SQS (SQS-managed keys), ECR and the Terraform state bucket. In transit, browsers use HTTPS to CloudFront, the services use TLS to RDS (`rds.force_ssl = 1`, `sslmode=require`) and to Valkey (with an AUTH token). The CloudFront → ALB hop is plain HTTP (AISS-08). Database passwords are generated as ephemeral values and written with write-only arguments, so they never reach Terraform state; the Valkey AUTH token and the origin secret do reach it (AISS-09). Each service connects with its own app role, and only `db-init` uses the master password.
+#figure(
+  table(
+    columns: (0.8fr, 1.1fr, 1.8fr),
+    [Workload / status], [Compute placement], [Choice, alternative and boundary],
+    [Online APIs · implemented], [Long-running ECS Fargate services], [Pooled SQL/TLS sessions, predictable startup and per-service scaling reuse the Java application. Lambda adapters/cold starts and EKS cluster operations were rejected for this course budget (AD-07). R4 measures browsing only, not every endpoint],
+    [Notification · implemented], [SQS long-poll loop in notification Fargate tasks], [Queue depth permits independent scaling and local claim/effect transactions. A Lambda consumer is possible but not built; backlog scale-out/DLQ recovery acceptance remains open. The audit subscription has no worker],
+    [Recurring sweeps, refunds, relay · implemented], [Leased jobs inside commerce tasks], [Reuse domain transactions and a database lease across replicas (AD-16). EventBridge-launched tasks would add startup/coordination overhead; not used. Lease ownership limits concurrent work but adds no throughput as commerce replicas grow],
+    [High-compute / long batch · proposed], [Separate ECS scheduled task or AWS Batch job], [For work that cannot fit a short invocation, queue admission, quotas and checkpoints would bound compute. Not built or benchmarked; use a suitable event contract, and a replica/export or explicit DB budget to avoid shared-RDS contention. Separate tasks alone do not prove isolation],
+  ),
+  caption: [Workload-to-compute mapping at inspected release `3a893036` (AD-07/AD-16). The batch row is a proposed extension, not a deployed worker or measured isolation result.],
+) <tbl-workload-compute>
 
-*Cost.* Calculated from the AD rows: while it is up, the runtime costs about US\$0.12 to US\$0.20 an hour (AD-12), and nothing for the rest of the week except the permanent edge. A measured figure from the AWS bill is not cited here, because the repository holds no record of it yet; #pending[chapter 6 reports the measured cost once that record is added (check with chapter 6 at the reconcile)].
+*Encryption and secrets.* Configured encryption covers RDS/Valkey storage, the domain-event SNS topic, SQS, ECR and remote Terraform state. The separate alarm SNS topic has no encryption key; do not generalize domain-topic protection to every topic. Browsers use HTTPS; services require TLS to RDS/Valkey, while CloudFront → ALB → task is HTTP (AISS-08). Database password generation uses ephemeral/write-only arguments, but the Valkey token and persistent origin secret enter state (AISS-09). App-role table grants restrict ordinary queries; each service process also receives Flyway owner credentials, so those grants alone do not contain a compromised process. §4.3 details these boundaries.
+
+*Cost.* The AD-12 hourly figures are estimates, not measurements. §6.3 now links the 8 November Cost Explorer record and distinguishes whole-account measured charges from calculated SWE5001 allocation; that dated record excludes the later promotions and R4 generator/storage charges. Runtime destruction reduces idle service cost, but retained disks/artifacts and permanent resources can still incur charges.
 
 === Persistence Design
 
-All persistent business data lives in PostgreSQL. Each service has its own database on the shared server and can read and write only the tables it owns. Sessions live in Valkey and are lost if the node restarts. Events live in the commerce outbox table until they are published, then in SQS until a consumer has applied them. Nothing is backed up, because every session starts from seed data (AD-12).
+PostgreSQL is the business system of record. Each service has a database and restricted app-role grants on the shared server; migration-owner credentials in the same process limit that security boundary (§4.3). Valkey holds disposable sessions/caches. The outbox retains delivery state separately from SNS/SQS; successful publication need not mean consumption. Runtime backup retention is disabled for this disposable demonstration (AD-12), not an assertion that every private evidence copy or object has no retention.
 
 ==== Data stores and table ownership
 
@@ -812,15 +839,15 @@ Every service database runs the same Flyway migration stream (`V1` to `V28`), so
   caption: [Table ownership per database, from `afterMigrate__service_grants.sql`. Commerce owns every table not listed for identity or notification.],
 ) <tbl-ownership>
 
-The trade-off: one migration stream is simple to build and test, and the grants stop a service from using another's tables, which architecture tests also check. The cost is that unused, empty tables exist in every database, and a migration for one service runs in all three.
+The trade-off is one migration stream and explicit app-role ownership, reinforced by mapper/architecture checks. Migration-owner credentials remain a broader process privilege; unused foreign tables still exist and each service runs every migration.
 
 ==== Conventions
 
 The schema follows the team's PostgreSQL conventions (`pgsql-ddl` skill):
 
-- *Keys.* Native `uuid` primary keys generated as UUIDv7 (`uuidv7()`, PostgreSQL 18). UUIDv7 is time-ordered, so new rows append to the index instead of splitting pages, and the application can create an identifier before the insert, which the outbox uses as the event ID.
+- *Keys.* Most tables use a native UUIDv7 `id` (`uuidv7()`, PostgreSQL 18); `biz_payment_review_case` names it `case_id`, and `sys_consumed_message` uses `(event_id, consumer)` instead. UUIDv7 improves index locality; it does not eliminate page splits. Outbox event IDs can be allocated before insert.
 - *Prefixes.* `sys_` for platform and technical tables, `biz_` for business entities, `rel_` for many-to-many links, `log_` for append-only records.
-- *Audit and soft delete.* Business tables carry `create_time`, `create_by`, `update_time`, `update_by` and `deleted`; mutable aggregates also carry `version` for optimistic locking. Uniqueness rules use partial indexes `WHERE deleted = false`, so a soft-deleted row does not block a new one.
+- *Audit and soft delete.* Mutable business tables generally carry creation/update times and actors plus `deleted`; selected aggregates have integer `version`. This is not universal: relation tables, immutable logs, the review case, outbox and consumed ledger have reduced columns. Many business unique indexes are partial (`deleted = false`), while notification replay keys, participation receipts and selected technical keys deliberately retain whole-table uniqueness. The dictionary identifies these exceptions.
 - *No foreign keys or CHECK constraints.* Relationships are logical, kept by the application inside its transactions. This lets a table move to another service's database without unpicking constraints, and keeps validation in one place (the domain model). The cost is that the database does not catch an orphaned row; the unique indexes below catch the errors that matter most.
 
 ==== Logical data models
@@ -834,6 +861,14 @@ The commerce database owns 21 tables, so its model is split in two: catalogue an
 #figure(kind: image, scale(90%, reflow: true, d9-commerce-team), caption: [Commerce database (1 of 2): catalogue and team purchase, logical data model (UML class notation for tables; key columns only). Dashed lines are logical relationships, with a multiplicity at each end; there are no foreign keys. The `payment_id` columns refer to `biz_payment` in @fig-d9-commerce-payment.]) <fig-d9-commerce-team>
 
 #figure(kind: image, scale(90%, reflow: true, d9-commerce-payment), caption: [Commerce database (2 of 2): purchase intent, payment, order, refund and technical tables, logical data model (UML class notation for tables; key columns only). `deal_id` and `product_id` refer to @fig-d9-commerce-team; a START intent reserves its `deal_id` before the team row exists, so the referenced team may not exist yet (0..1). The four technical tables are described in @tbl-technical.]) <fig-d9-commerce-payment>
+
+==== Supporting schema dictionary and revision
+
+The D9 diagrams deliberately omit types and secondary attributes. The following dictionary covers selected identity, invariant, amount, status and delivery fields across *all 29 owned tables*, checked against #checked-source("backend/blocbuy-bootstrap/src/main/resources/db/migration", [released Flyway V1–V28]) at `3a893036` on 12 November. It is a bounded schema reference, not an exhaustive column dump or fresh AWS schema inspection. Each row links the introducing/altering migrations for its selected fields; data-only and query-index-only migrations are outside that column lineage.
+
+*Notation:* `?` means nullable; unmarked listed fields are NOT NULL. Except where stated, the primary key is `id uuid NOT NULL DEFAULT uuidv7()`. Money uses `numeric(18,2)` and `currency varchar(4)`; application rules validate currencies/statuses. Timestamps are `timestamptz`. Ordinary audit actors can be nullable; the dictionary does not imply identical audit defaults for every table. Display/profile/shipping attributes, most audit columns, index ordering/default expressions and seed data are excluded; consult the linked SQL for their complete definitions. There are no foreign keys or CHECK constraints. References are application-managed, not database-enforced relationships.
+
+#d9-dictionary
 
 ==== Indexes that protect invariants
 
@@ -849,7 +884,7 @@ Several business rules are guaranteed by unique indexes, so that a race between 
     [`uq_biz_payment_pending_intent` (`WHERE status = 'created'`)], [At most one open payment per purchase intent],
     [`uq_biz_payment_request_key` (`user_id, request_key`)], [A retried checkout request does not create a second payment],
     [`uq_biz_order_payment_id`, `uq_biz_order_deal_user`], [One order per payment, and one order per buyer per team],
-    [`biz_refund.payment_id` (unique)], [A payment is refunded at most once],
+    [`biz_refund.payment_id` (unique)], [At most one local refund-work row per payment; provider idempotency/review governs external repayment],
     [`uq_log_payment_webhook_event_event_id`], [A Stripe webhook event is processed at most once],
     [`uq_sys_scheduler_lock_key`], [A scheduled job has at most one lease holder],
     [`pk_sys_consumed_message` (`event_id, consumer`)], [A consumer applies an event at most once],
@@ -950,8 +985,8 @@ The design rule is that Valkey is never the lock of record or the only copy of a
   table(
     columns: (auto, 1fr, 1fr, 1.2fr, 1.2fr),
     [Data group], [Data format], [Storage technology], [Security requirements and controls], [Trade-off],
-    [Identity], [Relational rows; Google profile as JSON (`raw_profile`)], [PostgreSQL, `identity` database], [Personal data (email, name). Only identity's app role can read it; storage encrypted; TLS required; other services see only public nicknames through an internal endpoint], [Synchronous lookup from commerce makes identity a dependency of checkout (AD-06, AISS-03)],
-    [Commerce and payment], [Relational rows; money as `numeric` with currency], [PostgreSQL, `commerce` database], [No card data stored: Stripe holds it and we keep only Stripe IDs. Unique indexes stop double charges and double refunds; webhook events stored for audit], [One database for team, order and payment keeps settlement atomic, at the cost of one large service (AISS-02)],
+    [Identity], [Relational rows; Google profile as JSON (`raw_profile`)], [PostgreSQL, `identity` database], [Personal data restricted by the identity app-role grants and API projections; storage encryption/TLS configured. Owner credentials remain a privileged path (§4.3)], [Synchronous active-user lookup makes identity a dependency of checkout (AD-06, AISS-03)],
+    [Commerce and payment], [Relational rows; money as `numeric` with currency], [PostgreSQL, `commerce` database], [No card data stored. Unique keys constrain local payment/refund/event records; Stripe idempotency, retries and manual review handle external charge/refund outcomes], [Local settlement writes are atomic; remote repayment is separate (AISS-02)],
     [Notifications], [Relational rows, immutable], [PostgreSQL, `notification` database], [Readable only by the recipient through the API; only notification's app role can write], [Eventually consistent, a few seconds behind the action (AISS-11)],
     [Sessions], [Key–value, Sa-Token session objects], [ElastiCache Valkey], [HTTP-only cookie; TLS and an AUTH token on the connection; 24-hour expiry; reachable only from the service group], [Fast and shared by all services, but one node: a restart signs everyone out (AISS-10)],
     [Events], [JSON envelope with string message attributes], [`sys_outbox` table, then SNS and SQS], [Encrypted topic and queues; IAM policies limit publish and receive to the producing and consuming task roles; payloads carry IDs, not personal data], [At-least-once delivery, so consumers must be idempotent (`sys_consumed_message`)],
@@ -974,7 +1009,7 @@ The two use cases below protect the same buyer at different points. When a buyer
 
 #page(flipped: true, margin: (x: 1.4cm, y: 1.2cm))[
   *UC3 START and UC4 JOIN — two buyers, one team* \
-  The leader pays for a two-seat listing and shares the invitation. Opening it leaves one paid member. The joiner's successful payment fills the second seat. Each buyer sees their own order. The group status is shared. The 24 October 2026 recording on deployed dev showed the second buyer's receipt and the same group marked “2 of 2 joined” and “Filled”. #link("https://github.com/PPsyrius/iss-groupbuy-team8/issues/590")[Recorded walkthrough].
+  The leader pays for a two-seat listing and shares the invitation. Opening it leaves one paid member. The joiner's successful payment fills the second seat. Each buyer sees their own order. The 24 October 2026 recording ran on the *SWE5006 monolith (`dev`, EC2)*, not the SWE5001 three-service runtime; it showed the second buyer's receipt and the shared “2 of 2 joined” / “Filled” state. See §6.6 for deployment provenance and #link("https://github.com/PPsyrius/iss-groupbuy-team8/issues/590")[the recorded walkthrough].
 
   #figure(
     image("../diagrams/d12-two-buyers-sequence.svg", width: 100%, height: 14.6cm, fit: "contain"),
@@ -1061,8 +1096,8 @@ The register retains fifteen architectural limitations, including resolved AISS-
 
 *Roadmap.* Each open item is assigned to one phase. #pending[The dates below are proposed and *pending team review*;] they are derived from the project calendar and the open GitHub issues, as follows:
 
-- The course ends on 16 November 2026 with the final `terraform destroy` (Sprint 4 plan, calendar). The second promotion (\#770) built from zero and passed smoke. The later session supplied the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November SGT placement/connectivity evidence] (AISS-07); §4.1 records the failed load campaign. R0's remaining scope is subject to \#774, not a requirement to repeat already retained placement evidence.
-- The drills behind AISS-13 are scoped in \#459 (estimate 4 h) and \#448 (poison message and backlog scaling); both were due on 20 October and are still open. #pending[AISS-12 is moved out of R0: it needs a distributed load generator that \#458 does not provide, so one session cannot close it.]
+- The course ends on 16 November 2026 with the final `terraform destroy` (Sprint 4 plan, calendar). The second promotion (\#770) built from zero and passed smoke. The later session supplied the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November SGT placement/connectivity evidence] (AISS-07); §4.1 now records the separate successful measured R4 browse/scale-out result with its collection limits. R0's remaining scope is subject to \#774, not a requirement to repeat already retained placement evidence.
+- The drills behind AISS-13 are scoped in \#459 (estimate 4 h) and \#448 (poison message and backlog scaling); both were due on 20 October and are still open. #pending[AISS-12 remains outside R0: R4 had a dedicated AWS generator, but its dynamic ramp is not the controlled fixed-one/fixed-four throughput pair required for linearity.]
 - There is a precedent for a dated acceptance: \#227 accepted the origin-TLS risk for `dev` with an end date of 16 November 2026. #pending[R1 and R2 apply only if the platform continues after the course; their dates assume a go-live decision in December 2026.]
 
 #figure(
@@ -1070,7 +1105,7 @@ The register retains fifteen architectural limitations, including resolved AISS-
     columns: (1fr, 1fr, 2.6fr, 0.8fr),
     [Phase], [Target #pending[(pending review)]], [Content], [Issues],
     [R0 — final evidence session], [#pending[Promote by Thu 12 Nov 2026; session on Fri 13 Nov 2026]], [Proposed remaining evidence: self-healing, poison-message and identity-outage drills (AISS-13), after startup-recovery correction (AISS-14). AISS-07 already has dated placement/connectivity evidence. Scope/date require the \#774 decision and separate operator approval], [\#774, \#459, \#448],
-    [R1 — production readiness], [#pending[31 Mar 2027]], [Remove single points of failure and close security gaps before real users: multi-zone data tier and NAT (AISS-01), internal service token (AISS-04), HTTPS to the origin (AISS-08), secrets out of state (AISS-09), narrower monitoring permissions (AISS-15); prove linear scaling with a distributed load generator (AISS-12)], [\#227 (NFR-37), \#458],
+    [R1 — production readiness], [#pending[31 Mar 2027]], [Remove single points of failure and close security gaps before real users: multi-zone data tier and NAT (AISS-01), internal service token (AISS-04), HTTPS to the origin (AISS-08), secrets out of state (AISS-09), narrower monitoring permissions (AISS-15); assess controlled fixed-task capacity and linearity separately from R4's dynamic ramp (AISS-12)], [\#227 (NFR-37), \#458],
     [R2 — scale-out], [#pending[30 Jun 2027, or earlier if a trigger fires]], [Split payment out of commerce (AISS-02), give a database its own server (AISS-05), replace the shared session store (AISS-10). Trigger: commerce needs more than three tasks for a sustained hour, or database CPU stays above 70% at peak], [—],
     [Accepted by design], [#pending[Review with R1, 31 Mar 2027]], [Kept unless the business need changes (AISS-03, AISS-06, AISS-11)], [—],
   ),
@@ -1087,14 +1122,14 @@ The key outstanding architectural issues in the solution are as follows:
     [AISS-02], [The commerce service is large. Payment scales and deploys with team purchase], [Team, order and payment share the settlement transaction, so they stay in one service (AD-02)], [Extract payment with a saga for refunds once its load differs from commerce's. #pending[*R2, by 30 Jun 2027* (pending review)]], [Eric], [Open],
     [AISS-03], [Checkout stops while identity is down], [Commerce checks the buyer with identity synchronously and fails closed (AD-06); the webhook returns 500 and Stripe retries], [Accepted: no wrong refunds or admissions. Later, a short-lived cache or circuit breaker. #pending[*review 31 Mar 2027* (pending review)]], [Yu Qianshuo], [Accepted by design],
     [AISS-04], [Internal endpoints rely on network rules only. A compromised task in the VPC could call them], [`/internal/**` is blocked at the ALB and skipped by session checks, but carries no service credential], [A service token or mutual TLS on internal calls. #pending[*R1, by 31 Mar 2027* (pending review)]], [Pan], [Open],
-    [AISS-05], [One shared database server. The services share capacity and one failure stops all three], [Three databases on one `db.t4g.micro` (AD-11)], [Move a database to its own server; only connection settings change. #pending[*R2, by 30 Jun 2027* (pending review)]], [Liu Jin], [Open],
+    [AISS-05], [One shared database server. The services share capacity and one failure stops all three], [Three databases on one RDS instance (AD-11); default micro class, small class in the 11 Nov R4 session (§4.1)], [Move a database to its own server; only connection settings change. #pending[*R2, by 30 Jun 2027* (pending review)]], [Liu Jin], [Open],
     [AISS-06], [A rebuild takes about 32 min, so a session must start early], [On AWS on 17 Oct 2026, create, deploy and smoke took about 32 min in promotion #link("https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39008208244")[run 39008208244]\; about 15 min of that is the deliberate 900 s wait for SNS filter policies to apply (on AWS on 16 Oct 2026, evidence `20261016-http-baseline-dashboard`)], [Start sessions early; the edge stays permanent (AD-12). #pending[*review 31 Mar 2027* (pending review)]], [Pan], [Accepted (mitigated)],
-    [AISS-07], [The earlier configuration gave database and application tasks the same eligible subnet set], [AD-15 introduced disjoint data/application subnets. On 10 Nov 2026 SGT, the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-subnet-verification/README.md")[dated AWS record] verified task/data ENIs, local-only data routes, restricted security groups and required connectivity], [Placement/connectivity evidence retained for \#589. Negative packet-isolation and failover tests are outside this result], [Liu Jin], [Resolved for the recorded session],
+    [AISS-07], [The earlier configuration gave database and application tasks the same eligible subnet set], [AD-15 introduced disjoint data/application subnets. On 10 Nov 2026 SGT, the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261110-subnet-verification/README.md")[dated AWS record] verified task/data ENIs, local-only data routes, restricted security groups and required connectivity], [Placement/connectivity evidence retained for \#589. Negative packet-isolation and failover tests are outside this result], [Liu Jin], [Resolved for the recorded session],
     [AISS-08], [CloudFront → ALB is plain HTTP. Origin traffic is unencrypted inside AWS], [The ALB listens on port 80; access is limited by prefix list and header (AD-09)], [An HTTPS listener with an ACM certificate and HTTPS-only origin policy. #pending[*R1, by 31 Mar 2027* (pending review)]], [Pan], [Open],
     [AISS-09], [The Valkey AUTH token and the origin secret are in Terraform state. Anyone who can read state can read them], [Database passwords are write-only, but these two have no write-only path in the provider. A runtime rebuild does not rotate the persistent origin secret], [Restrict state access; use an approved rotation procedure and a write-only/alternative secret path where supported. #pending[*R1, by 31 Mar 2027* (pending review)]], [Pan], [Open (accepted)],
     [AISS-10], [All sessions are in one Valkey node. A restart signs everyone out], [Services read the shared Sa-Token session instead of calling identity (AD-05)], [Short-lived signed tokens with refresh at the edge, or a replicated session store. #pending[*R2, by 30 Jun 2027* (pending review)]], [Eric], [Open],
     [AISS-11], [Events are eventually consistent. A notification can lag its action by seconds], [Outbox → SNS → SQS adds relay and polling delay (AD-04)], [Accepted: the UI shows progress and the API is the source of truth. #pending[*review 31 Mar 2027* (pending review)]], [Eric], [Accepted by design],
-    [AISS-12], [Capacity and 80%-linearity are not proven], [October V3 scaled one to three but dropped arrivals. The 10 Nov SGT campaign reached four desired/running tasks but failed error/drop gates and lost final ECS observation coverage (§4.1)], [An explicitly reviewed capacity/linearity design and separately authorised campaign; four tasks alone are not acceptance. #pending[*R1, by 31 Mar 2027* (pending review)]], [Pan], [Open],
+    [AISS-12], [Maximum capacity and controlled 80%-linearity are not proven], [11 Nov V3 R4 met native workload thresholds under one-to-six scaling (§4.1). The canonical analyzer ended on observation coverage; the source-preserving supplemental union is separate, not a passing canonical receipt], [Preserve the measured R4 result and collection limits; assess controlled fixed-one/fixed-four throughput separately, without inferring a ratio from the ramp. #pending[*R1, by 31 Mar 2027* (pending review)]], [Pan], [Open],
     [AISS-13], [Burst, self-healing, poison-message and identity-outage drills are not proven on AWS], [Tested locally only: the identity outage and a poison message on a local queue (4.2). Not run: V4 burst and V5 self-healing (\#459, \#448)], [Run the drills on AWS. #pending[*R0, 13 Nov 2026* (pending review)]], [Yu Qianshuo], [Open],
     [AISS-14], [An interrupted start-up can leave scaling suspended], [Recorded on AWS on 16 Oct 2026 and repaired by hand (evidence `20261016-http-baseline-dashboard`). The SCP that denied a CloudFront metric read the same day was fixed and probed on 16 Oct 2026 (evidence `20261016-scp-consolidation`)], [A retry regression test and fix. #pending[*R0, before the 13 Nov 2026 session* (pending review)]], [Liu Jin], [Open],
     [AISS-15], [`CloudWatchFullAccessV2` on the apply role is not limited to SWE5001], [The role could change alarms or dashboards outside this project], [Restrict to `blocbuy-swe5001-*` names. #pending[*R1, by 31 Mar 2027* (pending review)]], [Pan], [Open (accepted)],

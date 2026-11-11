@@ -1,0 +1,916 @@
+{
+  "schema": 1,
+  "scope": "Selected derived offline verification, not an original collector receipt, canonical analyzer pass, or owner acceptance decision. Source labels are relative to the privately retained analysis root; private originals are not included.",
+  "ownerAcceptanceDecision": "Not recorded; reserved to owner",
+  "rawRecount": {
+    "at": "2026-11-11T15:07:47.251741+00:00",
+    "scope": "Independent full decompression/CRC validation, original-byte SHA-256, raw JSONL request/error/drop/check/latency recount versus downloaded k6 summary; no load or AWS calls",
+    "rawBytes": 2483971025,
+    "rawSha256": "4542af4ad63b2a99a5c1406f9606cbfff0b0b3971e675572c81edf15b0da82f8",
+    "compressedSha256": "d94c3ff50da3e1cf2301e94d379bd4303268efbc46fe074af3d84341ad966947",
+    "counts": {
+      "http_requests": 726000,
+      "http_failure_samples": 726000,
+      "http_failures": 0,
+      "browse_samples": 725999,
+      "browse_errors": 0,
+      "checks": 725999,
+      "failed_checks": 0
+    },
+    "statuses": {
+      "200": 726000
+    },
+    "protocolTags": {
+      "missing": 726000
+    },
+    "protocolBreakdownUnavailable": "proto is intentionally excluded by the original workload systemTags; no full-run HTTP protocol inference",
+    "routes": {
+      "setup": 1,
+      "product_list": 508200,
+      "product_detail": 217799
+    },
+    "latencySamples": 725999,
+    "derivedBrowseLatencyMs": {
+      "avg": 9.431945498547519,
+      "min": 5,
+      "max": 728,
+      "med": 8.0,
+      "p(95)": 12.0,
+      "p(99)": 33.0
+    },
+    "completionMinuteBins": [
+      {
+        "completionMinuteSinceContainerStart": 0,
+        "httpRequests": 3321,
+        "browseSamples": 3320,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 15.0,
+        "browseLatencyMaxMs": 98
+      },
+      {
+        "completionMinuteSinceContainerStart": 1,
+        "httpRequests": 5262,
+        "browseSamples": 5262,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 11.0,
+        "browseLatencyMaxMs": 56
+      },
+      {
+        "completionMinuteSinceContainerStart": 2,
+        "httpRequests": 7183,
+        "browseSamples": 7183,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 11.0,
+        "browseLatencyMaxMs": 222
+      },
+      {
+        "completionMinuteSinceContainerStart": 3,
+        "httpRequests": 9102,
+        "browseSamples": 9102,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 11.0,
+        "browseLatencyMaxMs": 122
+      },
+      {
+        "completionMinuteSinceContainerStart": 4,
+        "httpRequests": 11023,
+        "browseSamples": 11023,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 13.0,
+        "browseLatencyMaxMs": 268
+      },
+      {
+        "completionMinuteSinceContainerStart": 5,
+        "httpRequests": 13177,
+        "browseSamples": 13177,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 11.0,
+        "browseLatencyMaxMs": 191
+      },
+      {
+        "completionMinuteSinceContainerStart": 6,
+        "httpRequests": 15579,
+        "browseSamples": 15579,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 11.0,
+        "browseLatencyMaxMs": 188
+      },
+      {
+        "completionMinuteSinceContainerStart": 7,
+        "httpRequests": 17978,
+        "browseSamples": 17978,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 17.0,
+        "browseLatencyMaxMs": 258
+      },
+      {
+        "completionMinuteSinceContainerStart": 8,
+        "httpRequests": 20378,
+        "browseSamples": 20378,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 15.0,
+        "browseLatencyMaxMs": 403
+      },
+      {
+        "completionMinuteSinceContainerStart": 9,
+        "httpRequests": 22778,
+        "browseSamples": 22778,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 20.0,
+        "browseLatencyMaxMs": 484
+      },
+      {
+        "completionMinuteSinceContainerStart": 10,
+        "httpRequests": 25179,
+        "browseSamples": 25179,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 19.0,
+        "browseLatencyMaxMs": 336
+      },
+      {
+        "completionMinuteSinceContainerStart": 11,
+        "httpRequests": 27577,
+        "browseSamples": 27577,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 14.0,
+        "browseLatencyMaxMs": 514
+      },
+      {
+        "completionMinuteSinceContainerStart": 12,
+        "httpRequests": 29977,
+        "browseSamples": 29977,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 13.0,
+        "browseLatencyMaxMs": 210
+      },
+      {
+        "completionMinuteSinceContainerStart": 13,
+        "httpRequests": 32378,
+        "browseSamples": 32377,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 13.0,
+        "browseLatencyMaxMs": 341
+      },
+      {
+        "completionMinuteSinceContainerStart": 14,
+        "httpRequests": 34779,
+        "browseSamples": 34780,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 188
+      },
+      {
+        "completionMinuteSinceContainerStart": 15,
+        "httpRequests": 36001,
+        "browseSamples": 36001,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 235
+      },
+      {
+        "completionMinuteSinceContainerStart": 16,
+        "httpRequests": 35999,
+        "browseSamples": 35999,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 416
+      },
+      {
+        "completionMinuteSinceContainerStart": 17,
+        "httpRequests": 35998,
+        "browseSamples": 35998,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 13.0,
+        "browseLatencyMaxMs": 226
+      },
+      {
+        "completionMinuteSinceContainerStart": 18,
+        "httpRequests": 36001,
+        "browseSamples": 36001,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 209
+      },
+      {
+        "completionMinuteSinceContainerStart": 19,
+        "httpRequests": 36001,
+        "browseSamples": 36001,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 13.0,
+        "browseLatencyMaxMs": 728
+      },
+      {
+        "completionMinuteSinceContainerStart": 20,
+        "httpRequests": 36000,
+        "browseSamples": 36000,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 220
+      },
+      {
+        "completionMinuteSinceContainerStart": 21,
+        "httpRequests": 36000,
+        "browseSamples": 36000,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 11.0,
+        "browseLatencyMaxMs": 346
+      },
+      {
+        "completionMinuteSinceContainerStart": 22,
+        "httpRequests": 36000,
+        "browseSamples": 36000,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 392
+      },
+      {
+        "completionMinuteSinceContainerStart": 23,
+        "httpRequests": 36000,
+        "browseSamples": 36000,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 11.0,
+        "browseLatencyMaxMs": 230
+      },
+      {
+        "completionMinuteSinceContainerStart": 24,
+        "httpRequests": 36000,
+        "browseSamples": 36000,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 207
+      },
+      {
+        "completionMinuteSinceContainerStart": 25,
+        "httpRequests": 32465,
+        "browseSamples": 32465,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 420
+      },
+      {
+        "completionMinuteSinceContainerStart": 26,
+        "httpRequests": 25266,
+        "browseSamples": 25266,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 181
+      },
+      {
+        "completionMinuteSinceContainerStart": 27,
+        "httpRequests": 18066,
+        "browseSamples": 18066,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 13.0,
+        "browseLatencyMaxMs": 171
+      },
+      {
+        "completionMinuteSinceContainerStart": 28,
+        "httpRequests": 10866,
+        "browseSamples": 10866,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 12.0,
+        "browseLatencyMaxMs": 233
+      },
+      {
+        "completionMinuteSinceContainerStart": 29,
+        "httpRequests": 3666,
+        "browseSamples": 3666,
+        "browseErrors": 0,
+        "browseLatencyP95Ms": 13.0,
+        "browseLatencyMaxMs": 184
+      }
+    ],
+    "binLimit": "Completion-time bins are not exact offered arrival rates; setup and boundary effects retained.",
+    "firstHttpPointAt": "2026-11-11T14:22:41.076293+00:00",
+    "lastHttpPointAt": "2026-11-11T14:52:40.105536+00:00",
+    "firstToLastHttpPointSeconds": 1799.029243,
+    "nativeExits": {
+      "k6": 0,
+      "monitor": 0,
+      "stream": 0,
+      "acceptanceComplete": false
+    },
+    "rawAndSummaryMatch": true,
+    "checkerCorrection": "Initial checker assumed url tags; original source excludes them. Corrected to fixed original name tags and retained initial failure/code. No original evidence changed.",
+    "prelaunchRefusalPreserved": true,
+    "ownerAcceptanceDecision": "not made by this verification"
+  },
+  "generatorResources": {
+    "inputLineCount": 883,
+    "states": {
+      "created": 2,
+      "running": 880,
+      "exited": 1
+    },
+    "coverage": {
+      "firstObservedAt": "2026-11-11T14:22:40.097298+00:00",
+      "lastObservedAt": "2026-11-11T14:52:42.177605+00:00",
+      "observationSpanSeconds": 1802.080307,
+      "start": "2026-11-11T14:22:40.555021916Z",
+      "end": "2026-11-11T14:52:41.886435328Z",
+      "executionSeconds": 1801.331413412,
+      "firstRunningAt": "2026-11-11T14:22:42.140819+00:00",
+      "lastRunningAt": "2026-11-11T14:52:40.134863+00:00",
+      "preStartBracketSeconds": 0.457723916,
+      "firstRunningLagSeconds": 1.585797084,
+      "lastRunningToFinishSeconds": 1.751572328,
+      "finishToFinalObservationSeconds": 0.291169672,
+      "strictUtcOrdering": true,
+      "gapsSeconds": {
+        "min": 0.021052,
+        "max": 2.064987,
+        "mean": 2.0431749512471655,
+        "median": 2.044963
+      },
+      "gapsOver3Seconds": 0,
+      "gapsOver15Seconds": 0,
+      "maxGapBetween": [
+        "2026-11-11T14:36:24.204664+00:00",
+        "2026-11-11T14:36:26.269651+00:00"
+      ],
+      "monitorConfiguredBoundSeconds": 2300,
+      "monitorNativeExit": 0,
+      "sampledRunningSpanSeconds": 1797.994044,
+      "sampledRunningSpanPercentOfExecution": 99.81472762939948
+    },
+    "limits": [
+      {
+        "cpuMax": "800000 100000",
+        "memoryMaxBytes": 8589934592,
+        "runningSampleCount": 880
+      }
+    ],
+    "containerCpu": {
+      "firstCumulativeUsec": 3444572,
+      "lastCumulativeUsec": 882286687,
+      "observedDeltaUsec": 878842115,
+      "observedDeltaCpuSeconds": 878.842115,
+      "weightedOneCpuPercent": 48.87903371719957,
+      "weightedEightVcpuPercent": 6.109879214649946,
+      "intervalEightVcpuPercent": {
+        "min": 0.2538379852957808,
+        "max": 12.721746349524901,
+        "mean": 6.10857067593028,
+        "median": 6.55242791975882
+      },
+      "peakInterval": {
+        "from": "2026-11-11T14:42:38.654674+00:00",
+        "to": "2026-11-11T14:42:40.709612+00:00",
+        "seconds": 2.054938,
+        "usageDeltaUsec": 2091392,
+        "oneCpuPercent": 101.77397079619921,
+        "eightVcpuPercent": 12.721746349524901
+      },
+      "cpuStatFirst": {
+        "usage_usec": 3444572,
+        "user_usec": 3004357,
+        "system_usec": 440215,
+        "nice_usec": 0,
+        "core_sched.force_idle_usec": 0,
+        "nr_periods": 18,
+        "nr_throttled": 0,
+        "throttled_usec": 0,
+        "nr_bursts": 0,
+        "burst_usec": 0
+      },
+      "cpuStatLast": {
+        "usage_usec": 882286687,
+        "user_usec": 649184378,
+        "system_usec": 233102308,
+        "nice_usec": 0,
+        "core_sched.force_idle_usec": 0,
+        "nr_periods": 17998,
+        "nr_throttled": 0,
+        "throttled_usec": 0,
+        "nr_bursts": 0,
+        "burst_usec": 0
+      },
+      "allCountersMonotonic": {
+        "usage_usec": true,
+        "user_usec": true,
+        "system_usec": true,
+        "nice_usec": true,
+        "core_sched.force_idle_usec": true,
+        "nr_periods": true,
+        "nr_throttled": true,
+        "throttled_usec": true,
+        "nr_bursts": true,
+        "burst_usec": true
+      },
+      "maxNrThrottled": 0,
+      "maxThrottledUsec": 0,
+      "cpuPressureCollected": false
+    },
+    "containerMemory": {
+      "sampledPeakBytes": {
+        "value": 834387968,
+        "observedAt": "2026-11-11T14:50:10.860499+00:00"
+      },
+      "sampledMinimumBytes": {
+        "value": 314966016,
+        "observedAt": "2026-11-11T14:22:42.140819+00:00"
+      },
+      "lastRunningBytes": 833908736,
+      "peakMiB": 795.734375,
+      "peakLimitPercent": 9.713554382324219,
+      "memoryEventsMax": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0
+      },
+      "pidsPeak": {
+        "value": 13,
+        "observedAt": "2026-11-11T14:22:42.140819+00:00"
+      }
+    }
+  },
+  "scaling": {
+    "activities": [
+      {
+        "alarmDirection": "high",
+        "causeClass": "request-target-tracking",
+        "desiredFirstObservedAtOrAboveTarget": "2026-11-11T14:30:54.131656Z",
+        "desiredObservedDelaySeconds": 5.796656,
+        "desiredTarget": 2,
+        "durationSeconds": 69.431,
+        "endTime": "2026-11-11T14:31:57.766000+00:00",
+        "runningFirstObservedAtOrAboveTarget": "2026-11-11T14:31:39.128277Z",
+        "runningObservedDelaySeconds": 50.793277,
+        "sources": [
+          {
+            "source": {
+              "jsonPointer": "/ScalingActivities/3",
+              "line": 46,
+              "path": "campaign/load-aws-r4/scaling-activities.json",
+              "sha256": "592bf63d0be0213e023e55043562a45ee4d8f2b6086d212dd5ef21a2dc8a7147"
+            },
+            "sourceKind": "canonical"
+          },
+          {
+            "source": {
+              "jsonPointer": "/ScalingActivities/3",
+              "line": 46,
+              "path": "campaign/supplemental-owner-r4/scaling-activities.json",
+              "sha256": "089662af65867a678d5841bb9025332e93bd974c62bb5d68f24cf09fe26b527a"
+            },
+            "sourceKind": "supplemental"
+          }
+        ],
+        "startTime": "2026-11-11T14:30:48.335000+00:00",
+        "status": "Successful"
+      },
+      {
+        "alarmDirection": "high",
+        "causeClass": "request-target-tracking",
+        "desiredFirstObservedAtOrAboveTarget": "2026-11-11T14:32:54.137961Z",
+        "desiredObservedDelaySeconds": 5.821961,
+        "desiredTarget": 3,
+        "durationSeconds": 62.416,
+        "endTime": "2026-11-11T14:33:50.732000+00:00",
+        "runningFirstObservedAtOrAboveTarget": "2026-11-11T14:33:39.064669Z",
+        "runningObservedDelaySeconds": 50.748669,
+        "sources": [
+          {
+            "source": {
+              "jsonPointer": "/ScalingActivities/2",
+              "line": 34,
+              "path": "campaign/load-aws-r4/scaling-activities.json",
+              "sha256": "592bf63d0be0213e023e55043562a45ee4d8f2b6086d212dd5ef21a2dc8a7147"
+            },
+            "sourceKind": "canonical"
+          },
+          {
+            "source": {
+              "jsonPointer": "/ScalingActivities/2",
+              "line": 34,
+              "path": "campaign/supplemental-owner-r4/scaling-activities.json",
+              "sha256": "089662af65867a678d5841bb9025332e93bd974c62bb5d68f24cf09fe26b527a"
+            },
+            "sourceKind": "supplemental"
+          }
+        ],
+        "startTime": "2026-11-11T14:32:48.316000+00:00",
+        "status": "Successful"
+      },
+      {
+        "alarmDirection": "high",
+        "causeClass": "request-target-tracking",
+        "desiredFirstObservedAtOrAboveTarget": "2026-11-11T14:34:54.137248Z",
+        "desiredObservedDelaySeconds": 5.797248,
+        "desiredTarget": 4,
+        "durationSeconds": 65.397,
+        "endTime": "2026-11-11T14:35:53.737000+00:00",
+        "runningFirstObservedAtOrAboveTarget": "2026-11-11T14:35:47.217790Z",
+        "runningObservedDelaySeconds": 58.87779,
+        "sources": [
+          {
+            "source": {
+              "jsonPointer": "/ScalingActivities/1",
+              "line": 22,
+              "path": "campaign/load-aws-r4/scaling-activities.json",
+              "sha256": "592bf63d0be0213e023e55043562a45ee4d8f2b6086d212dd5ef21a2dc8a7147"
+            },
+            "sourceKind": "canonical"
+          },
+          {
+            "source": {
+              "jsonPointer": "/ScalingActivities/1",
+              "line": 22,
+              "path": "campaign/supplemental-owner-r4/scaling-activities.json",
+              "sha256": "089662af65867a678d5841bb9025332e93bd974c62bb5d68f24cf09fe26b527a"
+            },
+            "sourceKind": "supplemental"
+          }
+        ],
+        "startTime": "2026-11-11T14:34:48.340000+00:00",
+        "status": "Successful"
+      },
+      {
+        "alarmDirection": "high",
+        "causeClass": "request-target-tracking",
+        "desiredFirstObservedAtOrAboveTarget": "2026-11-11T14:37:54.105470Z",
+        "desiredObservedDelaySeconds": 5.79047,
+        "desiredTarget": 6,
+        "durationSeconds": 65.424,
+        "endTime": "2026-11-11T14:38:53.739000+00:00",
+        "runningFirstObservedAtOrAboveTarget": "2026-11-11T14:38:54.173363Z",
+        "runningObservedDelaySeconds": 65.858363,
+        "sources": [
+          {
+            "source": {
+              "jsonPointer": "/ScalingActivities/0",
+              "line": 10,
+              "path": "campaign/load-aws-r4/scaling-activities.json",
+              "sha256": "592bf63d0be0213e023e55043562a45ee4d8f2b6086d212dd5ef21a2dc8a7147"
+            },
+            "sourceKind": "canonical"
+          },
+          {
+            "source": {
+              "jsonPointer": "/ScalingActivities/0",
+              "line": 10,
+              "path": "campaign/supplemental-owner-r4/scaling-activities.json",
+              "sha256": "089662af65867a678d5841bb9025332e93bd974c62bb5d68f24cf09fe26b527a"
+            },
+            "sourceKind": "supplemental"
+          }
+        ],
+        "startTime": "2026-11-11T14:37:48.315000+00:00",
+        "status": "Successful"
+      }
+    ],
+    "observationCoverage": {
+      "canonical": {
+        "bracketsActualEnd": false,
+        "bracketsActualStart": true,
+        "firstObservedAt": "2026-11-11T14:07:32.324506Z",
+        "lastObservedAt": "2026-11-11T14:49:32.150221Z",
+        "maximumSampleGapSeconds": 15.461205,
+        "nonIncreasingTimestampPairs": 0,
+        "rowErrors": 0,
+        "samples": 169,
+        "samplesWithinActualRun": 108,
+        "source": {
+          "path": "campaign/load-aws-r4/observations.jsonl",
+          "sha256": "426496da8b61728d8fd535b1f52a2309fc27ad130374d3c85b7549b3b0db1df1"
+        }
+      },
+      "derivedUnion": {
+        "bracketsActualStartAndEnd": true,
+        "clockCaveat": "Observed timestamps are client wall-clock read-completion times; no clock synchronization evidence. Python comparisons truncate nanoseconds to microseconds; original timestamp strings retained.",
+        "deduplication": "none; all observation rows retained; stable timestamp/source-kind/source-line ordering",
+        "endBracket": [
+          "2026-11-11T14:52:39.187410Z",
+          "2026-11-11T14:52:54.031915Z"
+        ],
+        "exactDuplicateRawRowsAcrossSources": 0,
+        "firstObservedAt": "2026-11-11T14:07:32.324506Z",
+        "lastObservedAt": "2026-11-11T14:53:16.055740Z",
+        "maximumGapAcrossRunIncludingBracketsSeconds": 15.257076,
+        "maximumSampleGapSeconds": 15.461205,
+        "notCanonicalReplacement": true,
+        "samples": 264,
+        "samplesWithinActualRun": 200,
+        "startBracket": [
+          "2026-11-11T14:22:32.276528Z",
+          "2026-11-11T14:22:47.275736Z"
+        ]
+      },
+      "supplemental": {
+        "bracketsActualEnd": true,
+        "bracketsActualStart": false,
+        "firstObservedAt": "2026-11-11T14:29:54.145673Z",
+        "lastObservedAt": "2026-11-11T14:53:16.055740Z",
+        "maximumSampleGapSeconds": 15.366203,
+        "nonIncreasingTimestampPairs": 0,
+        "rowErrors": 0,
+        "samples": 95,
+        "samplesWithinActualRun": 92,
+        "source": {
+          "path": "campaign/supplemental-owner-r4/observations.jsonl",
+          "sha256": "745f4138c07f826640302103a9568a4bc022c510d1eedf2df68e96a958634960"
+        }
+      }
+    },
+    "activityHistoryComparison": {
+      "apiOrderingContractIndependentlyVerifiedOffline": false,
+      "canonicalAdditionalRetainedActivities": 5,
+      "completeSupplementalWindowHistoryProven": false,
+      "supplementalAdditionalRetainedActivities": 0,
+      "supplementalIdsAreExactPrefixOfCanonical": true
+    },
+    "activityHistoryStatusCounts": {
+      "total": 54,
+      "successful": 52,
+      "historicalOverridden": 2,
+      "inRunSuccessful": 4
+    },
+    "limits": [
+      "No original context/result/observation file rewritten; derived union is not a canonical collectionComplete claim.",
+      "No raw k6 gzip read, hash, decompression or recount performed; main session owns independent raw recount.",
+      "No network, AWS, load, credential, Git, index, application, deployment or infrastructure operations performed.",
+      "Minute statistics retain AWS statistic semantics: percentiles cannot be aggregated into whole-run percentiles; ALB target latency is not end-to-end viewer latency.",
+      "Missing metric points, partial edge minutes and publication lag are UNKNOWN, never zero-filled; metadata StatusCode Complete is not a no-lag guarantee.",
+      "600 offered requests/s and six dynamic tasks cannot establish per-task capacity, saturation, stable-four-task T4, T1, or a T4/T1 linearity ratio.",
+      "Pool budget arithmetic and connection counts are not per-pool occupancy, checkout-wait, or application critical-path latency measurements.",
+      "Owner decides acceptance; prelaunch observer-validity refusal remains preserved and does not make observed samples fabricated."
+    ]
+  },
+  "provenance": {
+    "decodedCommand": {
+      "sha256": "9f916c9b31a1dc19010c4b67f24b94072b49f0bf2a3e170ecb4d860f06a40ea9",
+      "matchesRecordedSourceSha256": true,
+      "matchesActualOwnerSourceTemplateExactly": true,
+      "wholeSSMScriptMatchesSourceExactly": true,
+      "usesOriginalRunnerCreateArgs": true,
+      "onlyOutputDestinationChangedToFIFO": true,
+      "invokesCanonicalRunnerMainOrGuardValidate": false,
+      "writesSummaryItself": false,
+      "k6HandleSummaryWritesReport": true
+    },
+    "frozenWorkload": {
+      "browse.js": {
+        "sha256": "68b3d6624802a145b211521e3a8b44a9da0af230ec1b0b6101225488134186f4",
+        "bytes": 3018,
+        "fiveStagedCopiesByteEqual": true,
+        "frozenRepositoryInventoryMatches": true
+      },
+      "lib.mjs": {
+        "sha256": "e58d67966f8ed2945e44d60931a495dddf24a926551340fef10341129995d267",
+        "bytes": 23362,
+        "fiveStagedCopiesByteEqual": true,
+        "frozenRepositoryInventoryMatches": true
+      },
+      "scaling.mjs": {
+        "sha256": "2dde635653a10c0f6c56b3319b93a9c7836f1658ce7d2c22ed67c26c7d02209d",
+        "bytes": 11508,
+        "fiveStagedCopiesByteEqual": true,
+        "frozenRepositoryInventoryMatches": true
+      }
+    },
+    "workload": {
+      "generator": {
+        "preAllocatedVUs": 1000,
+        "maxVUs": 1000
+      },
+      "schedule": [
+        {
+          "fromRps": 40,
+          "toRps": 200,
+          "seconds": 300
+        },
+        {
+          "fromRps": 200,
+          "toRps": 600,
+          "seconds": 600
+        },
+        {
+          "fromRps": 600,
+          "toRps": 600,
+          "seconds": 600
+        },
+        {
+          "fromRps": 600,
+          "toRps": 0,
+          "seconds": 300
+        }
+      ],
+      "durationMs": 1800045.382151,
+      "expectedBrowseArrivals": 726000,
+      "actualBrowseArrivals": 725999,
+      "withinOriginalOneArrivalTolerance": true,
+      "targetRequestsPerMinute": 6000,
+      "cpuThreshold": 50
+    },
+    "independentReadback": {
+      "ssmStateReadSucceeded": true,
+      "parsedSSMOutputEqualsRetainedActualReadback": true,
+      "wholeMetricsObjectEqual": true,
+      "wholeContextObjectEqual": true,
+      "finishedAtEqual": true,
+      "limits": "Readback retained context, finishedAt, and all metrics; it did not retain the entire summary object, full created-inspect, or HostConfig"
+    },
+    "nativeAndControl": {
+      "downloadedNativeExits": {
+        "k6": 0,
+        "monitor": 0,
+        "stream": 0,
+        "acceptanceComplete": false
+      },
+      "separateDockerState": {
+        "running": false,
+        "startedAt": "2026-11-11T14:22:40.555021916Z",
+        "finishedAt": "2026-11-11T14:52:41.886435328Z",
+        "exitCode": 0,
+        "oomKilled": false
+      },
+      "startReadbackConsistent": true,
+      "outerOwnerSSMStatus": "Failed",
+      "outerOwnerSSMResponseCode": 1,
+      "outerErrorIsRecursiveS3CopyExit2": true,
+      "outerErrorContainsSpecialFileSkipWarning": true,
+      "mustNotCallWholeOwnerSSMCommandSuccessful": true
+    },
+    "controls": {
+      "priorSubmitExit": 1,
+      "priorObserverRefusalRetainedInLog": true,
+      "ownerDirective": {
+        "ownerDirected": true,
+        "acceptanceComplete": false,
+        "prelaunchRefusal": "observer remaining validity",
+        "workloadUnchanged": true,
+        "noRetry": true
+      },
+      "originalApprovedGeneratorStop": "2026-11-11T14:50:00Z",
+      "actualOwnerScriptTimerUTC": "2026-11-11 14:54:00 UTC",
+      "replacementTimerArmedBeforeOldStopped": true,
+      "appSafetyAt": "2026-11-11T15:00:00Z",
+      "ownerScriptApplicationSafetyChanged": false,
+      "floor": {
+        "recordAt": "2026-11-11T14:52:51.870219Z",
+        "observedAt": "2026-11-11T14:52:52.534507Z",
+        "min": 2,
+        "max": 6,
+        "desired": 6,
+        "running": 6,
+        "pending": 0,
+        "settledPlacementVerified": false
+      },
+      "wrapAt": "2026-11-11T14:52:55.295101+00:00",
+      "generatorStop": {
+        "at": "2026-11-11T14:54:15.876323+00:00",
+        "generatorState": "stopped",
+        "generatorStopped": true,
+        "before2255": true,
+        "applicationInfrastructureStoppedOrDestroyed": false
+      },
+      "applicationScheduleMutationInOwnerScript": false,
+      "ownerAcceptanceDecision": "not made by automation"
+    }
+  },
+  "originalTools": {
+    "scope": "Offline execution of original unchanged normalizer and original four-input Node analyzer against canonical R4 inputs; not a new load test or owner acceptance decision",
+    "normalizer": {
+      "exitCode": 0,
+      "stderrExact": "",
+      "normalizationBlockers": [],
+      "normalizationPassed": true,
+      "events": [
+        {
+          "at": "2026-11-11T14:30:48.335000+00:00",
+          "from": 1,
+          "to": 2,
+          "source": "application-autoscaling",
+          "policy": "blocbuy-swe5001-commerce-requests-per-target"
+        },
+        {
+          "at": "2026-11-11T14:32:48.316000+00:00",
+          "from": 2,
+          "to": 3,
+          "source": "application-autoscaling",
+          "policy": "blocbuy-swe5001-commerce-requests-per-target"
+        },
+        {
+          "at": "2026-11-11T14:34:48.340000+00:00",
+          "from": 3,
+          "to": 4,
+          "source": "application-autoscaling",
+          "policy": "blocbuy-swe5001-commerce-requests-per-target"
+        },
+        {
+          "at": "2026-11-11T14:37:48.315000+00:00",
+          "from": 4,
+          "to": 6,
+          "source": "application-autoscaling",
+          "policy": "blocbuy-swe5001-commerce-requests-per-target"
+        }
+      ]
+    },
+    "canonicalAnalyzer": {
+      "exitCode": 1,
+      "stdoutBytes": 0,
+      "stderrExact": "Observations must bracket execution with strictly ordered gaps <=45s\n",
+      "resultJsonProduced": false,
+      "acceptanceDecision": "Reserved to user; no GO/NO-GO issued"
+    },
+    "actualCanonicalCoverage": {
+      "executionStartUtcCalculatedFromOriginalSummary": "2026-11-11T14:22:41.685618+00:00",
+      "executionEndUtc": "2026-11-11T14:52:41.731Z",
+      "samples": 169,
+      "first": "2026-11-11T14:07:32.324506Z",
+      "last": "2026-11-11T14:49:32.150221Z",
+      "maximumGapSeconds": 15.461205,
+      "sampleGapsWithin45Seconds": true,
+      "bracketsExecution": false,
+      "sampledRevisionStable": true,
+      "normalizationBlockers": [],
+      "originalCollectorCollectionComplete": true,
+      "originalCollectorTimerCompleted": true,
+      "originalCollectorReceiptNotRewritten": true
+    },
+    "actualCanonicalActivityInput": {
+      "rows": 54,
+      "hasNextToken": false,
+      "allRowsSuccessful": false
+    },
+    "limits": [
+      "The unchanged canonical analyzer must not be reported as passing because native k6 returned zero.",
+      "An exception before result output is not an emitted automated latency-and-scale-out pass or fail result.",
+      "Supplemental observer rows and the derived union were not substituted for canonical inputs in this invocation.",
+      "No collector receipt, context, preflight, latency, drop count, or success field was synthesized or corrected.",
+      "Source-preserving supplemental coverage and manual/investigator analysis remain separate evidence for the owner to assess."
+    ]
+  },
+  "downloadedArtifactIdentities": [
+    {
+      "file": "summary.json",
+      "bytes": 19998,
+      "sha256": "4d0f89dfb56406cd13e9f41d47e5e5d6a06f782d38893bfcb613b020f0cc4fa4"
+    },
+    {
+      "file": "native-exits.json",
+      "bytes": 65,
+      "sha256": "15243cb688e771606abb71222482a7aae2eb9705956b1aca4be7cb833113995f"
+    },
+    {
+      "file": "owner-directive.json",
+      "bytes": 147,
+      "sha256": "c4d5a5c692a1de09af0405a561183e97735d11170b62667511bdffa2ee6099d3"
+    },
+    {
+      "file": "resources.jsonl",
+      "bytes": 825622,
+      "sha256": "375576fe0c485eb0f99cb9c0ff1207aa3694ed4934947c371e0656615f3d4cef"
+    },
+    {
+      "file": "RUN-STARTED.json",
+      "bytes": 151,
+      "sha256": "7a4b57e5715af7047b0c0fbd32641a12c9b6f5179f4087845ee0eb75d5a5f78e"
+    },
+    {
+      "file": "samples.jsonl.gz",
+      "bytes": 136493550,
+      "sha256": "d94c3ff50da3e1cf2301e94d379bd4303268efbc46fe074af3d84341ad966947"
+    }
+  ],
+  "projectionSources": {
+    "campaign/verification/independent-raw-recount.json": {
+      "bytes": 8204,
+      "sha256": "c1a35c28b0a4c7072b56ce7b525ea52538f233633f4f16652e4a5d451f5d8c50"
+    },
+    "analysis-resources/metrics.json": {
+      "bytes": 16741,
+      "sha256": "43e801eb6c523b43223cf5063557d3a0680c364d3fc9c3e4a1654606466d06ea"
+    },
+    "analysis-scaling/REPORT.json": {
+      "bytes": 40545,
+      "sha256": "cb1ecf3a9a2680c7ea2b442cad3aa7d0a9c502842af57436d8cbc5f6b44a7d60"
+    },
+    "analysis-provenance/checks.json": {
+      "bytes": 14523,
+      "sha256": "6a41b9e64364ac0876c303b1e05cf0e566da05c4e513566cbd889442bb4a487a"
+    },
+    "analysis-original-analyzer/CLOSURE.json": {
+      "bytes": 5456,
+      "sha256": "fbf23c03d0d20110f2b28793f6427d45e88df2fe49c080b327dc1e80396cbe3d"
+    },
+    "campaign/verification/download-receipt.json": {
+      "bytes": 1823,
+      "sha256": "a9b7bb13a96700d9897d85e281e21beff41cc910554a158708d5756930020690"
+    },
+    "campaign/load-aws-r4/scaling-activities.json": {
+      "bytes": 36190,
+      "sha256": "592bf63d0be0213e023e55043562a45ee4d8f2b6086d212dd5ef21a2dc8a7147"
+    }
+  },
+  "limitations": [
+    "Derived observation union retains source provenance but does not alter canonical receipts or the original analyzer exit.",
+    "Most final-minute CloudWatch values and target-5XX points are absent; unknowns must not be zero-filled.",
+    "Full-directory upload, full created HostConfig, TCP retransmissions, CPU pressure, whole-run credits/billing and per-task pool waits are unverified.",
+    "Dynamic six-task scaling does not establish controlled one-to-four-task linearity, saturation capacity, broader NFR-15 or repeatable recovery.",
+    "Original workload and measured results do not prove 1,000 simultaneous active requests; active vus gauge peaked at 100 despite preallocated/maximum 1,000."
+  ]
+}

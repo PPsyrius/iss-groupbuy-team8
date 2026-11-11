@@ -1,0 +1,774 @@
+{
+  "canonical": {
+    "messageCount": 0,
+    "nextTokenPresent": false,
+    "resultCount": 15,
+    "series": [
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m0",
+        "identity": "AWS/ApplicationELB/RequestCount/Sum",
+        "lastTimestamp": "2026-11-11T14:48:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 44,
+        "query": {
+          "jsonPointer": "/0",
+          "line": 3,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/0",
+          "line": 4,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Sum",
+        "statusCode": "Complete",
+        "unit": "Count",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m1",
+        "identity": "AWS/ApplicationELB/RequestCountPerTarget/Sum",
+        "lastTimestamp": "2026-11-11T14:48:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 44,
+        "query": {
+          "jsonPointer": "/1",
+          "line": 25,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/1",
+          "line": 101,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Sum",
+        "statusCode": "Complete",
+        "unit": "Count",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m2",
+        "identity": "AWS/ApplicationELB/TargetResponseTime/p50",
+        "lastTimestamp": "2026-11-11T14:48:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 27,
+        "query": {
+          "jsonPointer": "/2",
+          "line": 47,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/2",
+          "line": 198,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "p50",
+        "statusCode": "Complete",
+        "unit": "Seconds",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m3",
+        "identity": "AWS/ApplicationELB/TargetResponseTime/p95",
+        "lastTimestamp": "2026-11-11T14:48:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 27,
+        "query": {
+          "jsonPointer": "/3",
+          "line": 69,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/3",
+          "line": 261,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "p95",
+        "statusCode": "Complete",
+        "unit": "Seconds",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m4",
+        "identity": "AWS/ApplicationELB/TargetResponseTime/p99",
+        "lastTimestamp": "2026-11-11T14:48:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 27,
+        "query": {
+          "jsonPointer": "/4",
+          "line": 91,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/4",
+          "line": 324,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "p99",
+        "statusCode": "Complete",
+        "unit": "Seconds",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": null,
+        "id": "m5",
+        "identity": "AWS/ApplicationELB/HTTPCode_Target_5XX_Count/Sum",
+        "lastTimestamp": null,
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 0,
+        "query": {
+          "jsonPointer": "/5",
+          "line": 113,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/5",
+          "line": 387,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Sum",
+        "statusCode": "Complete",
+        "unit": "Count",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m6",
+        "identity": "AWS/RDS/DatabaseConnections/Maximum",
+        "lastTimestamp": "2026-11-11T14:48:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 44,
+        "query": {
+          "jsonPointer": "/6",
+          "line": 135,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/6",
+          "line": 394,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Maximum",
+        "statusCode": "Complete",
+        "unit": "Count",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m7",
+        "identity": "AWS/RDS/CPUUtilization/Average",
+        "lastTimestamp": "2026-11-11T14:47:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 43,
+        "query": {
+          "jsonPointer": "/7",
+          "line": 153,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/7",
+          "line": 491,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m8",
+        "identity": "AWS/RDS/FreeableMemory/Minimum",
+        "lastTimestamp": "2026-11-11T14:48:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 44,
+        "query": {
+          "jsonPointer": "/8",
+          "line": 171,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/8",
+          "line": 586,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Minimum",
+        "statusCode": "Complete",
+        "unit": "Bytes",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m9",
+        "identity": "AWS/ECS/CPUUtilization/Average/identity-svc",
+        "lastTimestamp": "2026-11-11T14:47:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 43,
+        "query": {
+          "jsonPointer": "/9",
+          "line": 189,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/9",
+          "line": 683,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m10",
+        "identity": "AWS/ECS/MemoryUtilization/Average/identity-svc",
+        "lastTimestamp": "2026-11-11T14:47:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 43,
+        "query": {
+          "jsonPointer": "/10",
+          "line": 211,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/10",
+          "line": 778,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m11",
+        "identity": "AWS/ECS/CPUUtilization/Average/commerce-svc",
+        "lastTimestamp": "2026-11-11T14:47:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 43,
+        "query": {
+          "jsonPointer": "/11",
+          "line": 233,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/11",
+          "line": 873,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m12",
+        "identity": "AWS/ECS/MemoryUtilization/Average/commerce-svc",
+        "lastTimestamp": "2026-11-11T14:47:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 43,
+        "query": {
+          "jsonPointer": "/12",
+          "line": 255,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/12",
+          "line": 968,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m13",
+        "identity": "AWS/ECS/CPUUtilization/Average/notification-svc",
+        "lastTimestamp": "2026-11-11T14:47:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 43,
+        "query": {
+          "jsonPointer": "/13",
+          "line": 277,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/13",
+          "line": 1063,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:05:00+00:00",
+        "id": "m14",
+        "identity": "AWS/ECS/MemoryUtilization/Average/notification-svc",
+        "lastTimestamp": "2026-11-11T14:47:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 43,
+        "query": {
+          "jsonPointer": "/14",
+          "line": 299,
+          "path": "campaign/load-aws-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/14",
+          "line": 1158,
+          "path": "campaign/load-aws-r4/metrics.json",
+          "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      }
+    ],
+    "source": {
+      "path": "campaign/load-aws-r4/metrics.json",
+      "sha256": "09343e735a7b0a93922a78b46c1b38260e0ac94f38884c64163170f2056c8168"
+    }
+  },
+  "supplemental": {
+    "messageCount": 0,
+    "nextTokenPresent": false,
+    "resultCount": 15,
+    "series": [
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m0",
+        "identity": "AWS/ApplicationELB/RequestCount/Sum",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/0",
+          "line": 3,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/0",
+          "line": 4,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Sum",
+        "statusCode": "Complete",
+        "unit": "Count",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m1",
+        "identity": "AWS/ApplicationELB/RequestCountPerTarget/Sum",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/1",
+          "line": 25,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/1",
+          "line": 73,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Sum",
+        "statusCode": "Complete",
+        "unit": "Count",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m2",
+        "identity": "AWS/ApplicationELB/TargetResponseTime/p50",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/2",
+          "line": 47,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/2",
+          "line": 142,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "p50",
+        "statusCode": "Complete",
+        "unit": "Seconds",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m3",
+        "identity": "AWS/ApplicationELB/TargetResponseTime/p95",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/3",
+          "line": 69,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/3",
+          "line": 211,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "p95",
+        "statusCode": "Complete",
+        "unit": "Seconds",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m4",
+        "identity": "AWS/ApplicationELB/TargetResponseTime/p99",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/4",
+          "line": 91,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/4",
+          "line": 280,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "p99",
+        "statusCode": "Complete",
+        "unit": "Seconds",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": null,
+        "id": "m5",
+        "identity": "AWS/ApplicationELB/HTTPCode_Target_5XX_Count/Sum",
+        "lastTimestamp": null,
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 0,
+        "query": {
+          "jsonPointer": "/5",
+          "line": 113,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/5",
+          "line": 349,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Sum",
+        "statusCode": "Complete",
+        "unit": "Count",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m6",
+        "identity": "AWS/RDS/DatabaseConnections/Maximum",
+        "lastTimestamp": "2026-11-11T14:52:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 31,
+        "query": {
+          "jsonPointer": "/6",
+          "line": 135,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/6",
+          "line": 356,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Maximum",
+        "statusCode": "Complete",
+        "unit": "Count",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m7",
+        "identity": "AWS/RDS/CPUUtilization/Average",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/7",
+          "line": 153,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/7",
+          "line": 427,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m8",
+        "identity": "AWS/RDS/FreeableMemory/Minimum",
+        "lastTimestamp": "2026-11-11T14:52:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 31,
+        "query": {
+          "jsonPointer": "/8",
+          "line": 171,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/8",
+          "line": 496,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Minimum",
+        "statusCode": "Complete",
+        "unit": "Bytes",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m9",
+        "identity": "AWS/ECS/CPUUtilization/Average/identity-svc",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/9",
+          "line": 189,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/9",
+          "line": 567,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m10",
+        "identity": "AWS/ECS/MemoryUtilization/Average/identity-svc",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/10",
+          "line": 211,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/10",
+          "line": 636,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m11",
+        "identity": "AWS/ECS/CPUUtilization/Average/commerce-svc",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/11",
+          "line": 233,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/11",
+          "line": 705,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m12",
+        "identity": "AWS/ECS/MemoryUtilization/Average/commerce-svc",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/12",
+          "line": 255,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/12",
+          "line": 774,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m13",
+        "identity": "AWS/ECS/CPUUtilization/Average/notification-svc",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/13",
+          "line": 277,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/13",
+          "line": 843,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      },
+      {
+        "firstTimestamp": "2026-11-11T14:22:00+00:00",
+        "id": "m14",
+        "identity": "AWS/ECS/MemoryUtilization/Average/notification-svc",
+        "lastTimestamp": "2026-11-11T14:51:00+00:00",
+        "messageCount": 0,
+        "periodSeconds": 60,
+        "pointCountAll": 30,
+        "query": {
+          "jsonPointer": "/14",
+          "line": 299,
+          "path": "campaign/supplemental-owner-r4/metric-queries.json",
+          "sha256": "26b6ec5d0d320626426a506699a96461e71544be343f9e94cb4bc9fd8ec7e40b"
+        },
+        "result": {
+          "jsonPointer": "/MetricDataResults/14",
+          "line": 912,
+          "path": "campaign/supplemental-owner-r4/metrics.json",
+          "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+        },
+        "statistic": "Average",
+        "statusCode": "Complete",
+        "unit": "Percent",
+        "unitBasis": "metric semantics; query omits Unit and get-metric-data response has no unit field"
+      }
+    ],
+    "source": {
+      "path": "campaign/supplemental-owner-r4/metrics.json",
+      "sha256": "b5630bfa3d38f394ae404a4534cc4fdc948099125867b9366fc4ef2c476c8df0"
+    }
+  }
+}

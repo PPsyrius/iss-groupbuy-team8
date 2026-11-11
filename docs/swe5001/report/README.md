@@ -77,7 +77,9 @@ Settled on 4 November 2026 (Phase 0). Sections are written against these; change
 
 10 November 2026 reconciliation (#775): the [dated session record](../evidence/20261110-subnet-verification/README.md) now verifies AD-15 placement and required connectivity on AWS; AISS-07 is resolved for that recorded session. This supersedes item 1's earlier “configured only” writing instruction, not its original decision. Negative packet/failover tests remain outside the result. The [pool/scaling experiment disposition](../evidence/20261110-load-preflight/README.md#10-november-disposition-for-775), [operator edge repair](../evidence/20261109-edge-policy-recovery/README.md) and D10 in §5 close the other report gaps without importing executable fixes from PR #784.
 
-11 November 2026 session addendum: the [released-image rerun record](../evidence/20261111-load-reruns/README.md) adds a passing V2 lower bound and two failed V3 campaigns. Its r2 variant used commerce 1 vCPU/2 GiB, RDS `db.t4g.small` and a 50% CPU guard through reviewed, hashed session-only overlays, not merged configuration. Historical 0.5-vCPU/micro-class facts below and in the writing harness remain dated observations/defaults, not that variant's sizing. Do not convert its improved error/drop totals into acceptance or revise other owners' historical sections silently; §4.1 owns the result and limitations, §4.3 the fresh metadata boundary, and §5 the operational provenance. Original report bytes/staged state were restored and verified before this continuation; evidence publication/pinning and second-owner review remain outstanding.
+11 November 2026 release/session distinction: the [released-image baseline record](../evidence/20261111-load-reruns/README.md) and selected R4 campaign identify released source `3a893036` separately from hashed session tooling and applied configuration. R4 commerce 1 vCPU/2 GiB, RDS `db.t4g.small` and its CPU guard are session facts, not merged default IaC. §4.1 owns the measured result and limits, §4.3 the metadata boundary and §5 the operational provenance; earlier campaign records remain archived outside the report's selected V3 results. Evidence publication/pinning and second-owner review remain outstanding.
+
+R4 results-selection and integration addendum (11 November campaign): the owner selected [AWS V3 R4](../evidence/20261111-v3-r4/README.md) as the **sole V3 results dataset for the report**, superseding earlier campaigns as the report's chosen V3 result, not rewriting their history. §4.1's results, workload/scaling tables and regenerated timeline now use R4 only; §§2, 3.2/3.4, 5 and 6 and AISS-12 reconcile the related status, sizing, operational provenance and capacity boundaries. Native workload success remains distinct from canonical analyzer exit 1 and the outer-upload failure; no owner acceptance or controlled linearity is inferred. The source package includes verified request/latency aggregates, completion-minute CSVs, scaling actions, source-preserving service/CloudWatch projections and a portable checker. Source publication, full evidence-commit pinning, PDF verification and second-owner review remain subject to the checks recorded with this integration.
 
 ### Section owners
 
@@ -104,7 +106,7 @@ Facts that one section states and another depends on. The owner of the second se
 | Stated in | Fact | Must match |
 |---|---|---|
 | 3.1.4 (Eric) | `ShareInvite` and `ShareCredit` have separate repositories and reference `GroupDeal` by `dealId`, outside its aggregate lock; credit is written `AFTER_COMMIT` in `REQUIRES_NEW` (ADR 0003) | 3.2.3 aggregate-to-table mapping, D4, D7; second-owner review pending |
-| 3.2.2 (Liu Jin) | One 0.5 vCPU commerce task saturated at about 280 req/s; three tasks about 455 req/s, the generator's limit (19 Oct 2026) | 4.1 (Pan) |
+| 3.2.2 (Liu Jin) | R4 retained commerce 1 vCPU/2 GiB and RDS small class; §4.1 reports the tested 600-RPS browse peak under one-to-six scaling, not per-task saturation or controlled linearity | 4.1 (Pan); second-owner review required |
 | 3.4 AISS-13 (Liu Jin) | The identity outage and a poison message have local results only; V4 and V5 were not run | 4.2 (Yu Qianshuo) |
 | 3.2.3 (Liu Jin) | Settlement lock order team → purchase intent → payment | 3.2.4 UC4 sequence (Yu Qianshuo) |
 | 3.4 AISS-04, -08, -09, -15 (Liu Jin) | Security gaps and their R1 targets | 4.3 (Pan) |
@@ -161,7 +163,7 @@ Template headings are fixed. "Must contain" lists what an assessor will look for
 
 | Section | Owner | Must contain | Sources |
 |---|---|---|---|
-| 4.1 Performance | Pan | F1: workload model, metric definitions and thresholds, results per run, what each run does and does not prove; caching and load balancing; scaling policy; capacity statement (measured, projected, next limit) | [`perf/k6/`](../../../perf/k6/README.md), evidence `20261016-http-baseline-dashboard`, `20261019-v3-autoscaling` |
+| 4.1 Performance | Pan | F1: workload model, metric definitions and thresholds, baseline and selected R4 results with limits; caching/load balancing; scaling policy; measured capacity boundary | [`perf/k6/`](../../../perf/k6/README.md), [V2 baseline](../evidence/20261016-http-baseline-dashboard/README.md), [V3 R4](../evidence/20261111-v3-r4/README.md) |
 | 4.2 Availability | Yu Qianshuo | Two zones, single-zone data tier, self-healing, rollback, failure drills with "AWS" or "local only" stated per result | Evidence `20261015-local-failure-rehearsal`, deck backup B12 |
 | 4.3 Security | Pan | Layered controls: Organization guardrails, Identity Center, OIDC, network isolation, encryption, secrets, pipeline scans; known gaps | Deck slide 22, [`infra/swe5001/github/`](../../../infra/swe5001/github/) |
 | 4.4 Extensibility and Maintainability | Lim | Measured reuse (audit queue), service template, architecture rules, API contract checks | Deck slide 11 |
@@ -188,18 +190,24 @@ The view set answers F8, F9 and F10. Every diagram is UML or a named notation, h
 | D2 | Use case diagram | UML | 1.4 | Proposal |
 | D3 | Logical view, redrawn (F12) | UML component diagram, or logical detail deployment diagram with logical nodes | 3.1.3 | Content of `logical-view.svg`, redrawn to the logical-view rules |
 | D4 | Context map | DDD context map with patterns | 3.1.4 | `context-map.svg` |
-| D5 | Physical deployment | UML deployment (nodes, artefacts, zones) | 3.2 | `physical-deployment.svg` |
+| D5 | Distributed deployment, topology comparison and dated zone allocation | UML deployment (nodes, artefacts, zones) | 3.2 | [`d5-physical-deployment.typ`](diagrams/d5-physical-deployment.typ), [`d5-topology-comparison.typ`](diagrams/d5-topology-comparison.typ) |
 | D6 | Network and security groups | AWS architecture icons | 3.2 | New; shows the data subnets (F6) |
 | D7 | Aggregates and life cycles | UML class + state machine | 3.1.4 | `aggregates.svg` |
 | D8 | Domain event catalogue and producer/consumer flow | Table + UML component | 3.1.4 | ADR 0007 |
-| D9 | ER diagram per database | Crow's foot or UML class | 3.2.3 | Flyway migrations |
+| D9 | Logical data models and typed supporting dictionary | UML class for tables + bounded dictionary | 3.2.3 | [`d9-data-models.typ`](diagrams/d9-data-models.typ), [`d9-schema-dictionary.typ`](diagrams/d9-schema-dictionary.typ), released Flyway V1–V28 |
 | D10a/b | Service-image job and deployment caller | UML activity, separate views | 5.2, 5.3 | [`d10-cicd-pipeline.typ`](diagrams/d10-cicd-pipeline.typ); broader CI paths are tabulated in §5.2 |
 | D11 | UC4 class diagram | UML class | 3.2.4 | New |
 | D12 | UC4 sequence, two users and the last seat | UML sequence | 3.2.4 | `uc4-join-sequence.svg` |
 | D13 | Team expiry and refund class diagram | UML class | 3.2.4 | New |
 | D14 | Team expiry and refund sequence | UML sequence | 3.2.4 | `expiry-refund-sequence.svg` |
 
-The additional §4.1 [November V3 timeline](diagrams/performance-v3-timeline.svg) is a data plot, not an architecture view. Its adjacent [Python source](diagrams/performance-v3-timeline.py) regenerates the SVG from retained minute/activity records with the standard library only (`python docs/swe5001/report/diagrams/performance-v3-timeline.py`, run in Docker). It excludes partial minutes, integrates the offered-rate reference and shades the original ECS-observer gap; it does not reconstruct missing task samples or create new acceptance evidence.
+The additional §4.1 [V3 R4 timeline](diagrams/performance-v3-timeline.svg) is a data plot, not an architecture view. Its adjacent [Python source](diagrams/performance-v3-timeline.py) regenerates the SVG exclusively from the portable R4 package with the standard library (`python docs/swe5001/report/diagrams/performance-v3-timeline.py`, run in Docker; `--check` compares without writing). Client completion bins and complete UTC CPU minutes retain their separate time origins; task-count dots are actual observations. Shading marks the tail after the canonical observer ended, covered separately by supplemental samples. The offered schedule is a reference, not reconstructed arrivals; the plot does not repair the canonical analyzer or prove controlled linearity.
+
+### Three-audit follow-up — 12 November 2026
+
+The [follow-up record](../evidence/20261112-audit-followup/README.md) maps all eight report findings plus terminology/recording/cost corrections, the non-destructive retention safeguards and privacy dispositions. D5 now distinguishes the historical SWE5006 EC2 monolith, configured ECS monolith fallback and distributed ECS, including enabled/disabled messaging; its zone inset separates dated observation from configuration. D9's supporting dictionary covers important typed fields for all 29 owned tables at `3a893036`, with explicit omissions and migration links. The workload/compute matrix distinguishes implemented online/consumer/lease work from proposed batch offload. These §3 amendments await Eric/Liu Jin's review; they do not change the section ownership or certify whole-report acceptance.
+
+D3's editable PlantUML and SVG were regenerated together with checksum-verified PlantUML 1.2026.10 and Graphviz in a disposable Java container; renderer packages were installed only inside that container, not on the host or in project dependencies. The D4a Mermaid change is a source comment only; its visible implemented-versus-modeled legend is in the report caption, so its existing SVG need not change. See the [fresh source/PDF receipt](../evidence/20261111-v3-r4/report-review.json) for the exact reviewed bytes, chapter-only scope and remaining warnings. Historical metadata exposure, durable archival approval and submission sign-off remain explicitly separate from a clean draft for peer review.
 
 ## Briefing coverage
 
