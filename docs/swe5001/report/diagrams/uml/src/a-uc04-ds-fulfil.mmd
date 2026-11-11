@@ -15,9 +15,8 @@ sequenceDiagram
         OFA->>Set: lockTeam(dealId): lock 1
         OFA->>Intents: lockById(intentId): lock 2
         Note over Svc,Users: Pay upfront (@sec-a-pay-upfront): lock 4, succeed, publish PaymentSucceeded
-        Svc->>Svc: quote.expiredAt(now)
-        break true: paid too late (A5)
-            Svc-->>Svc: Outcome(null, null, "BUSINESS_EXPIRED"), no fulfil
+        break quote.expiredAt(now): paid too late (A5)
+            Note over Svc,OFA: Outcome(null, null, "BUSINESS_EXPIRED"); fulfil is not called
         end
         Svc->>OFA: fulfil(event): re-takes locks 1 and 2 (held)
         break intent.fulfilled() (A8)

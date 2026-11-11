@@ -41,7 +41,7 @@ classDiagram
         +strategyFor(mode: PricingMode): PricingStrategy
     }
     class TeamPriceQuote {
-        <<aggregate root, record, Pers>>
+        <<entity, record, Pers>>
         +id: UUID
         +productId: UUID
         +ownerId: UUID

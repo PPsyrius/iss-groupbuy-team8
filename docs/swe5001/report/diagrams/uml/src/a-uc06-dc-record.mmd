@@ -28,7 +28,7 @@ classDiagram
         +lockExpiredTeam(dealId: UUID): void
     }
     class OrderFulfilmentAdapter {
-        <<adapter, application service, Dist>>
+        <<adapter, application service, Dist, Conc>>
         +lockExpiredTeam(dealId: UUID): void
     }
     class GroupDealSettlementSupport {

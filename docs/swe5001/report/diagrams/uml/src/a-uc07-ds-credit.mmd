@@ -1,32 +1,37 @@
 %% frame: UC7 B8–B9: record the sharer, then credit after commit (design, commerce-svc)
 sequenceDiagram
+    participant Tx as :TransactionTemplate
     participant F as :OrderFulfilmentAdapter
     participant S as :PaidGroupDealService
     participant R as :PaidGroupDealRepository
     participant P as :ApplicationEventPublisher
     participant Sub as :ShareCreditSubscriber
     participant CR as :ShareCreditRepository
-    create participant SC as ShareCredit
+    create participant SC as :ShareCredit
 
     critical tx REQUIRED (settlement), READ COMMITTED, 10 s
-        Note over F,R: B8: inside UC4's settlement transaction
+        Note over Tx,R: B8: inside UC4's settlement transaction, owned by :TransactionTemplate
         F->>S: joinConfirmed(dealId, paid, sharerUserId)
         alt admission refused, or the payment replayed (A7)
             S-->>F: refused or frozen ParticipationResult; no MemberJoined
         else admitted
             S->>R: insertJoinedMember(before, after, paid, sharer, now)
             S->>P: publishEvent(MemberJoined)
+            P-->>S: held until commit
             S-->>F: ParticipationResult applied
         end
     end
-    Note over P,CR: B9: COMMIT, then AFTER_COMMIT on the same thread
-    P->>Sub: onMemberJoined(event)
-    opt event.attributed()
-        critical tx REQUIRES_NEW, READ COMMITTED, 10 s
-            Sub->>SC: «create» of(event)
-            Sub->>CR: recordIfAbsent(credit)
-            CR-->>Sub: true, or false: already credited (A8)
+    Note over Tx,CR: B9: COMMIT
+    rect
+        Note over Tx,CR: AFTER_COMMIT: the transaction owner calls the listener on the same thread
+        Tx->>Sub: onMemberJoined(event)
+        opt event.attributed()
+            critical tx REQUIRES_NEW, READ COMMITTED, 10 s
+                Sub->>SC: «create» of(event)
+                Sub->>CR: recordIfAbsent(credit)
+                CR-->>Sub: true, or false: already credited (A8)
+            end
+            Note over Sub,CR: E1: any failure is caught and logged; ADR 0003 reconciles
         end
-        Note over Sub,CR: E1: any failure is caught and logged; ADR 0003 reconciles
+        Sub-->>Tx: void, never throws
     end
-    Sub-->>P: void, never throws

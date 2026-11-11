@@ -10,7 +10,7 @@ stateDiagram-v2
     Fulfilled : fulfilledPaymentId set
     Expired : expiredAt set
     Closed : paid, owed back; out of the sweep
-    [*] --> Issued : issue [now < quoteValidUntil] / save(intent)
+    [*] --> Issued : «create» issue / save(intent)
     Issued --> Issued : paid [base refuses] / refund (A5, A6)
     Issued --> Fulfilled : fulfilBy(paymentId) [accepted] / markFulfilled
     Fulfilled --> Fulfilled : paid [other payment] / refund

@@ -1,6 +1,6 @@
 %% frame: UC6 B2 to B4: refund obligations inside the expiry transaction (design)
 sequenceDiagram
-    participant Exp as :GroupDealExpiryService
+    participant Exp as proxy : GroupDealExpiryService
     participant Pub as :ApplicationEventPublisher
     participant Sub as :TeamExpiryRefundSubscriber
     participant Svc as :TeamExpiryRefundService
@@ -14,8 +14,9 @@ sequenceDiagram
     critical expiry transaction, REQUIRED, READ COMMITTED, 10 s
         Note over Exp,Svc: B1: inside expireOne(dealId), after lock 1 and the guarded expire (@sec-a-uc05)
         Exp->>Pub: publishEvent(TeamExpired)
-        Note over Exp,Adp: BEFORE_COMMIT, on the committing thread: @Order(10) has cancelled the orders (UC5)
-        Pub->>Sub: onTeamExpired(event), @Order(20)
+        Pub-->>Exp: held until commit
+        Note over Exp,Adp: BEFORE_COMMIT, on the committing thread, the transaction owner calls each listener: @Order(10) has cancelled the orders (UC5)
+        Exp->>Sub: onTeamExpired(event), @Order(20)
         Sub->>Svc: recordExpiredTeam(dealId)
         Note over Svc,Deals: TransactionTemplate joins the expiry transaction (REQUIRED)
         Note over Svc,Deals: B2: the team must still exist and be EXPIRED

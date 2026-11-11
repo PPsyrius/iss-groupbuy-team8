@@ -6,9 +6,16 @@ classDiagram
     }
     class TeamSucceeded {
         <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +size: int
+        +at: Instant
     }
     class TeamExpired {
         <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +at: Instant
     }
     class OrderLifecycleSubscriber {
         <<subscriber, Evt>>
