@@ -13,9 +13,9 @@ deploymentDiagram
                 }
                 zone "Private 10.50.10.0/24" {
                     environment FgA["ECS Fargate, Arm64"] : 0.5 vCPU, 1 GiB per task {
-                        artifact IdA["identity-svc"] : 1 task
-                        artifact CoA["commerce-svc"] : 2 to 6 tasks
-                        artifact NtA["notification-svc"] : 1 to 4 tasks
+                        artifact IdA["identity-svc"] : image
+                        artifact CoA["commerce-svc"] : image
+                        artifact NtA["notification-svc"] : image
                     }
                 }
                 zone "Data 10.50.20.0/24" {
@@ -28,9 +28,9 @@ deploymentDiagram
                 }
                 zone "Private 10.50.11.0/24" {
                     environment FgB["ECS Fargate, Arm64"] : 0.5 vCPU, 1 GiB per task {
-                        artifact IdB["identity-svc"] : 1 task
-                        artifact CoB["commerce-svc"] : 2 to 6 tasks
-                        artifact NtB["notification-svc"] : 1 to 4 tasks
+                        artifact IdB["identity-svc"] : image
+                        artifact CoB["commerce-svc"] : image
+                        artifact NtB["notification-svc"] : image
                     }
                 }
                 zone "Data 10.50.21.0/24" {
@@ -39,6 +39,7 @@ deploymentDiagram
             }
         }
         node S3["Amazon S3"] <<bucket>> : SPA files
+        note Tasks["Tasks per service, both\nzones together:\nidentity-svc 1,\ncommerce-svc 2 to 6,\nnotification-svc 1 to 4.\nECS places each task in\neither private subnet."]
         node Sns["domain-events"] <<SNS topic>> :::messaging
         node QNt["notification"] <<SQS queue>> :::messaging : and its DLQ
         node QAu["audit"] <<SQS queue>> :::messaging : and its DLQ
@@ -54,6 +55,7 @@ deploymentDiagram
 %% at CoB 1,4
 %% at Cache 0,6
 %% at Rds 1,6
+%% at Tasks 2,2
 %% at Sns 2,3
 %% at QNt 2,4
 %% at QAu 2,5

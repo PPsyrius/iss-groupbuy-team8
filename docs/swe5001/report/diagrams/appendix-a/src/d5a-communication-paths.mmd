@@ -10,14 +10,16 @@ deploymentDiagram
             node Alb["Application Load Balancer"]
             node Nat["fck-nat"]
         }
-        zone "Private application subnets" as Apps {
-            environment Id["identity-svc"] <<execution environment>>
-            environment Co["commerce-svc"] <<execution environment>>
-            environment Nt["notification-svc"] <<execution environment>>
+        zone "Private application subnets" {
+            environment Fg["ECS Fargate, Arm64"] {
+                artifact Id["identity-svc"]
+                artifact Co["commerce-svc"]
+                artifact Nt["notification-svc"]
+            }
         }
         zone "Data subnets" {
-            node Cache["ElastiCache Valkey"]
-            node Rds["RDS PostgreSQL"]
+            node Cache["ElastiCache Valkey"] : TLS 6379
+            node Rds["RDS PostgreSQL"] : TLS 5432
         }
     }
     zone "Amazon SNS and SQS" as Msg {
@@ -29,10 +31,14 @@ deploymentDiagram
     Cdn --> S3 : HTTPS (OAC)
     Stripe --> Cdn : HTTPS 443
     Cdn --> Alb : HTTP 80, origin secret
-    Alb --> Apps : HTTP 8589
+    Alb --> Fg : HTTP 8589
     Co --> Id : HTTP 8589
-    Apps --> Cache : TLS 6379
-    Apps --> Rds : TLS 5432
+    Id --> Cache
+    Co --> Cache
+    Nt --> Cache
+    Id --> Rds
+    Co --> Rds
+    Nt --> Rds
     Id --> Nat : HTTPS 443
     Co --> Nat : HTTPS 443
     Nt --> Nat : HTTPS 443
@@ -52,7 +58,7 @@ deploymentDiagram
 %% at Co 2,2
 %% at Nt 3,2
 %% at Cache 1,3
-%% at Rds 2,3
+%% at Rds 3,3
 %% at Sns 4,1
 %% at QNt 4,0
 %% at QAu 4,2
