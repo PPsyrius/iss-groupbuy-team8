@@ -13,7 +13,7 @@ package "«service» commerce-svc (Core Transactional Boundary)" #FDEFEC {
     [Product «AggregateRoot»\nTeamPricePolicy «AggregateRoot»\nProductTeamTerms «ValueObject»\nDualPricingStrategy «DomainService»] as CAT
   }
   package "GroupBuy Context (Core)" #FFF6E2 {
-    [GroupDeal «AggregateRoot»\nPaidMember · ParticipationReceipt «Entity»\nShareInvite · ShareCredit «ValueObject»\nPaidGroupDealCreator «Factory»] as GB
+    [GroupDeal «AggregateRoot»\nPaidMember · ParticipationReceipt «Entity»\nShareInvite · ShareCredit «OwnRepository»\nPaidGroupDealCreator «Factory»] as GB
   }
   package "Ordering Context (Core)" #FFF6E2 {
     [PurchaseIntent «AggregateRoot»\nOrder «AggregateRoot»\nOrderFulfilmentAdapter] as ORD

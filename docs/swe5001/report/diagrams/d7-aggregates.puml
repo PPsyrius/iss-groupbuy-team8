@@ -73,7 +73,7 @@ package "GroupBuy Context" {
     +fingerprint: String
     +result: ParticipationResult
   }
-  class ShareInvite <<value object>> {
+  class ShareInvite <<own-repository record>> {
     +id: UUID
     +ref: String
     +dealId: UUID
@@ -81,7 +81,7 @@ package "GroupBuy Context" {
     +mint(dealId, sharerId, rng)
     +attributes(dealId, buyerId)
   }
-  class ShareCredit <<value object>> {
+  class ShareCredit <<own-repository record>> {
     +dealId: UUID
     +paymentId: UUID
     +sharerUserId: UUID
@@ -90,6 +90,8 @@ package "GroupBuy Context" {
   }
   GroupDeal "1" *-- "1..*" PaidMember
   GroupDeal "1" *-- "1..*" ParticipationReceipt
+  ShareInvite ..> GroupDeal : dealId (ID ref, own repo)
+  ShareCredit ..> GroupDeal : dealId (ID ref, AFTER_COMMIT)
   GroupDeal ..> Product : productId (ID ref)
 }
 
