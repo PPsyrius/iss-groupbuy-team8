@@ -1,0 +1,54 @@
+%% frame: SWE5001 delivery pipeline
+activityDiagram
+    lane "GitHub" {
+        start S
+        action Trigger["Push to dev or manual dispatch"]
+    }
+    lane "swe5001-service-images.yml" {
+        action Build["Package the service JARs"]
+        fork F
+        action TestB["Unit and integration tests"]
+        action TestC["Contract tests"]
+        join J
+        action Image["Build ARM64 images"]
+        action Scan["Trivy scan"]
+        decision Gate["Fixable HIGH or CRITICAL?"]
+        flowend Fail
+        action Export["Export image archives"]
+        note N1["The gate fails the job;\nnothing is exported"]
+    }
+    lane "swe5001-deploy.yml" {
+        object Archive["image archives"]
+        action Publish["Publish to ECR"]
+        action Up["Create the runtime"]
+        action Smoke["Smoke suite"]
+        decision Ok["Smoke passes?"]
+        action Release["Publish SPA, promote digests"]
+        merge M
+        action Down["Destroy the runtime (always)"]
+        end E
+    }
+    S --> Trigger
+    Trigger --> Build
+    Build --> F
+    F --> TestB
+    F --> TestC
+    TestB --> J
+    TestC --> J
+    J --> Image
+    Image --> Scan
+    Scan --> Gate
+    Gate --> Fail : [yes]
+    Gate --> Export : [no]
+    N1 .. Fail
+    Export --> Archive
+    Archive --> Publish
+    Publish --> Up
+    Up --> Smoke
+    Smoke --> Ok
+    Ok --> Release : [yes]
+    Ok --> M : [no]
+    Release --> M
+    M --> Down
+    Down --> E
+%% at Release 4,15

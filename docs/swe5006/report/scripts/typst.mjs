@@ -1,5 +1,6 @@
 // Markdown (the subset AGENTS.md allows) and Mermaid (classDiagram, sequenceDiagram,
-// stateDiagram-v2) to Typst. Used by build.mjs and figure.mjs; no dependencies.
+// stateDiagram-v2, and the Mermaid-like componentDiagram, deploymentDiagram, usecaseDiagram and
+// activityDiagram) to Typst. Used by build.mjs and figure.mjs; no dependencies.
 
 const MARKER = /\{\{(FILL|VERIFY|CONFIRM)(?::\s*([^}]*))?\}\}/;
 
@@ -335,6 +336,254 @@ function stateDiagram(lines, frame) {
   return `#state-diagram(${typstArray(st)}, ${typstArray(tr)}, frame: ${str(frame)})`;
 }
 
+// ---- Component, deployment, use-case and activity diagrams --------------------
+//
+// One Mermaid-like grammar for the four kinds (diagrams/appendix-a/README.md in the SWE5001
+// report documents it). A header line (componentDiagram, deploymentDiagram, usecaseDiagram,
+// activityDiagram), then one statement per line:
+//   <keyword> Id["Name"] <<stereotype>> :::tint : sub   an element; ["Name"], <<…>>, :::tint and
+//                                                       ": sub" (a second, regular line) optional
+//   <keyword> Id["Name"] <<stereotype>> {  …  }        a container element (node, device,
+//                                                       environment, component) holding others
+//   package|rectangle|zone|lane "Title" [as Id] [<<stereotype>>] {  …  }   a group
+//   A ["end"] <op> ["end"] B [: label]                  a relation, with optional end labels
+//   UseCase : extension point                           a use case's extension point
+//   direction TB|LR
+// and the layout hints %% at Id col,row  and  %% route A B straight|hv|vh|vhv|hvh  and
+// %% route ortho|straight (the default route of the diagram).
+
+export const STRUCT_KINDS = {
+  componentDiagram: {
+    kind: 'component',
+    fn: 'component-diagram',
+    elements: ['component', 'database', 'interface', 'actor', 'artifact', 'node', 'device', 'environment', 'note'],
+    containers: ['component', 'node', 'device', 'environment'],
+    groups: ['package', 'rectangle', 'zone'],
+  },
+  deploymentDiagram: {
+    kind: 'deployment',
+    fn: 'deployment-diagram',
+    elements: ['node', 'device', 'environment', 'artifact', 'component', 'database', 'interface', 'actor', 'note'],
+    containers: ['node', 'device', 'environment', 'component'],
+    groups: ['package', 'rectangle', 'zone'],
+  },
+  usecaseDiagram: {
+    kind: 'usecase',
+    fn: 'usecase-diagram',
+    elements: ['actor', 'usecase', 'note'],
+    containers: [],
+    groups: ['rectangle', 'package'],
+  },
+  activityDiagram: {
+    kind: 'activity',
+    fn: 'activity-diagram',
+    elements: ['start', 'end', 'flowend', 'action', 'decision', 'merge', 'fork', 'join', 'object', 'note'],
+    containers: [],
+    groups: ['lane'],
+  },
+};
+export const STRUCT_ELEMENT = /^([a-z]+)\s+([\w.]+)(?:\s*\["((?:[^"\\]|\\.)*)"\])?(?:\s*<<\s*(.+?)\s*>>)?(?:\s*:::(platform|business|messaging|neutral))?(?:\s*:\s*([^{]*?))?\s*(\{)?\s*$/;
+export const STRUCT_GROUP = /^([a-z]+)\s+"([^"]*)"(?:\s+as\s+([\w.]+))?(?:\s*<<\s*(.+?)\s*>>)?(?:\s*:::(platform|business|messaging|neutral))?\s*\{\s*$/;
+export const STRUCT_REL = /^([\w.]+)\s*(?:"([^"]*)")?\s*(-->|<--|--\|>|<\|--|\.\.\|>|<\|\.\.|\.\.>|<\.\.|-\(\)|-\(|--|\.\.)\s*(?:"([^"]*)")?\s*([\w.]+)\s*(?::\s*(.*))?$/;
+export const STRUCT_ROUTE = /^%%\s*route\s+(?:([\w.]+)\s+([\w.]+)\s+)?(straight|hv|vh|vhv|hvh|ortho)\s*$/;
+const STRUCT_OPS = {
+  '-->': ['nav', false], '<--': ['nav', true], '--|>': ['inherit', false], '<|--': ['inherit', true],
+  '..|>': ['realize', false], '<|..': ['realize', true], '..>': ['dep', false], '<..': ['dep', true],
+  '-()': ['provides', false], '-(': ['requires', false], '--': ['assoc', false], '..': ['dashed', false],
+};
+const DEFAULT_STEREO = { device: 'device', environment: 'execution environment', database: 'database', artifact: 'artifact' };
+const ELEMENT_KIND = { device: 'node', environment: 'node', database: 'component' };
+
+// Parse a component, deployment, use-case or activity diagram, lay it out, and report what a
+// strict check should refuse (problems). Lines the grammar does not know are skipped here, as in
+// the other kinds, and listed in problems.
+export function structModel(header, lines) {
+  const spec = STRUCT_KINDS[header];
+  const problems = [];
+  const elems = new Map();
+  const groups = new Map();
+  const edges = [];
+  const stack = [];
+  let dir = 'TB';
+  let ortho = spec.kind === 'activity';
+  const routes = new Map();
+  let auto = 0;
+  const name = (s) => (s === undefined ? undefined : s.replace(/\\n|<br\s*\/?>/gi, '\n').replace(/\\"/g, '"'));
+  lines.forEach((raw, i) => {
+    const l = raw.trim();
+    const at = `line ${i + 1}`;
+    let m;
+    if ((m = l.match(STRUCT_ROUTE))) {
+      if (m[1]) routes.set(`${m[1]}\u0000${m[2]}`, m[3] === 'ortho' ? 'auto' : m[3]);
+      else ortho = m[3] === 'ortho';
+      return;
+    }
+    if (!l || l.startsWith('%%')) return;
+    if ((m = l.match(/^direction\s+(TB|TD|BT|LR|RL)$/))) {
+      dir = m[1] === 'LR' || m[1] === 'RL' ? 'LR' : 'TB';
+      return;
+    }
+    if (l === '}') {
+      if (!stack.length) problems.push(`${at}: "}" closes nothing`);
+      stack.pop();
+      return;
+    }
+    const path = stack.slice();
+    if ((m = l.match(STRUCT_GROUP)) && spec.groups.includes(m[1])) {
+      const id = m[3] || `__g${auto++}`;
+      if (groups.has(id) || elems.has(id)) problems.push(`${at}: "${id}" declared twice`);
+      groups.set(id, { id, k: m[1], name: m[2], stereo: m[4] ?? null, tint: m[5] ?? null, path, at });
+      stack.push(id);
+      return;
+    }
+    if ((m = l.match(STRUCT_ELEMENT)) && spec.elements.includes(m[1])) {
+      const [, kw, id, nm, stereo, tint, subtitle, open] = m;
+      const sub = subtitle ? subtitle.trim() : null;
+      if (groups.has(id) || elems.has(id)) problems.push(`${at}: "${id}" declared twice`);
+      const k = ELEMENT_KIND[kw] ?? kw;
+      const st = stereo ?? DEFAULT_STEREO[kw] ?? null;
+      if (open) {
+        if (!spec.containers.includes(kw)) problems.push(`${at}: a ${kw} cannot hold other elements`);
+        groups.set(id, { id, k, name: name(nm) ?? id, stereo: st, sub, tint: tint ?? null, path, at });
+        stack.push(id);
+      } else elems.set(id, { id, k, name: name(nm) ?? (['decision', 'merge', 'fork', 'join', 'start', 'end', 'flowend'].includes(kw) ? '' : id), stereo: st, sub, tint: tint ?? null, path, ext: [], at });
+      return;
+    }
+    if ((m = l.match(STRUCT_REL))) {
+      let [, a, ma, op, mb, b, label] = m;
+      const [k, rev] = STRUCT_OPS[op];
+      if (rev) [a, b, ma, mb] = [b, a, mb, ma];
+      edges.push({ from: a, to: b, k, label: label ? guillemets(label) : null, ma: ma || null, mb: mb || null, at });
+      return;
+    }
+    if ((m = l.match(/^([\w.]+)\s*:\s*(.+)$/))) {
+      const e = elems.get(m[1]);
+      if (e && e.k === 'usecase') e.ext.push(m[2].trim());
+      else problems.push(`${at}: "${m[1]} : …" adds an extension point, and only to a declared use case`);
+      return;
+    }
+    problems.push(`${at}: unsupported in ${header}: "${l}"`);
+  });
+  if (stack.length) problems.push(`${groups.get(stack[stack.length - 1]).at}: "${stack[stack.length - 1]}" is never closed with "}"`);
+  for (const e of edges) {
+    for (const id of [e.from, e.to]) if (!elems.has(id) && !groups.has(id)) problems.push(`${e.at}: "${id}" is not declared (catches typos)`);
+    if ((e.k === 'provides' || e.k === 'requires') && elems.get(e.to)?.k !== 'interface') problems.push(`${e.at}: "-()" and "-(" end at an interface`);
+  }
+  const known = edges.filter((e) => elems.has(e.from) && elems.has(e.to));
+  const ids = [...elems.keys()];
+  const hints = {};
+  for (const [i, l] of lines.entries()) {
+    const m = l.trim().match(/^%%\s*at\s+(\S+)\s+(-?[\d.]+)\s*,\s*(-?[\d.]+)/);
+    if (!m) continue;
+    if (!elems.has(m[1])) problems.push(`line ${i + 1}: pin names "${m[1]}", which is not an element (groups take the cells of what they hold)`);
+    else hints[m[1]] = [Math.round(Number(m[2])), Math.round(Number(m[3]))];
+  }
+  // Layout: longest-path layers (parents above children for generalisation), or, in an activity
+  // diagram with lanes, layers along the flow and one or more columns (rows, LR) per lane.
+  // A note ranks just below what it is attached to.
+  const layerEdges = known.map((e) => (e.k === 'inherit' || e.k === 'realize' || elems.get(e.from).k === 'note' ? { a: e.to, b: e.from } : { a: e.from, b: e.to }));
+  const base = ids.length ? layout(ids, layerEdges, {}, 'TB') : {};
+  const lanes = [...groups.values()].filter((g) => g.k === 'lane');
+  let pos = {};
+  if (lanes.length) {
+    let next = 0;
+    const laneOf = (e) => e.path.find((p) => groups.get(p)?.k === 'lane');
+    for (const lane of lanes) {
+      const members = ids.filter((id) => laneOf(elems.get(id)) === lane.id);
+      const byRank = new Map();
+      for (const id of members) {
+        const r = base[id][1];
+        if (!byRank.has(r)) byRank.set(r, []);
+        byRank.get(r).push(id);
+      }
+      let width = 1;
+      for (const list of byRank.values()) {
+        list.sort((x, y) => base[x][0] - base[y][0]);
+        list.forEach((id, j) => (pos[id] = [next + j, base[id][1]]));
+        width = Math.max(width, list.length);
+      }
+      next += width;
+    }
+    for (const id of ids) if (!laneOf(elems.get(id))) {
+      problems.push(`${elems.get(id).at}: "${id}" is outside every lane; put it in one`);
+      pos[id] = [next, base[id][1]];
+    }
+  } else pos = base;
+  if (dir === 'LR') for (const id of ids) pos[id] = [pos[id][1], pos[id][0]];
+  for (const [id, p] of Object.entries(hints)) pos[id] = p;
+  // Shift everything to start at cell 0,0.
+  const minC = Math.min(0, ...ids.map((id) => pos[id][0]));
+  const minR = Math.min(0, ...ids.map((id) => pos[id][1]));
+  for (const id of ids) pos[id] = [pos[id][0] - minC, pos[id][1] - minR];
+  for (const e of elems.values()) [e.col, e.row] = pos[e.id];
+  const cells = new Map();
+  for (const e of elems.values()) {
+    const key = `${e.col},${e.row}`;
+    if (cells.has(key)) problems.push(`${e.at}: "${e.id}" shares cell ${key} with "${cells.get(key)}"; pin one of them elsewhere`);
+    else cells.set(key, e.id);
+  }
+  // Groups take the cells of everything they hold.
+  for (const g of groups.values()) {
+    const inside = [...elems.values()].filter((e) => e.path.includes(g.id));
+    if (!inside.length) {
+      problems.push(`${g.at}: "${g.name}" holds no element`);
+      Object.assign(g, { c0: 0, r0: 0, c1: 0, r1: 0 });
+      continue;
+    }
+    g.c0 = Math.min(...inside.map((e) => e.col));
+    g.c1 = Math.max(...inside.map((e) => e.col));
+    g.r0 = Math.min(...inside.map((e) => e.row));
+    g.r1 = Math.max(...inside.map((e) => e.row));
+  }
+  const boxes = [...groups.values()].filter((g) => g.k !== 'lane');
+  const holds = (g, c, r) => c >= g.c0 && c <= g.c1 && r >= g.r0 && r <= g.r1;
+  for (const g of boxes) {
+    for (const e of elems.values()) if (!e.path.includes(g.id) && holds(g, e.col, e.row)) problems.push(`"${e.id}" (cell ${e.col},${e.row}) lies inside "${g.name}" but is not part of it; pin it outside`);
+    for (const h of boxes) {
+      if (h.id <= g.id || h.path.includes(g.id) || g.path.includes(h.id)) continue;
+      if (g.c0 <= h.c1 && h.c0 <= g.c1 && g.r0 <= h.r1 && h.r0 <= g.r1) problems.push(`"${g.name}" and "${h.name}" overlap; pin their elements apart`);
+    }
+  }
+  // A group that an edge enters from above widens so its title fits beside the line.
+  const inside = (id, g) => (elems.get(id) ?? groups.get(id))?.path.includes(g.id);
+  const topRow = (id) => (elems.has(id) ? elems.get(id).row : groups.get(id)?.r1 ?? Infinity);
+  for (const g of boxes) g.entered = edges.some((d) => [[d.from, d.to], [d.to, d.from]].some(([x, y]) => inside(x, g) && !inside(y, g) && y !== g.id && topRow(y) < g.r0));
+  const laneSpans = lanes.map((g) => (dir === 'LR' ? { name: g.name, a0: g.r0, a1: g.r1 } : { name: g.name, a0: g.c0, a1: g.c1 }));
+  for (let i = 1; i < laneSpans.length; i++) if (laneSpans[i].a0 <= laneSpans[i - 1].a1) problems.push(`lanes "${laneSpans[i - 1].name}" and "${laneSpans[i].name}" overlap or are out of order; pin their elements apart`);
+  // An interface's name goes where no edge arrives: below, above, or to the right.
+  for (const e of elems.values()) {
+    if (e.k !== 'interface') continue;
+    const rows = edges.filter((d) => d.from === e.id || d.to === e.id).map((d) => elems.get(d.from === e.id ? d.to : d.from)).filter(Boolean).map((o) => o.row);
+    const down = rows.some((r) => r > e.row);
+    const up = rows.some((r) => r < e.row);
+    e.lab = !down ? 'below' : !up ? 'above' : 'right';
+  }
+  for (const d of edges) d.route = routes.get(`${d.from}\u0000${d.to}`) ?? 'auto';
+  // A straight edge along a row or column must not run through another element's cell.
+  for (const d of edges) {
+    const a = elems.get(d.from);
+    const b = elems.get(d.to);
+    if (!a || !b || !['auto', 'straight'].includes(d.route) || (a.col !== b.col && a.row !== b.row)) continue;
+    const [c0, c1] = [Math.min(a.col, b.col), Math.max(a.col, b.col)];
+    const [r0, r1] = [Math.min(a.row, b.row), Math.max(a.row, b.row)];
+    for (const e of elems.values()) {
+      if (e === a || e === b || e.col < c0 || e.col > c1 || e.row < r0 || e.row > r1) continue;
+      problems.push(`${d.at}: the edge ${d.from}–${d.to} runs through "${e.id}"; pin one end elsewhere or give it a route`);
+    }
+  }
+  return { spec, dir, ortho, elems: [...elems.values()], groups: boxes, lanes: laneSpans, edges, problems };
+}
+
+function structDiagram(header, lines, frame) {
+  const { spec, dir, ortho, elems, groups, lanes, edges } = structModel(header, lines);
+  const s = (v) => (v === null || v === undefined ? 'none' : str(v));
+  const el = elems.map((e) => `(id: ${str(e.id)}, k: ${str(e.k)}, name: ${str(e.name)}, stereo: ${s(e.stereo)}, sub: ${s(e.sub)}, tint: ${s(e.tint)}, col: ${e.col}, row: ${e.row}, lab: ${s(e.lab)}, ext: ${typstArray(e.ext.map(str))})`);
+  const gr = groups.map((g) => `(id: ${str(g.id)}, k: ${str(g.k)}, name: ${str(g.name)}, stereo: ${s(g.stereo)}, sub: ${s(g.sub)}, tint: ${s(g.tint)}, c0: ${g.c0}, r0: ${g.r0}, c1: ${g.c1}, r1: ${g.r1}, entered: ${Boolean(g.entered)}, path: ${typstArray(g.path.map(str))})`);
+  const ln = lanes.map((l) => `(name: ${str(l.name)}, a0: ${l.a0}, a1: ${l.a1})`);
+  const ed = edges.map((d) => `(from: ${str(d.from)}, to: ${str(d.to)}, k: ${str(d.k)}, label: ${s(d.label)}, ma: ${s(d.ma)}, mb: ${s(d.mb)}, route: ${str(d.route)})`);
+  return `#${spec.fn}(${typstArray(el)}, ${typstArray(gr)}, ${typstArray(ln)}, ${typstArray(ed)}, frame: ${str(frame)}, dir: ${str(dir)}, ortho: ${ortho})`;
+}
+
 // Stereotypes and keywords take guillemets: "<<use>>" becomes «use», and a dependency label that
 // is a UML standard keyword on its own ("use", "trace", "throws", ...) is wrapped in them.
 const KEYWORDS = /^(use|trace|throws|create|instantiate|call|import|access|refine|derive|send|realize|permit|include|extend|bind)$/;
@@ -583,7 +832,9 @@ export function mermaid(src, caption = '', opts = {}) {
   if (kind.startsWith('classDiagram')) return classDiagram(body, frame);
   if (kind.startsWith('sequenceDiagram')) return sequenceDiagram(body, frame, { continuous: Boolean(opts.continuousActivations) });
   if (kind.startsWith('stateDiagram')) return stateDiagram(body, frame);
-  throw new Error(`unsupported Mermaid diagram "${kind}" (use classDiagram, sequenceDiagram or stateDiagram-v2)`);
+  const struct = Object.keys(STRUCT_KINDS).find((h) => kind === h || kind.startsWith(`${h} `));
+  if (struct) return structDiagram(struct, body, frame);
+  throw new Error(`unsupported Mermaid diagram "${kind}" (use classDiagram, sequenceDiagram, stateDiagram-v2, componentDiagram, deploymentDiagram, usecaseDiagram or activityDiagram)`);
 }
 
 // ---- Blocks -------------------------------------------------------------------
@@ -597,7 +848,7 @@ function figure(body, caption, opts = '') {
   const text = m ? m[2] : caption;
   // A UML diagram goes in as a function of the figure's host, so its frame can turn the whole
   // figure, caption included (report-figure in template.typ).
-  const uml = body.match(/^#((?:class|state|sequence)-diagram\(.*)\)$/s);
+  const uml = body.match(/^#((?:class|state|sequence|component|deployment|usecase|activity)-diagram\(.*)\)$/s);
   const arg = uml ? `(host => ${uml[1]}, host: host))` : `[${body}]`;
   return `#report-figure(${str(num)}, ${arg}, [${inline(text)}]${opts})`;
 }

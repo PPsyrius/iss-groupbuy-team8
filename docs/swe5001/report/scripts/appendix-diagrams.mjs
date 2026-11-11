@@ -6,7 +6,8 @@
 //   node docs/swe5001/report/scripts/appendix-diagrams.mjs --check    fail if gen/ is stale
 //
 // Reads diagrams/appendix-a/src/<id>.mmd and writes diagrams/appendix-a/gen/<id>.typ, which
-// exports `kind` ("class" | "sequence" | "state") and `drawing(host: none)`. The appendix places
+// exports `kind` ("class" | "sequence" | "state" | "component" | "deployment" | "usecase" |
+// "activity") and `drawing(host: none)`. The appendix places
 // a drawing with `afig` from sections/appendix-a/lib-a.typ. The translation is `mermaid()` from
 // the SWE5006 report (docs/swe5006/report/scripts/typst.mjs); this script adds the checks that
 // translator leaves out: it ignores any line it does not understand, so here every line must
@@ -15,7 +16,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mermaid } from '../../../swe5006/report/scripts/typst.mjs';
+import { mermaid, structModel } from '../../../swe5006/report/scripts/typst.mjs';
 
 const reportDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repo = resolve(reportDir, '../../..');
@@ -178,6 +179,30 @@ function checkState(lines, start) {
   return declared;
 }
 
+// Component, deployment, use-case and activity diagrams: the translator's own parser and layout
+// (structModel in typst.mjs) lists every line it skipped, every undeclared name, and every layout
+// fault (two elements in one cell, a group whose area takes in an element it does not hold, groups
+// or lanes that overlap, a straight edge through another element); here each is an error.
+function checkStruct(header, lines, start) {
+  const body = lines.slice(start);
+  const model = structModel(header, body);
+  if (model.problems.length) {
+    // The model counts lines from the body; report them from the top of the file.
+    const msg = model.problems[0].replace(/^line (\d+)/, (_, n) => `line ${Number(n) + start}`);
+    throw new DiagramError(`${msg}${model.problems.length > 1 ? ` (and ${model.problems.length - 1} more)` : ''}`);
+  }
+  if (!model.elems.length) throw new DiagramError('diagram has no elements');
+  body.forEach((l, i) => {
+    const m = l.trim().match(/^%%\s*at\s+\S+\s+(-?[\d.]+)\s*,\s*(-?[\d.]+)/);
+    if (m && (!Number.isInteger(Number(m[1])) || !Number.isInteger(Number(m[2])))) throw new DiagramError(`line ${i + 1 + start}: pins in a ${model.spec.kind} diagram take whole cells`);
+  });
+  return new Set(model.elems.map((e) => e.id));
+}
+const checkComponent = (lines, start) => checkStruct('componentDiagram', lines, start);
+const checkDeployment = (lines, start) => checkStruct('deploymentDiagram', lines, start);
+const checkUseCase = (lines, start) => checkStruct('usecaseDiagram', lines, start);
+const checkActivity = (lines, start) => checkStruct('activityDiagram', lines, start);
+
 function validate(src) {
   const lines = src.split('\n');
   const frameLine = lines.findIndex((l) => l.trim());
@@ -192,7 +217,11 @@ function validate(src) {
   if (/^classDiagram\b/.test(head)) [kind, declared] = ['class', checkClass(lines, first + 1)];
   else if (/^sequenceDiagram\b/.test(head)) [kind, declared] = ['sequence', checkSequence(lines, first + 1)];
   else if (/^stateDiagram-v2\b/.test(head)) [kind, declared] = ['state', checkState(lines, first + 1)];
-  else throw new DiagramError(`unsupported diagram type "${head}" (use classDiagram, sequenceDiagram or stateDiagram-v2)`);
+  else if (/^componentDiagram\b/.test(head)) [kind, declared] = ['component', checkComponent(lines, first + 1)];
+  else if (/^deploymentDiagram\b/.test(head)) [kind, declared] = ['deployment', checkDeployment(lines, first + 1)];
+  else if (/^usecaseDiagram\b/.test(head)) [kind, declared] = ['usecase', checkUseCase(lines, first + 1)];
+  else if (/^activityDiagram\b/.test(head)) [kind, declared] = ['activity', checkActivity(lines, first + 1)];
+  else throw new DiagramError(`unsupported diagram type "${head}" (use classDiagram, sequenceDiagram, stateDiagram-v2, componentDiagram, deploymentDiagram, usecaseDiagram or activityDiagram)`);
   const ps = pins(lines);
   if (kind === 'sequence' && ps.length) throw new DiagramError(`line ${ps[0].line}: pins do nothing in a sequence diagram (participant order is declaration order)`);
   for (const p of ps) if (!declared.has(p.id)) throw new DiagramError(`line ${p.line}: pin names unknown element "${p.id}"`);
@@ -219,7 +248,7 @@ function checkRefs(src) {
       throw new DiagramError(`line ${i + 1}: references are not supported in fragment guards; put them in a Note`);
     }
     REF.lastIndex = 0;
-    if (/^(participant|actor|create|class|state)\b/.test(t) && REF.test(t)) {
+    if (/^(participant|actor|create|class|state|component|database|interface|artifact|node|device|environment|usecase|action|decision|object|package|rectangle|zone|lane)\b/.test(t) && REF.test(t)) {
       throw new DiagramError(`line ${i + 1}: references are not supported in names`);
     }
     REF.lastIndex = 0;
@@ -254,9 +283,9 @@ function generate(id) {
   checkRefs(src);
   // Activation bars run unbroken through the fragments that close and reopen them (UML).
   const call = linkRefs(mermaid(src, '', { continuousActivations: true }));
-  const m = call.match(/^#((?:class|state|sequence)-diagram\(.*)\)$/s);
+  const m = call.match(/^#((?:class|state|sequence|component|deployment|usecase|activity)-diagram\(.*)\)$/s);
   if (!m) throw new DiagramError('translator returned an unexpected call');
-  const fn = { class: 'class-diagram', sequence: 'sequence-diagram', state: 'state-diagram' }[info.kind];
+  const fn = `${info.kind}-diagram`;
   const typ = [
     `// Generated by docs/swe5001/report/scripts/appendix-diagrams.mjs from ../src/${id}.mmd. Do not edit;`,
     '// edit the source and run the script again.',
@@ -294,7 +323,7 @@ for (const id of ids) {
       continue;
     }
     writeFileSync(out, typ);
-    const what = info.kind === 'sequence' ? 'participants' : info.kind === 'class' ? 'classes' : 'states';
+    const what = { sequence: 'participants', class: 'classes', state: 'states' }[info.kind] ?? 'elements';
     console.log(`${old === typ ? 'same ' : 'wrote'} ${id}  ${info.kind}, ${info.count} ${what}, ${info.pins} pins, ${typ.length} bytes`);
   } catch (e) {
     failed++;
