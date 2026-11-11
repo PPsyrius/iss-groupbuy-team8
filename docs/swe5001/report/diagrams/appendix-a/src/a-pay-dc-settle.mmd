@@ -40,7 +40,7 @@ classDiagram
         +fulfil(event: PaymentSucceeded): PaymentBusinessPort.Outcome
     }
     class OrderFulfilmentAdapter {
-        <<adapter, application service, Dist>>
+        <<adapter, application service, Dist, Conc>>
     }
     class Outcome["PaymentBusinessPort.Outcome"] {
         <<value object, record>>

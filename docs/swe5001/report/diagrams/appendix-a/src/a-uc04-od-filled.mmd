@@ -25,14 +25,14 @@ classDiagram
         status = SUCCEEDED
         outcome = FULFILLED
     }
-%% at leader 0,0
-%% at o1 1,0
-%% at o2 2,0
-%% at invite 0,1
+%% at o1 0,0
+%% at leader 1,0
+%% at invite 2,0
+%% at intent 0,1
 %% at team 1,1
-%% at intent 2,1
-%% at joiner 1,2
-%% at payment 2,2
+%% at joiner 2,1
+%% at payment 0,2
+%% at o2 1,2
     team -- leader
     team -- o1
     team -- o2
@@ -41,3 +41,6 @@ classDiagram
     intent -- payment : pays
     leader -- invite : shares
     joiner -- invite : joined via
+    o1 -- leader : backed by
+    o2 -- joiner : backed by
+    o2 -- payment : paid by

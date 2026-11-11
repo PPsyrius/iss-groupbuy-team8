@@ -1,98 +1,74 @@
 %% frame: BlocBuy subsystems: three services by COLA layer (backend ADR 0008)
-classDiagram
-    class IdAsm["identity-svc assembly"] {
-        <<component>>
-        IdentityServiceApplication
+componentDiagram
+    component IdSvc["identity-svc"] <<subsystem>> {
+        package "adapter" as IdAdp {
+            note IdAdpN["AuthController,\nLoginSessionPublisher,\nInternalUserController (internal)"]
+        }
+        package "application" as IdApp {
+            note IdAppN["UserAppServiceImpl,\nLoginAuthorizationService,\nOAuthLoginAppServiceImpl"]
+        }
+        package "domain" as IdDom {
+            note IdDomN["aggregates: User,\nOAuthIdentity\nports: UserRepository,\nOAuthIdentityGateway,\nLoginSnapshotGateway"]
+        }
+        package "infrastructure" as IdInf {
+            note IdInfN["UserRepositoryImpl,\nSysUserMapper,\nGoogleOAuthGateway,\nStpInterfaceImpl,\nRedisLoginSnapshotGateway"]
+        }
     }
-    class IdAdp["identity-svc adapter"] {
-        <<component>>
-        AuthController, LoginSessionPublisher
-        internal: InternalUserController
+    interface IUser["UserAppService"]
+    component CoSvc["commerce-svc"] <<subsystem>> {
+        package "adapter" as CoAdp {
+            note CoAdpN["controllers: Product,\nAdminListing, GroupDeal,\nOrder, StripeCheckout,\nStripeWebhook"]
+        }
+        package "application" as CoApp {
+            note CoAppN["StripeCheckoutService,\nOrderFulfilmentAdapter,\nPaidGroupDealService,\nOutboxRelayService, subscribers\nport: UserAppService"]
+        }
+        package "domain" as CoDom {
+            note CoDomN["aggregates: GroupDeal,\nPurchaseIntent, Order,\nCheckoutPayment, Product\nports: PaymentIntentPort,\nPaymentBusinessPort,\nOutboxEventTransport, repositories"]
+        }
+        package "infrastructure" as CoInf {
+            note CoInfN["repositories, mappers,\nStripeCheckoutGateway,\nIntegrationOutboxWriter,\nSnsOutboxEventTransport,\nSessionStpInterface"]
+        }
     }
-    class IdApp["identity-svc application"] {
-        <<component>>
-        UserAppServiceImpl, OAuthLoginAppServiceImpl, LoginAuthorizationService
+    interface IEv["PublishedEvents V1"]
+    component NoSvc["notification-svc"] <<subsystem>> {
+        package "adapter" as NoAdp {
+            note NoAdpN["NotificationController"]
+        }
+        package "application" as NoApp {
+            note NoAppN["NotificationAppService,\nNotificationEventAppService"]
+        }
+        package "domain" as NoDom {
+            note NoDomN["aggregate: Notification\nports:\nNotificationEventHandler,\nNotificationRepository,\nConsumedMessageRepository"]
+        }
+        package "infrastructure" as NoInf {
+            note NoInfN["IntegrationEventDecoder,\nNotificationRepositoryImpl,\nSessionStpInterface,\nSqsNotificationEventConsumer"]
+        }
     }
-    class IdDom["identity-svc domain"] {
-        <<component>>
-        aggregates: User, OAuthIdentity
-        ports: UserRepository, OAuthIdentityGateway, LoginSnapshotGateway
-    }
-    class IdInf["identity-svc infrastructure"] {
-        <<component>>
-        UserRepositoryImpl, SysUserMapper, GoogleOAuthGateway, RedisLoginSnapshotGateway, StpInterfaceImpl
-    }
-    class CoAsm["commerce-svc assembly"] {
-        <<component>>
-        CommerceServiceApplication
-        RemoteUserAppService
-        LeasedJobRunner and five jobs
-    }
-    class CoAdp["commerce-svc adapter"] {
-        <<component>>
-        ProductController, GroupDealController, StripeCheckoutController, StripeWebhookController, OrderController, AdminListingController
-    }
-    class CoApp["commerce-svc application"] {
-        <<component>>
-        port: UserAppService
-        StripeCheckoutService, OrderFulfilmentAdapter, PaidGroupDealService, OutboxRelayService, event subscribers
-    }
-    class CoDom["commerce-svc domain"] {
-        <<component>>
-        aggregates: GroupDeal, PurchaseIntent, Order, CheckoutPayment, Product
-        ports: PaymentBusinessPort, PaymentIntentPort, OutboxEventTransport, repositories
-    }
-    class CoInf["commerce-svc infrastructure"] {
-        <<component>>
-        repository implementations and mappers, StripeCheckoutGateway, IntegrationOutboxWriter, SnsOutboxEventTransport, SessionStpInterface
-    }
-    class NoAsm["notification-svc assembly"] {
-        <<component>>
-        NotificationServiceApplication
-    }
-    class NoAdp["notification-svc adapter"] {
-        <<component>>
-        NotificationController
-    }
-    class NoApp["notification-svc application"] {
-        <<component>>
-        NotificationEventAppService, NotificationAppService
-    }
-    class NoDom["notification-svc domain"] {
-        <<component>>
-        aggregate: Notification
-        ports: NotificationEventHandler, NotificationRepository, ConsumedMessageRepository
-    }
-    class NoInf["notification-svc infrastructure"] {
-        <<component>>
-        SqsNotificationEventConsumer, IntegrationEventDecoder, NotificationRepositoryImpl, SessionStpInterface
-    }
-%% at IdAsm 0,0
-%% at IdAdp 0,1
-%% at IdApp 0,2
-%% at IdDom 0,3
-%% at IdInf 0,4
-%% at CoAsm 1,0
-%% at CoAdp 1,1
-%% at CoApp 1,2
-%% at CoDom 1,3
-%% at CoInf 1,4
-%% at NoAsm 2,0
-%% at NoAdp 2,1
-%% at NoApp 2,2
-%% at NoDom 2,3
-%% at NoInf 2,4
-    IdAsm ..> IdAdp
     IdAdp ..> IdApp
     IdApp ..> IdDom
-    IdInf ..|> IdDom
-    CoAsm ..> CoAdp
+    IdInf ..> IdDom
     CoAdp ..> CoApp
     CoApp ..> CoDom
-    CoInf ..|> CoDom
-    NoAsm ..> NoAdp
+    CoInf ..> CoDom
     NoAdp ..> NoApp
     NoApp ..> NoDom
-    NoInf ..|> NoDom
-    CoAsm ..> IdAdp : «HTTP» /internal/users
-    CoInf ..> NoInf : «async»
+    NoInf ..> NoDom
+    IdAdp -() IUser
+    CoSvc -( IUser : «HTTP»
+    CoInf -() IEv : «async»
+    NoInf -( IEv
+%% route ortho
+%% at IdAdpN 0,0
+%% at IdAppN 0,1
+%% at IdDomN 0,2
+%% at IdInfN 0,3
+%% at IUser 1,0
+%% at CoAdpN 2,0
+%% at CoAppN 2,1
+%% at CoDomN 2,2
+%% at CoInfN 2,3
+%% at IEv 3,3
+%% at NoAdpN 4,0
+%% at NoAppN 4,1
+%% at NoDomN 4,2
+%% at NoInfN 4,3

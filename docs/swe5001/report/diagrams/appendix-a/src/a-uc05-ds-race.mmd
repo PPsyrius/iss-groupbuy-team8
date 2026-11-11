@@ -35,13 +35,9 @@ sequenceDiagram
             Pay->>Ful: lockForSettlement(quote)
             Ful->>Set: lockTeam(dealId)
             Set->>Repo: lockDeal(dealId): lock 1 after txE's commit, EXPIRED
-            Ful-->>Pay: void
-            Pay->>Ful: fulfil(event)
-            Ful->>Svc: joinConfirmed(dealId, paid, sharerUserId)
-            Svc->>GD: joinPaid(paid, alreadyMember, now)
-            GD->>GD: requireJoinWindow(now)
-            GD-->>Svc: BizException DEAL_CLOSED
-            Svc-->>Ful: compensation_required
-            Ful-->>Pay: Outcome(dealId, null, "GROUP_REJECTED"): refund owed (UC4 A6)
+            Ful-->>Pay: void; locks 2 (intent) and 4 (payment) follow
+            Note over Pay,GD: txE expired the team only once now >= expireTime, and txJ reads the database clock later
+            Pay->>Pay: quote.expiredAt(now): true, the quote's businessDeadline is expireTime
+            Pay-->>Pay: Outcome(null, null, "BUSINESS_EXPIRED"): fulfil is never called; refund owed (UC4 A5)
         end
     end

@@ -1,12 +1,12 @@
 %% frame: UC4 basic flow, part 1: before payment (analysis)
 sequenceDiagram
     actor Buyer
-    participant UI as JoinTeamUI (boundary)
-    participant Ctl as JoinTeamControl (control)
-    participant Acc as Account (entity)
-    participant Team as Team (entity)
-    participant Inv as Invitation (entity)
-    create participant Intent as PurchaseIntent (entity)
+    participant UI as :JoinTeamUI (boundary)
+    participant Ctl as :JoinTeamControl (control)
+    participant Acc as :Account (entity)
+    participant Team as :Team (entity)
+    participant Inv as :Invitation (entity)
+    create participant Intent as :PurchaseIntent (entity)
 
     Buyer->>UI: B1: join(team, invitation)
     UI->>Ctl: B1: requestJoin(buyer, team, invitation)
