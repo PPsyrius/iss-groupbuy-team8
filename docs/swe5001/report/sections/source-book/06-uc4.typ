@@ -2,7 +2,7 @@
 
 == UC4 Join an Existing Team by Paying <sec-a-uc04>
 
-UC4 is the use case in which money, a limited number of seats, concurrent buyers, an external payment provider and domain events all meet. A signed-in buyer pays the team's frozen price first; only after Stripe confirms the payment does commerce decide whether the buyer gets a seat. The buyer who fills the last seat makes the team succeed. A buyer who pays for a seat that has gone is owed a refund. Section 3.2.4 summarises this use case in D11 and D12. This part gives the full path from the flows of events to the code: analysis model, transition, design model, operations and patterns. The payment itself (the webhook's arrival, its verification and the payment side of the settlement) is the included use case Pay upfront and is designed once, in @sec-a-pay-upfront; this part designs what the money buys. Every class, method and error code named here exists in the code on this branch. UC4 is designed and built; its status on AWS is given by capability in @tbl-status.
+UC4 is the use case in which money, a limited number of seats, concurrent buyers, an external payment provider and domain events all meet. A signed-in buyer pays the team's frozen price first; only after Stripe confirms the payment does commerce decide whether the buyer gets a seat. The buyer who fills the last seat makes the team succeed. A buyer who pays for a seat that has gone is owed a refund. Section 3.2.4 summarises this use case in @fig-d11-uc4-design-classes, @fig-d12a-two-buyers-start and @fig-d12b-two-buyers-join. This part gives the full path from the flows of events to the code: analysis model, transition, design model, operations and patterns. The payment itself (the webhook's arrival, its verification and the payment side of the settlement) is the included use case Pay upfront and is designed once, in @sec-a-pay-upfront; this part designs what the money buys. Every class, method and error code named here exists in the code on this branch. UC4 is designed and built; its status on AWS is given by capability in @tbl-status.
 
 === Use Case and Flows of Events <sec-a-uc04-flows>
 
@@ -57,7 +57,7 @@ The basic flow is drawn in two parts so that the lifelines stay legible: before 
 
 #afig("a-uc04-as-basic-1", [UC4 analysis sequence diagram, basic flow part 1 (B1–B5), with A1 and A3. The `break` fragment refuses a buyer before any money moves; the purchase intent is created only after the check passes.])
 
-#afig("a-uc04-as-alt-seat", [UC4 analysis sequence diagram, alternate flows A5, A6 and A7 (refused after payment). Payments for one team are admitted one at a time; whichever check refuses, `JoinTeamControl` answers `refused(reason)` and Pay upfront records the refund.])
+#afig("a-uc04-as-alt-seat", [UC4 analysis sequence diagram, alternate flows A5, A6 and A7 (refused after payment). Payments for one team are admitted one at a time; the `alt` separates admission from refusal, and whichever check refuses, `JoinTeamControl` answers `refused(reason)` and Pay upfront records the refund.])
 
 #afig("a-uc04-as-basic-2", [UC4 analysis sequence diagram, basic flow part 2 (B5–B11). The checks of B6 are repeated because the terms may lapse while the buyer pays; the team creates the membership, and the `opt` fragment hands a filled team to UC5, which confirms its orders.])
 
@@ -142,7 +142,7 @@ Each design sequence retells part of @tbl-a-uc04-flows; the step tags link the t
 
 #afig("a-uc04-ds-events", [UC4 design sequence diagram, B10 with A1: event subscribers at commit (commerce-svc). Subscribers that must agree with the join run before commit, in `@Order`; the rest run after commit and cannot undo it.])
 
-#afig("a-uc04-ds-race", [UC4 design sequence diagram, A7: two payments race for the last seat (commerce-svc). `txA` and `txB` are two threads in the one `StripeCheckoutService` bean, each in its own settlement transaction; lock 1 orders them and the loser takes A6. The webhook path through `StripePaymentAppService` is in @fig-a-pay-ds-webhook.])
+#afig("a-uc04-ds-race", [UC4 design sequence diagram, A7: two payments race for the last seat (commerce-svc). `txA` and `txB` are two transactions of one `StripeCheckoutService` bean, each settling inside its own `par` operand; lock 1 orders them and the loser takes A6. The webhook path through `StripePaymentAppService` is in @fig-a-pay-ds-webhook.])
 
 === Operation Specifications <sec-a-uc04-ops>
 
