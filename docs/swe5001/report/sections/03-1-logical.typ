@@ -40,7 +40,7 @@ BlocBuy is one codebase that runs as three services on AWS. The split follows tr
 
 == Logical Architecture & Design
 
-BlocBuy runs as three services: `identity-svc` and `notification-svc` are reusable platform services, and `commerce-svc` holds the business. They talk through one synchronous call and an event bus. We split only where no transaction crosses the boundary (AD-02), and keep the six Domain-Driven Design (DDD) bounded contexts isolated in code and in database permissions, so a context can be extracted later (AD-01, AD-03, AD-18).
+BlocBuy runs as three services: `identity-svc` and `notification-svc` are reusable platform services, and `commerce-svc` holds the business. They talk through one synchronous call and an event bus. We split only where no transaction crosses the boundary (AD-02), and keep the six DDD bounded contexts isolated in code and in database permissions, so a context can be extracted later (AD-01, AD-03, AD-18).
 
 The logical elements, interfaces and interactions in §3.1 are roles, not products; §3.2 maps them to AWS products and network placement.
 
@@ -121,7 +121,7 @@ We organise the logical elements along two dimensions: four system tiers (@tbl-t
     table.header([Tier], [Logical elements], [Responsibility], [Communication style]),
     [1. Presentation and edge],
     [Web client, CDN and edge gateway],
-    [Serves the static client files of the single-page application (SPA), ends public Transport Layer Security (TLS), routes everything through one origin (`/api/v1/*`) and blocks outside access to internal endpoints (`/internal/*`).],
+    [Serves the static client files of the single-page application (SPA), ends public TLS, routes everything through one origin (`/api/v1/*`) and blocks outside access to internal endpoints (`/internal/*`).],
     [Synchronous HTTPS from browsers and from the payment provider's webhook.],
 
     [2. Application],
