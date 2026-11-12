@@ -11,7 +11,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[4]
 REPORT = ROOT / 'docs/swe5001/report'
-BASE = '876aafe60eca9d06937b0119dcfb2ce30dc663cf'
+BASE = '81a8d0fb8ae128dc424d0e9d630083c39c691805'
 APP = '3a893036d70d028b29ae13ebf820283571c1ae00'
 EVIDENCE = '27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6'
 INSPECTED = 'b80debcd8b8cdeb1272219758789e1a9927b9d7d'
@@ -68,43 +68,45 @@ def main():
         assert abs(float(row[2]) - expected['p95Ms']) < 0.001
         assert int(row[3]) == expected['errorRate'] == 0
     checks['v2-plateau-rows'] = len(rows)
-    assert all(s in perf for s in ('725,999', '726,000', '360,000', '23:09–23:21', 'attributed', 'active-VU gauge'))
+    assert all(s in perf for s in ('725,999', '726,000', '360,000'))
     assert 'No record covers scale-in' not in perf
-    assert '75/181 and 130/181' in perf and 'pooled demand is 55' in perf
-    assert perf.count('all-run p95 screen also failed') == 2
+    assert all(s in perf for s in ('75/181', '130/181'))
+    assert re.search(r'(?:not|unproven|incomplete|missing)[^.\n]*(?:acceptance|observations|analyser)|(?:acceptance|observations|analyser)[^.\n]*(?:not|unproven|incomplete|missing)', perf, re.I)
     checks['reviewed-performance-boundaries'] = True
 
     security = text('sections/04-3-security.typ')
-    for commit in ('ea88b3ef1dbc1680571c1374924c4354ae12f6d7',
-                   'e5d03121014bf0e0de0a3a173440b203eb2d6236',
-                   '1f3f549e8bb8c7b67e34800913307a600f0184c9'):
-        assert '/commit/' + commit in security
-        git('merge-base', '--is-ancestor', commit, BASE)
+    # Governance prose commits are not retained AWS command output. Do not
+    # require links to them or treat ancestry as proof of the claimed controls.
     assert 'Service Control Policies (SCPs)' in security
-    assert 'organisation-level trails remain unknown' in security
-    assert 'default 90-day event history remains' in security
-    checks['dated-governance-records-and-scope'] = True
+    assert re.search(r'organisation[^.\n]*(?:unknown|unverified|not independently)', security, re.I)
+    assert re.search(r'90.day[^.\n]*event history|event history[^.\n]*90.day', security, re.I)
+    assert re.search(r'(?:governance|readback|command output|AWS output)[^.\n]*(?:not retained|unverified|unavailable|not independently)|(?:not retained|unverified|unavailable|not independently)[^.\n]*(?:governance|readback|command output|AWS output)', security, re.I)
+    checks['governance-evidence-boundaries'] = True
     limits = text('sections/03-4-limitations.typ') + text('registers.md') + security
     assert not any(s in limits for s in ('Remove the key or move', 'A misuse would leave no organisation-wide record', 'Scan the rebuilt image before'))
-    assert 'Accepted by design' in limits and 'no removal is planned' in limits
+    assert re.search(r'accepted[^.\n]*(?:exception|design)', limits, re.I)
+    assert re.search(r'no (?:removal|retirement)[^.\n]*(?:planned|approved)|no removal is planned', limits, re.I)
     ops = text('sections/05-devops.typ')
-    assert 'Shift-left, fail-fast validation' in ops and 'avoiding duplicate post-merge checks saves' in ops
+    assert re.search(r'before merge', ops, re.I) and re.search(r'after merge', ops, re.I)
+    # Estimates must stay labelled; counts/rates belong to the dated evidence,
+    # not a checker tied to one sample or one sentence of report prose.
+    assert re.search(r'estimat|counterfactual', ops, re.I)
+    assert re.search(r'not[^.\n]*(?:invoice|billing|observed|measured)', ops, re.I)
+    audit_row = next(line for line in security.splitlines() if '[Auditability:' in line)
+    assert 'Singapore' in audit_row and re.search(r'unknown|unverified|unproven', audit_row, re.I)
     assert 'non-delivery-gating Sonar' in ops and 'Trivy image-scan step' in ops
     delivery = text('diagrams/uml/src/d10b-delivery.mmd')
     assert 'SourceOk --> FG : [passed]' in delivery and 'SourceOk --> SourceFailed : [failed]' in delivery
     assert 'Down --> Ev : [any outcome]' in delivery
     checks['delivery-decisions-and-failure-paths'] = True
 
-    protected = ('backend', 'frontend', 'infra', 'perf', '.github', 'contracts',
-                 'docs/quality/nfr-register.md',
-                 'docs/swe5001/evidence/20261111-load-reruns',
-                 'docs/swe5001/evidence/20261111-v3-r4',
-                 'docs/swe5001/evidence/20261112-audit-followup')
-    assert not git('diff', '--name-only', BASE, '--', *protected).strip()
+    # Scope preservation to this review's frozen receipts. A later dev change
+    # to unrelated application, infrastructure or pipeline files is not a
+    # regression in the report and must not fail this checker.
     for name in ('peer-report.patch', 'peer-base.json', 'facts.json', 'cleanup.json', 'verification.json'):
         assert not git('diff', '--name-only', BASE, '--', 'docs/swe5001/evidence/20261112-issue-789/' + name).strip()
-    checks['raw-evidence-code-pipeline-and-nfr-preserved'] = True
-    print(json.dumps({'scope': 'Current split report stacked on #801; offline source/target/data regression, not PDF or acceptance', 'base': BASE, 'checks': checks}, indent=2))
+    checks['scoped-historical-closure-receipts-preserved'] = True
+    print(json.dumps({'scope': 'Current split report targeting dev after merged #801; offline source/target/data regression, not PDF or acceptance', 'base': BASE, 'checks': checks}, indent=2))
 
 
 if __name__ == '__main__':

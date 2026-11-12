@@ -2,8 +2,25 @@
 import argparse
 import hashlib
 import json
-import subprocess
 from pathlib import Path
+
+
+# Recorded by the original secret-scan.json (README) and the closure
+# verification.json secretScan.sourceHashes (both copies). Do not derive these
+# expectations from today's working tree or the later publication commit.
+FROZEN_METADATA_SHA256 = {
+    'README.original-20261111.md': 'c4b6738db31762353c47ed689e3268484aabc84f7a5cddf4cf8a33bc5321cf08',
+    'SHA256SUMS.original-20261111': '64a1406b5a6764c1eae9dcdb472bf6e64ecf257d01868f31df50e2cabf76b0a2',
+}
+
+
+def frozen_metadata_checks(directory):
+    return {
+        'frozen-original-metadata:' + name.replace('.original-20261111', ''):
+            (directory / name).is_file()
+            and hashlib.sha256((directory / name).read_bytes()).hexdigest() == expected
+        for name, expected in FROZEN_METADATA_SHA256.items()
+    }
 
 
 def main():
@@ -64,9 +81,7 @@ def main():
     core = ('verification.json', 'browse-minutes.csv', 'scaling-activities.csv', 'server-minutes.csv', 'service-observations.jsonl', 'cloudwatch-points.jsonl', 'cloudwatch-series.json', 'source-projections.json', 'results.py')
     check('nine-original-r4-core-files-unchanged', all(sha(root / (name := 'docs/swe5001/evidence/20261111-v3-r4/' + file)) == original[name] for file in core))
     frozen = root / 'docs/swe5001/evidence/20261111-v3-r4'
-    for current, historical in (('README.original-20261111.md', 'README.md'), ('SHA256SUMS.original-20261111', 'SHA256SUMS')):
-        p = subprocess.run(['git', '-C', str(root), 'show', '27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6:docs/swe5001/evidence/20261111-v3-r4/' + current], capture_output=True)
-        check('frozen-original-metadata:' + historical, p.returncode == 0 and (frozen / current).read_bytes() == p.stdout)
+    checks.update(frozen_metadata_checks(frozen))
     check('peer-patch-sha256-matches-manifest', sha(package / 'peer-report.patch') == manifest['patchSha256'])
     check('peer-patch-matches-recorded-build-base', manifest['base'] == facts['peerSourceReviewed'] == '02c7b822354656a4b6b7d269c876bc0e76635295')
     check('peer-patch-excludes-shared-swe5006-changes', all(name.startswith('docs/swe5001/report/') for name in manifest['files']))

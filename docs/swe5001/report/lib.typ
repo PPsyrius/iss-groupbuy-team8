@@ -161,7 +161,7 @@
 #let repo = "https://github.com/PPsyrius/iss-groupbuy-team8"
 #let freeze = "3a893036d70d028b29ae13ebf820283571c1ae00"
 #let evidence-freeze = "27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6"
-#let report-base = "876aafe60eca9d06937b0119dcfb2ce30dc663cf"
+#let report-base = "81a8d0fb8ae128dc424d0e9d630083c39c691805"
 #let src(path, body, rev: none) = {
   let snapshot = if rev != none { rev }
     else if path.starts-with("docs/swe5001/evidence/20261111-cost-explorer/") { report-base }
