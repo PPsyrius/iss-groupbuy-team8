@@ -10,21 +10,21 @@ classDiagram
         <<interface, repository, Pers, Conc>>
         +lockDeal(dealId: UUID): Optional~GroupDeal~
         +currentTime(): Instant
-        +expire(before: GroupDeal, after: GroupDeal, now: Instant): void
+        +expire(before, after, now): void
     }
     class GroupDealExpirySweeper {
         <<application service, Sched>>
         ~RETRY_DELAY: Duration = PT5M
-        +sweep(limit: int, leaseValid: BooleanSupplier): GroupDealExpirySweeper.Result
+        +sweep(limit, leaseValid): GroupDealExpirySweeper.Result
     }
     class TeamExpirySweepJob {
         <<scheduled job, Sched>>
         +run(): void
-        -sweepOnce(leaseValid: BooleanSupplier): void
+        -sweepOnce(leaseValid): void
     }
     class LeasedJobRunner {
         <<utility, Sched, Conc>>
-        +run(job: String, lease: Duration, work: LeasedJobRunner.LeaseAwareWork): void
+        +run(job, lease, work): void
     }
     class ApplicationEventPublisher {
         <<interface, Evt>>
@@ -37,8 +37,6 @@ classDiagram
     class TeamExpired {
         <<domain event, record>>
         +dealId: UUID
-        +productId: UUID
-        +at: Instant
     }
     class IntegrationOutboxWriter {
         <<subscriber, Evt, Dist>>
@@ -47,11 +45,11 @@ classDiagram
     class RefundWorkerJob {
         <<scheduled job, Sched>>
         +run(): void
-        -attemptOne(leaseValid: BooleanSupplier): void
+        -attemptOne(leaseValid): void
     }
     class OrderRepository {
         <<interface, repository, Pers>>
-        +cancelByDealId(dealId: UUID, canceledAt: Instant): int
+        +cancelByDealId(dealId, canceledAt): int
     }
     class OrderLifecycleSubscriber {
         <<subscriber, Evt>>
@@ -64,8 +62,7 @@ classDiagram
     class RefundRepository {
         <<interface, repository, Pers, Conc>>
         +claimNext(): RefundWork
-        +now(): Instant
-        +finish(work: RefundWork, providerId: String, status: String, result: String): void
+        +finish(work, providerId, status, result): void
     }
     class RefundService {
         <<application service, Ext, Conc>>
@@ -74,7 +71,7 @@ classDiagram
     }
     class CheckoutPaymentRepository {
         <<interface, repository, Pers, Conc>>
-        +requireRefundsForExpiredTeam(dealId: UUID, reason: String, eventId: String): void
+        +requireRefundsForExpiredTeam(dealId, reason, eventId): void
     }
     class TeamExpiryRefundService {
         <<application service, Conc>>
@@ -86,7 +83,6 @@ classDiagram
         +providerRefundId: String
         +firstAttemptAt: Instant
         +providerKey(): String
-        +valid(): boolean
     }
     class RefundGateway {
         <<interface, gateway, Ext>>
