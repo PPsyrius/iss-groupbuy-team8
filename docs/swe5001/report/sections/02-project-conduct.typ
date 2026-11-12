@@ -126,7 +126,7 @@ SWE5001 took about 71.5 person-days in total, about 43% above the briefing's gui
     table.header([Member], [To 19 Oct (pd)], [Phase D (pd)], [Total (pd)], [Main SWE5001 contributions]),
     [Liu Jin], [12.5], [4], [16.5], [AWS stacks and the release pipeline; the service split; physical design (§3.2); report framework],
     [Panpakorn Siripanich (Pan)], [11.5], [8], [19.5], [Messaging infrastructure, auto-scaling and the dashboard; shared login session; load tests; in phase D the data subnets, the AWS sessions and the V3 reruns],
-    [Yu Qianshuo (Yorik)], [9], [1.5], [10.5], [Outbox and relay; failure drills; detailed design (§3.2.4)],
+    [Yu Qianshuo (Yorick)], [9], [1.5], [10.5], [Outbox and relay; failure drills; detailed design (§3.2.4)],
     [Lim Jiechao], [8.5], [5], [13.5], [Team lead; AWS Organization, SCP guardrails and Identity Center; architecture options study and proof of concept; presentation; report editor],
     [Wang Ziang (Eric)], [8.5], [3], [11.5], [Notification consumer and dead-letter redrive; demonstration lead; logical design and Domain-Driven Design (DDD) models (§3.1)],
     [*Total*], [*≈ 50*], [*≈ 21.5*], [*≈ 71.5*], [],
