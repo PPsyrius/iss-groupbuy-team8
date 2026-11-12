@@ -80,13 +80,16 @@
 }
 // The entry is rebuilt like the built-in one (a link around prefix, body, leader and page), in
 // body ink as in the Contents (the template's `show link` would turn the whole entry blue); a
-// link inside the caption stays blue. The leader and page number never wrap apart.
+// link inside the caption stays blue. Typst may break a line on either side of an inline box,
+// even next to a no-break space, so word joiners tie the caption's last word, the leader and
+// the page number together: a full line wraps the caption text under its hanging indent and
+// the page number never sits alone on a line.
 #let short-entry(it) = context {
   let el = it.element
   let ink = text.fill
   let body = if el.caption == none { it.body() } else { first-sentence(el.caption.body) }
   let leader = if it.fill == none { h(1fr) } else { box(width: 1fr, it.fill) }
-  link(el.location(), { set text(fill: ink); it.indented(it.prefix(), [#body~#leader~#it.page()]) })
+  link(el.location(), { set text(fill: ink); it.indented(it.prefix(), [#body#sym.wj~#sym.wj#leader#sym.wj~#it.page()]) })
 }
 #{
   front-title[List of figures]
