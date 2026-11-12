@@ -14,14 +14,24 @@
     footer: context {
       if counter(page).get().first() > 1 {
         set text(8pt, fill: muted)
-        [BlocBuy — SWE5001 Project Report #h(1fr) Page #counter(page).display()]
+        let hs = query(heading.where(level: 1).before(here()))
+        let ch = if hs.len() == 0 [] else {
+          let hd = hs.last()
+          if hd.numbering == none [#hd.body] else [#numbering(hd.numbering, ..counter(heading).at(hd.location())) | #hd.body]
+        }
+        [#ch #h(1fr) Page #counter(page).display() of #counter(page).final().first()]
       }
     },
   )
   set text(font: ("Arial", "Helvetica"), size: 10.5pt, lang: "en")
   set par(justify: true, leading: 0.62em, spacing: 0.95em)
   set heading(numbering: "1.1")
+  // Figures and tables are numbered per chapter ("Table 3.2"); table captions sit above the table.
+  set figure(numbering: (..n) => numbering("1.1", counter(heading).get().first(), ..n))
+  show figure.where(kind: table): set figure.caption(position: top)
   show heading.where(level: 1): it => {
+    counter(figure.where(kind: image)).update(0)
+    counter(figure.where(kind: table)).update(0)
     pagebreak(weak: true)
     set text(16pt, fill: accent)
     it
@@ -37,7 +47,7 @@
     set text(11pt)
     it
   }
-  show raw: set text(font: ("Menlo", "Courier New"), size: 0.88em)
+  show raw: set text(font: ("Menlo", "Courier New"), size: 8.5pt)
   set table(
     stroke: 0.5pt + rgb("#a7b4c2"),
     inset: (x: 5pt, y: 4.5pt),
@@ -95,3 +105,13 @@
   kind: image,
   caption: caption,
 )
+
+// One set of repository links for the whole report (style.md S-13). Every link is pinned to one
+// commit, `freeze`, so a reader sees the files as they were at submission. Until the freeze
+// commit exists on dev, `freeze` is dev; set it to the freeze sha before submitting.
+#let repo = "https://github.com/PPsyrius/iss-groupbuy-team8"
+#let freeze = "dev"
+#let src(path, body) = link(repo + "/blob/" + freeze + "/" + path, body)
+#let iss(n) = link(repo + "/issues/" + str(n))[\##n]
+#let pr(n) = link(repo + "/pull/" + str(n))[\##n]
+#let run(id, body) = link(repo + "/actions/runs/" + str(id), body)

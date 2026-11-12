@@ -4,63 +4,62 @@
 == Performance
 <sec-performance>
 
-BlocBuy combines static-content edge caching with an Application Load Balancer (ALB) and independently scalable Elastic Container Service (ECS) commerce tasks. On AWS, the 16 October and fresh 11 November 2026 monolith baselines passed through 200 requests per second. The October and November distributed campaigns demonstrated automatic scale-out but failed acceptance, including the 11 November larger-task/CPU-guard variant. None establishes accepted distributed capacity or linear scaling (AISS-12).
-
-#let perf-root = "https://github.com/PPsyrius/iss-groupbuy-team8/blob/b80debcd8b8cdeb1272219758789e1a9927b9d7d/"
-#let perf-source(path, body) = link(perf-root + path, body)
-
-// Readability changes are confined to Pan's sections; shared report styles are unchanged.
-#[
-#show raw: set text(size: 8.5pt)
-#show table.cell: set block(breakable: false)
+On 11 November 2026 on AWS, the distributed (V3) run R4 delivered the whole 30 min browse schedule up to 600 requests per second (req/s), with no errors, no dropped iterations and a client p95 of 12 ms, while commerce scaled itself from one to six tasks. R4 is the V3 result this section argues from; the five earlier V3 runs, which all failed, stay in @tbl-performance-runs as history. Its k6 gates passed, but the unchanged analyser issued no verdict, because the canonical observer stopped before the workload ended. R4 shows that the tested peak was served, not the maximum capacity of any task count, and it has no controlled one-task and four-task pair, so 80% linear scaling remains unproven (AISS-12). One monolith task passed every plateau up to 200 req/s on 16 October and 11 November, a lower bound. The next server-side limit is the single RDS server, at 181 connections in the R4 size (AISS-05).
 
 === Workload and measurement boundary
 
-The dated AWS sessions targeted the SWE5001 CloudFront endpoint in Singapore (`ap-southeast-1`), not the shared SWE5006 development deployment. The driver schedules arrivals independently of response time: requests per second (RPS) is the offered rate, not a count of concurrent users. Each workload iteration performs one read: 70% product-list GETs (`page=1&size=20`) and 30% product-detail GETs. Setup reads the existing demo catalogue and selects detail IDs from that page. This is a small, repeated read working set, not a large-catalogue or checkout benchmark; the records do not establish total catalogue volume. Payment settlement, writes, browser rendering and completed purchases are outside this workload. #perf-source("perf/k6/browse.js", [Driver]) · #perf-source("perf/k6/lib.mjs", [Schedule and response validation]).
-
-The workload exercises the catalogue-read portion of UC1, whose design is traced in Appendix A.3 and A.14. It does not verify the full NFR-15 scenario: that requirement uses 100 concurrent users, includes JOIN and My Orders, and bounds expiry lag. Arrival-rate browse scaling is assessed separately under NFR-64. A passing browse campaign would therefore leave those business-operation checks outstanding.
-
-*Evidence snapshots.* October source links identify the inspected historical revision; November records identify their own released source and tooling. Restored evidence links use repository URLs rather than local PDF paths. #pending[Editor: publish the restored records and pin their draft `dev` URLs to the evidence-freeze commit before submission; source pins must continue to identify the code actually inspected.]
-
-#figure(
-  table(
-    columns: (0.8fr, 2.1fr, 2.1fr),
-    table.header([AWS run (2026)], [Topology and provenance], [Offered load and generator]),
-    [16 October: V2, two runs], [One stable monolith task. Image source `6c7a99ab`; tooling `767d980b`. Route, image digest and task observations retained in the dated record.], [Ten 60 s plateaus: 10, 20, 40, 60, 80, 100, 125, 150, 175, 200 RPS. Windows/Docker generator, 100 preallocated / 400 maximum virtual users (VUs).],
-    [19 October: V3], [Distributed services; commerce starts at one task, 0.5 vCPU / 1 GB. Commerce image source `5e83d63e`; tooling `9512f1e0`. Different revisions from V2.], [40 → 200 RPS over 5 min; → 600 over 10 min; hold 10 min; → zero over 5 min. macOS/Docker generator, 100 / 400 VUs.],
-    [10 November SGT: V3], [Released source `93984f61`; commerce revision 32, pool five; one-task start. Collector helpers separately identified, not attributed to released source.], [Same 30-minute schedule and gates. Windows/Docker generator: eight logical CPUs, 8 GiB; 1,000 preallocated / maximum VUs.],
-  ),
-  kind: table,
-  caption: [Workload and provenance. Full SHAs, digests, preflights and operator observations are in the #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md", [V2 record]), #perf-source("docs/swe5001/evidence/20261019-v3-autoscaling/README.md", [October V3 record]) and #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-v3-autoscaling/README.md")[November V3 record].],
-) <tbl-performance-workloads>
+The sessions targeted the SWE5001 CloudFront endpoint, whose origin runs in Singapore (`ap-southeast-1`). Each iteration makes one catalogue read: 70% product-list and 30% product-detail GETs on a small, repeated demonstration catalogue (#src("perf/k6/browse.js")[driver], #src("perf/k6/lib.mjs")[schedule and checks]). The driver schedules arrivals independently of response time, so req/s is the offered rate, not a count of users. V2 runs ten 60 s plateaus from 10 to 200 req/s. V3 ramps from 40 to 200 req/s over 5 min and to 600 req/s over 10 min, holds for 10 min and ramps down over 5 min.
 
 === Metrics and acceptance
 
-The #perf-source("docs/swe5001/impl-verification-observability.md", [verification plan]) defines scenario acceptance; the #perf-source("perf/k6/SCALING.md", [analysis guide]) distinguishes event-relative acceptance from the runner's all-run diagnostic. A low HTTP failure rate cannot compensate for undelivered load.
+The verification plan (#src("docs/swe5001/impl-verification-observability.md")[V2 and V3 scenarios]) sets the gates in @tbl-performance-metrics. They are stricter, team-set gates under NFR-15 (#src("docs/quality/nfr-register.md")[NFR register]), which asks for p95 below 2 s at 100 concurrent users across browse, JOIN and My Orders; this workload covers browse only. A low error rate cannot compensate for undelivered load. Queue drain (V4) was not run on AWS (AISS-12).
 
 #figure(
   table(
-    columns: (1.05fr, 2.1fr, 1.85fr),
-    table.header([Metric / source], [Definition and unit], [Acceptance / interpretation]),
-    [Offered and achieved load / k6], [Scheduled arrivals in requests/s versus `browse_requests` completed per interval. One setup GET is counted by `http_reqs` but excluded from workload counts.], [V2 requires every plateau's full request budget. V3 must deliver its schedule; observed ALB RPS is reported separately.],
-    [Client latency / k6 `browse_latency`], [Wall-clock ms around HTTP plus response validation. p50 is the median; p95 and p99 bound 95% and 99% of samples. Includes failed responses, excludes setup.], [V2: each plateau p95 < 500 ms. V3: p95 < 800 ms outside the 3 min after each scale-out. p50/p99 are diagnostics, not additional gates.],
-    [Browse failures / k6 `browse_errors`], [Failed workload responses / completed workload requests (%). Requires HTTP 200 and a valid successful `Result` with expected catalogue data; detail ID must match.], [< 1%. Counts HTTP and payload failures, not completed orders or successful payment operations.],
-    [Dropped iterations / k6], [Scheduled iterations the generator could not start (count); absent from completed-request latency/error denominators.], [Zero required. Missing or nonzero counts invalidate capacity evidence; never treat drops as successful requests.],
-    [Server response and throughput / CloudWatch ALB], [`TargetResponseTime` p50/p95, reported in ms; `RequestCount` per minute / 60 gives RPS.], [Correlate with client data. ALB target timing excludes the full client/edge path and cannot substitute for the client p95 gate.],
-    [Resources and scale-out / ECS, CloudWatch, scaling activities], [Running task count, CPU/memory (%), activity start/fulfilment timestamps and database connections (count).], [Explain saturation and scaling delay. V3 also requires one-to-four achieved throughput ≥ 80% of ideal linear scaling; inventory connection limits separately.],
+    columns: (1.05fr, 2fr, 1.75fr, 1fr),
+    table.header([Metric and tool], [Definition and unit], [Acceptance or use], [Threshold source]),
+    [Offered and achieved load (k6)], [Scheduled arrivals in req/s versus `browse_requests` completed per interval. The one setup GET is excluded.], [V2: every plateau's full request budget. V3: the whole schedule delivered.], [Verification plan, V2 and V3],
+    [Client latency (k6 `browse_latency`)], [Time in ms around the HTTP call and response validation, failed responses included. p95 and p99 bound 95% and 99% of samples.], [V2: p95 < 500 ms per plateau. V3: p95 < 800 ms outside the 3 min after each scale-out. p50 and p99 are diagnostics.], [Verification plan, V2 and V3; parent NFR-15 (2 s)],
+    [Browse failures (k6 `browse_errors`)], [Failed responses as a share of completed requests (%). A pass needs HTTP 200 and a valid `Result` with the expected catalogue data.], [< 1%.], [Verification plan, V2 and V3],
+    [Dropped iterations (k6)], [Scheduled iterations the client could not start (count).], [Zero. Drops are never counted as successful requests.], [`perf/k6/README.md` analysis rules],
+    [Server response and throughput (CloudWatch, ALB)], [`TargetResponseTime` p50 and p95 in ms; `RequestCount` per minute divided by 60 gives req/s.], [Diagnostic only: it excludes the client and edge path.], [— (diagnostic)],
+    [Resources and scale-out (ECS, CloudWatch)], [Running tasks, CPU and memory (%), scaling activity start and end, database connections.], [Explains saturation and scaling delay. V3 also needs one-to-four throughput ≥ 80% of linear.], [Verification plan, V3 (linearity)],
   ),
   kind: table,
-  caption: [Load-test metric definitions and thresholds for the October 2026 scenarios. Queue depth/age, drain time and dead-letter counts belong to V4, not the browse workload.],
+  caption: [Load-test metrics and acceptance thresholds for the October and November runs. Source: verification plan and analysis guide.],
 ) <tbl-performance-metrics>
 
-=== Baseline results: 16 October 2026
+=== Runs at a glance
 
-Verified on AWS: both V2 runs completed exactly 57,600 workload requests plus one setup request, with zero browse failures and zero drops. Every plateau met its p95 and error thresholds. The repeat lasted 601.035 s including the terminal scheduler guard; its all-run client p50/p95/p99 were 16/25/53 ms. These all-run percentiles do not replace the per-plateau checks below. #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json", [Repeat summary]) · #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-calibration.json", [Calibration]).
+@tbl-performance-runs lists every load test on AWS, with the server sizing, where the k6 client ran and what the run shows. Latency is the all-run client p95, a screen, not the event-relative gate.
+
+#figure(
+  table(
+    columns: (0.75fr, 1.45fr, 1.3fr, 1fr, 0.9fr, 1.6fr),
+    table.header([Run], [Server side], [k6 client], [Requests and errors], [Drops and client p95], [Verdict and what it shows]),
+    [16 Oct: V2, two runs], [One monolith task. Image `6c7a99ab`.], [Team Windows workstation, Docker; location not recorded; 100–400 VUs], [57,600 and 0 each], [0; ≤ 57 ms per plateau], [Passed. 200 req/s was the highest rate tested: a lower bound, not capacity.],
+    [19 Oct: V3], [Three services; commerce one to six tasks of 0.5 vCPU, 1 GiB; `db.t4g.micro`; 12,000 requests per target per minute.], [Team macOS workstation, Docker; 100–400 VUs], [570,445 and 2 (0.0004%)], [155,554; 1,671 ms], [Failed: drops. Commerce 1 → 3 tasks; the client side limited the run.],
+    [10 Nov: V3], [As 19 Oct, with pools of five. Source `93984f61`.], [Team Windows workstation, Docker (8 CPUs, 8 GiB); 1,000 VUs], [636,824 and 15,423 (2.42%)], [89,175; 4,191 ms], [Failed: errors, drops. Commerce 1 → 4 tasks; capacity arrived about 4 min after failures began.],
+    [11 Nov: V2], [One monolith task. Source `3a893036`.], [As 10 Nov], [57,600 and 0], [0; 30 ms], [Passed. Repeats the lower bound on the released image.],
+    [11 Nov: V3 r1], [Committed sizing, as 10 Nov. Source `3a893036`.], [As 10 Nov], [687,083 and 11,841 (1.72%)], [38,916; 3,957 ms], [Failed: errors, drops, p95. Committed sizing fails as on 10 Nov.],
+    [11 Nov: V3 r2], [Session settings, not merged: commerce 1 vCPU, 2 GiB; `db.t4g.small`; CPU guard on.], [As 10 Nov], [720,141 and 4,561 (0.63%)], [5,858; 851 ms], [Failed: drops, p95. 98.94% of drops fell in one minute.],
+    [11 Nov: V3 r3], [As V3 r2, plus 6,000 requests per target per minute and a 120 s commerce slow start.], [Team Windows laptop, Docker (8 CPUs, 8 GiB), local Wi-Fi; 1,000 VUs], [725,924 and 8,429 (1.16%)], [75; 450 ms], [Failed: errors, drops. ALB target p95 9 ms; the client's network path was diagnosed.],
+    [11 Nov: V3 R4], [As V3 r3; pools of five. Source `3a893036`.], [AWS-hosted generator (`t3a.2xlarge`, Singapore), Docker (8 vCPUs, 8 GiB); 1,000 VUs], [726,000 and 0], [0; 12 ms], [k6 gates passed; the analyser gave no verdict (observer ended early). Commerce 1 → 6 tasks. The V3 result of this report.],
+  ),
+  kind: table,
+  caption: [Load-test runs on AWS, 16 October to 11 November. Source: dated records #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October], #src("docs/swe5001/evidence/20261019-v3-autoscaling/README.md")[19 October], #src("docs/swe5001/evidence/20261110-v3-autoscaling/README.md")[10 November], #src("docs/swe5001/evidence/20261111-load-reruns/README.md")[11 November reruns], #src("docs/swe5001/evidence/20261111-v3-r3/README.md")[V3 r3] and #src("docs/swe5001/evidence/20261111-v3-r4/README.md")[V3 R4].],
+) <tbl-performance-runs>
+
+Calculated: the V3 schedule offers 36,000 + 240,000 + 360,000 + 90,000 = 726,000 browse arrivals. R4 completed 725,999 of them, within the analyser's tolerance of one arrival, plus the setup GET; V3 r3 came closest before it but dropped 75.
+
+=== What each run shows
+
+*16 October baseline.* Every plateau met its p95 and error gates (@tbl-performance-v2). The analyser's `kneeRps=200` is the highest rate tested, not a located knee.
 
 #figure(
   table(
     columns: (1fr, 1.4fr, 1.25fr, 1.25fr),
-    table.header([Offered RPS], [Completed per run], [First p95 (ms)], [Repeat p95 (ms)]),
+    table.header([Offered req/s], [Completed per run], [First p95 (ms)], [Repeat p95 (ms)]),
     [10], [600], [57.05], [53],
     [20], [1,200], [34], [39.05],
     [40], [2,400], [26], [27],
@@ -73,88 +72,68 @@ Verified on AWS: both V2 runs completed exactly 57,600 workload requests plus on
     [200], [12,000], [49], [23],
   ),
   kind: table,
-  caption: [V2 AWS results, 16 October 2026. Each row is a 60 s plateau; both runs passed all rows. Source: #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md", [dated baseline record and summaries]).],
+  caption: [V2 results per 60 s plateau, 16 October. Source: #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[dated baseline record].],
 ) <tbl-performance-v2>
 
-The repeat's sampled service observations bracketed the run and showed one running/desired monolith, no pending task and the same task definition. Sampled generator-container CPU peaked at 15.89%; host observations covered only part of the run. The first run had no usable generator-resource capture. Most importantly, neither run reached saturation: the analyzer's `kneeRps=200` means the highest tested passing rate, not a located capacity knee. It is a tested lower bound for this monolith revision and working set, not proof of capacity per distributed task.
+*19 October scale-out.* Target tracking added a second commerce task at 15:55 SGT and a third at 15:58 SGT, each in about 65 s. With three tasks the ALB p50 was 5–7 ms while the client p50 stayed near 490 ms, so the client side limited the run (#src("docs/swe5001/evidence/20261019-v3-autoscaling/v3-alb-per-minute.tsv")[ALB intervals]).
 
-=== Scale-out results: 19 October 2026
+*10 November campaign.* Commerce CPU reached about 100% at 03:52 SGT and failures began at 03:53. The alarm decided at 03:56:38, and a second running task was first sampled at 03:57:43 (#src("docs/swe5001/evidence/20261110-v3-autoscaling/minute-correlation.csv")[minute correlation]). Later minutes near 600 req/s passed, but they cannot repair earlier failures; we did not isolate the cause (#src("docs/swe5001/evidence/20261110-v3-autoscaling/INVESTIGATION.md")[investigation]).
 
-Verified on AWS: the target-tracking alarm automatically increased commerce from one to two tasks at 15:55:02–15:56:08 Singapore time (66 s), then from two to three at 15:58:02–15:59:05 (63 s). These are activity start-to-fulfilment durations, not the full delay from the first overload. The #perf-source("docs/swe5001/evidence/20261019-v3-autoscaling/README.md", [V3 record]) and its scaling activities show genuine scale-out, but the run is rejected acceptance evidence.
+Tested locally, not on AWS: a Docker profile served 48,754 catalogue requests up to 400 req/s with no error, and a fault matrix showed that a failing Redis cache amplified load. We therefore added a failure-triggered backoff to the offer cache, released on 11 November (#src("docs/swe5001/evidence/20261110-catalogue-local-profile/README.md")[local profile]). Calculated: with pools of five the services need at most 55 database connections, and 55 + 3 owner + 1 operator + 15 safety = 74 free slots (#src("docs/swe5001/evidence/20261110-load-preflight/README.md")[preflight record]).
 
-#figure(
-  table(
-    columns: (1.15fr, 1.8fr, 2.05fr),
-    table.header([View / window], [Observed result], [What it establishes]),
-    [Client, full 30 min run], [570,445 workload requests plus one setup; about 317 RPS averaged over the run. Client p50/p95/p99: 592/1,671/2,936 ms. Two browse failures (about 0.0004%).], [Error rate passed; all-run p95 diagnostic failed. The average includes ramp periods and is not steady-state throughput.],
-    [Generator, full run], [155,554 dropped iterations; k6 exit 99. Retained analyzer receipt: “Generator drops invalidate V3 evidence”, exit 1.], [Acceptance rejected. The planned 600 RPS was not delivered; event-relative p95 and one-to-four linearity are unproven.],
-    [ALB, 15:52–15:55, one task], [272–286 RPS; p50 about 1.1 s, p95 about 1.9 s. Commerce CPU reached 90–100%.], [Observed saturation around 280 RPS for this 0.5-vCPU commerce revision and read workload.],
-    [ALB, 16:01–16:10, three tasks], [425–461 RPS (about 455); per-minute p50 5–7 ms and p95 13–50 ms.], [Observed server-side throughput and recovery after scale-out, not client latency acceptance or the maximum capacity of three tasks.],
-  ),
-  kind: table,
-  caption: [V3 AWS observations, 19 October 2026 (times in Singapore, UTC+8). Sources: #perf-source("docs/swe5001/evidence/20261019-v3-autoscaling/v3-summary.json", [raw summary]), #perf-source("docs/swe5001/evidence/20261019-v3-autoscaling/v3-alb-per-minute.tsv", [ALB intervals]) and #perf-source("docs/swe5001/evidence/20261019-v3-autoscaling/v3-analysis-result.txt", [rejection receipt]).],
-) <tbl-performance-v3>
+*11 November reruns.* One promotion released the source for all five runs of that day, R4 included. For V3 r2, r3 and R4 we changed the session, not the committed configuration. In V3 r2 the service-average CPU read 58% while one new task ran at 92–100%, so the averaged metric hid hot new tasks (#src("docs/swe5001/evidence/20261111-v3-investigation/README.md")[V3 r2 investigation]). V3 r3 ran from 18:39 to 19:09 SGT. Commerce scaled to six tasks, and one Spot task was reclaimed (§4.2). The ALB logged 725,898 requests at a target p95 of 9 ms, while k6 recorded 8,417 timeouts (#src("docs/swe5001/evidence/20261111-v3-r3/README.md")[V3 r3 record]).
 
-The runner's all-run p95 is only a diagnostic screen; it cannot establish the required p95 outside post-scale-out exclusion windows. The retained analyzer rejection stands, and no new analysis of the privately retained raw samples is claimed here. At three tasks, client p50 remained about 490 ms despite ALB p50 of 5–7 ms. The generator had at most 400 VUs and its container CPU peaked at 56%; the precise network/edge/generator constraint was not isolated. Consequently, neither client-generator CPU saturation nor application capacity at 600 RPS is established by this run.
+Tested locally, not on AWS: static-only traffic from the same laptop reproduced the failures without commerce, and native Windows and Docker controls failed at the same time. The diagnosis points to the laptop's local Wi-Fi path, not the services; the same path may have affected the earlier V3 runs (#src("docs/swe5001/evidence/20261111-v3-r3/DIAGNOSIS.md")[diagnosis]). R4 therefore moved the client to an AWS-hosted generator.
 
-=== Fresh distributed campaign: 10 November 2026 SGT
+=== The distributed result
 
-Verified on AWS, with partial ECS observation coverage: run `20261110-v3-194543` completed 636,824 browse requests, with 15,423 failures (2.4219%), 89,175 dropped iterations and all-run client p95 of 4,191 ms; k6 exited 99. Error and drop gates failed independently of any post-scale-out latency exclusions. The canonical analyzer rejected the run; no event-filtered p95 pass or 80%-linearity result is claimed. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-v3-autoscaling/README.md")[Dated result and retained summaries].
-
-AWS activities and saved samples show automatic one-to-four scale-out, but commerce CPU reached approximately 100% before additional tasks arrived. The observer stopped after its 04:03:47 SGT sample, leaving the last part of the run without the intended ECS revision/stability observations. Recovered CloudWatch metrics and later complete minutes near 600 requests/s do not replace those samples or erase earlier failures. Six projected commerce connection-error matches could not be classified as pool waits versus instance exhaustion. The original failed evidence remains; the cause is not reduced to generator CPU, database capacity or CloudShell loss alone.
-
-*Connection and restoration controls.* The #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-load-preflight/README.md#10-november-disposition-for-775")[preflight record] rejected maximum runtime pools of 110 against 74 unreserved database slots. The operator's pool-five experiment reduced runtime maxima to 55; three owner, one operator and 15 safety slots bring the calculated budget to 74, with no overlapping full-capacity deployment. Commerce's temporary one-task start was restored to minimum/desired two, but three tasks were still running at readback. Scheduled cleanup later removed runtime. These are recorded experiment controls, not validated headroom or settled recovery.
-
-*Local investigation, not AWS acceptance.* The #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-catalogue-local-profile/README.md")[Docker profile] initially did not reproduce the overload. A later #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-catalogue-local-profile/MATRIX.md")[fault matrix] reproduced cold-start contention and optional-cache failure amplification. It informed a failure-triggered cache-backoff candidate, but cold controls and some fault transitions still failed. Candidate comparisons, rejected experiments and source-specific test receipts remain in that record. Collector/backoff changes in #link("https://github.com/PPsyrius/iss-groupbuy-team8/pull/784")[PR \#784] later reached the 11 November release and reruns below; local regressions alone do not validate deployed capacity.
-
-=== Released-image reruns: 11 November 2026
-
-Verified on AWS: promotion #link("https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/42947289936")[42947289936] released source `3a893036` after PRs \#784/\#785. The fresh V2 and two separately authorised V3 campaigns used that release; the unchanged driver/observer source was `b911ea63`, with a separately hashed local release-binding adapter for preparation. The #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261111-load-reruns/README.md")[dated rerun record] retains original results, source/digest identities and integrity receipts. These draft evidence URLs follow the publication/pinning limitation above.
+On 11 November on AWS, R4 ran the unchanged V3 workload from 22:22:40 to 22:52:41 SGT against the V3 r3 server settings (#src("docs/swe5001/evidence/20261111-v3-r4/README.md")[R4 record]). The client was a load generator hosted on AWS: a `t3a.2xlarge` instance in Singapore running the pinned k6 1.6.1 container with 8 vCPUs and 8 GiB. It bypassed the laptop path diagnosed for V3 r3; it does not show that the services changed. We recounted the retained raw stream offline (2,483,971,025 bytes uncompressed) and reproduced every count and latency statistic of the k6 summary (#src("docs/swe5001/evidence/20261111-v3-r4/verification.json")[verification projection]). @tbl-performance-r4 gives the client-side results.
 
 #figure(
   table(
-    columns: (1.05fr, 1.55fr, 1.3fr, 1.1fr),
-    table.header([11 November run], [Browse requests / errors], [Drops / client p95], [Disposition]),
-    [V2: released monolith], [57,600 / zero], [Zero / 30 ms all-run; 18 ms at 200 RPS], [All ten HTTP plateaus passed; lower bound only.],
-    [V3 r1: 0.5 vCPU, RDS micro], [687,083 / 11,841 (1.7234%)], [38,916 / 3,957 ms], [Failed; k6 99, analyser 1.],
-    [V3 r2: 1 vCPU, RDS small, CPU guard], [720,141 / 4,561 (0.633348%)], [5,858 / 851 ms], [Error gate passed; campaign failed; k6 99, analyser 1.],
+    columns: (1.1fr, 1.9fr, 1.6fr),
+    table.header([Measurement], [R4 result], [What it shows]),
+    [Requests], [726,000: one setup GET and 725,999 browse requests (508,200 list, 217,799 detail); every response HTTP 200], [The whole schedule was delivered],
+    [Errors and drops], [0 browse errors; all 725,999 body checks passed; 0 dropped iterations], [The error and drop gates passed],
+    [Client latency, whole run], [Mean 9.4 ms; p50 8 ms; p95 12 ms; p99 33 ms; maximum 728 ms], [Every sample was under the 800 ms gate; this is not the event-relative analyser result],
+    [Ten peak minutes], [360,000 browse completions, about 600 req/s; p95 ≤ 13 ms in each minute; no errors], [The 600 req/s plateau held],
+    [Process exits], [k6, monitor and raw stream: 0, 0 and 0], [The k6 thresholds passed: errors < 1%, drops = 0, p95 < 800 ms],
   ),
   kind: table,
-  caption: [11 November AWS HTTP results. Both V3 runs retained the same 30-minute schedule, eight-CPU/8-GiB generator and 1,000 preallocated/maximum VUs. Original summaries and raw/summary audits are in the dated rerun record; p95 here is the all-run diagnostic, not a post-scale-out-filtered pass.],
-) <tbl-performance-20261111>
+  caption: [V3 R4 client results on AWS, 11 November. Source: #src("docs/swe5001/evidence/20261111-v3-r4/README.md")[R4 record] and #src("docs/swe5001/evidence/20261111-v3-r4/browse-minutes.csv")[completion minutes].],
+) <tbl-performance-r4>
 
-The new V2 retained 47 hash-verified observations bracketing its ten-minute workload, with one stable task and maximum gap 17 s. Its planned 15-minute observer later exited 255 after a container-role metadata HTTP 500. The covered HTTP/stability result stands, but full collector completion and AWS server-metric corroboration are not claimed. The highest passing rate remains 200 RPS, not a located saturation knee. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261111-load-reruns/v2/observer-resolution.json")[Coverage disposition].
+The 1,000 VUs were preallocated, but at most 100 were active at once, so R4 does not show 1,000 simultaneous users. The generator container averaged 6.1% of its eight vCPUs (peak 12.7%) and used at most 796 MiB, with no throttling, so the client had headroom.
 
-*Combined mitigation, not acceptance.* R2 increased commerce from 0.5 vCPU/1 GiB to 1 vCPU/2 GiB and RDS from `db.t4g.micro` to `db.t4g.small`, then activated a positive-only CPU guard: 50% average for one 60 s period, add one task, 60 s cooldown. It preserved images, five-connection pools, shared timeouts, health dependencies, the request policy and maxima. Calculated from measured SQL limits: the unchanged allowances require 75/181 connections at steady maxima and 130/181 across the full all-service 200% replacement envelope. These checks provide budgeted headroom, not proof that a task's pool cannot stall. The combined change improved observed error/drop totals relative to r1 but did not pass; it cannot isolate which change helped or form a like-for-like old monolith/distributed capacity pair. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261111-load-reruns/v3-r2/V3-REVIEW.md")[R2 configuration, budgets and limits].
+Target tracking on requests made all four scaling changes (@tbl-performance-r4-scaling); no count of five occurred. Commerce service-average CPU peaked at 54.7% at 22:31, above the 50% CPU guard, but every recorded action cites the request policy. Six tasks were first sampled 973.6 s after the generator container started; that span includes the ramp, metric publication, alarm evaluation and task start-up, so it is not the autoscaler's reaction time. In the peak minutes 22:40–22:46 the ALB counted about 36,000 requests a minute, about 6,000 per target with six tasks: the policy converged on its target, which says nothing about saturation. RDS CPU peaked near 24% and connections at 40 (#src("docs/swe5001/evidence/20261111-v3-r4/server-minutes.csv")[server minutes]).
 
-Both V3 observers retained 160 samples bracketing execution, but each recorded one failed ECS read and kept `collectionComplete=false`. R1 also retained 179 commerce pool-wait events, unhealthy replacements and seven samples above the six-running-task analyser bound. R2's maximum gap was 37.94 s, with a stable sampled revision, no count above six and no retained in-run unhealthy event; its connection/pool-wait filters found no matches. R2 reached 1,000 active VUs despite no generator OOM and sampled CPU/memory below container limits. Independent host/network headroom remains unproven. None of these diagnostics erases drops or establishes a unique bottleneck.
-
-R2's successful scaling activities requested two, four, five and six tasks. The CPU activity requesting three was marked *Overridden*, while desired three was independently sampled before four. The normalizer retained this ambiguity as a blocker, rather than relabel it successful or invent a direct 2→4 transition. The unchanged analyser rejected generator drops before calculating event-relative p95. Later low-latency minutes do not repair the campaign, and the 80%-linearity criterion remains separate. Normal-floor restoration read back bounds 2–6 and five running/desired tasks at 08:56 UTC; it did not establish settled two-task recovery. The operator explicitly kept distributed runtime up, without further tuning, an HTTP retry or teardown. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261111-load-reruns/v3-r2/load/coverage-review.json")[Activity/observer review] · #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261111-load-reruns/v3-r2/load/analysis.stderr.txt")[Unchanged analyser rejection].
-
-=== What the scaling evidence means
-
-The November observations separate *capacity arriving* from *requests succeeding*. In the 03:52 SGT minute, commerce CPU was approximately 100%; the first failed response followed at 03:53:08 and the first dropped arrival at 03:53:25. The first scale-out activity began at 03:56:39, and two running tasks were first sampled at 03:57:43. The retained alarm history reports its decision at 03:56:38 against the 03:51–03:53 minute values. This establishes an observed detection/decision delay followed by task startup, not a claim that a 60-second scale-out cooldown bounds total recovery time. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-v3-autoscaling/INVESTIGATION.md")[Timing investigation and alarm history].
+#figure(
+  table(
+    columns: (0.8fr, 1fr, 1fr, 1.2fr),
+    table.header([Desired tasks], [Activity start], [Activity end], [First sample at new count]),
+    [1 → 2], [22:30:48], [22:31:58], [22:31:39],
+    [2 → 3], [22:32:48], [22:33:51], [22:33:39],
+    [3 → 4], [22:34:48], [22:35:54], [22:35:47],
+    [4 → 6], [22:37:48], [22:38:54], [22:38:54],
+  ),
+  kind: table,
+  caption: [Commerce scale-out in V3 R4, 11 November (SGT). A running sample does not prove target health or the end of the 120 s slow start. Source: #src("docs/swe5001/evidence/20261111-v3-r4/scaling-activities.csv")[scaling activities].],
+) <tbl-performance-r4-scaling>
 
 #import "../diagrams/performance-v3-timeline.typ": v3-timeline
 #figure(
   block(breakable: false, v3-timeline),
-  caption: [Historical November V3 timeline (10 November 2026 SGT). Complete minute buckets only; throughput includes failed completions. The request schedule is an offered-rate reference, not delivered load. The shaded interval lacks the original fine-grained ECS observer; recovered CloudWatch series continue, but no missing task samples are interpolated. Derived from the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-v3-autoscaling/minute-correlation.csv")[minute correlation] and #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-v3-autoscaling/aws-correlation.json")[activity/observer record].],
+  caption: [Scale-out timeline view (time-series chart), V3 R4, 11 November. Completed browse requests follow the offered schedule up to 600 req/s with no errors while commerce grows from one to six tasks; the shaded tail follows the end of the canonical observer.],
 ) <fig-performance-v3-timeline>
 
-The timeline shows why later low latency cannot rescue the run. At 04:07–04:09 SGT, complete minutes recorded approximately 600 completed requests/s, no browse failures or drops, and client p95 of 57, 21 and 19 ms. Earlier overload and a later timeout spike had already violated acceptance. An unhealthy-task replacement overlapped the first error spike; recovered metrics also report an unhealthy target near the second spike. These correlations motivate checking readiness and dependency behaviour, but do not isolate CPU, Redis, PostgreSQL or the edge as the single cause. See the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/evidence/20261110-v3-autoscaling/INVESTIGATION.md")[retained investigation].
+*Tool outcomes and limits.* R4 is not a clean acceptance run. The reviewed launcher refused to start, because the canonical observer had too little of its window left; we overrode the refusal, and a separate wrapper ran the unchanged workload and kept the refusal on record (§5.3). The canonical observer took its last sample at 22:49:32, before the workload ended, so the unchanged analyser exited 1 ("Observations must bracket execution") and issued no verdict. A supplementary observer covered the tail, and the derived union of both has 264 rows with a largest gap of 15.3 s; it was not fed to the analyser. CloudWatch lacks the partial last minute, and target 5XX has no data points, which is not a verified zero. No acceptance verdict on R4 is recorded.
 
-Three obligations remain distinct. *Campaign acceptance* requires the scheduled work, latency and failure gates to pass with complete observations. *Capacity* requires a valid sustained maximum for a stated revision and working set; the highest passing V2 plateau is only a lower bound. *Scaling efficiency* requires comparable one- and four-task measurements under the same conditions: calculated efficiency is $T_4 / (4 T_1) >= 0.8$, where $T_1$ and $T_4$ are accepted achieved throughputs. A ramp with changing task counts and dropped work supplies neither a controlled pair nor that ratio. Cold-start and dependency-fault checks additionally ask whether capacity becomes usable without unacceptable disruption. They must not be replaced by a warmed steady-state interval.
+*What acceptance needs.* An accepted V3 delivers the whole schedule with complete observations and unchanged gates; R4 met the first and the third. Linear scaling also needs a controlled one-task and four-task pair: calculated efficiency is $T_4 / (4 T_1) >= 0.8$, where $T_1$ and $T_4$ are accepted throughputs. A ramp with changing task counts supplies neither the pair nor the ratio.
 
 === Configured optimisations and capacity limits
 
-*Load balancing and scaling.* The configured CloudFront API origin forwards to the Application Load Balancer (ALB), which distributes requests to healthy ECS targets. On 16 October, AWS readback confirmed two healthy commerce tasks in different zones and target tracking at 12,000 requests per target per minute. Calculated from V2: 200 requests/s × 60 s = 12,000 requests/min. The policy uses `ALBRequestCountPerTarget`, a maximum of six commerce tasks, and cooldowns of 60 s out / 180 s in. The normal demo minimum is two; V3 deliberately started at one. The persisted environment setting is not the checked-in fallback, which is only 200 requests per target per minute. These settings are configuration, not a throughput guarantee. #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md", [Live policy readback]) · #perf-source("infra/swe5001/runtime/observability.tf", [Policy source]) · #perf-source("infra/swe5001/runtime/variables.tf", [Fallback]).
+*Load balancing and scaling.* CloudFront forwards `/api/*` to the ALB, which routes to healthy ECS targets. Configured, not tested beyond the runs above: target tracking on `ALBRequestCountPerTarget` at 12,000 requests per target per minute, two to six commerce tasks and cooldowns of 60 s out and 180 s in (AD-20, #src("infra/swe5001/runtime/observability.tf")[policy source]). Calculated: 200 req/s × 60 s = 12,000, the V2 lower bound per task. A CPU guard is committed, off by default (`commerce_cpu_scale_out_enabled`), and enabled for the V3 r2 and r3 sessions. Only its code and variable are committed: the session values of V3 r3 and R4 (the guard at 50% instead of the default 70%, 6,000 requests per target and the 120 s slow start, with 1 vCPU and 2 GiB for commerce and `db.t4g.small`) were applied by local Terraform. Calculated for that size: the five-connection pools need 75 of 181 connections at the steady maximum and 130 of 181 while every task is replaced; this is a budget, not a measured pool wait.
 
-*Caching on the exercised read path.* CloudFront caches the static single-page application (SPA), but `/api/*` has caching disabled. The benchmark is therefore not an API edge-cache hit test. In the November released source `93984f61`, catalogue list/detail reads obtain display offers through `GroupDealQueryServiceImpl.findBestOpenDealsByProductIds` and `RedisOpenDealOfferCache`. One MGET reads the requested product keys; misses use one bounded PostgreSQL batch, and population uses a batched Lua call rather than a per-product round trip. Positive entries live 15–25 s and cached absences 5–10 s, with jitter. This avoids repeatedly deriving the same display offers and allows a newly available offer to appear sooner after an absence. Cached offers that have expired or filled are rejected; after-commit events evict affected product keys. The cache is a display optimisation, not authority to admit a purchase: settlement still checks the team under its lock. #perf-source("infra/swe5001/edge/cloudfront.tf", [Edge policy]) · #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/93984f615df79666f4c3ba62f4d6ae90fbf1f4e1/backend/blocbuy-application/src/main/java/com/blocbuy/groupbuy/service/GroupDealQueryServiceImpl.java")[Released query service] · #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/93984f615df79666f4c3ba62f4d6ae90fbf1f4e1/backend/blocbuy-infrastructure/src/main/java/com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCache.java")[Released cache].
+*Caching on the read path.* CloudFront does not cache `/api/*` (#src("infra/swe5001/edge/cloudfront.tf")[edge policy]). Catalogue reads take display offers from `RedisOpenDealOfferCache` with one MGET; misses use one bounded PostgreSQL batch, entries live 15–25 s, and after-commit events evict changed keys. Settlement still checks the team under its lock, so the cache affects only display. We kept no cache-hit ratio on AWS, so the saving is designed, not measured.
 
-That fallback protects the source result, not response time: repeated Redis waits can consume request capacity before PostgreSQL answers. Local fault tests reproduced this amplification and motivated PR \#784's failure-triggered backoff. It was absent from the 10 November image but reached the 11 November release; both new distributed campaigns still failed. No V2/V3 cache-hit ratio or controlled before/after database-load benefit was retained. The implementation explains the intended saving and staleness trade-off, not a measured AWS speedup. Appendix A.3 describes the browse design; its purchase counterparts in A.5/A.6 explain why a displayed offer cannot reserve a seat.
-
-*Measured versus projected.* The measured lower bound is 200 RPS on one V2 monolith; the October V3 observations are about 280 RPS saturation on one commerce task and about 455 RPS served by three tasks during a generator-limited run. The November run's later minutes near 600 RPS remain part of a failed campaign, not validated capacity. Different revisions/topologies cannot form a controlled scaling pair. Calculated policy illustration only: six targets × 200 RPS = 1,200 RPS; this is neither a forecast nor validated capacity. The connection-budget report was missing in October and supplied in November, but arithmetic does not establish pool behaviour under load. Before any accepted repeat, recheck effective settings, explain cold/fault transitions and retain unchanged latency/error/drop gates. Validate one-to-four throughput separately. V4 queue backlog/age, drain time and empty dead-letter-queue acceptance also remain unverified on AWS (AISS-12, NFR-64). #perf-source("perf/k6/SCALING.md", [Connection-budget and repeat procedure]).
-
-#pending[Liu Jin / Eric: review §4.1 against the dated AWS records and F1 before submission.]
-
-]
+*Measured versus projected (briefing Q4).* On AWS, R4 served 600 req/s, the highest rate tested, with one to six commerce tasks and every k6 gate met; one monolith task served 200 req/s. Neither is a maximum. Calculated: R4's target of 6,000 requests per target per minute gives 6 tasks × 100 req/s = 600 req/s, exactly the tested peak; the committed 12,000 gives 6 × 200 = 1,200 req/s, the policy's arithmetic ceiling, not a forecast. One-to-four linearity, the full NFR-15 mix and V4 queue drain remain unverified on AWS (AISS-12, NFR-64).
