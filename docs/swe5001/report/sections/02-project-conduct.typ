@@ -10,7 +10,7 @@ The plan was 50 person-days in seven work packages, the briefing's guideline of 
   table(
     columns: (0.35fr, 1.6fr, 0.45fr, 2.6fr, 1.1fr),
     table.header([WBS], [Work package], [Est. (pd)], [Main tasks (estimate in person-days)], [Delivered by]),
-    [1], [Planning and reporting], [3.5], [Proposal and architecture baseline (2.5); fortnightly progress reports (1)], [#pr(259), #pr(372), #iss(462)],
+    [1], [Planning and reporting], [3.5], [Proposal and architecture baseline (2.5); fortnightly progress reports (1)], [#pr(259), #iss(462)],
     [2], [Platform foundation], [6.5], [Shared platform module (3); outbox, SNS and SQS publishing and idempotent consumption (3.5)], [#pr(471), #pr(473), #pr(485), #pr(513)],
     [3], [Service decomposition], [13.5], [`notification-svc` (3), `identity-svc` (4), `commerce-svc` (2); databases and migrations per service (3); demonstration and load data (1.5)], [#pr(470), #pr(472), #pr(479), #pr(490)],
     [4], [Infrastructure as code], [11], [`foundation` stack (2); network, ECS and the golden-path module (4); RDS, ElastiCache and messaging (2); `edge` stack (1); scaling, dashboard and alarms (2)], [#pr(377)–#pr(380), #pr(487), #pr(489)],
@@ -30,13 +30,13 @@ Three choices kept the plan inside the guideline. The split stopped at three ser
 #figure(
   table(
     columns: (1fr, 2.4fr, 1.2fr),
-    table.header([Period], [Architecture change], [Decisions]),
+    table.header([Period], [Architecture change], [Main decisions]),
     [Sprint 3, 28 Sep – 9 Oct (phase 0 from 25 Sep)], [Options study and proof of concept (phase 0); `foundation`, `edge` and `runtime` stacks; the unchanged monolith on ECS Fargate (strangler step 0, first green promotion 6 October)], [AD-01, AD-12, AD-17, AD-19],
     [Sprint 4, 12–23 Oct], [Three services assembled from the existing modules; one database per service; outbox → SNS → SQS; one synchronous call; request-count auto-scaling; first three-service promotion 17 October; presentation 21 October], [AD-02, AD-03, AD-04, AD-06, AD-18, AD-20],
     [Phase D, from 22 Oct (to the status date, 11 Nov)], [Separate data subnets (AD-15); promotions of 10 and 11 November; load reruns], [AD-15],
   ),
   kind: table,
-  caption: [Architecture changes per period. Source: @tbl-milestones and the AD register (§3.1.1, §3.2.1, §3.3).],
+  caption: [Architecture changes per period, with the main decisions of each period only; AD-05, AD-07 to AD-14 and AD-16 are not placed in a period. Source: @tbl-milestones and the AD tables (§3.1.1, §3.2.1, §3.3).],
 ) <tbl-sprint-architecture>
 
 == Project Status
@@ -97,7 +97,7 @@ Most delivery milestones were met on time or early. Three slipped: the monolith 
     columns: (2fr, 1.2fr, 1.2fr, 2fr),
     table.header([Milestone], [Planned], [Achieved], [Evidence]),
     [Architecture options study and proof of concept (phase 0)], [Before the proposal], [25 Sep – 1 Oct], [#src("docs/swe5001/architecture-options-study/README.md")[Study]\; #src("docs/swe5001/architecture-options-study/poc.md")[proof of concept]],
-    [Proposal written and submitted], [28 Sep – 4 Oct], [30 Sep (merged); last edit 3 Oct; submitted on Canvas 4 Oct], [#pr(259), #pr(372)],
+    [Proposal written and submitted], [28 Sep – 4 Oct], [30 Sep (merged); last edit 3 Oct; submitted on Canvas 4 Oct], [#pr(259)\; the 3 Oct edit was merged with #pr(372), a team-price fix],
     [`foundation`, `edge` and `runtime` stacks in Terraform], [28 Sep – 4 Oct], [4 Oct], [#pr(377)–#pr(380)],
     [Monolith on ECS, first green promotion (phase A)], [28 Sep – 4 Oct], [6 Oct], [#run("37470479078")[Run 37470479078], #pr(418)],
     [Platform module, outbox and `notification-svc`], [5–11 Oct], [12–16 Oct], [#pr(471), #pr(473), #pr(485), #pr(513)],
@@ -118,7 +118,7 @@ Most delivery milestones were met on time or early. Three slipped: the monolith 
 
 === Effort per member
 
-We spent about 50 person-days on SWE5001 up to 19 October, which matches the briefing's guideline of about ten person-days for each of the five members in total (briefing Q8); Liu Jin (12.5) and Pan (11.5) are above ten. All five members agreed the split to 19 October and declared it in the presentation. Phase D (22 October to 16 November: the answers to the remarks and this report) added about 21.5 person-days, agreed by the team in November, so SWE5001 took about 71.5 person-days in total (@tbl-effort). That is above the guideline: phase D was not in the plan, and answering the remarks needed new AWS sessions, load-test reruns and a report rewrite.
+SWE5001 took about 71.5 person-days in total, about 43% above the briefing's guideline of about 50 (ten for each of the five members; briefing Q8). The overrun is phase D (22 October to 16 November: the answers to the remarks and this report), which was not in the plan and added about 21.5 person-days, because answering the remarks needed new AWS sessions, load-test reruns and a report rewrite. Up to the presentation we were within the guideline: about 50 person-days to 19 October, which all five members agreed and declared in the presentation (@tbl-effort); Liu Jin (12.5) and Pan (11.5) were above ten.
 
 #figure(
   table(
@@ -132,7 +132,7 @@ We spent about 50 person-days on SWE5001 up to 19 October, which matches the bri
     [*Total*], [*≈ 50*], [*≈ 21.5*], [*≈ 71.5*], [],
   ),
   kind: table,
-  caption: [Effort per member in person-days (pd). The split to 19 October was agreed by all members on 19 October 2026; the phase D figures were agreed in November. Source: #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6].],
+  caption: [Effort per member in person-days (pd). Source: the split to 19 October, agreed by all members on 19 October 2026, is on #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6]\; the phase D figures are the team's November agreement, put to members for confirmation on 12 November (#iss(790), #iss(791), #iss(792)).],
 ) <tbl-effort>
 
 *How the figures were obtained.* Nobody logged hours, although the plan asked each pull request to record them. We therefore summed the planned hours of the issues each member delivered and agreed the split from that sum. The figures are an agreed estimate, not a measurement; the range of 8.5–12.5 person-days reflects that Liu Jin carried phase A and Pan most of the messaging and scaling work of phase B. The phase D figures were agreed in November from the days each member worked on SWE5001 (pull requests, reviews and workflow runs). Pan carries the largest share because the AWS deployment and load-test sessions behind the data subnets and the V3 reruns run for hours.

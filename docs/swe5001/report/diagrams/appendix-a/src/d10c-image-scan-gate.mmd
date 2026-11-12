@@ -1,0 +1,61 @@
+%% frame: Image scan gate in the two image jobs
+activityDiagram
+    lane "ci-backend.yml: docker" {
+        start SB
+        action BB["Build the\nmonolith image"]
+        action HB["Smoke test:\nboot, health\ncheck"]
+        action TB["Trivy image\nscan: fixable\nHIGH or\nCRITICAL"]
+        decision VB
+        action FB["Job fails:\ndocker check\nred, merge\nblocked"]
+        end EFB
+        end EB
+    }
+    lane "swe5001-service-images.yml: build" {
+        start SI
+        action PI["Package the\nJAR (no tests)"]
+        action BI["Build the\nARM64 image,\nload it into\nDocker"]
+        action TI["Trivy image\nscan: fixable\nHIGH or\nCRITICAL"]
+        decision VI
+        action FI["Job fails:\nservice-images\ncheck red,\nmerge or\npromotion\nblocked"]
+        end EFI
+        decision UP
+        action EX["Export the\nscanned image\n(docker save),\nupload it"]
+        end EI
+        end EN
+    }
+    SB --> BB
+    BB --> HB
+    HB --> TB
+    TB --> VB
+    VB --> FB : [found]
+    FB --> EFB
+    VB --> EB : [none]
+    SI --> PI
+    PI --> BI
+    BI --> TI
+    TI --> VI
+    VI --> FI : [found]
+    FI --> EFI
+    VI --> UP : [none]
+    UP --> EX : [upload-images]
+    UP --> EN : [else]
+    EX --> EI
+%% at SB 0,0
+%% at BB 0,1
+%% at HB 0,2
+%% at TB 0,3
+%% at VB 0,4
+%% at FB 1,4
+%% at EFB 1,5
+%% at EB 0,5
+%% at SI 2,0
+%% at PI 2,1
+%% at BI 2,2
+%% at TI 2,3
+%% at VI 2,4
+%% at FI 3,4
+%% at EFI 3,5
+%% at UP 2,6
+%% at EN 3,6
+%% at EX 2,7
+%% at EI 2,8

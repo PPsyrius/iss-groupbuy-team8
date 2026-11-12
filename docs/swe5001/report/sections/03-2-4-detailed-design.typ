@@ -140,6 +140,10 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
 
 #afig("d12b-two-buyers-join", [Two-buyer interaction view, part 2 (UML sequence diagram). Settlement locks team, intent, then payment; under the team lock `GroupDeal.joinPaid` fills the last seat, or, when another buyer took it first, the full team leaves a refund obligation and no order.])
 
+@fig-d15-team-succeeded-objects shows the objects at the commit of the join that fills the team: the snapshot that @fig-d12a-two-buyers-start and @fig-d12b-two-buyers-join produce. Each link is an ID attribute, because the aggregates refer to each other by ID (§3.1.4). Both orders are confirmed in the same transaction as the team's success, and each purchase intent points at the one payment that fulfilled it. The `ShareCredit` is not yet there at that commit: `ShareCreditSubscriber` writes it `AFTER_COMMIT`, in its own transaction (ADR 0003).
+
+#afig("d15-team-succeeded-objects", orient: "portrait", [Team-success object view (UML object diagram, drawn with the class kit: `name : Class` with attribute values). A team of two at the commit of the filling join; `credit` follows in its own transaction just after it, and `u1` and `u2` stand for the two buyers' user IDs.])
+
 @fig-race-last-seat shows two payments racing for the last seat. Both webhooks reach settlement at once, but the team lock admits one transaction at a time: the first commits the join and fills the team, and the second, granted the lock only after that commit, finds the team closed and records a refund obligation instead of an order.
 
 #afig("a-uc04-ds-race", lbl: <fig-race-last-seat>, [Last-seat race interaction view (UML sequence diagram). The team lock serialises the two settlements, so the second payment finds the team full and commits a refund obligation, not an order.])
