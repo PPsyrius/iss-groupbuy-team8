@@ -1,9 +1,11 @@
-"""Render retained November V3 observations; no network or new measurements.
+"""Render only V3 R4 retained projections; no network or new measurements.
 
-Run with Python 3 from any directory. Output is next to this editable source.
-Uses only complete UTC minute buckets and integrates the nominal arrival schedule.
-The original observer gap is shaded; no ECS task samples are reconstructed.
+Python standard library only. --check compares the generated SVG without writing.
+Client completion bins and UTC CPU minutes keep distinct time origins. Task dots
+are observations, not interpolated transitions. Shading marks supplemental-only
+service coverage after the canonical observer ends, not a repaired analyzer pass.
 """
+import argparse
 import csv
 from datetime import datetime
 from html import escape
@@ -11,23 +13,25 @@ import json
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-EVIDENCE = HERE.parent.parent / 'evidence' / '20261110-v3-autoscaling'
-rows = list(csv.DictReader((EVIDENCE / 'minute-correlation.csv').open()))
-context = json.loads((EVIDENCE / 'aws-correlation.json').read_text())
-start = datetime.fromisoformat(context['interval']['start'].replace('Z', '+00:00'))
-end = datetime.fromisoformat(context['interval']['end'].replace('Z', '+00:00'))
-origin = start.replace(second=0, microsecond=0)
+EVIDENCE = HERE.parent.parent / 'evidence' / '20261111-v3-r4'
+context = json.loads((EVIDENCE / 'verification.json').read_text(encoding='utf-8'))
+start = datetime.fromisoformat(context['generatorResources']['coverage']['start'].replace('Z', '+00:00'))
+end = datetime.fromisoformat(context['generatorResources']['coverage']['end'].replace('Z', '+00:00'))
 
 def elapsed(value):
-    return (datetime.fromisoformat(value.replace('Z', '+00:00')) - origin).total_seconds() / 60
+    return (datetime.fromisoformat(value.replace('Z', '+00:00')) - start).total_seconds() / 60
 
-data = []
-for row in rows:
-    at = datetime.fromisoformat(row['at'].replace('Z', '+00:00'))
-    if at >= start and at.timestamp() + 60 <= end.timestamp():
-        data.append((row, (at - origin).total_seconds() / 60 + 0.5))
-assert len(data) == 29
-assert all(float(row['completed']) >= float(row['errors']) for row, _ in data)
+with (EVIDENCE / 'browse-minutes.csv').open(encoding='utf-8', newline='') as stream:
+    data = [(row, int(row['completionMinuteSinceContainerStart']) + 0.5) for row in csv.DictReader(stream)]
+assert len(data) == 30
+assert sum(int(row['browseSamples']) for row, _ in data) == 725999
+assert all(int(row['browseErrors']) == 0 for row, _ in data)
+with (EVIDENCE / 'server-minutes.csv').open(encoding='utf-8', newline='') as stream:
+    cpu = [(row, elapsed(row['minuteUtc']) + 0.5) for row in csv.DictReader(stream)
+           if row['partialRunEdgeMinute'] == 'False' and row['commerceCpuAveragePercent'] != '']
+observations = [json.loads(line) for line in (EVIDENCE / 'service-observations.jsonl').read_text(encoding='utf-8').splitlines()]
+samples = [row for row in observations if 0 <= elapsed(row['observedAt']) <= (end - start).total_seconds() / 60]
+assert len(cpu) == 29 and len(samples) == 200
 
 def arrival(t):
     if t <= 300:
@@ -37,14 +41,6 @@ def arrival(t):
     if t <= 1500:
         return 600
     return max(0, 600 * (1800 - t) / 300)
-
-def offered(minute):
-    # Integrate each linear segment exactly across its schedule boundaries.
-    a = minute * 60 - (start - origin).total_seconds()
-    b = a + 60
-    cuts = sorted({a, b, *(t for t in (300, 900, 1500) if a < t < b)})
-    return sum((arrival(x) + arrival(y)) * (y - x) / 2
-               for x, y in zip(cuts, cuts[1:])) / 60
 
 W, H = 470, 458
 LEFT, RIGHT = 48, 458
@@ -62,12 +58,13 @@ def line(x1, y1, x2, y2, color='#b8bec5', dash=None):
     parts.append(f'<line x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}" stroke="{color}" stroke-width="0.7"{extra}/>')
 
 def x(t):
-    return LEFT + PW * t / 30
+    return LEFT + PW * t / 30.05
 
-gap = elapsed(context['ecs']['incompleteAfter'])
-events = context['automaticScaleOutActivities']
-text(LEFT, 12, '10 November 2026 SGT • failed AWS campaign', font_weight='bold')
-text(LEFT, 26, 'Dashed verticals: scale-out activity starts; shading: original ECS observer missing')
+gap = elapsed(context['scaling']['observationCoverage']['canonical']['lastObservedAt'])
+events = context['scaling']['activities']
+assert [event['desiredTarget'] for event in events] == [2, 3, 4, 6]
+text(LEFT, 12, '11 November 2026 • V3 R4 • zero browse errors / drops', font_weight='bold')
+text(LEFT, 26, 'Verticals: request-policy starts; light band: tail covered by supplemental samples')
 
 def panel(index, title, maximum, ticks, series):
     top = 51 + index * 96
@@ -80,35 +77,46 @@ def panel(index, title, maximum, ticks, series):
         line(LEFT, y(tick), RIGHT, y(tick))
         text(LEFT - 5, y(tick) + 3, f'{tick:,}', text_anchor='end')
     for event in events:
-        xx = x(elapsed(event['start']))
+        xx = x(elapsed(event['startTime']))
         line(xx, top, xx, top + height, '#6B655C', '3 3')
     for name, color, values, dash in series:
-        points = ' '.join(f'{x(t):.2f},{y(v):.2f}' for t, v in values)
-        extra = f' stroke-dasharray="{dash}"' if dash else ''
-        parts.append(f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="1.5"{extra}/>')
+        if dash == 'dots':
+            for t, value in values:
+                fill = color if name == 'running' else 'white'
+                parts.append(f'<circle cx="{x(t):.2f}" cy="{y(value):.2f}" r="1.5" fill="{fill}" stroke="{color}" stroke-width="0.7"/>')
+        else:
+            points = ' '.join(f'{x(t):.2f},{y(v):.2f}' for t, v in values)
+            extra = f' stroke-dasharray="{dash}"' if dash else ''
+            parts.append(f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="1.5"{extra}/>')
     for minute in (0, 5, 10, 15, 20, 25, 30):
         xx = x(minute)
         line(xx, top + height, xx, top + height + 3)
-        label = f'{3 + (45 + minute)//60:02}:{(45 + minute)%60:02}'
-        text(xx, top + height + 13, label, text_anchor='middle')
+        text(xx, top + height + 13, str(minute), text_anchor='middle')
 
 def values(column, divisor=1):
     return [(minute, float(row[column]) / divisor) for row, minute in data]
 
 panel(0, 'Throughput (requests/s): blue = completed; grey dashed = offered reference', 650,
       (0, 200, 400, 600), [
-          ('completed', '#3E5CD9', values('completed', 60), None),
-          ('offered', '#6B655C', [(m, offered(m-0.5)) for _, m in data], '4 3')])
-panel(1, 'Client p95 per minute (ms; not an average of percentiles)', 11000,
-      (0, 5000, 10000), [('p95', '#3E5CD9', values('p95Ms'), None)])
-panel(2, 'Commerce CPU per minute (%)', 110,
-      (0, 50, 100), [('CPU', '#28744d', values('commerce_avg_cpu_pct'), None)])
-panel(3, 'Counts per minute: red = browse failures; grey dashed = dropped arrivals', 18000,
-      (0, 8000, 16000), [
-          ('errors', '#bf3022', values('errors'), None),
-          ('dropped', '#6B655C', values('dropped'), '4 3')])
-text(LEFT, 449, 'Complete buckets 03:46–04:14; observer ended 04:03:47. No task-count interpolation.')
+          ('completed', '#3E5CD9', values('browseSamples', 60), None),
+          ('offered', '#6B655C', [(m, arrival(m * 60)) for m in (0, 5, 15, 25, 30)], '4 3')])
+panel(1, 'Client p95 per completion minute (ms; not whole-run percentile)', 24,
+      (0, 10, 20), [('p95', '#3E5CD9', values('browseLatencyP95Ms'), None)])
+panel(2, 'Actual task samples: blue filled = running; grey hollow = desired', 6.7,
+      (0, 2, 4, 6), [
+          ('desired', '#6B655C', [(elapsed(row['observedAt']), row['desired']) for row in samples], 'dots'),
+          ('running', '#3E5CD9', [(elapsed(row['observedAt']), row['running']) for row in samples], 'dots')])
+panel(3, 'Commerce CPU (%) at complete UTC-minute centres; final partial minute unknown', 65,
+      (0, 25, 50), [('CPU', '#28744d', [(minute, float(row['commerceCpuAveragePercent'])) for row, minute in cpu], None)])
+text(LEFT, 449, 'Elapsed minutes from container start 22:22:40.555 SGT; schedule is a reference only.')
 parts.extend(['</g>', '</svg>'])
 output = HERE / 'performance-v3-timeline.svg'
-output.write_text('\n'.join(parts) + '\n', encoding='utf-8')
-print(f'{output.name}: {len(data)} complete minute buckets, {len(events)} scale-out starts')
+generated = ('\n'.join(parts) + '\n').encode('utf-8')
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--check', action='store_true')
+args = parser.parse_args()
+if args.check:
+    assert output.read_bytes() == generated, 'R4 timeline export differs; regenerate from retained R4 data'
+else:
+    output.write_bytes(generated)
+print(f'{output.name}: R4 only, {len(data)} browse bins, {len(samples)} task samples, {len(cpu)} CPU minutes, {len(events)} scale-out starts')
