@@ -84,16 +84,14 @@ Configured, not tested: each task has a read-only root file system and a writabl
 
 The owning decisions and the roadmap are in §3.4; @tbl-security-residual states the security consequence of each open limit.
 
-The most consequential gaps are privileged control-plane access, secret-bearing state and the unencrypted origin path, because they can affect deployment authority or disclose credentials or data. Missing peer identity raises the impact of a compromised task. The absent audit services weaken detection and investigation. The unencrypted alarm topic is a narrower confidentiality concern. This order ranks technical exposure; we have not yet decided which risks we accept for the course and which must block real-user operation.
-
 #figure(
   table(
     columns: (0.7fr, 2.1fr, 2.2fr),
     table.header([AISS], [Current limit], [Required follow-up]),
-    [04], [Internal calls rely on network trust, without a service token or mutual TLS.], [Add authenticated service identity; test denial from an untrusted peer as well as an external source.],
-    [07 (resolved)], [Resolved for placement and connectivity (§3.2).], [Recheck effective placement for a future deployment; do not reuse destroyed subnet IDs as current state.],
+    [04], [Internal calls rely on network trust, without a service token or mutual TLS.], [Add authenticated service identity; test denial from an untrusted peer and from outside.],
+    [07 (resolved)], [Resolved for placement and connectivity (§3.2).], [Recheck placement in a future deployment; destroyed subnet IDs are not current state.],
     [08], [Origin and ALB-to-task HTTP hops are unencrypted.], [Deploy and verify TLS on these hops; a prefix list or secret header is not encryption.],
-    [09], [Origin secret and Valkey token are visible to authorised state readers.], [Restrict state and plan access, rotate through an agreed procedure and adopt a write-only secret path where supported.],
+    [09], [Origin secret and Valkey token are visible to authorised state readers.], [Restrict state and plan access; agree rotation; use write-only secrets where supported.],
     [15], [Apply-role CloudWatch privileges are not fenced to SWE5001.], [Narrow permissions and test the intended cross-stack denials.],
     [16], [Alarm email delivery is untested.], [Set `SWE5001_ALLOW_UNCONFIRMED_ALERTS` to `false`, confirm all recipients and trigger one test alarm.],
     [17], [A long-lived IAM access key exists beside the keyless pipeline.], [Remove the key or move its user to Identity Center.],
@@ -104,3 +102,5 @@ The most consequential gaps are privileged control-plane access, secret-bearing 
   kind: table,
   caption: [Open security limitations and their follow-up. Source: the AISS register (§3.4).],
 ) <tbl-security-residual>
+
+The most consequential gaps are privileged control-plane access, secret-bearing state and the unencrypted origin path, because they can affect deployment authority or disclose credentials or data. Missing peer identity raises the impact of a compromised task. The absent audit services weaken detection and investigation. The unencrypted alarm topic is a narrower confidentiality concern. This order ranks technical exposure; we have not yet decided which risks we accept for the course and which must block real-user operation.
