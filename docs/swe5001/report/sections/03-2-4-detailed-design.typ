@@ -55,7 +55,7 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
     table.cell(rowspan: 4)[S9 Domain and integration events (Evt)],
     [Impacted], [`ResolveTeamControl`, `RefundMembersControl` (record), `Order`, `Invitation`],
     [Static], [Events `MemberJoined`, `TeamSucceeded`, `TeamExpired`, `PaymentSucceeded`; subscribers `OrderLifecycleSubscriber` (`@Order(10)`), `TeamExpiryRefundSubscriber` (`@Order(20)`), `IntegrationOutboxWriter` (lowest precedence), `ShareCreditSubscriber` (after commit)],
-    [Dynamic], [The transaction owner calls the `BEFORE_COMMIT` subscribers in order (@fig-d14a-team-expiry); the relay publishes the outbox row to SNS later (@fig-d14b-refund-retry)],
+    [Dynamic], [The transaction owner calls the `BEFORE_COMMIT` subscribers in order (@fig-d14a-team-expiry); the relay publishes the outbox row to SNS later (@fig-d14c-outbox-relay)],
     [Justification], [The publisher does not call each module, and an integration event exists only if its change committed (AD-04, ADRs 0002 and 0007)],
   ),
   kind: table,
@@ -87,8 +87,6 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
   caption: [Flow of events for UC4 with UC10: basic flow (1–8) and alternatives (4a–7a, numbered by the step they branch from). Source: code.],
 ) <tbl-uc4-flow>
 
-#afig("a-uc04-ac", lbl: <fig-uc4-analysis>, [UC4 analysis view (UML class diagram, «boundary», «control» and «entity»). Of the three controls, only `JoinTeamControl` uses the entities; each object is traced to its design classes in @tbl-uc4-map-summary.])
-
 @fig-d11-uc4-design-classes shows the objects behind the webhook (strategies S3 and S8). The inbound adapter `StripeWebhookController` passes the raw request and signature through `PaymentAppService` (implemented by `StripePaymentAppService`) to #src("backend/blocbuy-application/src/main/java/com/blocbuy/payment/service/StripeCheckoutService.java")[`StripeCheckoutService`]. Before it opens the settlement transaction, the service verifies the signature and reads the Checkout session back from Stripe. Inside the transaction it first claims the event ID (`CheckoutPaymentRepository.claimEvent`), so a redelivered event stops there. It then locks the team for JOIN, the saved purchase intent and the payment, in the global order. Payment requests fulfilment through `PaymentBusinessPort`, which the order module implements in #src("backend/blocbuy-application/src/main/java/com/blocbuy/order/service/OrderFulfilmentAdapter.java")[`OrderFulfilmentAdapter`]\; payment never depends on order code. The team aggregate (`GroupDeal`) checks its deadline, remaining seats and existing members, and returns the updated team snapshot. #src("backend/blocbuy-infrastructure/src/main/java/com/blocbuy/groupbuy/persistence/PaidGroupDealRepositoryImpl.java")[`PaidGroupDealRepositoryImpl`] implements the lock with PostgreSQL through MyBatis. @tbl-uc4-map-summary shows where each class comes from.
 
 #figure(
@@ -114,6 +112,8 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
   kind: table,
   caption: [UC4 analysis objects and the design classes that realise them, with the transition strategy that produced each. Source: code; strategies in @tbl-strategies-324.],
 ) <tbl-uc4-map-summary>
+
+#afig("a-uc04-ac", lbl: <fig-uc4-analysis>, [UC4 analysis view (UML class diagram, «boundary», «control» and «entity»). Of the three controls, only `JoinTeamControl` uses the entities; each object is traced to its design classes in @tbl-uc4-map-summary.])
 
 #afig("d11-uc4-design-classes", [UC4 design view (UML class diagram). Layers run from top to bottom: adapter, application, domain, infrastructure. No dependency leaves the domain, and payment reaches the order module only through `PaymentBusinessPort`. The purchase intent and order roots (@tbl-uc4-map-summary) sit behind that port and are not drawn.])
 
@@ -164,7 +164,7 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
     [6], [The integration event is written to the outbox, and the transaction commits], [`IntegrationOutboxWriter`, `sys_outbox`],
     [7], [Every 30 s, the refund worker claims the oldest due obligation in a short transaction], [`RefundWorkerJob`, `RefundService.processNext` (@fig-d14b-refund-retry)],
     [8], [Outside any transaction it asks Stripe for the refund, with the obligation's idempotency key, and records the answer in another transaction], [`StripeRefundGateway.createRefund`, `RefundWork.providerKey`, `finish`],
-    [9], [The outbox relay publishes the expiry to SNS, which delivers it to the notification queue], [`OutboxRelayJob`, `SnsOutboxEventTransport`],
+    [9], [The outbox relay publishes the expiry to SNS, which delivers it to the notification queue], [`OutboxRelayJob`, `SnsOutboxEventTransport` (@fig-d14c-outbox-relay)],
     [1a], [Another task holds the lease: nothing runs on this tick], [`LeasedJobRunner`],
     [3a], [A join filled the team first: expiry returns without an event], [`DEAL_CLOSED` caught (@fig-d14a-team-expiry)],
     [4a], [Any subscriber fails: the team's expiry, cancellations and obligations roll back together; the team is retried after 5 minutes], [`GroupDealExpirySweeper`],
@@ -208,9 +208,11 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
 
 #afig("d14a-team-expiry", [Team expiry interaction view (UML sequence diagram). Each team expires in its own `critical` transaction: the team lock, the clock read under it, `GroupDeal.expire`, then the transaction owner calls the `BEFORE_COMMIT` subscribers in `@Order`, so the orders, the refund obligations and the outbox row commit or roll back with the expiry.])
 
-*Paying the buyer back.* @fig-d14b-refund-retry traces what runs after the expiry commits. The refund worker claims an obligation in one short transaction, calls Stripe outside any transaction and records the answer in another. It derives the provider key from the refund ID (#src("backend/blocbuy-domain/src/main/java/com/blocbuy/payment/model/RefundWork.java")[`RefundWork`]). If it knows the provider refund ID, it retrieves that refund instead of creating one. From 23 hours after the first attempt it only looks the refund up and sends an uncertain outcome for review. Each attempt makes the obligation due again after a fixed 30 s, so a pending or failed call is retried until Stripe gives a final answer. Beside the worker, the outbox relay publishes the expiry through SNS, which delivers it asynchronously to the notification queue; notification can lag or retry independently of repayment. Tested locally, not on AWS: #src("backend/blocbuy-bootstrap/src/test/java/com/blocbuy/bootstrap/TeamExpirySchedulingIT.java")[`TeamExpirySchedulingIT`] covers the rollback, the retry and the reused provider key.
+#afig("d14b-refund-retry", [Refund worker interaction view (UML sequence diagram). After the expiry commits, the leased refund worker claims an obligation, calls Stripe and records the answer; no Stripe call runs inside a database transaction.])
 
-#afig("d14b-refund-retry", [Refund and relay interaction view (UML sequence diagram). After the commit two leased jobs run on their own; no Stripe or SNS call runs inside a database transaction.], float: true)
+*Paying the buyer back.* @fig-d14b-refund-retry traces what runs after the expiry commits. The refund worker claims an obligation in one short transaction, calls Stripe outside any transaction and records the answer in another. It derives the provider key from the refund ID (#src("backend/blocbuy-domain/src/main/java/com/blocbuy/payment/model/RefundWork.java")[`RefundWork`]). If it knows the provider refund ID, it retrieves that refund instead of creating one. From 23 hours after the first attempt it only looks the refund up and sends an uncertain outcome for review. Each attempt makes the obligation due again after a fixed 30 s, so a pending or failed call is retried until Stripe gives a final answer. Beside the worker, the outbox relay publishes the expiry through SNS (@fig-d14c-outbox-relay), which delivers it asynchronously to the notification queue; notification can lag or retry independently of repayment. Tested locally, not on AWS: #src("backend/blocbuy-bootstrap/src/test/java/com/blocbuy/bootstrap/TeamExpirySchedulingIT.java")[`TeamExpirySchedulingIT`] covers the rollback, the retry and the reused provider key.
+
+#afig("d14c-outbox-relay", [Outbox relay interaction view (UML sequence diagram). The leased relay runs apart from the refund worker and publishes the committed expiry to SNS; no SNS call runs inside a database transaction.])
 
 ==== Patterns in the two flows
 

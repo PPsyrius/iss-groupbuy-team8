@@ -2,11 +2,11 @@
 classDiagram
     class StripeWebhookController {
         <<controller, Ext, Sec>>
-        +handleStripeEvent(payload: String, signatureHeader: String): Result~Void~
+        +handleStripeEvent(payload, signatureHeader): Result~Void~
     }
     class PaymentAppService {
         <<interface>>
-        +handleStripeWebhook(payload: String, signatureHeader: String): void
+        +handleStripeWebhook(payload, signatureHeader): void
     }
     class StripePaymentAppService {
         <<application service, Ext>>
@@ -14,7 +14,7 @@ classDiagram
     class StripeCheckoutService {
         <<application service, Ext, Conc>>
         -tx: TransactionTemplate
-        +handleWebhook(rawBody: String, signature: String): void
+        +handleWebhook(rawBody, signature): void
     }
     class OrderFulfilmentAdapter {
         <<adapter, application service, Dist, Conc>>
@@ -23,7 +23,7 @@ classDiagram
     }
     class PaidGroupDealService {
         <<application service, Conc, Evt>>
-        +joinConfirmed(dealId: UUID, paid: PaidParticipation, sharerUserId: UUID): ParticipationResult
+        +joinConfirmed(dealId, paid, sharerUserId): ParticipationResult
     }
     class CheckoutPayment {
         <<aggregate root, record>>
@@ -33,7 +33,7 @@ classDiagram
     class CheckoutPaymentRepository {
         <<interface, repository, Pers, Conc>>
         +lock(id: UUID): CheckoutPayment
-        +requireRefund(payment: CheckoutPayment, reason: String, eventId: String): void
+        +requireRefund(payment, reason, eventId): void
     }
     class PaymentBusinessPort {
         <<interface, Dist, Conc>>
@@ -45,7 +45,7 @@ classDiagram
         -targetSize: int
         -currentSize: int
         -status: DealStatus
-        +joinPaid(payment: PaidParticipation, alreadyMember: boolean, now: Instant): PaidAdmission
+        +joinPaid(payment, alreadyMember, now): PaidAdmission
     }
     class PaidGroupDealRepository {
         <<interface, repository, Pers, Conc>>
@@ -53,7 +53,7 @@ classDiagram
     }
     class PaidGroupDealMapper {
         <<interface, mapper, Pers, Conc>>
-        +updateDeal(deal: BizGroupDealDO, expectedSize: int, expectedStatus: String): int
+        +updateDeal(deal, expectedSize, expectedStatus): int
     }
     class PaidGroupDealRepositoryImpl {
         <<adapter, Pers>>

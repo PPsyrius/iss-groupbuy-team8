@@ -1,4 +1,4 @@
-%% frame: Two buyers, part 2: the member joins by paying and the team succeeds (design, commerce-svc)
+%% frame: Two buyers, part 2: the member joins by paying and the team succeeds
 sequenceDiagram
     actor Member as member : Buyer
     participant Api as api : StripeCheckoutController
@@ -17,7 +17,6 @@ sequenceDiagram
     Wh->>App: handleStripeWebhook(payload, signatureHeader)
     App->>Svc: handleWebhook(rawBody, signature)
     critical settlement tx: REQUIRED, READ COMMITTED, 10 s
-        Svc->>Svc: settle(session, eventId, type, operator, id)
         Svc->>Pay: claimEvent(eventId, type)
         Svc->>Ofa: lockForSettlement(quote): lock 1 team, lock 2 intent
         Svc->>Pay: lock(id): lock 3 payment
@@ -38,6 +37,4 @@ sequenceDiagram
             Svc->>Pay: recordOutcome(…, "REFUND_REQUIRED")
         end
     end
-    Svc-->>App: void
-    App-->>Wh: void
     Wh-->>Stripe: HTTP 200
