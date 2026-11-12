@@ -1,5 +1,11 @@
 # Pan's Phase D effort — reconstruction for #789
 
+## 12 November 2026 — owner confirmation
+
+Pan explicitly confirmed **8 person-days for Phase D and 19.5 person-days in total** during the review of PR #798. These are now his agreed effort estimates, not measured hours. This confirmation supersedes the earlier lack of owner confirmation below; it does not confirm other members' estimates or change the reconstruction's evidence window through 12 November.
+
+## Original reconstruction before owner confirmation
+
 **Working estimate: 8 person-days additional, or 19.5 with the earlier 11.5.** This is an assumption-based reconstruction, not measured labour or a statement that Pan personally agreed to eight days. The owner asked for a calculation using the available conversation/session record, board snapshots and sprint logs. The result covers identified post-presentation work through **12 November**, not future work through the 16 November deadline.
 
 ## Method and exclusions

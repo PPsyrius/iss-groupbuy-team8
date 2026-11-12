@@ -156,12 +156,20 @@
   caption: caption,
 )
 
-// One set of repository links for the whole report (style.md S-13). Every link is pinned to one
-// commit, `freeze`, so a reader sees the files as they were at submission. Until the freeze
-// commit exists on dev, `freeze` is dev; set it to the freeze sha before submitting.
+// Keep released source, published evidence and the report stack distinct. Explicit revisions
+// preserve older inspected implementations; publication is not a new application release.
 #let repo = "https://github.com/PPsyrius/iss-groupbuy-team8"
-#let freeze = "dev"
-#let src(path, body) = link(repo + "/blob/" + freeze + "/" + path, body)
+#let freeze = "3a893036d70d028b29ae13ebf820283571c1ae00"
+#let evidence-freeze = "27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6"
+#let report-base = "81a8d0fb8ae128dc424d0e9d630083c39c691805"
+#let src(path, body, rev: none) = {
+  let snapshot = if rev != none { rev }
+    else if path.starts-with("docs/swe5001/evidence/20261111-cost-explorer/") { report-base }
+    else if path.starts-with("docs/swe5001/evidence/") { evidence-freeze }
+    else if path.starts-with("docs/swe5001/report/") { report-base }
+    else { freeze }
+  link(repo + "/blob/" + snapshot + "/" + path, body)
+}
 #let iss(n) = link(repo + "/issues/" + str(n))[\##n]
 #let pr(n) = link(repo + "/pull/" + str(n))[\##n]
 #let run(id, body) = link(repo + "/actions/runs/" + str(id), body)

@@ -1,8 +1,14 @@
-# Issue #789 — upcoming PR closure checklist
+# Issue #789 — historical closure checklist and report follow-up
+
+12 November publication update: PR #795 merged at `27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6`, closing #789. The checklist and exact-base receipts below describe that earlier handoff, not current publication status. The newer report follow-up targets PR #801's branch; it needs its own source/PDF verification. The historical checker accepts `--report-root <original-combined-report>` and compares frozen metadata against the reachable #795 merge, without requiring an orphaned object.
+
+13 November status amendment: #801 is merged at `81a8d0fb` and #802 targets `dev`. The checker now compares frozen metadata with recorded SHA-256 constants, not merge bytes. Its `--report-root` source checks retain their historical combined-layout scope; current split-report checks are separate.
 
 The PR answers [#789](https://github.com/PPsyrius/iss-groupbuy-team8/issues/789) and [Liu Jin's ten-point review](https://github.com/PPsyrius/iss-groupbuy-team8/issues/789#issuecomment-6813180582). The [140-page styled PDF](../20261112-peer-style-pdf-review/README.md) is the preserved before artifact; the separate corrected build is recorded below. Use `Closes #789` in the PR body; integration and acceptance are pre-merge checks.
 
 ## Original questions and requests
+
+12 November owner-confirmation addendum: Pan explicitly agreed to **8 Phase D person-days and 19.5 total** ([record](effort-estimate.md#12-november-2026--owner-confirmation)). Item 7 below describes the earlier handoff before that confirmation; the figures remain estimates, and other members' confirmation status is unchanged.
 
 | Item | PR deliverable / evidence | Closure boundary |
 | --- | --- | --- |

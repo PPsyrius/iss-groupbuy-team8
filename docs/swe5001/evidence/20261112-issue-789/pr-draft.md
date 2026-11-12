@@ -1,5 +1,7 @@
 # PR draft
 
+Historical draft: PR #795 merged at `27530a4d` on 12 November and closed #789. This preserved body is not the follow-up PR for the #801 report stack.
+
 **Title:** `docs(swe5001): consolidate evidence, audits and #789 corrections`
 
 **Base:** `dev` · **Head:** `docs/swe5001-must-fix-evidence`

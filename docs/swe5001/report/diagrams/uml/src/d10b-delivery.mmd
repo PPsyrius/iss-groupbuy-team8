@@ -4,6 +4,8 @@ activityDiagram
         start S
         action PR["Open the promotion\nPR, dev into prod"]
         action PS["promotion-source:\nhead is our dev"]
+        decision SourceOk
+        flowend SourceFailed
         fork FG
         action SI["service-images: build\nand scan, no export"]
         action IP["infra-plan:\ninfra-swe5001 checks"]
@@ -13,7 +15,7 @@ activityDiagram
         action Merge["Merge commit\ninto prod"]
         flowend E1
     }
-    lane "swe5001-deploy.yml (push to prod)" {
+    lane "swe5001-deploy.yml (enabled prod run)" {
         start S3
         action Img["images: build,\nscan, export"]
         decision D1
@@ -25,8 +27,8 @@ activityDiagram
         merge F3
         action Rel["release: publish SPA,\npromote the digests"]
         merge M
-        action Down["down (always):\nenv-down.sh,\nenv-status.sh"]
-        action Ev["evidence (always):\nmerge stage receipts"]
+        action Down["down (always):\nattempt destroy\nand absence check"]
+        action Ev["evidence (always):\nattempt receipt merge"]
         flowend E
     }
     lane "swe5001-env.yml" {
@@ -38,7 +40,9 @@ activityDiagram
     }
     S --> PR
     PR --> PS
-    PS --> FG
+    PS --> SourceOk
+    SourceOk --> FG : [passed]
+    SourceOk --> SourceFailed : [failed]
     FG --> SI
     FG --> IP
     SI --> J
@@ -61,7 +65,7 @@ activityDiagram
     F3 --> M
     Rel --> M
     M --> Down
-    Down --> Ev
+    Down --> Ev : [any outcome]
     Ev --> E
     S2 --> Cron
     Cron --> Disp
@@ -70,14 +74,16 @@ activityDiagram
 %% at S 0,0
 %% at PR 0,1
 %% at PS 0,2
-%% at FG 0,3
-%% at SI 0,4
-%% at IP 1,4
-%% at J 0,5
-%% at G 0,6
-%% at EB 1,6
-%% at Merge 0,7
-%% at E1 0,8
+%% at SourceOk 0,3
+%% at SourceFailed 1,3
+%% at FG 0,4
+%% at SI 0,5
+%% at IP 1,5
+%% at J 0,6
+%% at G 0,7
+%% at EB 1,7
+%% at Merge 0,8
+%% at E1 1,8
 %% at S3 3,0
 %% at Img 2,0
 %% at D1 2,1
