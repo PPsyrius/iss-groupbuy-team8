@@ -15,6 +15,11 @@ classDiagram
         <<control>>
         +paymentReported(report)
     }
+    class PaymentGateway {
+        <<boundary>>
+        +requestPayment(payment)
+        +paid(report)
+    }
     class Product {
         <<entity>>
         -title: Text
@@ -80,7 +85,8 @@ classDiagram
     }
 %% at JoinTeamUI 1,0
 %% at Account 2,0
-%% at PayUpfrontControl 3.3,0.35
+%% at PayUpfrontControl 3,0
+%% at PaymentGateway 4,0
 %% at Product 1,1
 %% at JoinTeamControl 2,1
 %% at ResolveTeamControl 3,1
@@ -95,8 +101,11 @@ classDiagram
 %% mside JoinTeamControl Order left right
 %% mside JoinTeamControl PurchaseIntent right left
 %% mside Payment PurchaseIntent left right
+%% mside PayUpfrontControl JoinTeamControl left right
     JoinTeamUI "1" -- "1" JoinTeamControl
+    PaymentGateway "1" -- "1" PayUpfrontControl
     PayUpfrontControl "1" --> "1" JoinTeamControl : base use case
+    PayUpfrontControl "1" --> "1" Payment
     JoinTeamControl "1" --> "1" Account
     JoinTeamControl "1" --> "1" Product
     JoinTeamControl "1" --> "1" ResolveTeamControl : last seat
