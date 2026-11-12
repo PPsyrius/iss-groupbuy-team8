@@ -1,5 +1,6 @@
 // SWE5001 Team 8 — Final Project Report
-// Structure follows "02 Project Report Template for Practice Project" exactly.
+// Structure follows "02 Project Report Template for Practice Project" exactly; the look follows
+// the SWE5006 report (docs/swe5006/report/typst/template.typ, through lib.typ `style`).
 // Build (from the repository root):
 //   mkdir -p docs/swe5001/report/build
 //   typst compile --root . docs/swe5001/report/main.typ docs/swe5001/report/build/report.pdf
@@ -7,35 +8,68 @@
 #import "lib.typ": *
 #show: style
 
-// Cover page (template: title, module, team, members)
-#page(footer: none)[
-  #v(1fr)
-  #image("../../nus-iss-logo.png", width: 5cm)
-  #v(1.5cm)
-  #text(24pt, weight: "bold", fill: accent)[Project Report for BlocBuy]
-  #v(0.3cm)
-  #text(13pt)[A Scalable Community Group-Buying Platform]
-  #v(1cm)
-  #text(12pt)[Practice Module for Graduate Certificate in Architecting Scalable Systems]
-  #v(0.4cm)
-  #text(12pt)[Team 8]
-  #v(0.6cm)
-  #text(11pt)[
-    *Members:* \
-    Lim Jiechao \
-    Liu Jin \
-    Panpakorn Siripanich \
-    Wang Ziang \
-    Yu Qianshuo
-  ]
-  #v(0.6cm)
-  #text(10pt)[Repository: #link("https://github.com/PPsyrius/iss-groupbuy-team8")]
-  #v(1fr)
-]
+// Cover page: the SWE5006 title page (template.typ `report`, the block after `v(1fr)`),
+// replicated here because `report` always prints a "Dev environment" row and puts its contents
+// straight after the cover, while this report has no live environment to name and adds the
+// lists of figures and tables. Values, sizes and colours are the template's.
+#{
+  let ink = rgb("#1B1A18")
+  let muted = rgb("#6B665E")
+  let red = rgb("#E8402A")
+  let label(body) = pad(top: 2.5pt, text(size: 8.5pt, weight: "bold", tracking: 0.8pt, fill: muted, upper(body)))
+  let person(s) = {
+    let m = s.match(regex("^(.*?)\s*\((.*)\)$"))
+    if m != none [#m.captures.at(0) #text(fill: muted)[(#m.captures.at(1))]] else { s }
+  }
+  let members = ("Lim Jiechao", "Wang Ziang (Eric)", "Liu Jin", "Yu Qianshuo (Yorik)", "Panpakorn Siripanich (Pan)")
+  v(1fr)
+  block(width: 100%, {
+    set par(spacing: 0pt, leading: 0.55em)
+    block(width: 2.2cm, height: 4pt, fill: red)
+    v(22pt)
+    text(size: 13pt, weight: "bold", tracking: 1.5pt, fill: red, upper("Project Report"))
+    v(10pt)
+    text(size: 52pt, weight: "bold", tracking: -1.5pt, fill: ink, "BlocBuy")
+    v(14pt)
+    text(size: 14pt, fill: ink, "Practice Module for Graduate Certificate in Architecting Scalable Systems")
+    v(44pt)
+    line(length: 100%, stroke: 0.5pt + rgb("#D8D2C8"))
+    v(14pt)
+    grid(columns: (3.6cm, 1fr), row-gutter: 16pt,
+      label[Team], text(weight: "bold", "Team 8"),
+      label[Members], stack(spacing: 7pt, ..members.map(person)),
+      // The template prints the repository as plain text; here it is also a link, in body ink.
+      label[Repository], text(size: 10pt, link(repo, text(fill: ink, "github.com/PPsyrius/iss-groupbuy-team8"))),
+    )
+  })
+  v(1fr)
+  pagebreak()
+}
 
-#outline(title: [Contents], depth: 3, indent: auto)
-#outline(title: [List of figures], target: figure.where(kind: image))
-#outline(title: [List of tables], target: figure.where(kind: table))
+// Front matter: Contents, List of figures, List of tables, each titled in the face of the
+// SWE5006 Contents title (template.typ `report`: 16 pt bold heading ink, 12 pt above, 18 pt
+// below; a plain block, not a heading, so it has no number, no contents entry and no running
+// head), entries 9 pt apart with dot leaders. Contents: level 1 in capitals, indent 0.5 cm a
+// level, depth 3, as the template.
+#let front-title(body) = block(above: 12pt, below: 18pt, text(size: 16pt, weight: "bold", fill: tpl.heading-ink, body))
+#{
+  front-title[Contents]
+  show outline.entry: set block(spacing: 9pt)
+  show outline.entry.where(level: 1): it => upper(it)
+  outline(title: none, depth: 3, indent: n => n * 0.5cm)
+}
+#pagebreak()
+#{
+  front-title[List of figures]
+  show outline.entry: set block(spacing: 9pt)
+  outline(title: none, target: figure.where(kind: image))
+}
+#pagebreak()
+#{
+  front-title[List of tables]
+  show outline.entry: set block(spacing: 9pt)
+  outline(title: none, target: figure.where(kind: table))
+}
 
 #heading(numbering: none, outlined: true)[Abbreviations]
 
