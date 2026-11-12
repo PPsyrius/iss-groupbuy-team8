@@ -1,0 +1,98 @@
+%% frame: Aggregates of identity, catalog and notification
+classDiagram
+    class UserStatus {
+        <<enumeration>>
+        ACTIVE
+        DISABLED
+    }
+    class User {
+        <<aggregate root>>
+        -id: UUID
+        -email: String
+        -status: UserStatus
+        +registerViaOAuth(source: RegisterSource, email: String, displayName: String, avatarUrl: String): User «static»
+        +ensureActive(): void
+        +touchLogin(at: Instant): void
+        +disable(): void
+    }
+    class OAuthIdentity {
+        <<aggregate root>>
+        -userId: UUID
+        -provider: OAuthProvider
+        -providerUserId: String
+        +bind(userId: UUID, provider: OAuthProvider, providerUserId: String, email: String, displayName: String, avatarUrl: String, rawProfile: String): OAuthIdentity «static»
+        +touchLogin(at: Instant, email: String, displayName: String, avatarUrl: String, rawProfile: String): void
+    }
+    class Notification {
+        <<aggregate root, record>>
+        +id: UUID
+        +eventId: UUID
+        +userId: UUID
+        +type: NotificationType
+        +referenceId: UUID
+        +title: String
+        +content: String
+        +createTime: Instant
+    }
+    class TeamPriceQuote {
+        <<entity, record>>
+        +id: UUID
+        +productId: UUID
+        +ownerId: UUID
+        +policyVersion: int
+        +amount: BigDecimal
+        +expiresAt: Instant
+    }
+    class ProductTeamTerms {
+        <<value object, record>>
+        +targetSize: Integer
+        +lifetimeSeconds: Integer
+        +configured(): boolean
+    }
+    class Product {
+        <<aggregate root>>
+        -id: UUID
+        -originalPrice: BigDecimal
+        -stock: int
+        -version: int
+        +draft(id: UUID, productNo: String, details: ListingDetails): Product «static»
+        +revise(details: ListingDetails): Product
+        +configureTeamTerms(targetSize: int, lifetimeSeconds: int): Product
+        +publish(): Product
+        +delist(): Product
+        +requireDeletable(): void
+    }
+    class TeamPricePolicy {
+        <<aggregate root, record>>
+        +productId: UUID
+        +amount: BigDecimal
+        +currency: String
+        +validFrom: Instant
+        +validUntil: Instant
+        +version: int
+        +requireQuotable(product: Product, now: Instant): void
+        +requireStartableWindow(now: Instant): void
+    }
+    class ProductStatus {
+        <<enumeration>>
+        DRAFT
+        ON_SALE
+        OFF_SALE
+    }
+%% at UserStatus 0,0
+%% at User 1,0
+%% at OAuthIdentity 2,0
+%% at Notification 0,1
+%% at TeamPriceQuote 2,1
+%% at ProductTeamTerms 1,3
+%% at Product 1,2
+%% at TeamPricePolicy 2,2
+%% at ProductStatus 0,2
+    User "*" --> "1" UserStatus : status
+    OAuthIdentity ..> User : id
+    Notification ..> User : id
+    Product *-- ProductTeamTerms : teamTerms
+    Product "*" --> "1" ProductStatus : status
+    TeamPricePolicy ..> Product : id
+    TeamPriceQuote ..> Product : id
+    TeamPriceQuote ..> TeamPricePolicy : policyVersion

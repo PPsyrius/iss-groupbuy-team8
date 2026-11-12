@@ -1,0 +1,60 @@
+%% frame: CI on a pull request into dev, then on dev
+activityDiagram
+    lane "GitHub: dev" {
+        start S
+        action Open["PR into dev"]
+        fork F
+        join J
+        action Merge["Squash merge"]
+        end E
+    }
+    lane "ci-backend.yml" {
+        action BQ["build-quality: Maven verify, Checkstyle"]
+        fork FB
+        action CC["contract-check"]
+        action Sonar["SonarCloud Backend"]
+        action Dock["docker: build image, boot smoke test, Trivy image scan"]
+        action DevPath["On dev:\npackage-dev,\npublish-ecr-dev,\ndeploy-existing-ec2"]
+    }
+    lane "security.yml" {
+        action Sec["gitleaks, trivy-deps, trivy-config"]
+        note NQ["codeql is off:\nENABLE_CODEQL\nis false"]
+    }
+    lane "swe5001-service-images.yml" {
+        action Pkg["Package the JAR (no tests)"]
+        action Img["Build ARM64 image"]
+        action Scan["Trivy image scan: fixable HIGH or CRITICAL"]
+        decision Vuln
+        flowend Fail
+    }
+    lane "infra-swe5001.yml" {
+        action Static["static: terraform test (mocked provider), Checkov, Trivy config"]
+        action Plan["plan: foundation only"]
+    }
+    S --> Open
+    Open --> F
+    F --> BQ
+    F --> Sec
+    F --> Pkg
+    F --> Static
+    BQ --> FB
+    FB --> CC
+    FB --> Sonar
+    CC --> Dock
+    Sonar --> J
+    Dock --> J
+    Sec --> J
+    NQ .. Sec
+    Pkg --> Img
+    Img --> Scan
+    Scan --> Vuln
+    Vuln --> Fail : [found]
+    Vuln --> J : [none]
+    Static --> Plan
+    Plan --> J
+    J --> Merge : [green, approved]
+    Merge --> DevPath
+    DevPath --> E
+%% at Fail 5,6
+%% at Static 6,3
+%% at Plan 6,4

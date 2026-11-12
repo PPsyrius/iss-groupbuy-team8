@@ -1,0 +1,103 @@
+%% frame: Commerce database, 1 of 2: catalogue and team purchase (no foreign keys)
+classDiagram
+    class log_product_team_terms {
+        <<table>>
+        id: uuid {PK}
+        product_id: uuid
+        product_version: int
+        new_target_size: int
+        new_lifetime_seconds: int
+        team_price_version: int
+    }
+    class biz_product {
+        <<table>>
+        id: uuid {PK}
+        product_no: varchar {partial UK}
+        status: varchar
+        stock: int
+        sold_count: int
+        team_target_size: int
+        team_lifetime_seconds: int
+        version: int
+    }
+    class biz_team_price_policy {
+        <<table>>
+        id: uuid {PK}
+        product_id: uuid
+        amount: numeric
+        valid_until: timestamptz
+        version: int
+        {UK: product_id, version}
+    }
+    class biz_share_invite {
+        <<table>>
+        id: uuid {PK}
+        invite_ref: varchar {partial UK}
+        deal_id: uuid
+        sharer_user_id: uuid
+        {partial UK: deal_id, sharer_user_id}
+    }
+    class biz_group_deal {
+        <<table>>
+        id: uuid {PK}
+        deal_no: varchar {partial UK}
+        product_id: uuid
+        leader_user_id: uuid
+        target_size: int
+        current_size: int
+        status: varchar
+        expire_time: timestamptz
+        version: int
+    }
+    class biz_team_price_quote {
+        <<table>>
+        id: uuid {PK}
+        product_id: uuid
+        owner_id: uuid
+        policy_version: int
+        amount: numeric
+        expires_at: timestamptz
+    }
+    class biz_share_credit {
+        <<table>>
+        id: uuid {PK}
+        deal_id: uuid
+        payment_id: uuid {partial UK}
+        sharer_user_id: uuid
+        invitee_user_id: uuid
+    }
+    class biz_group_member {
+        <<table>>
+        id: uuid {PK}
+        deal_id: uuid
+        user_id: uuid
+        payment_id: uuid {UK}
+        sharer_user_id: uuid
+        status: varchar
+        {partial UK: deal_id, user_id}
+    }
+    class biz_group_participation_receipt {
+        <<table>>
+        id: uuid {PK}
+        payment_id: uuid {UK}
+        deal_id: uuid
+        request_fingerprint: varchar
+        outcome: varchar
+    }
+%% at log_product_team_terms 0,0
+%% at biz_product 1,0
+%% at biz_team_price_policy 2,0
+%% at biz_share_invite 0,1
+%% at biz_group_deal 1,1
+%% at biz_team_price_quote 2,1
+%% at biz_share_credit 0,2
+%% at biz_group_member 1,2
+%% at biz_group_participation_receipt 2,2
+    biz_product "1" .. "0..*" log_product_team_terms
+    biz_product "1" .. "0..*" biz_team_price_policy
+    biz_team_price_policy "1" .. "0..*" biz_team_price_quote
+    biz_product "1" .. "0..*" biz_group_deal
+    biz_group_deal "1" .. "0..*" biz_share_invite
+    biz_group_deal "1" .. "1..*" biz_group_member
+    biz_group_member "1" .. "0..1" biz_share_credit
+    biz_group_deal "0..1" .. "0..*" biz_group_participation_receipt

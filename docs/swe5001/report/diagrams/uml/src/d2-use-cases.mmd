@@ -1,0 +1,71 @@
+%% frame: BlocBuy use cases in scope
+usecaseDiagram
+    actor Buyer
+    actor Admin["Platform administrator"]
+    actor Scheduler["Scheduler"] <<time>>
+    actor Stripe["Stripe\n(test mode)"] <<system>>
+    actor Google["Google\n(OAuth 2.0)"] <<system>>
+    rectangle "BlocBuy" {
+        usecase UC11["UC11 Receive notifications of team and payment events"]
+        usecase UC1["UC1 Browse and search team-priced products"]
+        usecase UC8["UC8 View my orders and my teams"]
+        usecase UC7["UC7 Share an invitation"]
+        usecase UC3["UC3 Initiate a team by paying for the first membership"]
+        usecase UC4["UC4 Join an existing team by paying"]
+        usecase UC2["UC2 Sign in with Google"]
+        usecase UC9["UC9 Administer product listings"]
+        usecase UC5["UC5 Resolve a team to succeeded or expired"]
+        usecase UC6["UC6 Refund members of an expired team"]
+        usecase UC10["UC10 Pay for a membership upfront"]
+        usecase UC12["UC12 Credit the sharer of a referred join"]
+        note N1["condition: {team expired}\nextension point: resolved"]
+        note N2["condition: {invite link used}\nextension point: admission"]
+    }
+    UC5 : resolved
+    UC4 : admission
+    Buyer -- UC11
+    Buyer -- UC1
+    Buyer -- UC8
+    Buyer -- UC7
+    Buyer -- UC3
+    Buyer -- UC4
+    Buyer -- UC2
+    Admin -- UC2
+    Admin -- UC9
+    UC3 ..> UC10 : include
+    UC4 ..> UC10 : include
+    UC12 ..> UC4 : extend
+    UC6 ..> UC5 : extend
+    N1 .. UC6
+    N2 .. UC12
+    Scheduler -- UC5
+    Stripe -- UC6
+    Stripe -- UC10
+    Google -- UC2
+%% at UC9 2,0
+%% at UC2 2,1
+%% at UC11 2,2
+%% at UC1 2,3
+%% at UC8 2,4
+%% at UC7 2,5
+%% at UC3 2,6
+%% at UC4 2,7
+%% at UC5 3,2
+%% at UC6 3,3
+%% at UC10 3,6
+%% at UC12 3,7
+%% at N2 3,8
+%% at N1 3,4
+%% at Admin 0,0
+%% at Buyer 0,4
+%% at Google 4,1
+%% at Scheduler 4,2
+%% at Stripe 4,5
+%% route Buyer UC2 vh
+%% route Buyer UC11 vh
+%% route Buyer UC1 vh
+%% route Buyer UC7 vh
+%% route Buyer UC3 vh
+%% route Buyer UC4 vh
+%% route Stripe UC6 vh
+%% route Stripe UC10 vh

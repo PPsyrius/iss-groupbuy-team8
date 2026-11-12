@@ -1,0 +1,74 @@
+%% frame: Aggregates of groupbuy
+classDiagram
+    class PaidMember {
+        <<entity, record>>
+        +dealId: UUID
+        +userId: UUID
+        +orderId: UUID
+        +status: String
+    }
+    class Product {
+        <<aggregate root>>
+    }
+    class ShareInvite {
+        <<aggregate root, record>>
+        +id: UUID
+        +ref: String
+        +dealId: UUID
+        +sharerUserId: UUID
+        +mint(dealId: UUID, sharerUserId: UUID, random: RandomGenerator): ShareInvite «static»
+        +isWellFormedRef(ref: String): boolean «static»
+        +attributes(joiningDealId: UUID, buyerId: UUID): boolean
+    }
+    class GroupDeal {
+        <<aggregate root>>
+        -id: UUID
+        -productId: UUID
+        -leaderUserId: UUID
+        -dealPrice: BigDecimal
+        -targetSize: int
+        -currentSize: int
+        -status: DealStatus
+        -expireTime: Instant
+        -successTime: Instant
+        ~startPaid(terms: NewDealTerms, payment: PaidParticipation, now: Instant): GroupDeal «static»
+        +joinPaid(payment: PaidParticipation, alreadyMember: boolean, now: Instant): PaidAdmission
+        +requireJoinWindow(now: Instant): void
+        +expire(now: Instant): GroupDeal
+    }
+    class ParticipationReceipt {
+        <<entity, record>>
+        +fingerprint: String
+        +result: ParticipationResult
+    }
+    class DealStatus {
+        <<enumeration>>
+        OPEN
+        SUCCEEDED
+        FAILED
+        EXPIRED
+        CANCELED
+        +canTransitionTo(target: DealStatus): boolean
+    }
+    class ShareCredit {
+        <<aggregate root, record>>
+        +dealId: UUID
+        +paymentId: UUID
+        +sharerUserId: UUID
+        +inviteeUserId: UUID
+        +creditTime: Instant
+        +of(joined: MemberJoined): ShareCredit «static»
+    }
+%% at PaidMember 0,0
+%% at Product 1,0
+%% at ShareInvite 2,0
+%% at GroupDeal 1,1
+%% at ParticipationReceipt 0,2
+%% at DealStatus 1,2
+%% at ShareCredit 2,1
+    GroupDeal *-- "*" PaidMember
+    GroupDeal *-- "*" ParticipationReceipt
+    GroupDeal --> DealStatus : status
+    GroupDeal ..> Product : id
+    ShareInvite ..> GroupDeal : id
+    ShareCredit ..> GroupDeal : id

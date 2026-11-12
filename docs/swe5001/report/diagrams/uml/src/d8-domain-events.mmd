@@ -1,0 +1,33 @@
+%% frame: In-process domain events in commerce-svc
+componentDiagram
+    component Commerce["commerce-svc"] <<subsystem>> {
+        component Pay["StripeCheckoutService"] <<application service>>
+        component Deals["PaidGroupDealService"] <<application service>>
+        component Expiry["GroupDealExpiryService"] <<application service>>
+        component Bus["ApplicationEventPublisher"] <<in-process event bus>> :::messaging
+        component RefundSub["TeamExpiryRefundSubscriber"] <<subscriber>> : BEFORE_COMMIT, @Order(20)
+        component OrderSub["OrderLifecycleSubscriber"] <<subscriber>> : BEFORE_COMMIT, @Order(10)
+        component Writer["IntegrationOutboxWriter"] <<subscriber>> : BEFORE_COMMIT, lowest precedence
+        component CreditSub["ShareCreditSubscriber"] <<subscriber>> : AFTER_COMMIT, REQUIRES_NEW
+        component CacheSub["OpenDealOfferCacheSubscriber"] <<subscriber>> : AFTER_COMMIT
+        database Outbox["sys_outbox"] <<table>>
+    }
+    Pay ..> Bus : PaymentSucceeded
+    Deals ..> Bus : MemberJoined, TeamSucceeded
+    Expiry ..> Bus : TeamExpired
+    Bus ..> RefundSub : TeamExpired
+    Bus ..> OrderSub : TeamSucceeded, TeamExpired
+    Bus ..> Writer : PaymentSucceeded, TeamSucceeded, TeamExpired
+    Bus ..> CreditSub : MemberJoined
+    Bus ..> CacheSub : MemberJoined, TeamSucceeded, TeamExpired
+    Writer ..> Outbox : inserts V1 envelope
+%% at Pay 0,0
+%% at Deals 1,0
+%% at Expiry 2,0
+%% at RefundSub 0,1
+%% at Bus 1,1
+%% at CacheSub 2,1
+%% at OrderSub 0,2
+%% at Writer 1,2
+%% at CreditSub 2,2
+%% at Outbox 1,3

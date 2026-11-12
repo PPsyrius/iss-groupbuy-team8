@@ -1,0 +1,61 @@
+%% frame: UC5 design, slice 3: the subscribers of a team's resolution (commerce-svc)
+classDiagram
+    class ApplicationEventPublisher {
+        <<interface, Evt>>
+        +publishEvent(event: Object): void
+    }
+    class TeamSucceeded {
+        <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +size: int
+        +at: Instant
+    }
+    class TeamExpired {
+        <<domain event, record>>
+        +dealId: UUID
+        +productId: UUID
+        +at: Instant
+    }
+    class OrderLifecycleSubscriber {
+        <<subscriber, Evt>>
+        +onTeamSucceeded(event: TeamSucceeded): void
+        +onTeamExpired(event: TeamExpired): void
+    }
+    class TeamExpiryRefundSubscriber {
+        <<subscriber, Evt>>
+        +onTeamExpired(event: TeamExpired): void
+    }
+    class IntegrationOutboxWriter {
+        <<subscriber, Evt, Dist>>
+        +onTeamSucceeded(event: TeamSucceeded): void
+        +onTeamExpired(event: TeamExpired): void
+    }
+    class OpenDealOfferCacheSubscriber {
+        <<subscriber, Evt>>
+        +onTeamSucceeded(event: TeamSucceeded): void
+        +onTeamExpired(event: TeamExpired): void
+    }
+    class OrderRepository {
+        <<interface, repository, Pers>>
+        +confirmByDealId(dealId: UUID): int
+        +cancelByDealId(dealId: UUID, canceledAt: Instant): int
+    }
+%% at OrderRepository 0,0
+%% at OrderLifecycleSubscriber 1,0
+%% at TeamExpiryRefundSubscriber 2,0
+%% at TeamSucceeded 0,1
+%% at ApplicationEventPublisher 1,1
+%% at TeamExpired 2,1
+%% at OpenDealOfferCacheSubscriber 0,2
+%% at IntegrationOutboxWriter 1,2
+    ApplicationEventPublisher ..> TeamSucceeded
+    ApplicationEventPublisher ..> TeamExpired
+    OrderLifecycleSubscriber ..> TeamSucceeded
+    OrderLifecycleSubscriber ..> TeamExpired
+    IntegrationOutboxWriter ..> TeamSucceeded
+    IntegrationOutboxWriter ..> TeamExpired
+    OpenDealOfferCacheSubscriber ..> TeamSucceeded
+    OpenDealOfferCacheSubscriber ..> TeamExpired
+    TeamExpiryRefundSubscriber ..> TeamExpired
+    OrderLifecycleSubscriber "1" --> "1" OrderRepository

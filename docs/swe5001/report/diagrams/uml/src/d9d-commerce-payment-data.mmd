@@ -1,0 +1,127 @@
+%% frame: Commerce database, 2 of 2: payment side and technical tables (no foreign keys)
+classDiagram
+    class biz_order {
+        <<table>>
+        id: uuid {PK}
+        order_no: varchar {partial UK}
+        payment_id: uuid {UK}
+        user_id: uuid
+        deal_id: uuid
+        status: varchar
+        version: int
+        {partial UK: deal_id, user_id}
+    }
+    class biz_purchase_intent {
+        <<table>>
+        id: uuid {PK}
+        user_id: uuid
+        operation: varchar
+        deal_id: uuid
+        product_id: uuid
+        quote_valid_until: timestamptz
+        fulfilled_payment_id: uuid {partial UK}
+        expired_at: timestamptz
+        version: int
+    }
+    class sys_outbox {
+        <<table>>
+        id: uuid = uuidv7 {PK}
+        event_type: varchar
+        aggregate_id: uuid
+        payload: jsonb
+        published_at: timestamptz
+        attempts: int
+    }
+    class sys_scheduler_lock {
+        <<table>>
+        id: uuid {PK}
+        lock_key: varchar {partial UK}
+        owner: varchar
+        locked_until: timestamptz
+        version: int
+    }
+    class log_payment_webhook_event {
+        <<table>>
+        id: uuid {PK}
+        event_id: varchar {UK}
+        payment_id: uuid
+        processing_result: varchar
+    }
+    class biz_payment {
+        <<table>>
+        id: uuid {PK}
+        payment_no: varchar {partial UK}
+        intent_id: uuid {partial UK, status = created}
+        user_id: uuid
+        request_key: varchar
+        checkout_session_id: varchar {partial UK}
+        status: varchar
+        version: int
+        {partial UK: user_id, request_key}
+    }
+    class biz_refund {
+        <<table>>
+        id: uuid {PK}
+        payment_id: uuid {UK}
+        intent_id: uuid
+        provider_refund_id: varchar {UK}
+        status: varchar
+        next_attempt_at: timestamptz
+        version: int
+    }
+    class sys_scheduled_item_retry {
+        <<table>>
+        id: uuid {PK}
+        job_key: varchar
+        item_id: uuid
+        retry_after: timestamptz
+        version: int
+        {partial UK: job_key, item_id}
+    }
+    class log_payment_review {
+        <<table>>
+        id: uuid {PK}
+        payment_id: uuid
+        reason: varchar
+        operator_id: varchar
+    }
+    class biz_payment_review_case {
+        <<table>>
+        case_id: uuid {PK}
+        payment_id: uuid {UK}
+        status: varchar
+        next_check_at: timestamptz
+    }
+    class log_refund_attempt {
+        <<table>>
+        id: uuid {PK}
+        refund_id: uuid
+        version: int
+        result: varchar
+    }
+    class sys_checkout_expiry_cursor {
+        <<table>>
+        id: uuid {PK}
+        job_name: varchar {UK}
+        last_create_time: timestamptz
+        last_payment_id: uuid
+    }
+%% at biz_order 0,0
+%% at biz_purchase_intent 1,0
+%% at sys_outbox 2,0
+%% at sys_scheduler_lock 3,0
+%% at log_payment_webhook_event 0,1
+%% at biz_payment 1,1
+%% at biz_refund 2,1
+%% at sys_scheduled_item_retry 3,1
+%% at log_payment_review 0,2
+%% at biz_payment_review_case 1,2
+%% at log_refund_attempt 2,2
+%% at sys_checkout_expiry_cursor 3,2
+    biz_purchase_intent "1" .. "0..*" biz_payment
+    biz_payment "1" .. "0..1" biz_order
+    biz_payment "0..1" .. "0..*" log_payment_webhook_event
+    biz_payment "1" .. "0..*" log_payment_review
+    biz_payment "1" .. "0..1" biz_payment_review_case
+    biz_payment "1" .. "0..1" biz_refund
+    biz_refund "1" .. "0..*" log_refund_attempt

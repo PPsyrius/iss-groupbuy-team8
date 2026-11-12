@@ -1,0 +1,36 @@
+%% frame: Two buyers, part 1: the leader starts a team, pays and shares the invite link (design, commerce-svc)
+sequenceDiagram
+    actor Leader as leader : Buyer
+    participant Api as api : StripeCheckoutController
+    participant Deals as deals : GroupDealController
+    actor Stripe as stripe : Stripe
+    participant Wh as wh : StripeWebhookController
+    participant App as app : StripePaymentAppService
+    participant Svc as svc : StripeCheckoutService
+    participant Ofa as adapter : OrderFulfilmentAdapter
+    participant Grp as groups : PaidGroupDealService
+
+    Note over Leader,Api: UC3: a START intent at the team price
+    Leader->>Api: intent(csrf, request)
+    Leader->>Api: checkout(csrf, key, request)
+    Api-->>Leader: CheckoutResult
+    Note over Leader,Stripe: the leader pays on Stripe Checkout
+    Stripe->>Wh: handleStripeEvent(payload, signatureHeader)
+    Wh->>App: handleStripeWebhook(payload, signatureHeader)
+    App->>Svc: handleWebhook(rawBody, signature)
+    critical settlement tx: REQUIRED, READ COMMITTED, 10 s
+        Svc->>Svc: settle(session, eventId, type, operator, id)
+        Svc->>Ofa: lockForSettlement(quote): lock 1 (no team row yet), lock 2
+        Note over Svc,Ofa: lock(id): lock 4
+        Svc->>Ofa: fulfil(event)
+        Ofa->>Grp: startConfirmed(terms, paid)
+        Grp-->>Ofa: ParticipationResult: applied, team OPEN, 1 of 2
+        Ofa-->>Svc: Outcome(dealId, orderId, null): leader's order PENDING
+    end
+    Svc-->>App: void
+    App-->>Wh: void
+    Wh-->>Stripe: HTTP 200
+    Note over Leader,Deals: UC7: the leader shares the team
+    Leader->>Deals: createInvite(csrf, dealId, response)
+    Deals-->>Leader: ShareInviteResponse(ref, dealId, productId, expiresAt)
+    Note over Leader,Deals: the leader sends the link to the member (@fig-d12b-two-buyers-join)
