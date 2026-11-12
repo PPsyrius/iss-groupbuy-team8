@@ -117,7 +117,7 @@ We deliver automatically to two targets: the shared SWE5006 development deployme
 
 #afig("d10c-image-scan-gate", orient: "portrait", [Image scan gate view (UML activity diagram). In both image jobs the scan follows the build, and a fixable HIGH or CRITICAL finding fails the job; the service image is exported only after a clean scan, and only on a deployment.])
 
-#afig("d10b-delivery", [Delivery view (UML activity diagram). A promotion merges into prod only after three green checks and a code-owner approval; a failure in any deployment job skips the later jobs and still reaches `down`, which always runs.])
+#afig("d10b-delivery", [Delivery view (UML activity diagram). A promotion merges into prod only after three green checks and an approving review, from a code owner where the change touches an owned path; a failure in any deployment job skips the later jobs and still reaches `down`, which always runs.])
 
 === Targets and approval boundary
 
@@ -192,7 +192,7 @@ On AWS, 13 promotions into `prod` ran the deployment between 6 October and 11 No
     [10 Nov, from 02:18], [Session: placement checks, then the V3 campaign], [Placement verified (§3.2); a read-only connection-limit report; manual pool and scaling changes; load failed (§4.1); the scheduled safety net destroyed the 120 runtime resources by 07:52], [#src("docs/swe5001/evidence/20261110-subnet-verification/README.md")[subnet verification], #src("docs/swe5001/evidence/20261110-load-preflight/README.md")[load preflight]],
     [11 Nov, 10:37–11:31], [Promotion #pr(785), run #run("42947289936")[42947289936], `3a893036`], [Passed; 120 resources created and destroyed; two of three alarm recipients unconfirmed], [GitHub run],
     [11 Nov, from 13:09], [Session: V2, then V3 r1, r2 and r3], [Monolith runtime destroyed (77 resources, absence at 13:09); distributed start-up and smoke passed in 30 min 59 s; we kept the runtime up after V3 r2 and ran V3 r3 on it from 18:39; V3 r1–r3 failed (§4.1)], [#src("docs/swe5001/evidence/20261111-load-reruns/README.md")[load reruns], #src("docs/swe5001/evidence/20261111-v3-r3/README.md")[V3 r3]],
-    [11 Nov, 21:28–22:54], [Session: V3 r4 from a load generator on AWS (`t3a.2xlarge`)], [k6 gates passed, no analyser verdict (§4.1); commerce bounds restored to two to six at 22:52; generator stopped, not terminated, at 22:54], [#src("docs/swe5001/evidence/20261111-v3-r4/README.md")[V3 r4]],
+    [11 Nov, 21:28–22:54], [Session: V3 r4 from a load generator on AWS (`t3a.2xlarge`)], [k6 gates passed, no analyser verdict (§4.1); commerce bounds restored to two to six at 22:52; generator stopped, not terminated, at 22:54; runtime and generator removed on 12 Nov after the nightly `down` failed (§2.2)], [#src("docs/swe5001/evidence/20261111-v3-r4/README.md")[V3 r4], #src("docs/swe5001/evidence/20261112-issue-789/cleanup.json")[cleanup record]],
   ),
   kind: table,
   caption: [Delivery runs of 17 October and every promotion and session from 9 to 11 November. Source: the GitHub runs and dated records named in each row.],
