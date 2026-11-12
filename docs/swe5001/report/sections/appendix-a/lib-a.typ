@@ -68,6 +68,11 @@
 // appendix heading or past the end of the document.
 #let afig(id, caption, lbl: auto, orient: auto, float: false) = {
   import "/docs/swe5001/report/diagrams/appendix-a/gen/" + id + ".typ": drawing, kind
+  // The kit draws each class box as a table, so lib.typ's report-table rule (`show table: set
+  // text(hyphenate: true)`) would reach it and hyphenate names ("StripeWebhookCon-troller").
+  // The kit already breaks a name between its camelCase words and sizes every box to its
+  // longest unbreakable piece; inside a drawing nothing is hyphenated, as in the SWE5006 report.
+  show table: set text(hyphenate: false)
   let lab = if lbl == auto { label("fig-" + id) } else { lbl }
   assert(orient in (auto, "landscape", "portrait"), message: "afig orient: auto, \"landscape\" or \"portrait\"")
   assert(not (orient == "landscape" and kind == "sequence"), message: id + ": a sequence diagram never turns landscape; split it")
