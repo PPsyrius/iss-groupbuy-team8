@@ -1,6 +1,6 @@
 #import "../../figures.typ": *
 
-// Number-only references ("A.37", "A.5") for dense trace tables.
+// Number-only references ("6.12", "5") for dense trace tables.
 #let rr(..ls) = ls.pos().map(l => ref(l, supplement: none)).join[, ]
 #let yes = sym.checkmark
 #let no(why) = [– #text(fill: muted, why)]
@@ -17,7 +17,7 @@ The tables below prove two things. First, every use case is realised by named de
 #[
 #show table: set text(8pt)
 #atable(
-  [Use case realisation matrix (traceability matrix, analysis → design). Read a row left to right: the analysis control, the design element that receives the trigger, the application services, aggregates and tables it uses, the events it raises (→ their subscribers), the strategies applied, the owning service and the bounded contexts whose aggregates the row uses (identity's HTTP check not counted), and the part with the detail. "Settled" means after the Stripe webhook of A.12.],
+  [Use case realisation matrix (traceability matrix, analysis → design). Read a row left to right: the analysis control, the design element that receives the trigger, the application services, aggregates and tables it uses, the events it raises (→ their subscribers), the strategies applied, the owning service and the bounded contexts whose aggregates the row uses (identity's HTTP check not counted), and the part with the detail. "Settled" means after the Stripe webhook of part 12.],
   <tbl-a-trace-uc>,
   columns: (auto, 1fr, 1.9fr, 1.55fr, 1.3fr, 1.55fr, 1.45fr, 0.6fr, 0.95fr),
   header: ([UC], [Analysis control], [Entry point and route], [Application services], [Aggregates and records], [Tables], [Events raised → consumed], [Strate\-gies], [Service, contexts, part]),
@@ -48,10 +48,10 @@ The tables below prove two things. First, every use case is realised by named de
   header: ([Use case], [S1 Lang], [S2 Pres], [S3 Dist], [S4 Pers], [S5 Ext], [S6 Sec], [S7 Sched], [S8 Conc], [S9 Evt]),
   [UC1 Browse], yes, yes, yes, yes, yes, yes, no[no timer], no[read only], yes,
   [UC2 Sign in], yes, yes, yes, yes, yes, yes, no[expiry by TTL], yes, no[no event],
-  [UC3 Start team], yes, yes, yes, yes, via[A.12], yes, yes, yes, no[no group event],
-  [UC4 Join team], yes, yes, yes, yes, via[A.12], yes, no[no timer], yes, yes,
+  [UC3 Start team], yes, yes, yes, yes, via[part 12], yes, yes, yes, no[no group event],
+  [UC4 Join team], yes, yes, yes, yes, via[part 12], yes, no[no timer], yes, yes,
   [UC5 Resolve team], yes, no[no screen], no[no remote call], yes, no[no provider], no[no request], yes, yes, yes,
-  [UC6 Refund], yes, via[A.12], yes, yes, yes, yes, yes, yes, yes,
+  [UC6 Refund], yes, via[part 12], yes, yes, yes, yes, yes, yes, yes,
   [UC7 Share], yes, yes, yes, yes, no[no provider], yes, no[manual query], yes, yes,
   [UC8 View mine], yes, yes, yes, yes, no[no provider], yes, no[no timer], yes, no[no event],
   [UC9 Administer], yes, yes, yes, yes, no[no provider], yes, no[no timer], yes, no[no event],
@@ -62,7 +62,7 @@ The tables below prove two things. First, every use case is realised by named de
 
 === Shared Design Elements <sec-a-trace-shared>
 
-A class drawn in more than one part is one class: the same name, role stereotype, member signatures and responsibility wherever it appears; only its strategy tags may differ between slices (@tbl-a-stereotypes). A slice shows only the members it uses (template rule 17), so a class may show fewer members in one part than in another, never different ones. @tbl-a-trace-shared lists each shared class with the figures that draw it; its stereotype is the one that A.1 (@tbl-a-stereotypes) gives its role. The aggregate roots are the 11 of report §3.1.4: `User`, `OAuthIdentity`, `Product`, `TeamPricePolicy`, `GroupDeal`, `ShareInvite`, `ShareCredit`, `PurchaseIntent`, `Order`, `CheckoutPayment` and `Notification`. `TeamPriceQuote` is an entity of `TeamPricePolicy`; `RefundWork` is a claim snapshot of a refund record, and `PaymentReviewCase` is a read model inside `CheckoutPayment`; none of the three is a root.
+A class drawn in more than one part is one class: the same name, role stereotype, member signatures and responsibility wherever it appears; only its strategy tags may differ between slices (@tbl-a-stereotypes). A slice shows only the members it uses (template rule 17), so a class may show fewer members in one part than in another, never different ones. @tbl-a-trace-shared lists each shared class with the figures that draw it; its stereotype is the one that part 1 (@tbl-a-stereotypes) gives its role. The aggregate roots are the 11 of report §3.1.4: `User`, `OAuthIdentity`, `Product`, `TeamPricePolicy`, `GroupDeal`, `ShareInvite`, `ShareCredit`, `PurchaseIntent`, `Order`, `CheckoutPayment` and `Notification`. `TeamPriceQuote` is an entity of `TeamPricePolicy`; `RefundWork` is a claim snapshot of a refund record, and `PaymentReviewCase` is a read model inside `CheckoutPayment`; none of the three is a root.
 
 #[
 #show table: set text(8pt)
@@ -124,7 +124,7 @@ Each lifecycle is drawn once, in the part that owns the entity (template rule 23
   <tbl-a-trace-life>,
   columns: (1fr, 1.05fr, 2.4fr, 1fr),
   header: ([Lifecycle (state type)], [Statechart, owner], [Parts that cause transitions (transition)], [Parts that only read it]),
-  [Purchase intent], [#rr(<fig-a-uc03-st-intent>), UC3 (#rr(<sec-a-uc03>))], [UC3, UC4: issue; Pay upfront through `OrderFulfilmentAdapter`: mark fulfilled, or refund a payment on a lapsed or expired intent; the intent sweep (A.2 S7): expire], [Pay upfront (the frozen `CheckoutQuote`)],
+  [Purchase intent], [#rr(<fig-a-uc03-st-intent>), UC3 (#rr(<sec-a-uc03>))], [UC3, UC4: issue; Pay upfront through `OrderFulfilmentAdapter`: mark fulfilled, or refund a payment on a lapsed or expired intent; the intent sweep (part 2, S7): expire], [Pay upfront (the frozen `CheckoutQuote`)],
   [Team (`DealStatus`)], [#rr(<fig-a-uc05-st-deal>), UC5 (#rr(<sec-a-uc05>))], [UC3: start (→ OPEN); UC4: join, and fill (→ SUCCEEDED); a late payment on a closed team (refund owed); UC5: expiry tick (→ EXPIRED)], [UC1 (open offers), UC7, UC8, UC9, Notifications],
   [Order (`OrderStatus`)], [#rr(<fig-a-uc05-st-order>), UC5 (#rr(<sec-a-uc05>))], [UC3, UC4: create PENDING in `OrderFulfilmentAdapter`; UC5: confirm or cancel in `OrderLifecycleSubscriber`], [UC8],
   [Checkout payment (`CheckoutPayment.Status`)], [#rr(<fig-a-pay-st-payment>), Pay upfront (#rr(<sec-a-pay-upfront>))], [Pay upfront: prepare, bind, settle, fail, cancel, recover (the buyer acts from UC3 or UC4; Stripe reports through the webhook)], [UC6 (a team's succeeded payments)],
@@ -133,27 +133,27 @@ Each lifecycle is drawn once, in the part that owns the entity (template rule 23
   [Outbox event (`sys_outbox` row)], [#rr(<fig-a-ntf-st-outbox>), Notifications (#rr(<sec-a-notifications>))], [UC4, UC5, Pay upfront: record, through their domain events; Notifications: relay, retry, fail, replay, retention], [—],
 )
 
-=== Decisions in the Appendix <sec-a-trace-ad>
+=== Decisions in the Source Book <sec-a-trace-ad>
 
-@tbl-a-trace-ad starts from the architecture decision register (report §3.1.1, §3.2.1 and §3.3) and shows where the appendix realises each decision. Ten of the twenty decisions shape the design model. The other ten govern deployment, scaling and delivery and have no design class. S5 rests on backend ADRs rather than a chapter-3 decision, so it has its own row.
+@tbl-a-trace-ad starts from the architecture decision register (report §3.1.1, §3.2.1 and §3.3) and shows where the source book realises each decision. Ten of the twenty decisions shape the design model. The other ten govern deployment, scaling and delivery and have no design class. S5 rests on backend ADRs rather than a chapter-3 decision, so it has its own row.
 
 #[
 #show table: set text(8pt)
 #atable(
-  [AD → appendix index. Each architecture decision, the strategy that carries it (@tbl-a-strategies), the design elements and parts that realise it, and the NFRs it serves through that strategy.],
+  [AD → source book index. Each architecture decision, the strategy that carries it (@tbl-a-strategies), the design elements and parts that realise it, and the NFRs it serves through that strategy.],
   <tbl-a-trace-ad>,
   columns: (1.7cm, 1.3fr, auto, 2.5fr, 0.85fr),
   header: ([AD], [Decision (short)], [Strategy], [Realised in (design elements, parts)], [NFRs]),
-  [AD-01], [Strangler migration; monolith kept as fallback], [S1], [One codebase whose classes run in either topology; wiring in `PaymentIntegrationConfiguration`. The S1 line of A.3–A.8 and A.11–A.13.], [05, 06, 26],
-  [AD-02], [Split where no transaction crosses], [S3, S8], [Payment and order stay in commerce-svc, so settlement is one local transaction behind `PaymentBusinessPort` → `OrderFulfilmentAdapter` (A.5, A.6, A.8, A.12); notification-svc shares no transaction (A.13).], [05, 07, 13, 27, 64, 66],
-  [AD-03], [One database per service], [S4, S8], [Each table has one owning service: identity (A.4), commerce (A.3, A.5–A.12), notification (A.13). Several aggregates share one local transaction under the S8 justification (A.4–A.8, A.11, A.12).], [05, 13, 21, 30],
-  [AD-04], [Outbox → SNS → SQS, idempotent consumers], [S9], [`IntegrationOutboxWriter`, `OutboxRelayService`, `SqsNotificationEventConsumer`, `ConsumedMessageRepository` (A.13); producers in A.6, A.7, A.12.], [30, 39, 59–61, 63],
-  [AD-05], [Shared session in Valkey, roles inside], [S6], [`LoginSessionPublisher`, `RedisLoginSnapshotGateway`, `SessionStpInterface` (A.4, #rr(<fig-a-str-s6-rbac>)); the buyer's id from the session in A.5, A.6 and A.9–A.13.], [01, 46, 47, 58, 68],
-  [AD-06], [One synchronous call, commerce → identity, fail closed], [S3; S5 for the webhook], [`UserAppService` → `RemoteUserAppService` (A.5, A.6, A.9, A.11, A.12); the webhook's settlement depends on it at run time (A.12).], [66],
-  [Backend ADRs 0001, 0004, 0005], [Provider isolation; no chapter-3 AD], [S5], [One port and one adapter per external system: `OAuthIdentityGateway` (A.4, fails closed), `ListingSearchReranker` (A.3, fails open to the database order), `CheckoutGateway` (A.12), `RefundGateway` (A.8), `OutboxEventTransport` (A.13).], [21–23, 31, 50, 66],
-  [AD-09], [CloudFront → restricted ALB], [S2, S3, S6], [Same-origin `/api/v1` routes of every controller in @tbl-a-trace-uc; ALB path routing of `/api/v1/notifications` to notification-svc (A.13).], [07, 12, 16, 25],
-  [AD-11], [One RDS server, three databases], [S4], [The identity, commerce and notification databases of A.4, A.5–A.12 and A.13.], [05, 13],
-  [AD-16], [Jobs stay with their data, under a lease], [S7], [`LeasedJobRunner`, `SchedulerLeaseRepository`; `PurchaseIntentExpiryJob` (A.5), `TeamExpirySweepJob` (A.7), `RefundWorkerJob` (A.8), `OutboxRelayJob` (A.13).], [15, 32, 61],
+  [AD-01], [Strangler migration; monolith kept as fallback], [S1], [One codebase whose classes run in either topology; wiring in `PaymentIntegrationConfiguration`. The S1 line of parts 3–8 and 11–13.], [05, 06, 26],
+  [AD-02], [Split where no transaction crosses], [S3, S8], [Payment and order stay in commerce-svc, so settlement is one local transaction behind `PaymentBusinessPort` → `OrderFulfilmentAdapter` (parts 5, 6, 8, 12); notification-svc shares no transaction (part 13).], [05, 07, 13, 27, 64, 66],
+  [AD-03], [One database per service], [S4, S8], [Each table has one owning service: identity (part 4), commerce (parts 3, 5–12), notification (part 13). Several aggregates share one local transaction under the S8 justification (parts 4–8, 11, 12).], [05, 13, 21, 30],
+  [AD-04], [Outbox → SNS → SQS, idempotent consumers], [S9], [`IntegrationOutboxWriter`, `OutboxRelayService`, `SqsNotificationEventConsumer`, `ConsumedMessageRepository` (part 13); producers in parts 6, 7, 12.], [30, 39, 59–61, 63],
+  [AD-05], [Shared session in Valkey, roles inside], [S6], [`LoginSessionPublisher`, `RedisLoginSnapshotGateway`, `SessionStpInterface` (part 4, #rr(<fig-a-str-s6-rbac>)); the buyer's id from the session in parts 5, 6 and 9–13.], [01, 46, 47, 58, 68],
+  [AD-06], [One synchronous call, commerce → identity, fail closed], [S3; S5 for the webhook], [`UserAppService` → `RemoteUserAppService` (parts 5, 6, 9, 11, 12); the webhook's settlement depends on it at run time (part 12).], [66],
+  [Backend ADRs 0001, 0004, 0005], [Provider isolation; no chapter-3 AD], [S5], [One port and one adapter per external system: `OAuthIdentityGateway` (part 4, fails closed), `ListingSearchReranker` (part 3, fails open to the database order), `CheckoutGateway` (part 12), `RefundGateway` (part 8), `OutboxEventTransport` (part 13).], [21–23, 31, 50, 66],
+  [AD-09], [CloudFront → restricted ALB], [S2, S3, S6], [Same-origin `/api/v1` routes of every controller in @tbl-a-trace-uc; ALB path routing of `/api/v1/notifications` to notification-svc (part 13).], [07, 12, 16, 25],
+  [AD-11], [One RDS server, three databases], [S4], [The identity, commerce and notification databases of parts 4, 5–12 and 13.], [05, 13],
+  [AD-16], [Jobs stay with their data, under a lease], [S7], [`LeasedJobRunner`, `SchedulerLeaseRepository`; `PurchaseIntentExpiryJob` (part 5), `TeamExpirySweepJob` (part 7), `RefundWorkerJob` (part 8), `OutboxRelayJob` (part 13).], [15, 32, 61],
   [AD-18], [COLA layers enforced by ArchUnit], [S1], [The layer of every design class (controller, application service, domain, infrastructure) under the mapping rule (#rr(<sec-a-mapping-rule>)); every mapping table.], [05, 06, 26],
   [AD-07, 08, 10, 12–15, 17, 19, 20], [Compute, scaling, network, account, pipeline and release], [—], [No design class; see report §3.2.1 and §3.3.], [—],
 )

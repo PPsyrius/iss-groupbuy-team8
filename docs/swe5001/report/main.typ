@@ -166,4 +166,4 @@
 #include "sections/04-quality-attributes.typ"
 #include "sections/05-devops.typ"
 #include "sections/06-highlights.typ"
-// Appendix A (sections/source-book.typ) is the team's design source book, not part of the report.
+// The detailed design source book (sections/source-book.typ) is the team's design reference, not part of the report.
