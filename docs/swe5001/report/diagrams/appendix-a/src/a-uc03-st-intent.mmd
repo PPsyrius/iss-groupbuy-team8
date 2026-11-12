@@ -18,7 +18,7 @@ stateDiagram-v2
     Lapsed --> Lapsed : paid / refund, BUSINESS_EXPIRED
     Lapsed --> Expired : expireOne [unpaid] / markExpired
     Lapsed --> Closed : expireOne [paid] / excludePaidFromExpiry
-    Expired --> Expired : paid / refund, INTENT_EXPIRED
+    Expired --> Expired : paid / refund, BUSINESS_EXPIRED
 %% at __start0 1,0
 %% at Issued 1,1
 %% at Fulfilled 2,2

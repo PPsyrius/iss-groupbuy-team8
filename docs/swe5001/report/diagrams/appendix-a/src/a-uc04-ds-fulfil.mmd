@@ -14,7 +14,7 @@ sequenceDiagram
         Svc->>OFA: B6: lockForSettlement(quote)
         OFA->>Set: lockTeam(dealId): lock 1
         OFA->>Intents: lockById(intentId): lock 2
-        Note over Svc,Users: Pay upfront (@sec-a-pay-upfront): lock 4, succeed, publish PaymentSucceeded
+        Note over Svc,Users: Pay upfront (@sec-a-pay-upfront): lock 3, succeed, publish PaymentSucceeded
         break quote.expiredAt(now): paid too late (A5)
             Note over Svc,OFA: Outcome(null, null, "BUSINESS_EXPIRED"); fulfil is not called
         end
@@ -35,7 +35,7 @@ sequenceDiagram
         break not applied (A6, A7)
             OFA-->>Svc: Outcome: GROUP_REJECTED
         end
-        OFA->>Ord: B8, first write: «create» create(terms, confirmedAt)
+        OFA->>Ord: B8: «create» create(terms, confirmedAt)
         OFA->>Orders: save(order)
         Orders-->>OFA: Order (status PENDING)
         OFA->>Set: linkOrder(dealId, paymentId, orderId)

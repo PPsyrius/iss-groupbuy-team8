@@ -15,7 +15,7 @@ sequenceDiagram
     Buyer->>Ctl: issue(request {productId})
     Ctl->>App: issueQuote(productId, ownerId)
     critical quote transaction, REQUIRED, default isolation, 10 s
-        Note over App,Prods: B2: lock 6, the product row, which UC9 takes to change a price
+        Note over App,Prods: B2: the product row lock, which UC9 takes to change a price
         App->>Prods: lockById(productId)
         Prods-->>App: Optional(Product)
         App->>Users: requireActive(ownerId)
@@ -33,11 +33,11 @@ sequenceDiagram
         Res-->>App: PricingStrategy
         App->>Str: quoteTeamPrice(product, policy, now)
         Str->>Pol: requireQuotable(product, now)
-        break TEAM_PRICE_UNAVAILABLE: no policy in force, not on sale, or not below the solo price (A2)
+        break TEAM_PRICE_INVALID: not below the solo price or another currency; TEAM_PRICE_UNAVAILABLE: no policy in force or not on sale (A2)
             Pol-->>Str: BizException
             Str-->>App: BizException
             App-->>Ctl: BizException, rolled back
-            Ctl-->>Buyer: HTTP 409, no quote
+            Ctl-->>Buyer: HTTP 400 (invalid) or 409 (unavailable), no quote
         end
         Str-->>App: amount
         App->>Quote: «create» (id, productId, ownerId, version, amount, currency, now, expiry)

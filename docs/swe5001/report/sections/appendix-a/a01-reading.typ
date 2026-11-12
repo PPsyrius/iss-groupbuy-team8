@@ -2,7 +2,7 @@
 
 == Reading This Appendix <sec-a-reading>
 
-This appendix gives the detailed object design of every BlocBuy use case. For each one, it takes the flows of events through a platform-free analysis model to the classes and messages of the code, by way of the transition strategies in @sec-a-strategies. It answers two assessor remarks for every use case, not only for the two that chapter 3 discusses: remark 6 asked for the "resultant detailed object design", and remark 11 asked for class and sequence diagrams at class and object level, built the way the SAD and SDP courses teach. Section 3.2.4 discusses UC4 (joining by paying) and team expiry at chapter level; the parts below give their full detail, and the same detail for every other use case.
+This appendix gives the detailed object design of every BlocBuy use case. For each one, it takes the flows of events through a platform-free analysis model to the classes and messages of the code, by way of the transition strategies in @sec-a-strategies. It answers two of the lecturers' remarks (F1–F13, report §6.1) for every use case, not only for the two that report chapter 3 discusses: F5 asked for the "resultant detailed object design", and F10 asked for class and sequence diagrams at class and object level, built the way the SAD and SDP courses teach. Report §3.2.4 discusses UC4 (joining by paying) and team expiry at chapter level; the parts below give their full detail, and the same detail for every other use case.
 
 === How the Parts Are Laid Out <sec-a-reading-layout>
 
@@ -64,7 +64,7 @@ All diagrams use UML 2 notation, drawn in the Visual Paradigm style of the team'
   [«adapter», «mapper», «data object», «converter»], [Infrastructure: a port implementation; a MyBatis mapper (the course's DAO); a row-shaped object (the course's DTO); the converter between row and aggregate.],
   [«adapter, application service»], [An application-layer service that also implements a port owned by another module: `OrderFulfilmentAdapter` (`PaymentBusinessPort`) and `PurchaseIntentAppService` (`PaymentIntentPort`).],
   [«subscriber», «scheduled job», «configuration»], [A transaction-phase event listener (`OrderLifecycleSubscriber`, `IntegrationOutboxWriter`); a timer class in `bootstrap.scheduling` (`TeamExpirySweepJob`); a Spring wiring class (`SaTokenConfig`).],
-  [«utility»], [A technical helper with no domain role, called by others and holding no business state: `UuidV7`, `LeasedJobRunner`. This is wider than UML's standard «utility», whose members are all static: `LeasedJobRunner` is a Spring bean that holds technical state (its task's owner id and current leases), but no business state.],
+  [«utility»], [A technical helper with no domain role, called by others and holding no business state: `UuidV7`, `LeasedJobRunner`. This is wider than UML's standard «utility», whose members are all static: `LeasedJobRunner` is a Spring bean that holds technical state (its owner id and the lease repository port, `SchedulerLeaseRepository`; the leases themselves live in `sys_scheduler_lock`), but no business state.],
   [«interface», «abstract», «record», «enumeration», «exception»], [Java language constructs (S1).],
   [«subsystem»], [One service in the subsystem view of A.2 (@fig-a-sys-subsystems), holding one package per COLA layer.],
   [«topic», «queue»], [Sequence-diagram participants for the SNS topic and an SQS queue.],
@@ -98,9 +98,9 @@ Every part uses the names of @fig-a-sys-entities: `Account`, `Role`, `OAuthBindi
 
 === Evidence Status and the SWE5006 Report <sec-a-reading-evidence>
 
-Everything in this appendix is designed and built. Every class, method, field, error code and table it names exists in the code of the report baseline and was checked against it. Whether a capability was verified on AWS, only locally or in automated tests is stated once, in @tbl-status, and not repeated here. A diagram shows how the code is built; it is not evidence that a flow ran in a given environment.
+Everything in this appendix is designed and built. Every class, method, field, error code and table it names exists in the code at the report's freeze commit (report §1.1). Whether a capability was verified on AWS, only locally or in automated tests is stated once, in the status table of report §2.2, and not repeated here. A diagram shows how the code is built; it is not evidence that a flow ran in a given environment.
 
-The appendix is self-contained. It reuses the analysis model of the SWE5006 report (its section 3.4) and updates it in two ways. First, the names are unified across use cases, as above. Second, the design moves from the SWE5006 modular monolith to the three-service topology of backend ADR 0008: commerce asks identity over HTTP (S3), roles travel in the login session (S6), scheduled jobs run in commerce-svc only (S7), each service has its own database (S4), and events reach notification-svc through an outbox, SNS and SQS (S9). The business rules themselves did not change.
+The appendix is self-contained. It reuses the analysis model of the SWE5006 report (its §3.4) and updates it in two ways. First, the names are unified across use cases, as above. Second, the design moves from the SWE5006 modular monolith to the three-service topology of backend ADR 0008: commerce asks identity over HTTP (S3), roles travel in the login session (S6), scheduled jobs run in commerce-svc only (S7), each service has its own database (S4), and events reach notification-svc through an outbox, SNS and SQS (S9). The business rules themselves did not change.
 
 === Reading Path <sec-a-reading-path>
 

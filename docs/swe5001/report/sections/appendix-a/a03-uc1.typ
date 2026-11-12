@@ -2,7 +2,7 @@
 
 == UC1 Browse and Search Team-Priced Products <sec-a-uc01>
 
-UC1 is BlocBuy's front door. Anyone, signed in or not, can page through the products on sale, narrow them by category or keyword and open one. Each product shows two prices: the individual price and, when a team is filling for it, the team price with the seats filled so far. The use case only reads. It creates no team, intent, payment or order, and it never calls identity-svc. This part traces UC1 from its flows of events to the code, including the keyword search and the optional re-ranking by meaning, which the SWE5006 report did not model. UC1 is designed and built; its status on AWS is given by capability in @tbl-status.
+UC1 is BlocBuy's front door. Anyone, signed in or not, can page through the products on sale, narrow them by category or keyword and open one. Each product shows two prices: the individual price and, when a team is filling for it, the team price with the seats filled so far. The use case only reads. It creates no team, intent, payment or order, and it never calls identity-svc. This part traces UC1 from its flows of events to the code, including the keyword search and the optional re-ranking by meaning, which the SWE5006 report did not model. UC1 is designed and built; its status on AWS is given by capability in the status table of report §2.2.
 
 === Use Case and Flows of Events <sec-a-uc01-flows>
 

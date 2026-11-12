@@ -15,7 +15,7 @@ sequenceDiagram
         OFA->>Set: lockTeam(dealId): lock 1, no row
         OFA->>Intents: lockById(intentId): lock 2
         OFA-->>Svc: void
-        Note over Svc,Groups: B8: transaction of @fig-a-pay-ds-settle; lock 4 is the payment; a lapsed quote is refused there (A5, BUSINESS_EXPIRED)
+        Note over Svc,Groups: B8: transaction of @fig-a-pay-ds-settle; lock 3 is the payment; a lapsed quote is refused there (A5, BUSINESS_EXPIRED)
         Svc->>OFA: fulfil(event)
         OFA->>Set: lockTeam(dealId): no row
         OFA->>Intents: lockById(intentId): already held
@@ -23,7 +23,7 @@ sequenceDiagram
         break intent already fulfilled: replay, or INTENT_ALREADY_FULFILLED (A7)
             OFA-->>Svc: Outcome
         end
-        Note over OFA,Cat: B9: intent.expiredAt() set → INTENT_EXPIRED (A5)
+        Note over OFA,Cat: B9: INTENT_EXPIRED is defensive; a late payment stopped at B8 (A5)
         OFA->>Users: requireActive(userId)
         OFA->>Cat: requirePurchasable(productId)
         break INTENT_EXPIRED, BUYER_INACTIVE or PRODUCT_UNAVAILABLE (A5)
@@ -38,7 +38,7 @@ sequenceDiagram
             OFA->>Orders: save(order): PENDING
             OFA->>Set: linkOrder(dealId, paymentId, orderId)
             OFA->>Intents: markFulfilled(intent, paymentId)
-            OFA->>Cat: consumeOneUnit(productId): lock 6, the product row
+            OFA->>Cat: consumeOneUnit(productId): guarded update
             break last unit taken by a concurrent settlement: everything rolls back (E1)
                 Cat-->>OFA: false
                 OFA-->>Svc: IllegalStateException
