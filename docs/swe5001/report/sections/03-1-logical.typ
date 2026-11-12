@@ -22,7 +22,7 @@ BlocBuy is one codebase that runs as three services on AWS. The split follows tr
     [Logical deployment], [Logical], [UML deployment diagram], [Which node type hosts each tier], [Architect], [@fig-d5b-logical-deployment],
     [Context map], [Logical], [UML component diagram with DDD relations], [Which context depends on which], [Architect and developer], [@fig-d4-context-map],
     [EventStorming timeline], [Process], [EventStorming table], [Where the hot spots are], [Architect], [@tbl-d4a-eventstorming],
-    [Aggregates], [Logical], [UML class diagrams], [What one transaction protects], [Developer], [@fig-d7a-aggregates, @fig-d7b-aggregates, @fig-d7c-aggregates],
+    [Aggregates], [Logical], [UML class diagrams], [What one transaction protects], [Developer], [@fig-d7a-aggregates, @fig-d7b-aggregates, @fig-d7c-aggregates, @fig-d7d-aggregates],
     [Lifecycles], [Logical], [UML state machine diagrams and a table], [Which state changes the money rules allow], [Developer], [@fig-st-team, @fig-st-intent, @fig-st-payment, @tbl-lifecycles],
     [Domain and integration events], [Process], [UML component diagrams], [Which events cross which boundary], [Developer and operator], [@fig-d8-domain-events, @fig-d8b-integration-events, @tbl-domain-events],
     [Code layers], [Development], [COLA layer list and rule table], [Where code may depend on what], [Developer], [@tbl-arch-rules],
@@ -32,7 +32,7 @@ BlocBuy is one codebase that runs as three services on AWS. The split follows tr
     [Data ownership], [Physical], [UML class diagrams with «table»], [Which service owns which table], [Developer and database administrator], [@fig-d9a-identity-data, @fig-d9b-notification-data, @fig-d9c-commerce-team-data, @fig-d9d-commerce-payment-data],
     [Delivery pipeline], [Development], [UML activity diagrams], [How a change reaches production], [Operator], [@fig-d10a-ci-image-chain, @fig-d10b-delivery],
     [Settlement design], [Scenarios and logical], [UML class and sequence diagrams], [How a paid join is admitted or refunded], [Developer], [@fig-d11-uc4-design-classes, @fig-d12a-two-buyers-start, @fig-d12b-two-buyers-join, @fig-race-last-seat],
-    [Expiry design], [Process], [UML class and sequence diagrams], [How expiry and refunds stay consistent], [Developer], [@fig-d13-expiry-design-classes, @fig-d14a-team-expiry, @fig-d14b-refund-retry],
+    [Expiry design], [Process], [UML class and sequence diagrams], [How expiry and refunds stay consistent], [Developer], [@fig-d13-expiry-design-classes, @fig-d14a-team-expiry, @fig-d14b-refund-retry, @fig-d14c-outbox-relay],
   ),
   kind: table,
   caption: [Architectural views, with the concern and the reader each one serves. Source: this report.],
@@ -145,8 +145,6 @@ We organise the logical elements along two dimensions: four system tiers (@tbl-t
 
 The logical deployment view (@fig-d5b-logical-deployment) maps the tiers to node types without products.
 
-#afig("d5b-logical-deployment", [Logical deployment view (UML deployment diagram). Tiers map to node types without products: each service is a jar in a language runtime on its own application server node; @tbl-logical-physical names the products.])
-
 ==== Service layering and automated guardrails
 
 Inside the backend reactor, every bounded context (`identity`, `catalog`, `groupbuy`, `order`, `payment`, `notification`) follows the Alibaba COLA package structure. The reactor has ten modules: the six COLA modules, `blocbuy-platform` and the three service assemblies.
@@ -182,6 +180,8 @@ Five developers worked in parallel, so 19 automated architecture checks (@tbl-ar
 === Nodes and Subsystems
 
 @fig-d3-logical-view shows the request path: who calls which interface, and the external systems. @fig-d3b-logical-events-data shows the published events and the data stores. Both use UML component notation with role names only; @tbl-logical-physical maps each element to its product.
+
+#afig("d5b-logical-deployment", [Logical deployment view (UML deployment diagram). Tiers map to node types without products: each service is a jar in a language runtime on its own application server node; @tbl-logical-physical names the products.])
 
 #afig("d3-logical-view", [Logical view, request path (UML component diagram). Producers and consumers reach the subsystems only through the edge gateway, and the one synchronous call between subsystems is `commerce-svc` requiring `UserAppService`.])
 
@@ -411,8 +411,6 @@ The study recommended one Team Purchase context for `groupbuy` and `order` (§4.
 1. *Language test.* A "quote" in `catalog` (`TeamPriceQuote`) is an exploratory price for a browsing buyer; it holds no stock and lapses without side effects. In `payment` (`CheckoutQuote`), a "quote" is a frozen financial commitment bound to a `PurchaseIntent` and a Stripe session. Likewise, `GroupDeal` in `groupbuy` models the team's size and window rules, while `Order` in `order` models one buyer's receipt and product snapshot.
 2. *Upstream and downstream test.* For every pair of collaborating contexts and external providers, we decided which side sets the contract (upstream, U) and which side adapts (downstream, D), and chose the DDD pattern in @fig-d4-context-map and @tbl-context-map.
 
-#afig("d4-context-map", [Context map (UML component diagram with DDD context-map labels). Each dashed arrow runs from the downstream (D) context to the upstream (U) one and names the pattern; Partnership and Shared Kernel are undirected. External systems sit behind anti-corruption layers, and payment owns the ports that order implements (Separated Interface).])
-
 Arrows in @fig-d4-context-map point from the downstream context to the upstream one; @tbl-context-map lists each pair upstream first. The map capitalises the context names; the table uses the Java package names. Shaded contexts are the core subdomains.
 
 #figure(
@@ -489,6 +487,8 @@ Arrows in @fig-d4-context-map point from the downstream context to the upstream 
   caption: [Context-map relationships with their pattern, interaction style, mechanism and rationale. Source: @fig-d4-context-map and the code.],
 ) <tbl-context-map>
 
+#afig("d4-context-map", [Context map (UML component diagram with DDD context-map labels). Each dashed arrow runs from the downstream (D) context to the upstream (U) one and names the pattern; Partnership and Shared Kernel are undirected. External systems sit behind anti-corruption layers, and payment owns the ports that order implements (Separated Interface).])
+
 ==== Aggregate derivation and lifecycles
 
 *How we derived the aggregates.* We did not map one aggregate per table. We derived every aggregate root with a four-step test:
@@ -499,7 +499,7 @@ Arrows in @fig-d4-context-map point from the downstream context to the upstream 
 
 Three further transactions write more than one aggregate for the same reasons: team expiry (ADR 0002), listing terms with their price policy (UC9) and first sign-in (UC2).
 
-@tbl-aggregates derives the 11 aggregate roots of the six bounded contexts; @fig-d7a-aggregates, @fig-d7b-aggregates and @fig-d7c-aggregates show their class structure by context. The last row holds the refund records, which are not roots; the review case is a read model inside the `CheckoutPayment` aggregate.
+@tbl-aggregates derives the 11 aggregate roots of the six bounded contexts; @fig-d7a-aggregates to @fig-d7d-aggregates show their class structure by context. The last row holds the refund records, which are not roots; the review case is a read model inside the `CheckoutPayment` aggregate.
 
 #figure(
   table(
@@ -597,7 +597,9 @@ Three further transactions write more than one aggregate for the same reasons: t
 
 #afig("d7b-aggregates", [Aggregate view of groupbuy (UML class diagram). `PaidMember` and `ParticipationReceipt` belong to the `GroupDeal` aggregate and are written by its repository under the team lock; `ShareInvite` and `ShareCredit` are separate roots that refer to the team by `dealId`, so sharing never takes the team lock.])
 
-#afig("d7c-aggregates", [Aggregate view of order and payment (UML class diagram). The purchase intent, the checkout payment and the order are three roots linked only by ids; `RefundWork` is not a root but the refund worker's claim snapshot of one `biz_refund` row.])
+#afig("d7c-aggregates", [Aggregate view of purchase intent and payment (UML class diagram). The purchase intent and the checkout payment are two roots linked only by ids; `RefundWork` is not a root but the refund worker's claim snapshot of one `biz_refund` row.])
+
+#afig("d7d-aggregates", [Aggregate view of order (UML class diagram). The order is a third root: its placement terms refer to the checkout payment of @fig-d7c-aggregates only by `paymentId`.])
 
 Three lifecycles carry the money rules, so we draw them: the team (@fig-st-team), the purchase intent (@fig-st-intent) and the checkout payment (@fig-st-payment). @tbl-lifecycles lists the simpler lifecycles of the order, the listing and the refund obligation. `GroupDeal` checks every transition with `DealStatus.canTransitionTo`: only `OPEN` moves to a final state (`SUCCEEDED` when `currentSize` reaches `targetSize`, `EXPIRED` when the database clock passes `expireTime`), and a final state never changes. The enum also allows `OPEN` to `FAILED` and `OPEN` to `CANCELED` for a future administrative cancellation; no code path uses them in this release. The purchase intent has no state field: its state is derived from `fulfilledPaymentId` and `expiredAt`.
 

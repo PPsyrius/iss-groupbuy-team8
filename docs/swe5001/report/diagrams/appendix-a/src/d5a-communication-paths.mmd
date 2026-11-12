@@ -6,23 +6,23 @@ deploymentDiagram
     node Google["Google Sign-In"] <<external system>>
     node S3["Amazon S3"] <<bucket>> : SPA files
     zone "VPC 10.50.0.0/16" {
-        zone "Public subnets" {
+        zone "Public" {
             node Alb["Application Load Balancer"]
             node Nat["fck-nat"]
         }
-        zone "Private application subnets" {
+        zone "Private" {
             environment Fg["ECS Fargate, Arm64"] {
                 artifact Id["identity-svc"]
                 artifact Co["commerce-svc"]
                 artifact Nt["notification-svc"]
             }
         }
-        zone "Data subnets" {
+        zone "Data" {
             node Cache["ElastiCache Valkey"] : TLS 6379
             node Rds["RDS PostgreSQL"] : TLS 5432
         }
     }
-    zone "Amazon SNS and SQS" as Msg {
+    zone "SNS and SQS" as Msg {
         node Sns["domain-events"] <<SNS topic>> :::messaging
         node QNt["notification"] <<SQS queue>> :::messaging : and its DLQ
         node QAu["audit"] <<SQS queue>> :::messaging : and its DLQ
@@ -44,7 +44,7 @@ deploymentDiagram
     Nt --> Nat : HTTPS 443
     Nat --> Stripe : HTTPS 443
     Nat --> Google : HTTPS 443
-    Nat --> Msg : HTTPS 443
+    Nat --> Msg
     Sns --> QNt
     Sns --> QAu
 %% at Browser 0,0

@@ -43,7 +43,7 @@ Show the reasoning, not only the result.
 3. **Bounded contexts and context map (D4).** Every edge labelled upstream or downstream and with its pattern: customer–supplier, conformist, anti-corruption layer (around Google and Stripe), open host service (the public API), published language (the versioned events). Say why each pattern was chosen. Source: §4.3–§4.5.
 4. **From contexts to services.** Why four contexts share commerce-svc (they share one settlement transaction) and which became services. Source: §6, deck slide 7.
 5. **Aggregate derivation (F4).** For each aggregate, one table row: the commands it handles, the invariant it protects ("a team never has more members than its size"), the consistency boundary, the root, its entities and value objects, the events it emits. State the rule used (one invariant, one transaction; reference other aggregates by ID) and explain the accepted settlement exception: one transaction spans team, purchase intent, payment and order writes. Distinguish that shared transaction boundary from lock acquisition; use the [verified lock order](AGENTS.md#claims-that-are-easy-to-get-wrong) for the UC4 sequence.
-6. **Aggregate diagrams (D7a–D7c) and life cycles.** UML class diagrams by context with `«aggregate root»`, `«entity»`, `«value object»` stereotypes. The team, purchase intent and checkout payment state machines are placed in §3.1.4 from the source-book diagrams (`a-uc05-st-deal`, `a-uc03-st-intent`, `a-pay-st-payment`, unchanged); the order, listing and refund life cycles are one table (`tbl-lifecycles`).
+6. **Aggregate diagrams (D7a–D7d) and life cycles.** UML class diagrams by context with `«aggregate root»`, `«entity»`, `«value object»` stereotypes. The team, purchase intent and checkout payment state machines are placed in §3.1.4 from the source-book diagrams (`a-uc05-st-deal`, `a-uc03-st-intent`, `a-pay-st-payment`, unchanged); the order, listing and refund life cycles are one table (`tbl-lifecycles`).
 7. **Domain events (D8, D8b).** Catalogue: event, producer aggregate, internal or published, version, consumers. Show how a new consumer subscribes without changing the producer (the audit queue).
 8. **Ubiquitous language.** The glossary from §7, in an appendix.
 
@@ -87,7 +87,7 @@ Derived from three sources: the presenter of each deck section on 21 October (v3
 | Member (GitHub) | Sections | Diagrams | Feedback closed | Basis |
 |---|---|---|---|---|
 | Lim Jiechao (`limjiechao`) | 1, 2, 3.3, 4.4, 6; final PDF build | D1, D2 | Q1, Q3, Q8, success criteria | Presented intro, conduct, analytics; owns #675, #676, #681. Takes 3.3 and 4.4 from Eric to balance load |
-| Wang Ziang, Eric (`EricWang1358`) | 3.1 (3.1.1–3.1.4) | D3, D3b, D4, D4a, D5b, D7a–D7c, D8, D8b | F3, F4, F8 (logical), F9, F12 | Presented logical design and DDD; assigned #586, #587, #595 |
+| Wang Ziang, Eric (`EricWang1358`) | 3.1 (3.1.1–3.1.4) | D3, D3b, D4, D4a, D5b, D7a–D7d, D8, D8b | F3, F4, F8 (logical), F9, F12 | Presented logical design and DDD; assigned #586, #587, #595 |
 | Liu Jin (`l0sgAi`) | 3.2 (3.2.1–3.2.3), 3.4 | D5, D5a, D6, D9a–D9d | F6, F8 (physical), F11 | Presented physical design; built the SWE5001 infrastructure; assigned #586, #588, #589 |
 | Yu Qianshuo (`Yorick-Yu`) | 3.2.4, 4.2 | D11, D12a, D12b, D13, D14a, D14b | F5, F7, F10 | Assigned #585, #590; wrote the outbox and the failure drills (#459). Did not present, so takes a full design section |
 | Panpakorn Siripanich, Pan (`PPsyrius`) | 4.1, 4.3, 5 | D10a, D10b | F1, F2 | Presented DevOps and security; wrote the k6 tooling and the V2/V3 runs (#458); assigned #592. 4.1 moves from #591's owners (Liu Jin, Eric), who review it |
@@ -104,7 +104,7 @@ Facts that one section states and another depends on. The owner of the second se
 
 | Stated in | Fact | Must match |
 |---|---|---|
-| 3.1.4 (Eric) | `ShareInvite` (`biz_share_invite`, `ShareInviteRepository`) and `ShareCredit` (`biz_share_credit`, `ShareCreditRepository`) are aggregate roots; both reference `GroupDeal` by `dealId`, outside its lock; `ShareCreditSubscriber` writes the credit `AFTER_COMMIT` in `REQUIRES_NEW` (ADR 0003). Eleven aggregate roots in all, plus the refund and review records, which are not roots | 3.2.3 aggregate-to-table mapping, D4, D7a–D7c |
+| 3.1.4 (Eric) | `ShareInvite` (`biz_share_invite`, `ShareInviteRepository`) and `ShareCredit` (`biz_share_credit`, `ShareCreditRepository`) are aggregate roots; both reference `GroupDeal` by `dealId`, outside its lock; `ShareCreditSubscriber` writes the credit `AFTER_COMMIT` in `REQUIRES_NEW` (ADR 0003). Eleven aggregate roots in all, plus the refund and review records, which are not roots | 3.2.3 aggregate-to-table mapping, D4, D7a–D7d |
 | 3.2.2 (Liu Jin) | The committed size is 0.5 vCPU, 1 GiB and `db.t4g.micro`; V3 r4 ran commerce at 1 vCPU, 2 GiB and RDS at `db.t4g.small` as session-only settings; §4.1 reports the tested 600 req/s under one-to-six scaling, not per-task saturation or linearity | 4.1 (Pan) |
 | 3.4 AISS-13 (Liu Jin) | The identity outage and a poison message have local results only; V4 and V5 were not run | 4.2 (Yu Qianshuo) |
 | 3.2.3 (Liu Jin) | Settlement lock order team → purchase intent → payment | 3.2.4 UC4 sequence (Yu Qianshuo) |
@@ -142,7 +142,7 @@ Template headings are fixed. "Must contain" lists what an assessor will look for
 | 3.1.1 Key Architectural Decisions | AD table with trade-off and rationale per row | [`02-proposed-architecture.md` §11](../architecture-options-study/02-proposed-architecture.md), ADRs 0007, 0008 |
 | 3.1.2 Tiers and Layers | Tiers, and the COLA layers inside each service; the 19 architecture checks (17 ArchUnit rules + 2 plain tests) that enforce them | [`02-proposed-architecture.md` §2.1](../architecture-options-study/02-proposed-architecture.md), backend constraints skill |
 | 3.1.3 Nodes and Subsystems | F12: redrawn logical view (D3, D3b); element catalogue: element, responsibility, provider | `d3-logical-view`, `d3b-logical-events-data` |
-| 3.1.4 Platform Design | F3, F4, F9, F13: EventStorming method, subdomains, context map with patterns, aggregates and how they were derived, domain event catalogue (internal vs published), how producers and consumers use the platform (API contract, versioned events) | [`06-eventstorming-ddd.md`](../architecture-options-study/06-eventstorming-ddd.md) §1–§6, `d4-context-map`, `d4a-eventstorming-timeline.typ`, `d7a-aggregates` to `d7c-aggregates`, `d8-domain-events`, `d8b-integration-events`, three source-book statecharts, [`contracts/openapi.json`](../../../contracts/openapi.json) |
+| 3.1.4 Platform Design | F3, F4, F9, F13: EventStorming method, subdomains, context map with patterns, aggregates and how they were derived, domain event catalogue (internal vs published), how producers and consumers use the platform (API contract, versioned events) | [`06-eventstorming-ddd.md`](../architecture-options-study/06-eventstorming-ddd.md) §1–§6, `d4-context-map`, `d4a-eventstorming-timeline.typ`, `d7a-aggregates` to `d7d-aggregates`, `d8-domain-events`, `d8b-integration-events`, three source-book statecharts, [`contracts/openapi.json`](../../../contracts/openapi.json) |
 
 **3.2 Physical Architecture & Design (owner: Liu Jin; 3.2.4 Yu Qianshuo)**
 
@@ -195,7 +195,7 @@ The view set answers F8, F9 and F10. Every diagram is UML or a named notation, h
 | D5, D5a | Physical deployment: nodes, artefacts, zones and subnets; communication paths | UML deployment diagrams | 3.2 | `d5-physical-deployment`, `d5a-communication-paths` |
 | D5b | Logical deployment: tiers to node types, no products | UML deployment diagram | 3.1.2 | `d5b-logical-deployment` |
 | D6 | Network (F6), with the security-group table beside it | AWS architecture diagram conventions (groups, no service icons), drawn in Typst with the kit palette (not a kit drawing) | 3.2 | [`d6-network.typ`](diagrams/d6-network.typ), [`d6-security-groups.typ`](diagrams/d6-security-groups.typ) |
-| D7a–D7c | Aggregates by context | UML class diagrams | 3.1.4 | `d7a-aggregates`, `d7b-aggregates`, `d7c-aggregates` |
+| D7a–D7d | Aggregates by context | UML class diagrams | 3.1.4 | `d7a-aggregates`, `d7b-aggregates`, `d7c-aggregates`, `d7d-aggregates` |
 | (life cycles) | Team, purchase intent and checkout payment state machines; order, listing and refund life cycles as a table | UML state machine diagrams (source-book diagrams reused unchanged) and `tbl-lifecycles` | 3.1.4 | `a-uc05-st-deal`, `a-uc03-st-intent`, `a-pay-st-payment` (labels `fig-st-team`, `fig-st-intent`, `fig-st-payment`) |
 | D8, D8b | In-process domain events; integration events from the outbox to the consumers | UML component diagrams | 3.1.4 | `d8-domain-events`, `d8b-integration-events` |
 | D9a–D9d | Data model per database (identity, notification, commerce team, commerce payment) | UML class diagrams with the «table» stereotype | 3.2.3 | `d9a-identity-data`, `d9b-notification-data`, `d9c-commerce-team-data`, `d9d-commerce-payment-data` |
@@ -203,7 +203,7 @@ The view set answers F8, F9 and F10. Every diagram is UML or a named notation, h
 | D11 | UC4 design classes (a subset of the source book) | UML class diagram | 3.2.4 | `d11-uc4-design-classes` |
 | D12a, D12b | UC4 with two buyers: the leader starts, the member joins; the last-seat race is drawn in full only in the source book | UML sequence diagrams | 3.2.4 | `d12a-two-buyers-start`, `d12b-two-buyers-join` |
 | D13 | Team expiry design classes (a subset of the source book) | UML class diagram | 3.2.4 | `d13-expiry-design-classes` |
-| D14a, D14b | Team expiry; refund retry | UML sequence diagrams | 3.2.4 | `d14a-team-expiry`, `d14b-refund-retry` |
+| D14a–D14c | Team expiry; refund retry; outbox relay | UML sequence diagrams | 3.2.4 | `d14a-team-expiry`, `d14b-refund-retry`, `d14c-outbox-relay` |
 
 Every UML diagram, in the chapters and in the Appendix A source book, is drawn with one kit (`docs/swe5006/report/typst/uml.typ`): its source is `diagrams/appendix-a/src/<id>.mmd`, generated into `gen/<id>.typ` and placed with `afig` (see [`diagrams/appendix-a/README.md`](diagrams/appendix-a/README.md)). D4a and D6 are the two non-UML views; they use the kit's palette and fonts.
 

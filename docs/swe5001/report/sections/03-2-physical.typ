@@ -51,11 +51,11 @@ The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`)
   caption: [Logical elements of @fig-d3-logical-view and @fig-d3b-logical-events-data and the products that implement them. Source: `infra/swe5001` and `backend` at the freeze commit (§1.1).],
 ) <tbl-logical-physical>
 
-*Deployment view.* Two UML deployment diagrams show the physical layout. @fig-d5-deployment places each artefact in its region, VPC, availability zone and subnet; @fig-d5a-communication-paths shows the paths between the nodes.
-
 #afig("d5-physical-deployment", lbl: <fig-d5-deployment>, [Physical deployment view (UML deployment diagram). Each availability zone holds a public, a private application and a data subnet. Each service's image is deployable in either zone's Fargate environment; the note gives the task count per service over both zones, so `identity-svc`, with one task, is not zone-redundant. RDS and Valkey each run in one data subnet that AWS chooses.])
 
-#afig("d5a-communication-paths", [Communication path view (UML deployment diagram). Each service is an artefact in the Fargate execution environment, as in @fig-d5-deployment. Only CloudFront reaches the load balancer, all three services reach Valkey and PostgreSQL, and every outbound call to Stripe, Google, SNS and SQS leaves through fck-nat.])
+#afig("d5a-communication-paths", [Communication path view (UML deployment diagram). Each service is an artefact in the Fargate execution environment, as in @fig-d5-deployment. Only CloudFront reaches the load balancer, all three services reach Valkey and PostgreSQL, and every outbound call to Stripe, Google, SNS and SQS leaves through fck-nat on HTTPS 443.])
+
+*Deployment view.* Two UML deployment diagrams show the physical layout. @fig-d5-deployment places each artefact in its region, VPC, availability zone and subnet; @fig-d5a-communication-paths shows the paths between the nodes.
 
 The paths in @fig-d5a-communication-paths work as follows:
 
@@ -304,11 +304,11 @@ The schema follows our PostgreSQL conventions (`pgsql-ddl` skill):
 
 @fig-d9a-identity-data and @fig-d9b-notification-data show the two smaller databases. The commerce database owns 21 tables, so its model is split in two: catalogue and team purchase (@fig-d9c-commerce-team-data), and purchase intent, payment, order, refund and the technical tables (@fig-d9d-commerce-payment-data; their patterns are in @tbl-technical). A START intent reserves its `deal_id` before the team row exists, so the team it refers to may not exist yet.
 
-Every table also carries the audit columns `create_by`, `create_time`, `update_by`, `update_time` and `deleted`, which the figures omit. The exceptions: `rel_user_role` and `rel_role_permission` have no `update_*` columns; the append-only `log_` tables have only `create_time` (`log_product_team_terms` also `create_by`); `biz_payment_review_case` has only `create_time`; `sys_outbox` has only `created_at`, and `sys_consumed_message` only `consumed_at`. A `version` column, drawn where it exists, is on `biz_product`, `biz_team_price_policy` (where it is also the revision number), `biz_group_deal`, `biz_purchase_intent`, `biz_payment`, `biz_order`, `biz_refund`, `sys_scheduler_lock` and `sys_scheduled_item_retry`; `sys_user`, `biz_group_member` and `biz_payment_review_case` have none.
-
 #afig("d9a-identity-data", [Identity data view (UML class diagram, «table» stereotype; {partial UK} = unique among rows with `deleted = false`). Each Google identity, role grant and permission grant refers to its owner by an ID column only.])
 
 #afig("d9b-notification-data", [Notification data view (UML class diagram, «table» stereotype). The consumed-message row and the notifications for one event are written in one transaction; `uq_biz_notification_event_user` keeps one notification per event and recipient, even after a soft delete.])
+
+Every table also carries the audit columns `create_by`, `create_time`, `update_by`, `update_time` and `deleted`, which the figures omit. The exceptions: `rel_user_role` and `rel_role_permission` have no `update_*` columns; the append-only `log_` tables have only `create_time` (`log_product_team_terms` also `create_by`); `biz_payment_review_case` has only `create_time`; `sys_outbox` has only `created_at`, and `sys_consumed_message` only `consumed_at`. A `version` column, drawn where it exists, is on `biz_product`, `biz_team_price_policy` (where it is also the revision number), `biz_group_deal`, `biz_purchase_intent`, `biz_payment`, `biz_order`, `biz_refund`, `sys_scheduler_lock` and `sys_scheduled_item_retry`; `sys_user`, `biz_group_member` and `biz_payment_review_case` have none.
 
 #afig("d9c-commerce-team-data", [Commerce data view, catalogue and team purchase (UML class diagram, «table» stereotype; {partial UK} = unique among rows with `deleted = false`). Every link is a logical ID column, because the schema has no foreign keys; `payment_id` refers to `biz_payment` in @fig-d9d-commerce-payment-data.])
 

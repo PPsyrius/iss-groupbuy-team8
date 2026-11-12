@@ -1,0 +1,38 @@
+%% frame: Aggregate of order
+classDiagram
+    class CheckoutPayment {
+        <<aggregate root, record>>
+    }
+    class OrderNewOrderTerms["Order.NewOrderTerms"] {
+        <<value object, record>>
+        +paymentId: UUID
+        +dealId: UUID
+        +userId: UUID
+        +productId: UUID
+        +quantity: int
+        +unitPrice: BigDecimal
+    }
+    class Order {
+        <<aggregate root>>
+        -id: UUID
+        -totalAmount: BigDecimal
+        -paidTime: Instant
+        -cancelTime: Instant
+        -version: int
+        +create(terms: Order.NewOrderTerms, paidAt: Instant): Order «static»
+        +confirm(): Order
+        +cancel(canceledAt: Instant): Order
+    }
+    class OrderStatus {
+        <<enumeration>>
+        PENDING
+        CONFIRMED
+        CANCELLED
+    }
+%% at CheckoutPayment 0,0
+%% at OrderStatus 1,0
+%% at OrderNewOrderTerms 0,1
+%% at Order 1,1
+    Order *-- OrderNewOrderTerms : placement
+    Order --> OrderStatus : status
+    OrderNewOrderTerms ..> CheckoutPayment : id

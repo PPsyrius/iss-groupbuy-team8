@@ -12,17 +12,17 @@ deploymentDiagram
     node Lb["Load balancer"]
     rectangle "Application tier" as AppTier {
         node IdN["Application server"] {
-            environment IdJ["Java 21 runtime"] {
+            environment IdJ["Language runtime"] {
                 artifact IdA["identity-svc.jar"]
             }
         }
         node CoN["Application server"] {
-            environment CoJ["Java 21 runtime"] {
+            environment CoJ["Language runtime"] {
                 artifact CoA["commerce-svc.jar"]
             }
         }
         node NtN["Application server"] {
-            environment NtJ["Java 21 runtime"] {
+            environment NtJ["Language runtime"] {
                 artifact NtA["notification-svc.jar"]
             }
         }
