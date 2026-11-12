@@ -12,12 +12,12 @@ activityDiagram
         action BQ["build-quality: Maven verify, Checkstyle"]
         fork FB
         action CC["contract-check"]
-        action Sonar["SonarCloud Backend"]
+        action Sonar["SonarCloud\nBackend"]
         action Dock["docker: build image, boot smoke test, Trivy image scan"]
         action DevPath["On dev:\npackage-dev,\npublish-ecr-dev,\ndeploy-existing-ec2"]
     }
     lane "security.yml" {
-        action Sec["gitleaks, trivy-deps, trivy-config"]
+        action Sec["gitleaks,\ntrivy-deps,\ntrivy-config"]
         note NQ["codeql is off:\nENABLE_CODEQL\nis false"]
     }
     lane "swe5001-service-images.yml" {
@@ -58,3 +58,5 @@ activityDiagram
 %% at Fail 5,6
 %% at Static 6,3
 %% at Plan 6,4
+%% at DevPath 1,8
+%% at E 0,9

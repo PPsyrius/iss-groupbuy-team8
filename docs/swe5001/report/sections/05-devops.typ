@@ -106,14 +106,14 @@ The gate ignores unfixed vulnerabilities and lower severities, so a pass does no
 
 The promotion scanned its push commit; the PR jobs scanned GitHub's merge commit, not the reported head. These runs show the scan order and the publication path; that a failed scan blocks publication follows from the job dependencies, not from a test with a vulnerable image. Configured, not tested: ECR also scans each pushed image (`scan_on_push`) and refuses to overwrite a tag (`IMMUTABLE`, #src("infra/swe5001/foundation/ecr.tf")[`ecr.tf`]); those findings are not part of the gate. `sbom.yml` produces a source inventory on each `v*` tag and weekly; we keep no per-image SBOM for SWE5001 images.
 
-#afig("d10a-ci-image-chain", [Continuous integration view (UML activity diagram). The applicable checks of all four workflows must pass before the squash merge; the image job stops on a fixable HIGH or CRITICAL finding, and the two SWE5001 workflows run only when their files change.])
-
-#afig("d10b-delivery", [Delivery view (UML activity diagram). A promotion merges into prod only after three green checks and a code-owner approval; the deployment then builds, publishes, creates and smoke-tests the runtime, and always destroys it.])
-
 == Continuous Delivery
 <sec-continuous-delivery>
 
 We deliver automatically to two targets: the shared SWE5006 development deployment and the disposable SWE5001 service environment. A SWE5001 promotion merges reviewed `dev` changes into `prod`; the deployment then builds and scans the images, publishes them by digest, creates the runtime, smoke-tests it, records the release and destroys the runtime. GitHub environments are permission contexts, not consecutive stages; SWE5001 is not an always-on production service.
+
+#afig("d10a-ci-image-chain", [Continuous integration view (UML activity diagram). The applicable checks of all four workflows must pass before the squash merge; the image job stops on a fixable HIGH or CRITICAL finding, and the two SWE5001 workflows run only when their files change.])
+
+#afig("d10b-delivery", [Delivery view (UML activity diagram). A promotion merges into prod only after three green checks and a code-owner approval; the deployment then builds, publishes, creates and smoke-tests the runtime, and always destroys it.])
 
 === Targets and approval boundary
 
