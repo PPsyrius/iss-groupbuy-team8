@@ -16,7 +16,7 @@ activityDiagram
         action BI["Build the\nARM64 image,\nload it into\nDocker"]
         action TI["Trivy image\nscan: fixable\nHIGH or\nCRITICAL"]
         decision VI
-        action FI["Job fails:\nservice-images\ncheck red,\nmerge or\npromotion\nblocked"]
+        action FI["Job fails:\nservice-images\nred: prod\ncheck blocks\npromotion; dev\nmerge stops by\nteam rule"]
         end EFI
         decision UP
         action EX["Export the\nscanned image\n(docker save),\nupload it"]
