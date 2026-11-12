@@ -53,7 +53,7 @@ Two critical use cases: **UC4 join a team by paying** and **team expiry with ref
 
 1. **Class diagram (D11, D13).** Real classes across the COLA layers: adapter (controller or webhook handler) → application service → domain (aggregate, factory, domain service, port interfaces) → infrastructure (gateway, MyBatis mapper, outbox writer). Show interfaces and the direction of dependencies (domain depends on nothing). Start from `OrderFulfilmentAdapter`, `PaidGroupDealService`, `StandardPaidGroupDealCreator`, `IntegrationOutboxWriter`, `LeasedJobRunner`.
 2. **Sequence diagram (D12a, D12b, D14a, D14b).** Object lifelines with real method names; the transaction boundary as a combined fragment; `alt` for the business refusal (team full, so the payment is refunded). For UC4 show **two users**: the leader starts and pays, shares the link, the member joins and pays, the team succeeds. The race for the last seat is drawn in full only in the Appendix A source book (`a-uc04-ds-race`); the report states it in a fragment and in text.
-3. **Object diagram (optional).** A team with its two memberships, orders and payments at the moment it succeeds.
+3. **Object diagram (D15).** A team with its two memberships, orders and payments at the moment it succeeds.
 4. **Design patterns.** Only patterns present in the code, each with the problem it solves: Factory Method (team creation), Observer (domain event subscribers with a fixed order), Transactional Outbox, Ports and Adapters, Idempotent Receiver (consumed-message table). Source: [`paid-group-participation.md`](../../../backend/docs/design/paid-group-participation.md), ADRs 0002 and 0007.
 
 ### C. Database schema design (F11; section 3.2.3)
@@ -89,8 +89,8 @@ Derived from three sources: the presenter of each deck section on 21 October (v3
 | Lim Jiechao (`limjiechao`) | 1, 2, 3.3, 4.4, 6; final PDF build | D1, D2 | Q1, Q3, Q8, success criteria | Presented intro, conduct, analytics; owns #675, #676, #681. Takes 3.3 and 4.4 from Eric to balance load |
 | Wang Ziang, Eric (`EricWang1358`) | 3.1 (3.1.1–3.1.4) | D3, D3b, D4, D4a, D5b, D7a–D7d, D8, D8b | F3, F4, F8 (logical), F9, F12 | Presented logical design and DDD; assigned #586, #587, #595 |
 | Liu Jin (`l0sgAi`) | 3.2 (3.2.1–3.2.3), 3.4 | D5, D5a, D6, D9a–D9d | F6, F8 (physical), F11 | Presented physical design; built the SWE5001 infrastructure; assigned #586, #588, #589 |
-| Yu Qianshuo (`Yorick-Yu`) | 3.2.4, 4.2 | D11, D12a, D12b, D13, D14a, D14b | F5, F7, F10 | Assigned #585, #590; wrote the outbox and the failure drills (#459). Did not present, so takes a full design section |
-| Panpakorn Siripanich, Pan (`PPsyrius`) | 4.1, 4.3, 5 | D10a, D10b | F1, F2 | Presented DevOps and security; wrote the k6 tooling and the V2/V3 runs (#458); assigned #592. 4.1 moves from #591's owners (Liu Jin, Eric), who review it |
+| Yu Qianshuo (`Yorick-Yu`) | 3.2.4, 4.2 | D11, D12a, D12b, D13, D14a, D14b, D15 | F5, F7, F10 | Assigned #585, #590; wrote the outbox and the failure drills (#459). Did not present, so takes a full design section |
+| Panpakorn Siripanich, Pan (`PPsyrius`) | 4.1, 4.3, 5 | D10a, D10b, D10c | F1, F2 | Presented DevOps and security; wrote the k6 tooling and the V2/V3 runs (#458); assigned #592. 4.1 moves from #591's owners (Liu Jin, Eric), who review it |
 
 Reviewer pairs (second owner per [`AGENTS.md`](AGENTS.md#workflow-per-section)): Eric ↔ Yu Qianshuo (DDD and class diagrams must use the same names), Liu Jin ↔ Pan (physical, security and performance share the network and scaling facts), Lim reviews Liu Jin's 3.4 and Eric reviews Lim's 3.3.
 
@@ -199,11 +199,12 @@ The view set answers F8, F9 and F10. Every diagram is UML or a named notation, h
 | (life cycles) | Team, purchase intent and checkout payment state machines; order, listing and refund life cycles as a table | UML state machine diagrams (source-book diagrams reused unchanged) and `tbl-lifecycles` | 3.1.4 | `a-uc05-st-deal`, `a-uc03-st-intent`, `a-pay-st-payment` (labels `fig-st-team`, `fig-st-intent`, `fig-st-payment`) |
 | D8, D8b | In-process domain events; integration events from the outbox to the consumers | UML component diagrams | 3.1.4 | `d8-domain-events`, `d8b-integration-events` |
 | D9a–D9d | Data model per database (identity, notification, commerce team, commerce payment) | UML class diagrams with the «table» stereotype | 3.2.3 | `d9a-identity-data`, `d9b-notification-data`, `d9c-commerce-team-data`, `d9d-commerce-payment-data` |
-| D10a, D10b | Continuous integration; delivery | UML activity diagrams | 5.2, 5.3 | `d10a-ci-image-chain`, `d10b-delivery` |
+| D10a, D10c, D10b | Continuous integration at job level; the image scan gate inside the two image jobs; delivery | UML activity diagrams | 5.2, 5.3 | `d10a-ci-image-chain`, `d10c-image-scan-gate`, `d10b-delivery` |
 | D11 | UC4 design classes (a subset of the source book) | UML class diagram | 3.2.4 | `d11-uc4-design-classes` |
 | D12a, D12b | UC4 with two buyers: the leader starts, the member joins; the last-seat race is drawn in full only in the source book | UML sequence diagrams | 3.2.4 | `d12a-two-buyers-start`, `d12b-two-buyers-join` |
 | D13 | Team expiry design classes (a subset of the source book) | UML class diagram | 3.2.4 | `d13-expiry-design-classes` |
 | D14a–D14c | Team expiry; refund retry; outbox relay | UML sequence diagrams | 3.2.4 | `d14a-team-expiry`, `d14b-refund-retry`, `d14c-outbox-relay` |
+| D15 | A team of two at the commit of the filling join (F5, F10 "object level") | UML object diagram, drawn with the class kit | 3.2.4 | `d15-team-succeeded-objects` |
 
 Every UML diagram, in the chapters and in the Appendix A source book, is drawn with one kit (`docs/swe5006/report/typst/uml.typ`): its source is `diagrams/appendix-a/src/<id>.mmd`, generated into `gen/<id>.typ` and placed with `afig` (see [`diagrams/appendix-a/README.md`](diagrams/appendix-a/README.md)). D4a and D6 are the two non-UML views; they use the kit's palette and fonts.
 
