@@ -1,5 +1,7 @@
 # Reply draft for #789
 
+12 November owner-confirmation addendum: Pan explicitly confirmed **8 Phase D person-days, 19.5 total**, as his agreed estimate during the PR #798 review. This supersedes item 7's earlier lack of confirmation; it is not measured time or confirmation of the full team's figures. See the [confirmation record](effort-estimate.md#12-november-2026--owner-confirmation).
+
 Preserved reply draft; this does not assert it was posted. [PR #795](https://github.com/PPsyrius/iss-groupbuy-team8/pull/795) merged the [evidence package](https://github.com/PPsyrius/iss-groupbuy-team8/tree/27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6/docs/swe5001/evidence/20261112-issue-789), closing #789. The remaining body records the earlier proposal, not current publication status.
 
 1. **Cleanup:** nightly down ran late and failed on S3 reads. Separate operator recovery removed 127 runtime resources by 12:13:20 SGT on 12 November; generator retirement completed by 12:06:02. Empty managed state, normal env-status exit 0 and 51 direct checks passed. All 71 log objects were archive/readback-verified before source deletion; 13 R4 objects and one encrypted disk snapshot remain private and chargeable. Foundation/edge/SWE5006 were not targeted; no GitHub-role expansion.

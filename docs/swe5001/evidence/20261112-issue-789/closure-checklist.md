@@ -6,6 +6,8 @@ The PR answers [#789](https://github.com/PPsyrius/iss-groupbuy-team8/issues/789)
 
 ## Original questions and requests
 
+12 November owner-confirmation addendum: Pan explicitly agreed to **8 Phase D person-days and 19.5 total** ([record](effort-estimate.md#12-november-2026--owner-confirmation)). Item 7 below describes the earlier handoff before that confirmation; the figures remain estimates, and other members' confirmation status is unchanged.
+
 | Item | PR deliverable / evidence | Closure boundary |
 | --- | --- | --- |
 | 1. Runtime and generator | [cleanup.json](cleanup.json), §§2/5.3/6 and reply: runtime removed by 12:13:20 SGT, generator retirement by 12:06:02, 51 checks at 12:14:42 on 12 November. | The failed nightly job remains failed. Private S3 archives and one encrypted disk snapshot remain chargeable; no archive disposal or permanent-stack destruction is implied. |
