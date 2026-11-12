@@ -416,12 +416,17 @@ export function structModel(header, lines) {
     const at = `line ${i + 1}`;
     let m;
     if ((m = l.match(STRUCT_ROUTE))) {
-      if (m[1]) routes.set(`${m[1]}\u0000${m[2]}`, m[3] === 'ortho' ? 'auto' : m[3]);
+      if (m[1]) routes.set(`${m[1]}\u0000${m[2]}`, { route: m[3] === 'ortho' ? 'auto' : m[3], at, used: false });
       else ortho = m[3] === 'ortho';
+      return;
+    }
+    if (/^%%\s*route\b/.test(l)) {
+      problems.push(`${at}: malformed route "${l}" (use "%% route A B straight|hv|vh|vhv|hvh" or "%% route ortho|straight")`);
       return;
     }
     if (!l || l.startsWith('%%')) return;
     if ((m = l.match(/^direction\s+(TB|TD|BT|LR|RL)$/))) {
+      if (m[1] === 'BT' || m[1] === 'RL') problems.push(`${at}: direction ${m[1]} is not supported; use TB or LR`);
       dir = m[1] === 'LR' || m[1] === 'RL' ? 'LR' : 'TB';
       return;
     }
@@ -455,6 +460,7 @@ export function structModel(header, lines) {
       let [, a, ma, op, mb, b, label] = m;
       const [k, rev] = STRUCT_OPS[op];
       if (rev) [a, b, ma, mb] = [b, a, mb, ma];
+      if (a === b) problems.push(`${at}: "${a}" relates to itself; self-relations are not drawn`);
       edges.push({ from: a, to: b, k, label: label ? guillemets(label) : null, ma: ma || null, mb: mb || null, at });
       return;
     }
@@ -560,7 +566,17 @@ export function structModel(header, lines) {
     const up = rows.some((r) => r < e.row);
     e.lab = !down ? 'below' : !up ? 'above' : 'right';
   }
-  for (const d of edges) d.route = routes.get(`${d.from}\u0000${d.to}`) ?? 'auto';
+  // A route hint names the edge's ends in either order; hv and vh read from the first-named end,
+  // so a hint written against the stored direction (A <-- B is kept as B to A) swaps them.
+  const FLIP = { hv: 'vh', vh: 'hv' };
+  for (const d of edges) {
+    const fwd = routes.get(`${d.from}\u0000${d.to}`);
+    const back = routes.get(`${d.to}\u0000${d.from}`);
+    const hint = fwd ?? back;
+    if (hint) hint.used = true;
+    d.route = fwd ? fwd.route : back ? FLIP[back.route] ?? back.route : 'auto';
+  }
+  for (const [key, r] of routes) if (!r.used) problems.push(`${r.at}: route "${key.replace('\u0000', ' ')}" names no relation`);
   // A straight edge along a row or column must not run through another element's cell.
   for (const d of edges) {
     const a = elems.get(d.from);

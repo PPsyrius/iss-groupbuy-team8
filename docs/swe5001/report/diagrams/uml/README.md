@@ -85,6 +85,7 @@ One grammar serves the four kinds. The translator is `structModel` in `docs/swe5
 %% frame: BlocBuy services by tier
 componentDiagram
     actor Buyer
+    component Web["Web client"]
     package "Application tier" {
         interface IDeals["Group deal API"]
         component Commerce["commerce-svc"] <<subsystem>> {
@@ -95,12 +96,18 @@ componentDiagram
     zone "Third party" {
         component Stripe["Stripe"] <<external system>>
     }
+    Buyer --> Web
     Commerce -() IDeals
     Web -( IDeals : REST
     Deals -- Pay : Partnership
     Pay "D" ..> "U" Stripe : ACL
 %% route ortho
-%% at Deals 1,3
+%% at Buyer 0,0
+%% at Web 1,0
+%% at IDeals 1,1
+%% at Deals 1,2
+%% at Pay 2,2
+%% at Stripe 3,2
 ```
 
 **Statements**, one per line:
@@ -139,8 +146,8 @@ componentDiagram
 
 - `%% at Id col,row` pins an element (whole cells, column first, row down). Groups are never pinned. Pin every element of a component, deployment or use-case diagram; the automatic layout (longest-path layers) is a fallback.
 - An activity diagram with lanes lays itself out: one row per step along the flow, one or more columns per lane, lanes in declaration order. Pin only what a skip edge would otherwise run through.
-- `%% route ortho` (the default in activity diagrams) draws edges between different rows and columns with right-angled bends; `%% route straight` (the default otherwise) draws them straight. `%% route A B straight|hv|vh|vhv|hvh` sets one edge: `hv` runs across then along, `vh` along then across, `vhv` and `hvh` bend twice with the middle run in the free band of the gap next to the source.
-- The generator refuses: an unknown line, an undeclared name, a container or group with nothing inside, two elements in one cell, an element inside the area of a group it is not part of, overlapping groups or lanes, an element outside every lane (once there are lanes), and a straight edge along a row or column that runs through another element. Fix each with a pin or a route.
+- `%% route ortho` (the default in activity diagrams) draws edges between different rows and columns with right-angled bends; `%% route straight` (the default otherwise) draws them straight. `%% route A B straight|hv|vh|vhv|hvh` sets one edge: `hv` runs across then along, `vh` along then across, `vhv` and `hvh` bend twice with the middle run in the free band of the gap next to the source. A and B may be named in either order; `hv` and `vh` read from the first-named end.
+- The generator refuses: an unknown line, an undeclared name, a container or group with nothing inside, two elements in one cell, an element inside the area of a group it is not part of, overlapping groups or lanes, an element outside every lane (once there are lanes), a straight edge along a row or column that runs through another element, a malformed `%% route` line, a route that names no relation, a relation from an element to itself, and `direction BT` or `RL`. Fix a layout fault with a pin or a route.
 - A group that an edge enters from above widens so its title fits beside the line; a group title that an edge or label still crosses moves to the right end of its band.
 
 ## Placing figures and tables (figures.typ)
