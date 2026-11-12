@@ -1,5 +1,9 @@
 # AWS V3 r4 — measured outcome and verification
 
+## Publication addendum — 12 November 2026
+
+The original preparation-status paragraph below is historical. This package was subsequently committed and published at immutable [`0405b1f0cbfd5442cb3dfef084c69f785b272d82`](https://github.com/PPsyrius/iss-groupbuy-team8/tree/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-v3-r4), separately from `dev` integration; it is no longer working-tree-only. The later [#789 handoff](../20261112-issue-789/README.md) and [operator cleanup projection](../20261112-issue-789/cleanup.json) record subsequent clarification/retirement, not a changed R4 workload or canonical verdict. Original [README bytes](README.original-20261111.md) and [manifest bytes](SHA256SUMS.original-20261111) are preserved verbatim, also at that immutable commit. The current `SHA256SUMS` is explicitly a new manifest for this metadata-amended package, including those frozen copies, so the unchanged standalone checker still validates the exact current file set. Historical scan/review receipts retain their original byte scopes; the new #789 verification covers the amendment instead. All nine core data/verifier files and original scan/review receipts remain unchanged; no failed analyzer result or historical receipt is replaced by a manufactured pass.
+
 ## Report selection and branch-local package
 
 The owner selected **R4 as the sole V3 results campaign for the report**. Earlier V3 campaigns remain historical investigation records; they are not blended into R4 totals, plots, latency statistics or scaling claims. Selecting the report's data source is separate from an acceptance verdict. The package is prepared in the working tree of `docs/swe5001-must-fix-evidence`; it is not claimed committed, pushed or available at a frozen remote URL.

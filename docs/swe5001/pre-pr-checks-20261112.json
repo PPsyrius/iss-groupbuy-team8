@@ -1,0 +1,201 @@
+{
+  "verifiedAtUtc": "2026-11-12T05:49:06.142091+00:00",
+  "scope": "Three-commit file set plus current pre-PR edits; no historical receipt rewrite",
+  "branchHead": "af2ec5b2424c30da69c8279396fe8834eceaa0b9",
+  "sourceFiles": 846,
+  "jsonFilesParsed": 504,
+  "pythonSyntaxFiles": 3,
+  "currentNavigationMarkdownFiles": 17,
+  "localFileLinks": 314,
+  "nfrRows": 74,
+  "condensation": {
+    "2026-11-10": {
+      "beforeWords": 204,
+      "afterWords": 118,
+      "bullets": 4
+    },
+    "2026-11-11": {
+      "beforeWords": 557,
+      "afterWords": 192,
+      "bullets": 7
+    },
+    "2026-11-12": {
+      "beforeWords": 587,
+      "afterWords": 210,
+      "bullets": 7
+    },
+    "NFR-52": {
+      "beforeWords": 63,
+      "afterWords": 67
+    },
+    "NFR-64": {
+      "beforeWords": 266,
+      "afterWords": 83
+    },
+    "NFR-70": {
+      "beforeWords": 105,
+      "afterWords": 81
+    }
+  },
+  "closureChecks": 56,
+  "retention": {
+    "mode": "read-only preservation check, NOT archive/removal readiness",
+    "candidatesPresentAndUnchanged": 485,
+    "protectedPathsPresent": 557,
+    "affectedHistoricalManifestsUnchanged": 25,
+    "hashBoundCandidates": 456,
+    "privacyOriginalsUnchanged": 44,
+    "repositoryFilesRemoved": 0,
+    "durableArchiveVerified": false,
+    "metadataExposureResolved": false
+  },
+  "r4": {
+    "mode": "check",
+    "csvFiles": 3,
+    "browseMinuteBins": 30,
+    "scalingActions": 4,
+    "serviceObservations": 264,
+    "cloudwatchPoints": 793,
+    "serverMinutes": 31,
+    "canonicalAnalyzerExitPreserved": 1
+  },
+  "chartCheck": "performance-v3-timeline.svg: R4 only, 30 browse bins, 200 task samples, 29 CPU minutes, 4 scale-out starts",
+  "liveDocumentConflictMarkers": [],
+  "historicalMetadataExposureResolved": false,
+  "freshPeerBuildPerformed": false,
+  "branchRangeBase": "7c33c25a37ede8c369fbe08b786310c37e9e3922",
+  "verificationCommands": {
+    "k6": "docker run --rm --pull=never --network=none --read-only --tmpfs /tmp:rw,size=128m --workdir /repo --mount <repo>:/repo:readonly --entrypoint node node:24-bookworm --test perf/k6/lib.test.mjs perf/k6/scaling.test.mjs",
+    "workflowPython": "python -m unittest discover -s .github/tests -p *_test.py",
+    "workflowNode": "node --test .github/tests/cleanup-pr-caches.test.cjs .github/tests/security-headers.test.cjs .github/tests/style-policy.test.cjs .github/tests/api-output-clean.test.cjs (offline node:24-bookworm)",
+    "closure": "python docs/swe5001/evidence/20261112-issue-789/check_closure.py --repo . --peer-root <02c7b822-corrected-fixture>",
+    "retention": "python docs/swe5001/evidence/20261112-audit-followup/check-retention.py",
+    "r4": "python docs/swe5001/evidence/20261111-v3-r4/results.py",
+    "chart": "python docs/swe5001/report/diagrams/performance-v3-timeline.py --check"
+  },
+  "tests": {
+    "k6": {
+      "passed": 53,
+      "failed": 0,
+      "nodeImage": "node:24-bookworm"
+    },
+    "workflowPython": {
+      "run": 340,
+      "passed": 336,
+      "skipped": 4,
+      "failed": 0,
+      "pythonVersion": "3.14.6",
+      "yamlVersion": "6.0.3"
+    },
+    "workflowNode": {
+      "passed": 55,
+      "failed": 0,
+      "nodeImage": "node:24-bookworm"
+    },
+    "actionlint": {
+      "scope": "Read-only local workflow lint",
+      "exitCode": 0,
+      "image": "rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667"
+    }
+  },
+  "secretScan": {
+    "image": "ghcr.io/gitleaks/gitleaks:v8.30.1",
+    "scannerExitCode": 1,
+    "parsedReport": true,
+    "findings": 1,
+    "verifiedChecksumFalsePositives": 1,
+    "unresolvedFindings": 0,
+    "repositoryConfigOrInlineAllowancesUsed": false,
+    "scanRuleOrExclusionChanged": false,
+    "findingLocation": {
+      "path": "docs/swe5001/evidence/20261112-issue-789/verification.json",
+      "line": 657,
+      "rule": "generic-api-key"
+    },
+    "disposition": "The sole value is the exact SHA-256 of the referenced R4 secret-scan.json, independently recomputed. Historical verification receipt unchanged. No suppression added.",
+    "sourceFiles": 846,
+    "sourceSetSha256": "74becb3d51a61dd3ed53e598144af758c2107a4070bfbb777dc6c92530a66f74",
+    "method": "Directory scan of git diff branchRangeBase..branchHead paths plus current edits, excluding this generated receipt; private exact path/hash manifest retained. No Git-history/PDF or metadata clearance."
+  },
+  "currentEdits": [
+    {
+      "path": ".gitattributes",
+      "sha256": "fd2c8f4275de2281aee211fa9fbbdc04f1277b8af1f69c13207e696c2348188a"
+    },
+    {
+      "path": "docs/agile/sprint-04/log/2026-11-10.md",
+      "sha256": "a7c405ad25058c5224cb58226614f4321feb56385dae6209bdc1dcd7fe4b5801"
+    },
+    {
+      "path": "docs/agile/sprint-04/log/2026-11-11.md",
+      "sha256": "b47d7ac08d1c3a65ad6052ff44c545e1b3d9c234fbb7ee709f2ea78f94af59bb"
+    },
+    {
+      "path": "docs/agile/sprint-04/log/2026-11-12.md",
+      "sha256": "b3bdca96293ebb98538e9a9514bbb1ee3137e79e8d5e0e35498d63536222961d"
+    },
+    {
+      "path": "docs/quality/nfr-register.md",
+      "sha256": "218b4c49ec5a5b24255ae965a15bf22db34d70b9238dbbef1834a0774099f169"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261112-issue-789/README.md",
+      "sha256": "1eca0bcbd77f28c0db0d15f7fd0c14dcb3d6eb0d438a223f4808806362cc8f3d"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261112-issue-789/check_closure.py",
+      "sha256": "64c61413172189277e0f239d3817b27a9b74ce15a4f8fc500e5fcaad8dbea055"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261112-issue-789/closure-checklist.md",
+      "sha256": "862cc3b5c3195f75b6cf54cfd2c66c478a167c3770d27efed08c633367c4a1f2"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261112-issue-789/pr-draft.md",
+      "sha256": "98cc496afe228dc641e5f1afbc39f5704c0199f4eabcdbb47374173fa2bdcbba"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261112-issue-789/reply-draft.md",
+      "sha256": "e18ef03ce7eb758d63a45e4ab2d75a29ebc2c8ba26c033f01bc222b9c2fc9f9b"
+    },
+    {
+      "path": "docs/swe5001/pre-pr-review-20261112.md",
+      "sha256": "0a02b5b94f1a1eeccc661359371dbe4e597f055cc8675800d1a63b1dde491166"
+    }
+  ],
+  "peerFreshness": {
+    "retainedPatchBase": "02c7b822354656a4b6b7d269c876bc0e76635295",
+    "applyCheckedAgainst": "eb376a8f864d0f6ebba4ae8fc8f6a42426034fdf",
+    "applyCheckExitCode": 1,
+    "privateThreeWayConflictedFiles": [
+      "docs/swe5001/report/AGENTS.md",
+      "docs/swe5001/report/sections/01-introduction.typ",
+      "docs/swe5001/report/sections/02-project-conduct.typ",
+      "docs/swe5001/report/sections/03-2-physical.typ",
+      "docs/swe5001/report/sections/04-1-performance.typ",
+      "docs/swe5001/report/sections/04-3-security.typ",
+      "docs/swe5001/report/sections/05-devops.typ",
+      "docs/swe5001/report/sections/06-1-remarks.typ",
+      "docs/swe5001/report/sections/06-3-cost.typ"
+    ],
+    "lastReadbackHead": "2f9c2eb2cf2a3888a79f84bc127a50de80284d81",
+    "newerPeerBuildVerified": false,
+    "requiredBeforeMerge": "Reconcile residual #789 corrections with newer peer changes and rebuild/review; preserve #794 and follow-up fixes."
+  },
+  "preservation": {
+    "historicalReceiptsRewritten": false,
+    "campaignDataTextChanged": false,
+    "retentionCheckerWeakened": false,
+    "restoredLfOriginals": 75,
+    "lineEndingControls": "-text on three mixed-ending retained packages; LF for generated R4 SVG",
+    "generatedSvgMatchesHead": true
+  },
+  "publication": {
+    "stagedFiles": 0,
+    "committedByThisReview": false,
+    "pushedByThisReview": false,
+    "prOpenedByThisReview": false,
+    "issueClosedByThisReview": false,
+    "awsOrLoadActions": false
+  }
+}

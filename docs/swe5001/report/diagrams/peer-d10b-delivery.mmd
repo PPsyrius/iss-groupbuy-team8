@@ -1,0 +1,82 @@
+%% frame: SWE5001 release prerequisites and always-run cleanup attempts
+activityDiagram
+    lane "Promotion PR into prod" {
+        start S
+        action PR["dev into prod: source guard,\nimage validation, infra plan"]
+        decision Approval
+        action Merge["Merge commit into prod"]
+        action Blocked["Merge blocked"]
+        end Refused
+        end Approved
+    }
+    lane "swe5001-deploy.yml" {
+        start Deploy
+        action Images["Build, scan, export images"]
+        decision ImagesOk
+        action Publish["Publish images and\ncandidate digests"]
+        decision PublishOk
+        action Up["Create runtime, readiness,\nsmoke suite"]
+        decision UpOk
+        action Release["Publish SPA and\nrelease digests"]
+        merge Cleanup
+        action Down["Attempt down (always)\nDestroy + verify"]
+        action Evidence["Attempt evidence (always)\nRetain outcomes"]
+        end Done
+    }
+    lane "swe5001-env.yml" {
+        start Timer
+        action Cron["23:00 SGT cron\nActual run may be late"]
+        action Session["Dispatch down on prod\nRecord actual outcome"]
+        end SessionEnd
+    }
+    S --> PR
+    PR --> Approval
+    Approval --> Merge : [checks green and approved]
+    Approval --> Blocked : [otherwise]
+    Blocked --> Refused
+    Merge --> Approved
+    Deploy --> Images
+    Images --> ImagesOk
+    ImagesOk --> Publish : [succeeds]
+    ImagesOk --> Cleanup : [fails]
+    Publish --> PublishOk
+    PublishOk --> Up : [succeeds]
+    PublishOk --> Cleanup : [fails]
+    Up --> UpOk
+    UpOk --> Release : [succeeds]
+    UpOk --> Cleanup : [fails]
+    Release --> Cleanup : [either outcome]
+    Cleanup --> Down
+    Down --> Evidence : [either outcome]
+    Evidence --> Done
+    Timer --> Cron
+    Cron --> Session
+    Session --> SessionEnd
+%% always() schedules an attempt; neither destruction nor upload success is guaranteed.
+%% at S 0,0
+%% at PR 0,1
+%% at Approval 0,2
+%% at Merge 0,3
+%% at Approved 0,4
+%% at Blocked 0,5
+%% at Refused 0,6
+%% at Deploy 1,0
+%% at Images 1,1
+%% at ImagesOk 1,2
+%% at Publish 1,3
+%% at PublishOk 1,4
+%% at Up 1,5
+%% at UpOk 1,6
+%% at Release 1,7
+%% at Cleanup 1,8
+%% at Down 1,9
+%% at Evidence 1,10
+%% at Done 1,11
+%% at Timer 2,0
+%% at Cron 2,1
+%% at Session 2,2
+%% at SessionEnd 2,3
+%% route Approval Blocked hvh
+%% route ImagesOk Cleanup hvh
+%% route PublishOk Cleanup hvh
+%% route UpOk Cleanup hvh

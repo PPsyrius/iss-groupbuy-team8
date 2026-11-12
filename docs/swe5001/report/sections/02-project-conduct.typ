@@ -3,8 +3,8 @@
 // Links in Lim's chapters are pinned to dev at b80debcd (8 November 2026).
 #let repo = "https://github.com/PPsyrius/iss-groupbuy-team8"
 #let src(path, body) = link(repo + "/blob/b80debcd8b8cdeb1272219758789e1a9927b9d7d/" + path, body)
-// Files added by this change are linked through dev until it merges.
-#let dev-src(path, body) = link(repo + "/blob/dev/" + path, body)
+// Legacy helper name; these evidence paths are published at the branch snapshot, not dev.
+#let dev-src(path, body) = link(repo + "/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/" + path, body)
 #let iss(n) = link(repo + "/issues/" + str(n))[\##n]
 #let pr(n) = link(repo + "/pull/" + str(n))[\##n]
 #let run(id, body) = link(repo + "/actions/runs/" + id, body)
@@ -49,6 +49,7 @@ Every use case and platform capability in scope is built; dated AWS records veri
     [Promotion pipeline: build, scan, create, smoke, release, destroy], [Verified on AWS], [Green on 6, 17, 19 and 20 October and 9 November (AD-19, §5.3). On 9 November the eleventh promotion (#pr(757)) failed at the `edge` step and still destroyed the runtime (#dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[record], §6.4)\; the twelfth (#pr(770)), the same evening, built 120 resources from zero, passed, released and destroyed them (#dev-src("docs/swe5001/evidence/20261109-promotion-770/README.md")[record]). The smoke suite is nine read-only, unauthenticated checks over five GET requests through CloudFront: health is UP, the product list is not empty, `auth/me` and the notification list answer 401 without a session, an internal path is not served by a service, and each of the four API answers carries an `X-Trace-Id` header (#src("perf/smoke/smoke.sh")[`smoke.sh`]\; all nine passed in #run("39435280952")[run 39435280952] and #run("42653347818")[run 42653347818])],
     [Three services running on ECS (`distributed` topology)], [Verified on AWS], [#run("39008208244")[Run 39008208244], 17 October; repeated in #run("39259845179")[run 39259845179] (19 October) and #run("39435280952")[run 39435280952] (20 October) and #run("42653347818")[run 42653347818] (9 November)],
     [HTTP target-tracking auto-scaling and the CloudWatch dashboard], [R4 workload and scale-out verified on AWS], [The selected 11 November V3 R4 result and source-preserving observations are in §4.1. Native workload thresholds passed; the canonical analyzer ended on incomplete observation coverage. Maximum capacity and controlled linearity remain unproven (AISS-12)],
+    [Runtime and generator close-out, 12 November SGT], [Verified on AWS], [Separate operator recovery after the failed nightly job removed 127 Terraform-managed runtime resources by 12:13:20 and retired the generator by 12:06:02. Empty managed runtime state, a no-change destroy plan, normal `env-status.sh` exit 0 and 51 direct AWS checks establish the recorded close-out (§5.3). Private S3 archives and one encrypted generator-disk snapshot remain chargeable; foundation/edge and SWE5006 were not targeted],
     [Outbox, SNS/SQS fan-out and the idempotent consumer], [Built; routing verified on AWS], [Messaging readiness check passed in the promotions; no end-to-end notification on AWS is recorded],
     [Stripe test-mode Checkout in `commerce-svc`], [Built; deployed 20 October], [#pr(565), #pr(574)\; no payment on AWS recorded],
     [Identity outage and poison message to the dead-letter queue], [Verified locally only], [15 October rehearsal (§4.2, AISS-13)],
@@ -59,7 +60,7 @@ Every use case and platform capability in scope is built; dated AWS records veri
     [Data subnets for RDS and Valkey (AD-15)], [Verified on AWS, 10 November SGT], [The #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261110-subnet-verification/README.md")[dated session record] binds actual task/data ENIs, disjoint subnet sets, local-only data routes, security groups, public health/catalogue and operator-observed signed-in identity/notification responses to released source `93984f61`. Negative packet and failover tests are excluded. The operator closed #iss(589); AISS-07 is resolved for that session. #run("42722097786")[Scheduled cleanup] later destroyed runtime; §5.3 records the SQL-budget/pool experiment and its close-out, without a new AWS session],
   ),
   kind: table,
-  caption: [Project status reconciled through the 11 November 2026 R4 campaign. Status words follow the evidence rules of this report: "verified on AWS" needs a dated AWS record; "verified locally" never stands in for it.],
+  caption: [Project status reconciled through the 12 November 2026 operator close-out. Status words follow the evidence rules of this report: "verified on AWS" needs a dated AWS record; "verified locally" never stands in for it.],
 ) <tbl-status>
 
 *Outstanding issues.* Each open item has an owner and a proposed date in §3.4. AISS-07 now has dated placement/connectivity evidence; the remaining drills and startup-recovery evidence (AISS-13, AISS-14) stay subject to the team's R0 decision, not an automatic session authorisation. R4's canonical collection limitation and unproven maximum capacity/linearity remain under AISS-12, separate from its successful measured workload. Two project items sit outside the AISS register: progress report 2, due 18 October, has no record (#iss(462)), and #iss(620) asks for milestone and effort records, which this section answers in part.
@@ -83,7 +84,7 @@ Most delivery milestones were met on time or early. The platform module and outb
     [Messaging and auto-scaling in Terraform], [12–18 Oct], [14 Oct], [#pr(487), #pr(489)],
     [Load baseline and dashboard on AWS], [15 Oct], [16 Oct], [#pr(518)],
     [First green three-service promotion], [19–20 Oct], [17 Oct], [#run("39008208244")[Run 39008208244], #pr(534)],
-    [Auto-scaling session on AWS (V3)], [19 Oct], [11 Nov R4 selected; workload and scale-out verified, canonical collection limitation retained], [§4.1; #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/docs/swe5001-must-fix-evidence/docs/swe5001/evidence/20261111-v3-r4/README.md")[R4 record]],
+    [Auto-scaling session on AWS (V3)], [19 Oct], [11 Nov R4 selected; workload and scale-out verified, canonical collection limitation retained], [§4.1; #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-v3-r4/README.md")[R4 record]],
     [Drills on AWS (V4, V5, V7, identity outage)], [19–22 Oct], [Not achieved; local only], [#iss(458), #iss(459)],
     [Presentation (phase C ends)], [23 Oct, moved to 21 Oct], [21 Oct], [#iss(393)],
     [Remarks answered: report framework, data subnets, diagrams (phase D)], [—], [22 Oct – 6 Nov], [#pr(593), #pr(740), #pr(743), #pr(745), #pr(746)],
@@ -95,7 +96,7 @@ Most delivery milestones were met on time or early. The platform module and outb
 
 === Effort per member
 
-The team spent about 50 person-days on SWE5001, inside the briefing's guideline of about ten person-days for each member (briefing Q8). All five members agreed the split in @tbl-effort on 19 October and declared it in the presentation.
+The team estimated about 50 person-days on SWE5001 *through 19 October*, inside the briefing's guideline of about ten person-days for each member (briefing Q8). All five agreed the historical split in @tbl-effort and declared it in the presentation. This is not the total including post-presentation work.
 
 #figure(
   table(
@@ -113,3 +114,5 @@ The team spent about 50 person-days on SWE5001, inside the briefing's guideline 
 ) <tbl-effort>
 
 *How the figures were obtained.* Nobody logged hours, although the plan asked each pull request to record them. The team therefore summed the planned hours of the issues each member delivered and agreed the split from that sum. The figures are an agreed estimate, not a measurement; the range of 8.5–12.5 person-days reflects that Liu Jin carried phase A and Pan most of the messaging and scaling work of phase B.
+
+*Pan's Phase D reconstruction (\#789).* For identified work from 22 October through 12 November, a work-package reconstruction assumes 12 h for report/explanation work, 6 h for subnet/edge/publication verification, 10 h for cache/rerun tooling, 16 h for the 11 November sessions/diagnosis/generator work, and 4 h for final audit/handoff: 48 h. At the sprint plan's 6 h per ideal day, that is *8 additional person-days*, or *19.5 including the earlier 11.5*. The assumed range is 37–64 h (about 6.2–10.7 additional days); board estimates and automated runtime do not measure human effort. This is a rounded reconstructed estimate, not timesheets or a new all-team agreement. Other members' Phase D work and future work through submission are not calculated here; the full source inventory and assumptions accompany the local \#789 handoff.

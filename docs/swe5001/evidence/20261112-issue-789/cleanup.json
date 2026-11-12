@@ -1,0 +1,92 @@
+{
+  "scope": "Safe projection of owner-authorized SWE5001 runtime and generator retirement on 12 November 2026; private operator receipts retained outside Git",
+  "verifiedAtUtc": "2026-11-12T04:14:42.667991+00:00",
+  "verifiedAtSgt": "2026-11-12T12:14:42.667991+08:00",
+  "accountVerified": true,
+  "region": "ap-southeast-1",
+  "releasedInfrastructureSource": "3a893036d70d028b29ae13ebf820283571c1ae00",
+  "authorization": {
+    "earlierDocumentationOnlyRestrictionSupersededForCleanup": true,
+    "ownerApprovedLogArchivalBeforeDeletion": true,
+    "ownerApprovedRuntimeAndGeneratorRetirement": true,
+    "publicationRemainsLocalOnly": true,
+    "newLoadExperimentAuthorizedOrRun": false
+  },
+  "nightlyAttempt": {
+    "dispatcherRun": 43104933031,
+    "downRun": 43104955071,
+    "downConclusion": "failure",
+    "laterRecoveryIsNotANightlyWorkflowSuccess": true,
+    "githubApplyRolePermissionsChanged": false
+  },
+  "runtime": {
+    "stateKey": "swe5001/runtime.tfstate",
+    "method": "Existing authenticated SSO operator assignment; privately reviewed runtime-only saved Terraform destroy plans, applied in two stages",
+    "startedAtUtc": "2026-11-12T03:58:58.794862+00:00",
+    "firstStageCompletedAtUtc": "2026-11-12T04:11:13.586842+00:00",
+    "firstStageManagedDeletes": 122,
+    "firstStageRetainedLogBucketAndSecurityControls": true,
+    "finalStageStartedAtUtc": "2026-11-12T04:11:32.932098+00:00",
+    "completedAtUtc": "2026-11-12T04:13:20.100053+00:00",
+    "finalStageManagedDeletes": 5,
+    "totalManagedDeletes": 127,
+    "managedStateResourcesAfter": 0,
+    "postDestroyPlanExitCode": 0,
+    "normalEnvStatusExitCode": 0,
+    "normalEnvDownScriptInvokedForRecovery": false,
+    "normalScriptBoundary": "env-down.sh has no archival step; it destroys runtime, retries once after 60 seconds, then invokes env-status.sh. The experimental ALB-log bucket had force_destroy=false, so Terraform would not automatically empty a nonempty bucket."
+  },
+  "generator": {
+    "startedRetirementAtUtc": "2026-11-12T04:00:25.089341+00:00",
+    "completedAtUtc": "2026-11-12T04:06:02.381705+00:00",
+    "previousState": "stopped",
+    "state": "terminated",
+    "instanceType": "t3a.2xlarge",
+    "originalRootDiskGiB": 40,
+    "originalRootDiskAbsent": true,
+    "temporarySecurityGroupAbsent": true,
+    "temporaryRoleInstanceProfileAndBoundaryAbsent": true,
+    "sharedDefaultVpcAndSubnetPreserved": true
+  },
+  "archive": {
+    "destination": "Existing private generator-evidence S3 bucket; new unique archive prefix, no existing objects overwritten",
+    "logArchiveCompletedAtUtc": "2026-11-12T03:53:54.188018+00:00",
+    "logObjects": 71,
+    "logObjectBytes": 76166764,
+    "logManifestSha256": "f4b4e59943a1c9c4867f7cadacb7873928b795d087fd386294f0af6df68119e2",
+    "allLogBytesReadbackVerifiedBeforeSourceDeletion": true,
+    "manifestReadbackVerified": true,
+    "sourceObjectsDeletedOnlyAfterFinalArchiveReadback": 71,
+    "albWriterVerifiedAbsentBeforeSourceDeletion": true,
+    "finalSourceInventoryEmptyBeforeBucketDestroy": true,
+    "sourceBucketAbsentAfterDestroy": true,
+    "retainedR4ObjectsUnchanged": 13,
+    "encryptedGeneratorDiskSnapshots": 1,
+    "snapshotState": "completed",
+    "snapshotSourceVolumeGiB": 40,
+    "snapshotCompletedBeforeInstanceTermination": true,
+    "snapshotEvidenceBoundary": "Preserves the stopped disk, including any uncollected files; no snapshot restore or filesystem-content acceptance test was performed.",
+    "s3SecurityVerified": ["Singapore Region and intended ownership", "All four public-access blocks", "AES256 encryption", "Bucket-owner-enforced ownership", "TLS-only bucket policy"]
+  },
+  "independentVerification": {
+    "passedChecks": 51,
+    "runtimeAbsenceScopes": ["Tagged VPC, subnets, ENIs, volumes, security groups, routes, addresses and launch templates", "NAT instances and Auto Scaling group", "ALB and exact target groups", "RDS and its subnet/parameter groups", "Cache and its subnet group", "ECS cluster inactive or missing", "Exact runtime IAM roles and instance profile", "SNS topics and four SQS queues", "Runtime log groups, alarms and dashboard", "Generated runtime SSM parameter metadata", "ECS application-autoscaling targets", "Original ALB-log bucket"],
+    "generatorAbsenceScopes": ["Exact instance terminated and original root disk absent", "Temporary security group absent", "Temporary IAM role, instance profile and boundary absent"],
+    "retentionReadbacks": ["Original R4 object identities unchanged", "Log archive objects and manifest present", "Archive-bucket public-access blocks retained", "Encrypted disk snapshot completed", "Permanent CloudFront distribution deployed and SPA bucket present", "Permanent GitHub roles present", "Shared generator VPC and subnet present"],
+    "limitations": "Point-in-time checks of known identities and scoped service inventories, not an account-wide cost audit, whole-stack drift check, snapshot restore test or SWE5006 health test."
+  },
+  "retention": {
+    "storageChargesRemain": true,
+    "retainedStorage": ["Private generator-evidence S3 bucket with original results and log archives", "One completed encrypted generator disk snapshot"],
+    "permanentFoundationAndEdgeNotTargeted": true,
+    "swe5006NotTargeted": true,
+    "archiveDisposalNotAuthorized": true,
+    "zeroAccountCostClaimed": false,
+    "newPostCleanupBillMeasured": false
+  },
+  "privacy": {
+    "rawStatesPlansCredentialsAndPayloadsPublished": false,
+    "objectKeysBucketNamesAndPrivateResourceIdentifiersIncluded": false,
+    "originalR4AndAuditPackagesRewritten": false
+  }
+}

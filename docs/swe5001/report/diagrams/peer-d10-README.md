@@ -1,0 +1,7 @@
+# Peer D10 correction handoff (#789)
+
+The combined report uses [`d10-cicd-pipeline.typ`](d10-cicd-pipeline.typ). The paired `peer-d10a-ci-image-chain.mmd` / `.typ` and `peer-d10b-delivery.mmd` / `.typ` are the editable/generated replacements for the styled peer report's Figures 5.1 and 5.2, not a shared-renderer upgrade or new imports into the older combined layout.
+
+They target the peer's activity-capable UML kit and generator at `02c7b822354656a4b6b7d269c876bc0e76635295`. Their destination paths are `diagrams/appendix-a/src/d10{a-ci-image-chain,b-delivery}.mmd` and matching `gen/*.typ`, as carried by the [exact-base patch](../../evidence/20261112-issue-789/peer-report.patch) and [hash manifest](../../evidence/20261112-issue-789/peer-base.json). Regenerate with the peer's `node docs/swe5001/report/scripts/appendix-diagrams.mjs d10a-ci-image-chain d10b-delivery`; do not hand-edit the generated Typst or assume the older local kit supports `activityDiagram`.
+
+The CI view puts a decision after the join, makes the path-filtered branches conditional, expands both image-scan failure routes and terminates failure at an activity final. The delivery view routes failed images/publish/up prerequisites to a merge before cleanup/evidence attempts; `always()` is not a guarantee of their success. The caption owns skipped-dependent-job semantics so guards remain short and readable. The peer build checks actual rendered labels against the 8-point minimum and preserves its structure/style; see [verification](../../evidence/20261112-issue-789/verification.json).
