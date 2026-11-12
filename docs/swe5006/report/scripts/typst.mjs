@@ -251,8 +251,10 @@ function classDiagram(lines, frame) {
   // Ranking: generalisation and realisation point up (parent above), the rest point down.
   const layoutEdges = rels.map((r) => (r.kind === 'inherit' || r.kind === 'realize' ? { a: r.b, b: r.a } : { a: r.a, b: r.b }));
   const pos = layout([...classes.keys()], layoutEdges, hintsFrom(lines), dir);
+  // `%% objects` (opt-in) draws every box as an object: underlined `name : Class`, no operations.
+  const objects = lines.some((l) => /^%%\s*objects\s*$/.test(l.trim()));
   const cls = [...classes.values()].map(
-    (c) => `(id: ${str(c.id)}, name: ${str(c.name)}, stereo: ${c.stereo ? str(c.stereo) : 'none'}, attrs: ${typstArray(c.attrs.map(str))}, ops: ${typstArray(c.ops.map(str))}, abstract: ${c.abstract}, pos: (${pos[c.id][0]}, ${pos[c.id][1]}))`,
+    (c) => `(id: ${str(c.id)}, name: ${str(c.name)}, stereo: ${c.stereo ? str(c.stereo) : 'none'}, attrs: ${typstArray(c.attrs.map(str))}, ops: ${typstArray(c.ops.map(str))}, abstract: ${c.abstract}${objects ? ', object: true' : ''}, pos: (${pos[c.id][0]}, ${pos[c.id][1]}))`,
   );
   const bends = routes(rels, pos);
   // `%% mside A B <side at A> <side at B>` (left or right, walking from the relation's source)

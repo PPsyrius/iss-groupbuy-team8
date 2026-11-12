@@ -23,6 +23,7 @@ classDiagram
     }
     class PaidGroupDealService {
         <<application service, Conc, Evt>>
+        +startConfirmed(terms, paid): ParticipationResult
         +joinConfirmed(dealId, paid, sharerUserId): ParticipationResult
     }
     class CheckoutPayment {
@@ -32,8 +33,10 @@ classDiagram
     }
     class CheckoutPaymentRepository {
         <<interface, repository, Pers, Conc>>
+        +claimEvent(eventId: String, type: String): boolean
         +lock(id: UUID): CheckoutPayment
         +requireRefund(payment, reason, eventId): void
+        +recordOutcome(paymentId, dealId, orderId, outcome): void
     }
     class PaymentBusinessPort {
         <<interface, Dist, Conc>>
@@ -61,13 +64,13 @@ classDiagram
     class CheckoutPaymentRepositoryImpl {
         <<adapter, Pers>>
     }
-%% at StripeWebhookController 0,0
-%% at PaymentAppService 0,1
+%% at StripeWebhookController 0,1
+%% at PaymentAppService 0,2
 %% at StripePaymentAppService 1,1
 %% at StripeCheckoutService 2,1
 %% at OrderFulfilmentAdapter 3,1
 %% at PaidGroupDealService 4,1
-%% at CheckoutPayment 0,2
+%% at CheckoutPayment 0,3
 %% at CheckoutPaymentRepository 1,2
 %% at PaymentBusinessPort 2,2
 %% at GroupDeal 3,2

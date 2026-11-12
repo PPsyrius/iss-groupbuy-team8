@@ -19,26 +19,27 @@ sequenceDiagram
     loop each dealId, while leaseValid
         Sw->>Px: expireOne(dealId)
         critical expireOne, REQUIRED, default isolation, 10 s
-            Px->>Repo: lockDeal(dealId): lock 1
+            Px->>Repo: lockDeal(dealId) {lock 1}
             Repo-->>Px: Optional of GroupDeal
             Px->>Repo: currentTime()
             Repo-->>Px: Instant now
             Px->>Deal: expire(now)
             break DEAL_CLOSED: already resolved
-                Deal-->>Px: BizException, caught: return false
+                Deal-->>Px: BizException DEAL_CLOSED
+                Px-->>Sw: false
             end
             Deal-->>Px: after (EXPIRED)
             Px->>Repo: expire(before, after, now)
-            Note over Px,Out: publishEvent(TeamExpired) on ApplicationEventPublisher only registers the event; at BEFORE_COMMIT the transaction owner calls each listener in @Order
-            Px->>OLS: onTeamExpired(event), @Order(10)
-            OLS-->>Px: orders cancelled
-            Px->>Ref: onTeamExpired(event), @Order(20)
-            Ref->>RSvc: recordExpiredTeam(dealId)
-            RSvc-->>Ref: one refund obligation per paid member
+            Note over Px,Out: publishEvent(TeamExpired) on ApplicationEventPublisher only registers the event; at BEFORE_COMMIT the transaction owner calls each listener in @Order (10, 20, then lowest precedence): orders cancelled, one refund obligation per paid member, one TeamExpiredV1 row in sys_outbox
+            Px->>OLS: onTeamExpired(event)
+            OLS-->>Px: void
+            Px->>Ref: onTeamExpired(event)
+            Ref->>RSvc: recordExpiredTeam(dealId) {lock 3}
+            RSvc-->>Ref: void
             Ref-->>Px: void
-            Px->>Out: onTeamExpired(event), lowest precedence
-            Out-->>Px: TeamExpiredV1 row in sys_outbox
+            Px->>Out: onTeamExpired(event)
+            Out-->>Px: void
         end
-        Px-->>Sw: true after COMMIT; an exception rolls all back
+        Px-->>Sw: true
     end
     Sw-->>Job: Result(due, expired, alreadyResolved, failed)

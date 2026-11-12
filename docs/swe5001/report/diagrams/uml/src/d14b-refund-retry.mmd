@@ -10,7 +10,8 @@ sequenceDiagram
         Job->>Svc: processNext()
         critical claim, REQUIRED (new), READ COMMITTED, 5 s
             Svc->>Repo: claimNext()
-            Repo-->>Svc: RefundWork: oldest due row, SKIP LOCKED, 2 min row lease
+            Repo-->>Svc: RefundWork
+            Note over Svc,Repo: oldest due row, SKIP LOCKED, 2 min row lease
         end
         break nothing due
             Svc-->>Job: false
@@ -20,7 +21,7 @@ sequenceDiagram
             Svc->>GW: retrieveRefund(providerRefundId)
             GW->>Stripe: GET /v1/refunds/{id}
         else no refund id, and the database clock now() is 23 h or more past firstAttemptAt
-            Svc->>GW: findRefund(work): never create again
+            Svc->>GW: findRefund(work) {never create again}
             GW->>Stripe: GET /v1/refunds?payment_intent=…
         else no refund id, under 23 h
             Svc->>GW: createRefund(work)
