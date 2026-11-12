@@ -22,7 +22,7 @@ deploymentDiagram
         node Bus["Amazon SNS and SQS"] <<node>> :::messaging
     }
     Browser -- Cdn : HTTPS
-    Browser -- Alb : HTTPS /api
+    Cdn -- Alb : HTTP 80 /api/*
     Alb -- IdTask : HTTP 8081
     Alb -- CoTask : HTTP 8082
     CoTask -- Rds : JDBC over TLS
