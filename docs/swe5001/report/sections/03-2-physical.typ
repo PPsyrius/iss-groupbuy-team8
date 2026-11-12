@@ -192,7 +192,7 @@ The physical decisions buy isolation and a small bill rather than always-on capa
       *Driver:* Security (isolation between the two environments). \
       *Context:* The SWE5006 environment and the SWE5001 runtime share our member account 402178232802 in an AWS Organization; neither must be able to damage the other. \
       *Options considered:* (a) a separate member account (`swe5001-poc`, since closed); (b) the shared account with no fence, rejected because either project could change the other's resources; (c) the shared account with the SWE5001 apply role fenced to its own resources. \
-      *Choice:* (c). The SWE5001 apply role denies actions on resources without the SWE5001 tags or name prefix (#src("infra/swe5001/foundation/github-oidc.tf")[`github-oidc.tf`], "Guardrail for the shared account"); SCPs and Identity Center govern the whole account, and an account administrator cannot lift an SCP. \
+      *Choice:* (c). The SWE5001 apply role denies changes to resources without the SWE5001 tags or name prefix (#src("infra/swe5001/foundation/github-oidc.tf")[`github-oidc.tf`], "Guardrail for the shared account"), except its CloudWatch alarm, dashboard and metric access (AISS-15); SCPs and Identity Center govern the whole account, and an account administrator cannot lift an SCP. \
       *Trade-off:* One account, one set of short-lived logins and one bill shared by both projects (§6.3); the fence is an IAM policy that an administrator can change, weaker than an account boundary. An SCP can also block legitimate calls, as a CloudFront metric read was on 16 October (§4.3, @tbl-findings). \
       *Consequence:* Access details are in §4.3. \
       *Record:* No ADR; `docs/deploy/aws-account-governance/README.md`.
@@ -391,7 +391,7 @@ Write transactions run at PostgreSQL's default READ COMMITTED with `SELECT … F
   caption: [Technical tables and the patterns they support. Source: Flyway migrations V13–V28.],
 ) <tbl-technical>
 
-Only one relay copy runs, because it holds the scheduler lease; its throughput limit is calculated in AD-16 (§3.3).
+One relay copy holds the scheduler lease at a time; a takeover can overlap one in-flight batch, so consumers de-duplicate by event ID. Its throughput limit is calculated in AD-16 (§3.3).
 
 ==== Non-relational stores and messages
 

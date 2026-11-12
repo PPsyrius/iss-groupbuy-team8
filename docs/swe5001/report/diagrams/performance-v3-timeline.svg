@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="470pt" height="458pt" viewBox="0 0 470 458">
 <rect width="100%" height="100%" fill="white"/>
-<g font-family="Arial, sans-serif" font-size="8.5" fill="#1B1A18">
+<g font-family="Arial, sans-serif" font-size="8.6" fill="#1B1A18">
 <text x="48.00" y="12.00" font-weight="bold">11 November 2026 • V3 R4 • zero browse errors / drops</text>
 <text x="48.00" y="26.00" >Verticals: request-policy starts; light band: tail covered by supplemental samples</text>
 <text x="48.00" y="44.00" font-weight="bold">Throughput (requests/s): blue = completed; grey dashed = offered reference</text>

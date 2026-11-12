@@ -705,7 +705,7 @@ Settlement is a reusable module inside `commerce-svc`: `payment` drives it throu
 
 *How the platform extends.*
 - *A new subscriber needs no producer change.* The `audit` queue (no consumer; demonstrates fan-out, ADR 0007) and its dead-letter queue receive every event whose `eventType` starts with `Team`. They were created with the notification queue on 14 October by two lines of Terraform in `infra/swe5001/modules/messaging/main.tf` (one `consumers` element and one filter line), with no change to `commerce-svc`. A working consumer also needs its checks and its worker; @tbl-seams lists the full edit.
-- *Workload-isolated batch path.* Designed but not implemented: heavy batch jobs, such as end-of-day settlement reconciliation, seller payout aggregation or retraining a recommendation model, would read the `audit` queue and run as ECS scheduled tasks or AWS Batch jobs outside `commerce-svc` tasks. They would not compete for its CPU or PostgreSQL connections (AD-07, AD-16; @tbl-workload-compute, §3.2.2).
+- *Workload-isolated batch path.* Designed but not implemented: heavy batch jobs, such as end-of-day settlement reconciliation, seller payout aggregation or retraining a recommendation model, would read the `audit` queue and run as ECS scheduled tasks or AWS Batch jobs outside `commerce-svc` tasks. They would not compete for its CPU, but they would still share the RDS server, so database isolation is a separate requirement (AD-07, AD-16, AISS-05; @tbl-workload-compute, §3.2.2).
 
 *How the API contract is governed.*
 - *Built.* One OpenAPI 3.1 specification (`contracts/openapi.json`, 31 operations in 27 paths under `/api/v1`) is the contract for all three services. The web client's TypeScript client is generated from it. Tested in CI: a pull request fails when controller mappings drift from the committed specification or expose `/internal/*` (`InternalPathsContractTest`). At run time, the edge routes only public `/api/v1/*` paths, while `/internal/users/*` is reachable only inside the virtual private cloud (VPC) through ECS Service Connect (AD-06, AD-09).
@@ -786,7 +786,7 @@ Settlement is a reusable module inside `commerce-svc`: `payment` drives it throu
 
     [Scheduler lease],
     [`blocbuy-bootstrap` (technical)],
-    [A lease row in `sys_scheduler_lock` with a `locked_until` time; the row is locked only while a task acquires it. It ensures that only one task runs each of the five scheduled jobs at a time (AD-16).],
+    [A lease row in `sys_scheduler_lock` with a `locked_until` time; the row is locked only while a task acquires it. It gives each of the five scheduled jobs one owner at a time; after a lost renewal a takeover can overlap one in-flight item, which guarded updates and unique keys keep correct (AD-16).],
     [`LeasedJobRunner`, `sys_scheduler_lock`; jobs `TeamExpirySweepJob`, `PurchaseIntentExpiryJob`, `RefundWorkerJob`, `OutboxRelayJob`, `OutboxRetentionJob`],
   ),
   kind: table,
