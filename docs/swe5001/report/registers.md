@@ -39,7 +39,7 @@ Rule: the **backup slides B1–B2** are the base, because they are the most comp
 | AD-19 | Release only by a `dev` → `prod` promotion PR that builds, deploys, tests, releases and destroys | Continuous deployment from `dev`; manual applies; a long-lived staging runtime | 3.3 | — | — |
 | AD-20 | Commerce scales on ALB requests per task: target tracking on `ALBRequestCountPerTarget` at 12,000 requests per target per minute, two to six tasks (one in baseline sessions), cooldowns 60 s out and 180 s in; notification scales on queue backlog per task, target 50, one to four tasks. Driver: scalability | CPU target tracking; step scaling; fixed task count | 3.2.1 | — (16 October policy record) | new |
 
-Not carried over from the study (designed, not built): stock reservation (study AD-04), ADOT/X-Ray tracing (study AD-11).
+Not carried over from the study (designed in the options study, not built; report Table 1.7 uses the same wording): stock reservation (study AD-04), ADOT/X-Ray tracing (study AD-11).
 
 ## AISS register (section 3.4)
 
