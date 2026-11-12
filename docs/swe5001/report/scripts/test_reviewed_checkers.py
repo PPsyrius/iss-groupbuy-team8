@@ -77,12 +77,15 @@ class ReviewedCheckerTests(unittest.TestCase):
 
     def run_report(self, transform=lambda name, content: content):
         original_text = reviewed.text
+        original_git = reviewed.git
 
         def scoped_git(*args):
             if args[0] == 'diff':
                 self.assertEqual(args[:4], ('diff', '--name-only', reviewed.BASE, '--'))
                 self.assertTrue(all(path.startswith('docs/swe5001/evidence/20261112-issue-789/') for path in args[4:]))
                 return ''
+            if args[0] == 'show':
+                return original_git(*args)
             return ''
 
         with patch.object(reviewed, 'git', side_effect=scoped_git), patch.object(
@@ -118,8 +121,10 @@ class ReviewedCheckerTests(unittest.TestCase):
                                 if name.endswith('05-devops.typ') else content)
 
     def test_ci_billing_allows_concise_qualification_and_rejects_reversal(self):
+        revision = reviewed.re.search(r'development-baseline.json", rev: "([0-9a-f]{40})"',
+                                      reviewed.text('sections/05-devops.typ'))[1]
         paragraph = ('Estimated: 147 qualifying backend delivery runs used 1,733 runner-minutes '
-                     '(#src("docs/swe5001/evidence/20261113-ci-check-cost-estimate/development-baseline.json")[receipt]). '
+                     '(#src("docs/swe5001/evidence/20261113-ci-check-cost-estimate/development-baseline.json", rev: "' + revision + '")[receipt]). '
                      'At US\\$0.006/min, US\\$10.40 is a list-price equivalent, not observed billing. '
                      'Standard GitHub-hosted runners are free for public repositories.')
         reviewed.check_ci_baseline(paragraph)
@@ -129,6 +134,26 @@ class ReviewedCheckerTests(unittest.TestCase):
                          ('public repositories', 'private repositories')):
             with self.subTest(change=new), self.assertRaises(AssertionError):
                 reviewed.check_ci_baseline(paragraph.replace(old, new))
+
+    def test_matching_local_receipt_and_report_edits_cannot_override_cited_jobs(self):
+        ops = reviewed.text('sections/05-devops.typ')
+        path = 'docs/swe5001/evidence/20261113-ci-check-cost-estimate/development-baseline.json'
+        revision = reviewed.re.search(r'development-baseline.json", rev: "([0-9a-f]{40})"', ops)[1]
+        cited = reviewed.git('show', revision + ':' + path)
+        local = reviewed.json.loads(cited)
+        eligible = next(r for r in local['runs'] if r['classification'])
+        eligible['jobs'][0]['seconds'] += 600
+        local['summary']['rounded_job_minutes'] += 10
+        local['summary']['rounded_minutes_cost_equivalent_usd'] = 10.458
+        # In-memory substitutes only: no report or receipt file is rewritten.
+        changed_ops = ops.replace('1,733', '1,743').replace('10.40', '10.46')
+        with patch.object(Path, 'read_text', return_value=reviewed.json.dumps(local)), patch.object(
+            reviewed, 'git', return_value=cited
+        ) as read_revision:
+            reviewed.check_ci_baseline(ops)
+            with self.assertRaises(AssertionError):
+                reviewed.check_ci_baseline(changed_ops)
+            read_revision.assert_called_with('show', revision + ':' + path)
 
     def test_report_ci_billing_qualification_cannot_be_removed_or_reversed(self):
         for old, new in (('list-price equivalent', 'billed charge'),

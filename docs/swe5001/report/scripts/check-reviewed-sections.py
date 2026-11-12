@@ -48,12 +48,14 @@ def snapshot(path, section, override):
 
 
 def check_ci_baseline(ops):
-    """Compare the cited paragraph with recorded jobs, not hard-coded totals."""
+    """Compare report totals with the jobs at the revision its citation names."""
     path = 'docs/swe5001/evidence/20261113-ci-check-cost-estimate/development-baseline.json'
     paragraphs = [p for p in ops.split('\n\n') if path in p]
     assert len(paragraphs) == 1, 'CI baseline needs one cited report paragraph'
     paragraph = paragraphs[0]
-    receipt = json.loads((ROOT / path).read_text())
+    citation = re.search(r'#src\("' + re.escape(path) + r'",\s*rev:\s*"([0-9a-f]{40})"\)', paragraph)
+    assert citation, 'CI baseline needs an explicit immutable receipt revision'
+    receipt = json.loads(git('show', citation[1] + ':' + path))
     eligible = [r for r in receipt['runs'] if r['classification']]
     minutes = sum(ceil(j['seconds'] / 60) for r in eligible for j in r['jobs'])
     cost = (Decimal(minutes) * Decimal(str(receipt['summary']['linux_usd_per_minute']))).quantize(
