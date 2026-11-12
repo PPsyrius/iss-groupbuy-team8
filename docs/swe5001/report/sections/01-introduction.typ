@@ -98,7 +98,7 @@ SWE5001 changed how BlocBuy is built and run, not what it does. The business fun
   table(
     columns: (1fr, 3fr),
     table.header([Phase], [Delivered]),
-    [0. Study and proof of concept], [The architecture options study (viability, cost, Kubernetes, EventStorming) and a throw-away proof of concept in a separate AWS account],
+    [0\. Study and proof of concept], [The architecture options study (viability, cost, Kubernetes, EventStorming) and a throw-away proof of concept in a separate AWS account],
     [A. Strangler step 0], [The permanent `foundation` and `edge` stacks, the disposable `runtime` stack, the release pipeline, and the unchanged monolith running on ECS],
     [B. Split], [Three service assemblies from one codebase, a database per service, the remote identity check, the outbox, SNS and SQS messaging and the idempotent notification consumer],
     [C. AWS evidence], [The load baseline, auto-scaling, three-service promotions and the 21 October presentation],
@@ -133,7 +133,7 @@ Every use case keeps its SWE5006 behaviour in the monolith and has one owning se
   caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], where notification was unnumbered and UC7 also covered referral credit; this report numbers every use case in @fig-d2-use-cases and splits the credit into UC12. UC10 to UC12 are numbered for this report: the #src("docs/sprint2-progress-report.typ")[Sprint 2 progress report] used UC10 for the payment and order system of record, which this UC10 covers from the buyer's side.],
 ) <tbl-scope-uc>
 
-#afig("d2-use-cases", lbl: <fig-d2-use-cases>, [Use case view (UML use case diagram). UC3 and UC4 always include UC10; UC6 extends UC5 when the team expired, and UC12 extends UC4 when the join used an invite link.])
+#afig("d2-use-cases", lbl: <fig-d2-use-cases>, float: true, [Use case view (UML use case diagram). UC3 and UC4 always include UC10; UC6 extends UC5 when the team expired, and UC12 extends UC4 when the join used an invite link.])
 
 Besides the use cases, the scope covered the platform itself:
 
