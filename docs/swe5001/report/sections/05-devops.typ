@@ -1,5 +1,5 @@
 #import "../lib.typ": *
-#import "appendix-a/lib-a.typ": afig
+#import "../figures.typ": afig
 
 = DevOps and Development Lifecycle
 

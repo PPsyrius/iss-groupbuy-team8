@@ -338,7 +338,7 @@ function stateDiagram(lines, frame) {
 
 // ---- Component, deployment, use-case and activity diagrams --------------------
 //
-// One Mermaid-like grammar for the four kinds (diagrams/appendix-a/README.md in the SWE5001
+// One Mermaid-like grammar for the four kinds (diagrams/uml/README.md in the SWE5001
 // report documents it). A header line (componentDiagram, deploymentDiagram, usecaseDiagram,
 // activityDiagram), then one statement per line:
 //   <keyword> Id["Name"] <<stereotype>> :::tint : sub   an element; ["Name"], <<…>>, :::tint and

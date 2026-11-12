@@ -96,7 +96,7 @@
   // `internal_controllers_are_hidden_and_distributed_only`) may break after a dot, underscore,
   // slash, opening parenthesis or comma, and between the words of a camelCase name, so it wraps
   // inside its column instead of running into the next one or past the page edge. As in the
-  // SWE5006 template's `report-table` and the source book's `lib-a.typ`.
+  // SWE5006 template's `report-table` and `figures.typ`.
   // An AWS region or zone name (`ap-southeast-1`, `ap-southeast-1a`) never breaks at its hyphens.
   show raw.where(block: false): it => if it.text.starts-with("ap-southeast-1") { box(it) } else { it }
   show table: it => {

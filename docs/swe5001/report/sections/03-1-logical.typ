@@ -1,6 +1,6 @@
 // Logical Architecture & Design: part of 03-solution-overview.typ (split for parallel editing; output unchanged).
 #import "../lib.typ": *
-#import "appendix-a/lib-a.typ": afig
+#import "../figures.typ": afig
 #import "../diagrams/d4a-eventstorming-timeline.typ": d4a
 
 // AD and AISS numbers come from ../registers.md.

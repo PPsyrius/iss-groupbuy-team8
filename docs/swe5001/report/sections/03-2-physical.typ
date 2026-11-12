@@ -1,6 +1,6 @@
 // Physical Architecture & Design: part of 03-solution-overview.typ (split for parallel editing; output unchanged).
 #import "../lib.typ": *
-#import "appendix-a/lib-a.typ": afig
+#import "../figures.typ": afig
 #import "../diagrams/d6-network.typ": d6
 #import "../diagrams/d6-security-groups.typ": d6-sg-table
 

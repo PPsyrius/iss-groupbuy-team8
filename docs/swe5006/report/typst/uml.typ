@@ -3,7 +3,7 @@
 // (docs/presentation-kit/diagrams/STYLE.md and the deck's src/diagrams/*.svg). One kit draws
 // every UML diagram of the SWE5006 report and the SWE5001 report. scripts/typst.mjs translates
 // Mermaid (and the Mermaid-like componentDiagram, deploymentDiagram, usecaseDiagram and
-// activityDiagram, whose grammar docs/swe5001/report/diagrams/appendix-a/README.md documents)
+// activityDiagram, whose grammar docs/swe5001/report/diagrams/uml/README.md documents)
 // into calls to the diagram functions at the end of each part below. Frame headings: "class",
 // "sd", "stm", "cmp", "deployment", "uc", "act".
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge

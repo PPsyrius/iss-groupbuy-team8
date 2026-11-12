@@ -183,7 +183,7 @@ Technical findings from the real cloud (deck backup B8), analytics (B11), cost (
 
 The view set answers F8, F9 and F10. Every diagram is UML or a named notation, has a caption stating its viewpoint, and is referenced from the text. The report lists the views in its view catalogue (`tbl-views`, chapter 3 opener).
 
-**The detailed design source book is not part of the report.** Its files (folder `appendix-a/`: `sections/07-appendix-a.typ` and `sections/appendix-a/`) hold the team's full analysis-to-design specification for every use case; `main.typ` does not include it. Chapters 1–6 stand alone: they never reference a source-book figure, table or section, and where they need its content they carry it (a short table, a sentence, or a source-book diagram placed unchanged with `afig` and a body label).
+**The detailed design source book is not part of the report.** Its files (folder `source-book/`: `sections/source-book.typ` and `sections/source-book/`) hold the team's full analysis-to-design specification for every use case; `main.typ` does not include it. Chapters 1–6 stand alone: they never reference a source-book figure, table or section, and where they need its content they carry it (a short table, a sentence, or a source-book diagram placed unchanged with `afig` and a body label).
 
 | ID | View | Notation | Section | Source (id) |
 |---|---|---|---|---|
@@ -206,7 +206,7 @@ The view set answers F8, F9 and F10. Every diagram is UML or a named notation, h
 | D14a–D14c | Team expiry; refund retry; outbox relay | UML sequence diagrams | 3.2.4 | `d14a-team-expiry`, `d14b-refund-retry`, `d14c-outbox-relay` |
 | D15 | A team of two at the commit of the filling join (F5, F10 "object level") | UML object diagram, drawn with the class kit | 3.2.4 | `d15-team-succeeded-objects` |
 
-Every UML diagram, in the chapters and in the source book, is drawn with one kit (`docs/swe5006/report/typst/uml.typ`): its source is `diagrams/appendix-a/src/<id>.mmd`, generated into `gen/<id>.typ` and placed with `afig` (see [`diagrams/appendix-a/README.md`](diagrams/appendix-a/README.md)). D4a and D6 are the two non-UML views; they use the kit's palette and fonts.
+Every UML diagram, in the chapters and in the source book, is drawn with one kit (`docs/swe5006/report/typst/uml.typ`): its source is `diagrams/uml/src/<id>.mmd`, generated into `gen/<id>.typ` and placed with `afig` (see [`diagrams/uml/README.md`](diagrams/uml/README.md)). D4a and D6 are the two non-UML views; they use the kit's palette and fonts.
 
 The additional §4.1 [V3 r4 timeline](diagrams/performance-v3-timeline.svg) is a data plot, not an architecture view. Its adjacent [Python source](diagrams/performance-v3-timeline.py) regenerates the SVG from the V3 r4 evidence package only, with the standard library (`python docs/swe5001/report/diagrams/performance-v3-timeline.py`, run in Docker; `--check` compares without writing). Client completion bins and complete UTC CPU minutes keep their separate time origins; task-count dots are actual samples; shading marks the tail after the canonical observer ended. The offered schedule is a reference, not reconstructed arrivals. The SVG and Python source come from Pan's commit `0405b1f0`.
 

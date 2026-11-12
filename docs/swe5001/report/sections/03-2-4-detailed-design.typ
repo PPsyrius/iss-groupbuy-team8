@@ -1,6 +1,6 @@
 // Detailed Design: part of 03-solution-overview.typ (split for parallel editing; output unchanged).
 #import "../lib.typ": *
-#import "appendix-a/lib-a.typ": afig
+#import "../figures.typ": afig
 
 === Detailed Design
 

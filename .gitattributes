@@ -4,7 +4,7 @@
 # Frozen delivery inputs are byte-hashed; preserve their bytes on Windows checkouts.
 /docs/ci/evidence/dora-metrics-*-inputs.json text eol=lf
 # Appendix A diagrams: the generator writes LF and --check compares bytes; keep Windows checkouts in LF.
-/docs/swe5001/report/diagrams/appendix-a/** text eol=lf
+/docs/swe5001/report/diagrams/uml/** text eol=lf
 # Frozen diagnostic artefacts carry byte hashes; do not normalise their line endings.
 /docs/swe5001/evidence/20261110-catalogue-local-profile/** -text
 /docs/swe5001/evidence/20261110-v3-autoscaling/** -text
