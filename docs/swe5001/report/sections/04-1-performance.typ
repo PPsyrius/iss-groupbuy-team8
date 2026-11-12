@@ -4,7 +4,7 @@
 == Performance
 <sec-performance>
 
-Each load test is judged on four client-side metrics from k6: completed against offered requests per second, client p95 latency, the browse error rate (below 1%) and dropped iterations (zero). ALB response time and target 5xx responses, the ECS task count and CPU are server-side diagnostics; @tbl-performance-metrics defines every metric and its threshold (F1). On 11 November 2026 on AWS, the distributed run V3 r4 delivered the whole 30 min browse schedule up to 600 req/s, with no errors, no dropped iterations and a client p95 of 12 ms, while commerce scaled itself from one to six tasks. V3 r4 is the V3 result this section argues from; the five earlier V3 runs, which all failed, stay in @tbl-performance-runs as history. Its k6 gates passed, but the analyser issued no verdict, so it shows that the tested peak was served, not maximum capacity or linear scaling (AISS-12); §4.1.5 states its limits in full. One monolith task passed every plateau up to 200 req/s on 16 October and 11 November, a lower bound. Estimated, not observed: the next server-side limit is the single RDS server, at 181 connections in the V3 r4 size (AISS-05); in V3 r4 its CPU peaked near 24% with 40 connections open.
+Each load test is judged on four client-side metrics from k6: completed against offered requests per second, client p95 latency, the browse error rate (below 1%) and dropped iterations (zero). ALB response time and target 5xx responses, the ECS task count and CPU are server-side diagnostics; @tbl-performance-metrics defines every metric and its threshold (F1). On 11 November 2026 on AWS, the distributed run V3 r4 delivered the whole 30 min browse schedule up to 600 req/s, with no errors, no dropped iterations and a client p95 of 12 ms, while commerce scaled itself from one to six tasks. V3 r4 is the V3 result this section argues from; the five earlier V3 runs, which all failed, stay in @tbl-performance-runs as history. Its k6 gates passed, but the analyser issued no verdict, so it shows that the tested peak was served, not maximum capacity or linear scaling (AISS-12); §4.1.5 states its limits in full. The V2 baseline is the 11 November run on the released monolith: one task passed every plateau up to 200 req/s, a lower bound that two runs on 16 October corroborate (§4.1.4). Estimated, not observed: the next server-side limit is the single RDS server, at 181 connections in the V3 r4 size (AISS-05); in V3 r4 its CPU peaked near 24% with 40 connections open.
 
 === Workload and measurement boundary
 
@@ -39,10 +39,10 @@ The verification plan (#src("docs/swe5001/impl-verification-observability.md")[V
   table(
     columns: (0.75fr, 1.45fr, 1.3fr, 1fr, 0.9fr, 1.6fr),
     table.header([Run], [Server side], [k6 client], [Requests and errors], [Drops and client p95], [Verdict and what it shows]),
-    [16 Oct: V2, two runs], [One monolith task. Image `6c7a99ab`.], [Team Windows workstation, Docker; location not recorded; 100–400 VUs], [57,600 and 0 each], [0; ≤ 57 ms per plateau], [Passed. 200 req/s was the highest rate tested: a lower bound, not capacity.],
+    [16 Oct: V2, two runs], [One monolith task. Image `6c7a99ab`.], [Team Windows workstation, Docker; location not recorded; 100–400 VUs], [57,600 and 0 each], [0; ≤ 57 ms per plateau], [Passed. Earlier corroboration of the V2 baseline.],
     [19 Oct: V3], [Three services; commerce one to six tasks of 0.5 vCPU, 1 GiB; `db.t4g.micro`; 12,000 requests per target per minute.], [Team macOS workstation, Docker; 100–400 VUs], [570,445 and 2 (0.0004%)], [155,554; 1,671 ms], [Failed: drops. Commerce 1 → 3 tasks; the client side limited the run.],
     [10 Nov: V3], [As 19 Oct, with pools of five. Source `93984f61`.], [Team Windows workstation, Docker (8 CPUs, 8 GiB); 1,000 VUs], [636,824 and 15,423 (2.42%)], [89,175; 4,191 ms], [Failed: errors, drops. Commerce 1 → 4 tasks; capacity arrived about 4 min after failures began.],
-    [11 Nov: V2], [One monolith task. Source `3a893036`.], [As 10 Nov], [57,600 and 0], [0; 30 ms], [Passed. Repeats the lower bound on the released image.],
+    [11 Nov: V2], [One monolith task. Source `3a893036`.], [As 10 Nov], [57,600 and 0], [0; 30 ms], [Passed. The V2 baseline of this report: 200 req/s is a lower bound, not capacity.],
     [11 Nov: V3 r1], [Committed sizing, as 10 Nov. Source `3a893036`.], [As 10 Nov], [687,083 and 11,841 (1.72%)], [38,916; 3,957 ms], [Failed: errors, drops, p95. Committed sizing fails as on 10 Nov.],
     [11 Nov: V3 r2], [Session settings, not merged: commerce 1 vCPU, 2 GiB; `db.t4g.small`; CPU guard on.], [As 10 Nov], [720,141 and 4,561 (0.63%)], [5,858; 851 ms], [Failed: drops, p95. 98.94% of drops fell in one minute.],
     [11 Nov: V3 r3], [As V3 r2, plus 6,000 requests per target per minute and a 120 s commerce slow start.], [Team Windows laptop, Docker (8 CPUs, 8 GiB), local Wi-Fi; 1,000 VUs], [725,924 and 8,429 (1.16%)], [75; 450 ms], [Failed: errors, drops. ALB target p95 9 ms; the client's network path was diagnosed.],
@@ -56,26 +56,28 @@ Calculated: the V3 schedule offers 36,000 + 240,000 + 360,000 + 90,000 = 726,000
 
 === What each run shows
 
-*16 October baseline.* Every plateau met its p95 and error gates (@tbl-performance-v2). The analyser's `kneeRps=200` is the highest rate tested, not a located knee.
+*V2 baseline, 11 November.* On 11 November on AWS, one monolith task running the released source passed all ten plateaus (@tbl-performance-v2): 57,600 browse requests with no errors or dropped iterations, an all-run client p95 of 30 ms and 18 ms at the 200 req/s plateau (#src("docs/swe5001/evidence/20261111-load-reruns/v2/V2-REVIEW.md")[V2 review]). We chose this run as the baseline because it tested the current release, not because its latency was lower. Forty-seven sampled observations bracket the workload and show one stable task, but the observer then ended early (exit 255), so no server metrics corroborate the run (#src("docs/swe5001/evidence/20261111-load-reruns/v2/observer-resolution.json")[coverage record]). The analyser's `kneeRps=200` is the highest rate tested, not a located knee; the run shows neither maximum capacity nor a controlled comparison with V3 r4, whose sizing and client differ.
 
 #figure(
   table(
     columns: (1fr, 1.4fr, 1.25fr, 1.25fr),
-    table.header([Offered req/s], [Completed per run], [First p95 (ms)], [Repeat p95 (ms)]),
-    [10], [600], [57.05], [53],
-    [20], [1,200], [34], [39.05],
-    [40], [2,400], [26], [27],
-    [60], [3,600], [43.05], [28],
-    [80], [4,800], [28], [23],
-    [100], [6,000], [26], [23],
-    [125], [7,500], [23], [42],
-    [150], [9,000], [26], [23],
-    [175], [10,500], [35], [23],
-    [200], [12,000], [49], [23],
+    table.header([Offered req/s], [Completed requests], [Client p95 (ms)], [Browse errors]),
+    [10], [600], [112.05], [0],
+    [20], [1,200], [36.05], [0],
+    [40], [2,400], [27.05], [0],
+    [60], [3,600], [52], [0],
+    [80], [4,800], [18], [0],
+    [100], [6,000], [17], [0],
+    [125], [7,500], [17], [0],
+    [150], [9,000], [19], [0],
+    [175], [10,500], [47], [0],
+    [200], [12,000], [18], [0],
   ),
   kind: table,
-  caption: [V2 results per 60 s plateau, 16 October. Source: #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[dated baseline record].],
+  caption: [V2 baseline results per 60 s plateau, 11 November; every plateau passed its gates. Source: #src("docs/swe5001/evidence/20261111-load-reruns/v2/calibration.json")[calibration].],
 ) <tbl-performance-v2>
+
+*16 October corroboration.* On 16 October on AWS, two runs of an earlier revision on the same workload each completed 57,600 requests with no errors or drops and passed every plateau; the repeat's all-run p95 was 25 ms, and 23 ms at 200 req/s (#src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October record], with both per-plateau tables). Revisions and client settings differ, so the two dates show repeatability, not an improvement or a regression. AD-20's scaling target was derived from these runs (§3.2.1).
 
 *19 October scale-out.* Target tracking added a second commerce task at 15:55 SGT and a third at 15:58 SGT, each in about 65 s. With three tasks the ALB p50 was 5–7 ms while the client p50 stayed near 490 ms, so the client side limited the run (#src("docs/swe5001/evidence/20261019-v3-autoscaling/v3-alb-per-minute.tsv")[ALB intervals]). The same record holds our first observed saturation of one task: from 15:52 to 15:55 SGT the single 0.5 vCPU commerce task served 272–286 req/s at an ALB p50 of about 1.1 s with its CPU at 90–100%, and from 16:01 to 16:10 SGT three tasks served 425–461 req/s (#src("docs/swe5001/evidence/20261019-v3-autoscaling/README.md")[19 October record]). These are ALB observations from a failed run at the committed task size. They are not an accepted capacity figure, and they do not describe the 1 vCPU tasks of V3 r4. The 10 November campaign gives a second, consistent observation.
 
