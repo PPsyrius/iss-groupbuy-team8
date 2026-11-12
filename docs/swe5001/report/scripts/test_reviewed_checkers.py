@@ -65,7 +65,11 @@ class ReviewedCheckerTests(unittest.TestCase):
             r'#src\("' + reviewed.re.escape(paths[1][0]) + r'", rev: "([0-9a-f]{40})"\)', ops)
         self.assertIsNotNone(baseline_call, 'Baseline JSON must retain an explicit immutable revision')
         baseline_rev = baseline_call[1]
-        self.assertNotIn(baseline_rev, (reviewed.APP, reviewed.EVIDENCE, reviewed.BASE))
+        # The receipt postdates the evidence merge, so the explicit pin must
+        # override that default, and it must be reachable from this branch
+        # (never a pull-request head that no branch contains).
+        self.assertNotEqual(baseline_rev, reviewed.EVIDENCE)
+        reviewed.git('merge-base', '--is-ancestor', baseline_rev, 'HEAD')
         for section in ('04-3-security.typ', '05-devops.typ', '01-introduction.typ'):
             for path, expected in paths:
                 with self.subTest(path=path, section=section):
