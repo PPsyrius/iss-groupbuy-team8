@@ -94,7 +94,7 @@ The gate ignores unfixed vulnerabilities and lower severities, so a pass does no
 
 The shared EC2 pipeline builds, health-checks and scans pull requests before merge, so developers see failures before delivery. After merge, it rebuilds the application for SWE5006 without repeating the image health check or Trivy scan (#src("docs/ci/devsecops-pipeline-plan.md")[pipeline decision]). Because it rebuilds, the delivered image is not the exact image tested before merge (AISS-20). SWE5001 promotions build and scan their own images.
 
-Estimated from GitHub's job timings, the 147 successful backend deliveries from 5 September to 11 November used 1,733 runner-minutes after rounding each job up. At the published #link("https://docs.github.com/en/billing/reference/actions-runner-pricing")[Linux rate] of US\$0.006/min, that is about US\$10.40. This covers backend delivery only, not the whole Actions bill or measured savings; pull-request checks and the frontend and security workflows are excluded.
+Estimated from GitHub's job timings, the 147 qualifying backend delivery runs from 5 September to 11 November used 1,733 runner-minutes after rounding each job up (#src("docs/swe5001/evidence/20261113-ci-check-cost-estimate/development-baseline.json", rev: "4c5cd6abbbf44dd18a461984d8727c88e4c5d885")[timings and calculation]). At the published #link("https://docs.github.com/en/billing/reference/actions-runner-pricing")[Linux rate] of US\$0.006/min, that is about US\$10.40. This covers backend delivery only, not the whole Actions bill or measured savings; pull-request checks and the frontend and security workflows are excluded.
 
 #figure(
   table(

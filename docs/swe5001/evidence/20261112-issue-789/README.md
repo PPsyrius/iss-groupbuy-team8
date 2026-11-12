@@ -6,6 +6,8 @@ Publication update, 12 November: [PR #795](https://github.com/PPsyrius/iss-group
 
 Peer freshness: pre-PR readbacks found #794 at `eb376a8f`, then further corrections at `2f9c2eb2`. The retained patch/build prove the exact `02c7b822` handoff, not those newer heads; direct application to `eb376a8f` failed. Reconcile remaining #789 changes with the newer peer work before merge; see the [pre-PR findings](../../pre-pr-review-20261112.md).
 
+13 November status amendment: #801 is merged at `81a8d0fb`; #802 targets `dev`, not #801's former branch. The stacking and peer-integration instructions above describe the earlier handoff. The historical checker now verifies the frozen metadata against recorded SHA-256 constants; its source checks still require the original combined-layout report, not the current split report.
+
 ## Answers and evidence boundaries
 
 12 November owner-confirmation addendum: Pan has explicitly agreed to **8 Phase D person-days and 19.5 total**; see the [dated confirmation](effort-estimate.md#12-november-2026--owner-confirmation). This supersedes the lack of confirmation in item 7 below. The original reconstruction, `facts.json`, verification hashes and receipts retain their historical scope; the new confirmation does not turn estimated effort into logged hours or confirm other members' estimates.

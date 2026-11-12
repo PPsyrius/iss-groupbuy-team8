@@ -51,15 +51,44 @@ class ReviewedCheckerTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.run_report(changed_row)
 
-    def test_cost_estimate_need_not_use_one_sample_count_or_sentence(self):
+    def test_cost_estimate_allows_rephrasing(self):
         def change(name, content):
             if name.endswith('05-devops.typ'):
-                return reviewed.re.sub(r'\d', '7', content)
+                return content.replace("Estimated from GitHub's job timings, the", 'Calculated from recorded job timings, the')
             return content
 
-        # Numeric arithmetic is outside this check: a dated estimate verifier
-        # must compare its evidence JSON, not freeze report prose or counts.
         self.run_report(change)
+
+    def test_changed_report_baseline_numbers_are_rejected(self):
+        for old, new in (('147 qualifying', '148 qualifying'), ('1,733', '999,999'), ('10.40', '9999.99'), ('0.006/min', '0.060/min')):
+            with self.subTest(value=old), self.assertRaises(AssertionError):
+                self.run_report(lambda name, content: content.replace(old, new)
+                                if name.endswith('05-devops.typ') else content)
+
+    def test_missing_baseline_citation_is_rejected(self):
+        with self.assertRaises(AssertionError):
+            self.run_report(lambda name, content: content.replace(
+                '20261113-ci-check-cost-estimate/development-baseline.json', 'missing-baseline/development-baseline.json')
+                if name.endswith('05-devops.typ') else content)
+
+    def test_successful_delivery_overstatement_is_rejected(self):
+        with self.assertRaises(AssertionError):
+            self.run_report(lambda name, content: content.replace(
+                'qualifying backend delivery runs', 'successful backend deliveries')
+                if name.endswith('05-devops.typ') else content)
+
+    def test_reversed_account_read_boundary_is_rejected(self):
+        with self.assertRaises(AssertionError):
+            self.run_report(lambda name, content: content.replace(
+                'No output is retained to verify that observation.',
+                'AWS output independently verifies that observation.')
+                if name.endswith('04-3-security.typ') else content)
+
+    def test_missing_account_read_boundary_is_rejected_despite_other_qualifiers(self):
+        with self.assertRaises(AssertionError):
+            self.run_report(lambda name, content: content.replace(
+                'No output is retained to verify that observation.', '')
+                if name.endswith('04-3-security.typ') else content)
 
     def test_governance_requires_missing_output_boundary(self):
         def change(name, content):

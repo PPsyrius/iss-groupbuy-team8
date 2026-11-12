@@ -4,6 +4,8 @@ Run from the repository root. PDF layout/URI checks and the standalone R4,
 retention and diagram verifiers are separate verification levels.
 """
 import json
+from decimal import Decimal, ROUND_HALF_UP
+from math import ceil
 from pathlib import Path
 import re
 import subprocess
@@ -41,6 +43,36 @@ def snapshot(path, section, override):
                                      path in ('CONTRIBUTING.md', 'docs/agile/README.md')):
         return INSPECTED
     return APP
+
+
+def check_ci_baseline(ops):
+    """Compare the cited paragraph with recorded jobs, not hard-coded totals."""
+    path = 'docs/swe5001/evidence/20261113-ci-check-cost-estimate/development-baseline.json'
+    paragraphs = [p for p in ops.split('\n\n') if path in p]
+    assert len(paragraphs) == 1, 'CI baseline needs one cited report paragraph'
+    paragraph = paragraphs[0]
+    receipt = json.loads((ROOT / path).read_text())
+    eligible = [r for r in receipt['runs'] if r['classification']]
+    minutes = sum(ceil(j['seconds'] / 60) for r in eligible for j in r['jobs'])
+    cost = (Decimal(minutes) * Decimal(str(receipt['summary']['linux_usd_per_minute']))).quantize(
+        Decimal('0.01'), rounding=ROUND_HALF_UP)
+    count = re.search(r'([\d,]+)\s+qualifying backend delivery runs', paragraph)
+    duration = re.search(r'([\d,]+)\s+runner-minutes', paragraph)
+    amount = re.search(r'US\\\$([\d,]+\.\d{2})(?!\d)', paragraph)
+    rate = re.search(r'US\\\$([\d.]+)/min', paragraph)
+    assert count and int(count[1].replace(',', '')) == len(eligible)
+    assert duration and int(duration[1].replace(',', '')) == minutes
+    assert amount and Decimal(amount[1].replace(',', '')) == cost
+    assert rate and Decimal(rate[1]) == Decimal(str(receipt['summary']['linux_usd_per_minute']))
+    assert not re.search(r'successful (?:backend )?deliver', paragraph, re.I)
+
+
+def check_account_read_boundary(security):
+    """Protect the specific account-read qualification, not words elsewhere."""
+    paragraph = next(p for p in security.split('\n\n') if re.search(
+        r'Lim reports[^.\n]*11 November[^.\n]*CloudTrail', p))
+    assert re.search(r'(?:no|without)[^.\n]*output[^.\n]*(?:retained|verify)', paragraph, re.I)
+    assert not re.search(r'(?:AWS|command) output[^.\n]*independently verif', paragraph, re.I)
 
 
 def main():
@@ -82,6 +114,7 @@ def main():
     assert re.search(r'90.day[^.\n]*event history|event history[^.\n]*90.day', security, re.I)
     assert re.search(r'(?:governance|readback|command output|AWS output)[^.\n]*(?:not retained|unverified|unavailable|not independently)|(?:not retained|unverified|unavailable|not independently)[^.\n]*(?:governance|readback|command output|AWS output)', security, re.I)
     checks['governance-evidence-boundaries'] = True
+    check_account_read_boundary(security)
     limits = text('sections/03-4-limitations.typ') + text('registers.md') + security
     assert not any(s in limits for s in ('Remove the key or move', 'A misuse would leave no organisation-wide record', 'Scan the rebuilt image before'))
     assert re.search(r'accepted[^.\n]*(?:exception|design)', limits, re.I)
@@ -92,6 +125,8 @@ def main():
     # not a checker tied to one sample or one sentence of report prose.
     assert re.search(r'estimat|counterfactual', ops, re.I)
     assert re.search(r'not[^.\n]*(?:invoice|billing|observed|measured)', ops, re.I)
+    check_ci_baseline(ops)
+    checks['reported-ci-baseline-matches-recorded-jobs'] = True
     audit_row = next(line for line in security.splitlines() if '[Auditability:' in line)
     assert 'Singapore' in audit_row and re.search(r'unknown|unverified|unproven', audit_row, re.I)
     assert 'non-delivery-gating Sonar' in ops and 'Trivy image-scan step' in ops

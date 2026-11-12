@@ -4,9 +4,9 @@ Read-only GitHub Actions readback on 13 November 2026 for #802 / #462. The [gene
 
 ## Full 147-delivery runner-time baseline
 
-All 147 qualifying runs were inspected, not just the three image-check samples below. Sum each executed job's `completed_at − started_at`, excluding skipped jobs and queue time. Parallel jobs consume separate runners and are added, not replaced with elapsed workflow duration. Retained Sonar coverage/verification, packaging, publication and deployment are included rather than treated as avoided work.
+All 147 qualifying runs were inspected, not just the three image-check samples below. Qualification means successful image publication, or successful Docker and EC2 jobs in the earlier workflow; it does not require deployment success in the publication group. Of these runs, 134 EC2 deployments succeeded and 13 failed. Sum each executed job's `completed_at − started_at`, excluding skipped jobs and queue time. Parallel jobs consume separate runners and are added, not replaced with elapsed workflow duration. Retained Sonar coverage/verification, packaging, publication and deployment are included rather than treated as avoided work.
 
-| Period | Qualifying deliveries | Summed execution minutes | Reconstructed whole-job rounded minutes | Cost equivalent at $0.006/min |
+| Period | Qualifying delivery runs | Summed execution minutes | Reconstructed whole-job rounded minutes | Cost equivalent at $0.006/min |
 | --- | ---: | ---: | ---: | ---: |
 | September | 70 | 518.72 | 691 | $4.15 |
 | October | 69 | 753.85 | 944 | $5.66 |
@@ -31,7 +31,7 @@ Calculated mean: `(60 + 54 + 56) / 3 = 56.67 seconds`, or `0.9444 runner-minutes
 
 ## Development-period volume and dollar estimate
 
-The full paginated workflow-runs history available on 13 November returned **166** `ci-backend.yml` runs for `event=push`, `branch=dev`, from **5 September to 11 November 2026**. Per-run Jobs API checks identify **128** successful `publish-ecr-dev` jobs and **19** earlier runs with no separate publisher job but successful `docker` and `deploy-existing-ec2` jobs. Count those disjoint groups as **147 successful delivery opportunities**. Failed, cancelled or otherwise non-qualifying runs are excluded. The oldest retained run is not proof that all project work began on 5 September.
+The full paginated workflow-runs history available on 13 November returned **166** `ci-backend.yml` runs for `event=push`, `branch=dev`, from **5 September to 11 November 2026**. Per-run Jobs API checks identify **128** successful `publish-ecr-dev` jobs and **19** earlier runs with no separate publisher job but successful `docker` and `deploy-existing-ec2` jobs. Count those disjoint groups as **147 qualifying delivery runs**, including 13 whose EC2 deployment subsequently failed. Runs meeting neither qualification are excluded. The oldest retained run is not proof that all project work began on 5 September.
 
 | Month | Dev-push runs | Successful separate image publications | Earlier successful Docker + EC2 deliveries | Eligible total |
 | --- | ---: | ---: | ---: | ---: |

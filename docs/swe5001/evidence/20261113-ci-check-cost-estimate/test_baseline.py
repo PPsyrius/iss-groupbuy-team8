@@ -33,6 +33,21 @@ class BaselineTests(unittest.TestCase):
                 self.assertEqual(ceil(elapsed / 60), job['rounded_minutes'])
                 self.assertNotEqual(job['conclusion'], 'skipped')
 
+    def test_qualification_does_not_require_successful_deployment(self):
+        outcomes = Counter()
+        for run in self.runs:
+            names = {j['name'] for j in run['jobs']}
+            success = {j['name'] for j in run['jobs'] if j['conclusion'] == 'success'}
+            expected = ('image-publication' if 'publish-ecr-dev' in success else
+                        'legacy-docker-and-ec2' if 'publish-ecr-dev' not in names and
+                        {'docker', 'deploy-existing-ec2'} <= success else None)
+            self.assertEqual(expected, run['classification'])
+            if expected:
+                deployment = [j for j in run['jobs'] if j['name'] == 'deploy-existing-ec2']
+                self.assertEqual(len(deployment), 1)
+                outcomes[deployment[0]['conclusion']] += 1
+        self.assertEqual(outcomes, {'success': 134, 'failure': 13})
+
     def test_summed_parallel_runner_time(self):
         totals = [sum(j['seconds'] for j in r['jobs']) for r in self.eligible]
         self.assertEqual(sum(totals), self.summary['total_runner_seconds'])
