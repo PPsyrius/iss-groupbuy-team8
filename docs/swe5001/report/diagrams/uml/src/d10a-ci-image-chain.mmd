@@ -2,59 +2,83 @@
 activityDiagram
     lane "GitHub: dev" {
         start S
-        action Open["PR into dev"]
         fork F
         join J
-        action Merge["Squash merge"]
-        end E
+        decision Gate
+        end EB
+        action Merge["Squash\nmerge"]
     }
     lane "ci-backend.yml" {
-        action BQ["build-quality: Maven verify, Checkstyle"]
+        action BQ["build-quality:\nMaven verify,\nCheckstyle"]
         fork FB
         action CC["contract-check"]
-        action Sonar["SonarCloud Backend"]
-        action Dock["docker: build image, boot smoke test, Trivy image scan"]
+        action Sonar["SonarCloud\nBackend"]
+        action Dock["docker: build\nimage, boot\nsmoke test,\nTrivy image scan"]
         action DevPath["On dev:\npackage-dev,\npublish-ecr-dev,\ndeploy-existing-ec2"]
+        end E
     }
     lane "security.yml" {
-        action Sec["gitleaks, trivy-deps, trivy-config"]
-        note NQ["codeql is off:\nENABLE_CODEQL\nis false"]
+        action Sec["gitleaks,\ntrivy-deps,\ntrivy-config\n(codeql is off)"]
     }
     lane "swe5001-service-images.yml" {
-        action Pkg["Package the JAR (no tests)"]
-        action Img["Build ARM64 image"]
-        action Scan["Trivy image scan: fixable HIGH or CRITICAL"]
-        decision Vuln
-        flowend Fail
+        decision TrigI
+        action Imgs["Package the JAR\n(no tests), build\nARM64 image,\nTrivy image scan"]
+        merge MI
     }
     lane "infra-swe5001.yml" {
-        action Static["static: terraform test (mocked provider), Checkov, Trivy config"]
-        action Plan["plan: foundation only"]
+        decision TrigP
+        action Static["static: terraform\ntest (mocked\nprovider), Checkov,\nTrivy config"]
+        action Plan["plan: foundation\nonly"]
+        merge MP
     }
-    S --> Open
-    Open --> F
+    S --> F
     F --> BQ
     F --> Sec
-    F --> Pkg
-    F --> Static
+    F --> TrigI
+    F --> TrigP
     BQ --> FB
     FB --> CC
     FB --> Sonar
     CC --> Dock
-    Sonar --> J
     Dock --> J
+    Sonar --> J
     Sec --> J
-    NQ .. Sec
-    Pkg --> Img
-    Img --> Scan
-    Scan --> Vuln
-    Vuln --> Fail : [found]
-    Vuln --> J : [none]
+    TrigI --> Imgs : [files changed]
+    TrigI --> MI : [else]
+    Imgs --> MI
+    MI --> J
+    TrigP --> Static : [files changed]
+    TrigP --> MP : [else]
     Static --> Plan
-    Plan --> J
-    J --> Merge : [green, approved]
+    Plan --> MP
+    MP --> J
+    J --> Gate
+    Gate --> Merge : [green, approved]
+    Gate --> EB : [else]
     Merge --> DevPath
     DevPath --> E
-%% at Fail 5,6
-%% at Static 6,3
-%% at Plan 6,4
+%% at S 0,0
+%% at BQ 2,2
+%% at FB 2,3
+%% at CC 2,4
+%% at Sonar 3,4
+%% at Dock 2,5
+%% at Sec 4,2
+%% at TrigI 5,2
+%% at Imgs 5,3
+%% at MI 6,5
+%% at TrigP 7,2
+%% at Static 7,3
+%% at Plan 7,4
+%% at MP 8,5
+%% at Gate 0,7
+%% at EB 1,7
+%% at Merge 0,8
+%% at DevPath 2,8
+%% at E 3,8
+%% route TrigI MI hv
+%% route Imgs MI vh
+%% route TrigP MP hv
+%% route Plan MP vh
+%% at F 0,1
+%% at J 0,6

@@ -24,7 +24,7 @@ componentDiagram
     Order "D" ..> "U" Catalog : Customer–Supplier
     GroupBuy -- Order : Partnership
     Order "D" ..> "U" Payment : Separated Interface
-    Payment "D" ..> "U" GroupBuy : Published Language
+    Payment "D" ..> "U" GroupBuy : Domain event
     NtSvc "D" ..> "U · OHS" CoSvc : Published Language
     Common -- IdSvc : Shared Kernel
     Common -- CoSvc : Shared Kernel

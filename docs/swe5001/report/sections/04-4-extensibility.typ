@@ -1,4 +1,4 @@
-// Extensibility and Maintainability: part of 04-quality-attributes.typ (split for parallel editing; output unchanged).
+// Extensibility and Maintainability: part of 04-quality-attributes.typ.
 #import "../lib.typ": *
 
 == Extensibility and Maintainability
@@ -11,7 +11,7 @@ The platform is extended at three seams: a new event consumer, a new service and
   table(
     columns: (0.9fr, 1.6fr, 2.1fr, 1.6fr),
     table.header([Change], [What a developer edits], [What comes with it], [What checks it]),
-    [New event consumer (for example analytics or audit)], [Its subscription: one element in the `consumers` set and one filter line in the messaging module, plus its dead-letter queue name on the dashboard. Its checks: the consumer count and filter assertions in `runtime/tests/messaging.tftest.hcl` and a routing probe in `scripts/messaging-check.sh`. Its worker: new code in the consuming service. No producer file changes. Counted for the audit queue in #pr(487) (14 Oct): one element and one filter line in the messaging module, the `"audit"` element and its filter `audit = { eventType = [{ prefix = "Team" }] }`], [Its own SQS queue and dead-letter queue (settings in §3.2.3), a queue policy that accepts only the domain topic over TLS, and a filtered subscription], [Today `terraform test` expects exactly two consumers and asserts the filters of `notification` and `audit`, and the readiness script probes routing to those two queues before the relay starts\; a new consumer fails the test until it is added to both],
+    [New event consumer (for example analytics or audit)], [Its subscription: one element in the `consumers` set and one filter line in the messaging module (for the audit queue, #pr(487), 14 Oct: `"audit"` and `audit = { eventType = [{ prefix = "Team" }] }`), plus its dead-letter queue name on the dashboard. Its checks: the consumer count and filter assertions in `runtime/tests/messaging.tftest.hcl` and a routing probe in `scripts/messaging-check.sh`. Its worker: new code in the consuming service. No producer file changes], [Its own SQS queue and dead-letter queue (settings in §3.2.3), a queue policy that accepts only the domain topic over TLS, and a filtered subscription], [Today `terraform test` expects exactly two consumers and asserts the filters of `notification` and `audit`, and the readiness script probes routing to those two queues before the relay starts\; a new consumer fails the test until it is added to both],
     [New service], [One entry in the services map (19–37 lines), one ECR repository name, one entry in the image workflow's service list and the start-up script, its database grants, and a thin assembly module registered in `backend/pom.xml`], [Everything the golden-path `ecs-service` module creates (below), plus the shared COLA modules], [ArchUnit rules; the image scan (the pull-request job runs, because the service list in `swe5001-service-images.yml` changes); offline `terraform test` and Checkov for `runtime` (the live plan covers `foundation` only)],
     [New or changed public operation], [A controller in the shared adapter module (`blocbuy-adapter`, part of the exported application), owned by one service; the committed OpenAPI contract is regenerated], [The generated TypeScript client in the web application], [`contract-check` fails on drift and on incompatible changes; the client generation breaks the front-end type check if an operation disappears],
   ),
@@ -71,6 +71,8 @@ Two things are deliberately outside the module: the auto-scaling policy, because
 *What a new use case gains (Q3).* A new use case built on the platform starts with sign-in and roles, the error format, trace propagation, the outbox and duplicate-protection code (switched on per service, with its own publish or receive permission), a runtime with rollback (configured, not exercised: V6, §2.2), a dashboard series and a guarded API contract. Built from scratch, each of these would be designed, built and secured again. The evidence is the size of the edits above; we did not time the addition of a fourth service.
 
 === Maintainability
+
+@tbl-maintainability counts the codebase on 8 November.
 
 #figure(
   table(

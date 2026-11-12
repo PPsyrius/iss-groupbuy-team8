@@ -1,11 +1,11 @@
-// Analytics: part of 06-highlights.typ (split for parallel editing; output unchanged).
+// Analytics: part of 06-highlights.typ.
 #import "../lib.typ": *
 
 == Analytics
 
 The platform measures how it runs today, and stores the data to measure how the business runs; only the first is built.
 
-*Operational analytics, in use.* On 16 October on AWS, the CloudWatch dashboard showed the edge, the services and the messaging in three rows of charts (#src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October record]); an organisation SCP first denied its CloudFront chart, and we fixed that the same day (@tbl-findings). The load results of that day set the committed auto-scaling target; §4.1 gives the session-only target that V3 R4 ran with and what it observed.
+*Operational analytics, in use.* On 16 October on AWS, the CloudWatch dashboard showed the edge, the services and the messaging in three rows of charts (#src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October record]); an organisation SCP first denied its CloudFront chart, and we fixed that the same day (@tbl-findings). The load results of that day set the committed auto-scaling target; V3 r4 ran with a session-only target (§4.1).
 
 *Alarms, configured but never exercised.* Configured, not tested: two CloudWatch alarms, `blocbuy-swe5001-notification-dlq-not-empty` and `blocbuy-swe5001-notification-queue-age`, notify an SNS topic with three email subscriptions. No session record shows an alarm firing or a notification arriving. The readiness check of every promotion that reached it found an unconfirmed recipient: two of three in #run("39008208244")[run 39008208244] (17 October), one in #run("39259845179")[run 39259845179] (19 October) and #run("39435280952")[run 39435280952] (20 October), all three in #run("42587537517")[run 42587537517] (9 November) and #run("42653347818")[run 42653347818] (10 November), and two of three in #run("42947289936")[run 42947289936] (11 November). On 11 November on AWS, the alert topic `blocbuy-swe5001-alerts` had three email subscriptions: one confirmed and two pending confirmation. Each run continued only because both up workflows default the opt-out `SWE5001_ALLOW_UNCONFIRMED_ALERTS` to `true`, although `env-up.sh` alone defaults it to `false` (@tbl-findings). An unconfirmed recipient receives no alarm (AISS-16).
 

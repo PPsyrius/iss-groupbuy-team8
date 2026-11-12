@@ -1,4 +1,4 @@
-%% frame: Aggregates of order and payment
+%% frame: Aggregates of purchase intent and payment
 classDiagram
     class PurchaseIntentTerms["PurchaseIntent.Terms"] {
         <<value object, record>>
@@ -65,47 +65,15 @@ classDiagram
         FAILED
         CANCELED
     }
-    class OrderNewOrderTerms["Order.NewOrderTerms"] {
-        <<value object, record>>
-        +paymentId: UUID
-        +dealId: UUID
-        +userId: UUID
-        +productId: UUID
-        +quantity: int
-        +unitPrice: BigDecimal
-    }
-    class Order {
-        <<aggregate root>>
-        -id: UUID
-        -totalAmount: BigDecimal
-        -paidTime: Instant
-        -cancelTime: Instant
-        -version: int
-        +create(terms: Order.NewOrderTerms, paidAt: Instant): Order «static»
-        +confirm(): Order
-        +cancel(canceledAt: Instant): Order
-    }
-    class OrderStatus {
-        <<enumeration>>
-        PENDING
-        CONFIRMED
-        CANCELLED
-    }
 %% at PurchaseIntentTerms 0,0
 %% at PurchaseIntent 1,0
 %% at CheckoutQuote 0,1
 %% at CheckoutPayment 1,1
-%% at CheckoutPaymentStatus 2,0
 %% at RefundWork 0,2
-%% at OrderNewOrderTerms 1,2
-%% at Order 2,1
-%% at OrderStatus 2,2
+%% at CheckoutPaymentStatus 1,2
     PurchaseIntent *-- PurchaseIntentTerms : terms
     CheckoutPayment *-- CheckoutQuote : quote
     CheckoutPayment --> CheckoutPaymentStatus : status
-    Order *-- OrderNewOrderTerms : placement
-    Order --> OrderStatus : status
     CheckoutQuote ..> PurchaseIntent : id
     PurchaseIntent ..> CheckoutPayment : id
-    OrderNewOrderTerms ..> CheckoutPayment : id
     RefundWork ..> CheckoutPayment : id

@@ -4,11 +4,17 @@
 // scripts/uml-diagrams.mjs (see diagrams/uml/README.md).
 #import "lib.typ": accent, muted, hdr, pending
 
-// Page geometry of the report (lib.typ: A4, margins x 2.2 cm, top and bottom 2.3 cm).
-#let a-text = (width: 21cm - 2 * 2.2cm, height: 29.7cm - 2 * 2.3cm)
-// The same page turned a quarter (page(flipped: true) keeps the margins).
-#let a-land = (width: 29.7cm - 2 * 2.2cm, height: 21cm - 2 * 2.3cm)
-#let cap-gap = 0.65em
+// Page geometry of the report (lib.typ `style`, the SWE5006 template's `setup`: A4, 2.54 cm
+// margins all round, template.typ `text-area`).
+#let a-margin = 2.54cm
+#let a-text = (width: 21cm - 2 * a-margin, height: 29.7cm - 2 * a-margin)
+// The same page turned a quarter (page(flipped: true) keeps the margins, the header and the footer).
+#let a-land = (width: 29.7cm - 2 * a-margin, height: 21cm - 2 * a-margin)
+// Gap between the framed drawing and its caption (lib.typ `figure-gap`, template.typ report-figure).
+#let cap-gap = 0.3em
+// The figure frame around a drawing (lib.typ `figure-inset` and `figure-stroke`): 6 pt inset and a
+// 0.4 pt stroke on each side, so the drawing gets the text width less this.
+#let a-frame = 2 * 6pt + 2 * 0.4pt
 
 // Appendix numbering: the level-1 heading reads "Appendix A: …", parts "A.1", "A.1.1", and
 // figures and tables "A.1", "A.2", … from the first figure of the appendix. Level 3 and below
@@ -42,7 +48,7 @@
 #let cap-height(caption, width) = measure(block(width: width, {
   set text(9pt)
   set par(justify: false)
-  [Figure A.99: #caption]
+  [*Figure A.99:* #caption]
 })).height
 
 // A generated UML diagram as a numbered figure.
@@ -62,19 +68,24 @@
 // appendix heading or past the end of the document.
 #let afig(id, caption, lbl: auto, orient: auto, float: false) = {
   import "/docs/swe5001/report/diagrams/uml/gen/" + id + ".typ": drawing, kind
+  // The kit draws each class box as a table, so lib.typ's report-table rule (`show table: set
+  // text(hyphenate: true)`) would reach it and hyphenate names ("StripeWebhookCon-troller").
+  // The kit already breaks a name between its camelCase words and sizes every box to its
+  // longest unbreakable piece; inside a drawing nothing is hyphenated, as in the SWE5006 report.
+  show table: set text(hyphenate: false)
   let lab = if lbl == auto { label("fig-" + id) } else { lbl }
   assert(orient in (auto, "landscape", "portrait"), message: "afig orient: auto, \"landscape\" or \"portrait\"")
   assert(not (orient == "landscape" and kind == "sequence"), message: id + ": a sequence diagram never turns landscape; split it")
   context {
-    let portrait-room = a-text.height - cap-height(caption, a-text.width) - cap-gap.to-absolute() - 2.2em.to-absolute()
-    let land-room = a-land.height - cap-height(caption, a-land.width) - cap-gap.to-absolute() - 1em.to-absolute()
+    let portrait-room = a-text.height - cap-height(caption, a-text.width) - cap-gap.to-absolute() - a-frame - 2.2em.to-absolute()
+    let land-room = a-land.height - cap-height(caption, a-land.width) - cap-gap.to-absolute() - a-frame - 1em.to-absolute()
     // Forcing works through the room the kit is offered: a portrait room of almost nothing makes
     // landscape the better choice, a landscape room of almost nothing rules it out.
     let portrait-room = if orient == "landscape" { 1cm } else { portrait-room }
     let land-room = if orient == "portrait" { 1cm } else { land-room }
-    let host = (probe: true, rotated: false, width: a-text.width, height: portrait-room, land: (width: a-land.width, height: land-room))
+    let host = (probe: true, rotated: false, width: a-text.width - a-frame, height: portrait-room, land: (width: a-land.width - a-frame, height: land-room))
     // The probe lays the drawing out once more; a sequence diagram never turns, so it skips it.
-    let turned = kind != "sequence" and measure(block(width: a-text.width, drawing(host: host))).height == 1pt
+    let turned = kind != "sequence" and measure(block(width: a-text.width - a-frame, drawing(host: host))).height == 1pt
     // Record what the frame decided, for scripts/preview-source-book.sh (typst query "<a-fig>").
     let note = context {
       let s = query(selector(<uml-scale>).before(here())).at(-1, default: none)
@@ -101,10 +112,10 @@
       // natural is the drawing's height at scale 1 and frame the heading and padding of the UML
       // frame (about 28 pt). Otherwise the drawing keeps the full page and moves to the next one.
       // Only sequence diagrams: they fill the text width, so their scale depends on height alone.
-      let left = a-text.height + 2.3cm - here().position().y - cap-height(caption, a-text.width) - cap-gap.to-absolute() - 2.2em.to-absolute()
+      let left = a-text.height + a-margin - here().position().y - cap-height(caption, a-text.width) - cap-gap.to-absolute() - a-frame - 2.2em.to-absolute()
       let room = if kind != "sequence" or float or left >= portrait-room - 1pt or left < 4cm { portrait-room } else {
         let frame = 28pt
-        let natural = measure(block(width: a-text.width, drawing(host: (probe: false, rotated: false, width: a-text.width, height: 200cm, land: (width: 1cm, height: 1cm))))).height
+        let natural = measure(block(width: a-text.width - a-frame, drawing(host: (probe: false, rotated: false, width: a-text.width - a-frame, height: 200cm, land: (width: 1cm, height: 1cm))))).height
         if left - frame >= 0.945 * (natural - frame) { left } else { portrait-room }
       }
       [#figure(drawing(host: host + (probe: false, height: room)), caption: caption, kind: image, gap: cap-gap, placement: place-at)#lab]

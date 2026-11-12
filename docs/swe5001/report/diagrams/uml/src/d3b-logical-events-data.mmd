@@ -5,27 +5,27 @@ componentDiagram
         component CoSvc["commerce-svc"] <<subsystem>> :::business
         component NtSvc["notification-svc"] <<subsystem>>
     }
-    interface IEv["PublishedEvents V1"]
+    interface IEv["PublishedEvents\nV1"]
     package "Integration tier" {
         component Broker["Message\nbroker"] :::messaging
         component NQ["Event queue\n(notification)"] :::messaging
         component AQ["Event queue\n(audit)"] :::messaging : no consumer
     }
     package "Data tier" {
-        database Sess["Session store"]
+        database Sess["Session\nstore"]
         database IdDb["Identity\ndata store"]
         database CoDb["Commerce\ndata store"]
         database NtDb["Notification\ndata store"]
     }
     CoSvc -() IEv : async
     Broker -( IEv : async
-    Broker --> NQ
-    Broker --> AQ
+    NQ ..> Broker
+    AQ ..> Broker
     NtSvc ..> NQ : async
     IdSvc ..> IdDb : sync
     CoSvc ..> CoDb : sync
     NtSvc ..> NtDb : sync
-    AppT ..> Sess : sync
+    AppT ..> Sess : sync, all three
 %% route ortho
 %% route NtSvc NtDb hv
 %% route AppT Sess hv

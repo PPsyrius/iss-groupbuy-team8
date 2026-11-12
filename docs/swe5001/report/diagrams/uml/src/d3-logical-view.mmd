@@ -43,7 +43,7 @@ componentDiagram
     IdP -() IOidc
     CoSvc -() IEv : async
     Payment -() IHook
-    PayP -( IHook : async
+    PayP -( IHook : sync
     Payment -( IPay : sync
     PayP -() IPay
 %% route ortho

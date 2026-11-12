@@ -1,4 +1,4 @@
-// D6: network view in the AWS architecture icons convention (group boxes for the VPC,
+// D6: network view in AWS group notation (group boxes for the VPC,
 // availability zones and subnets; no service icons), in the report's UML kit palette (ink,
 // muted, role tints from style.typ) and at the kit's 8.5 pt label size. Source of the §3.2
 // network figure. The security-group rules are a separate table: d6-security-groups.typ.
@@ -34,6 +34,10 @@
     body
   },
 )
+// A permitted inbound flow, printed beside the resource it reaches.
+#let in-flow(body) = text(size: lbl, fill: platform, weight: "bold", body)
+// One route or flow in the legend above the VPC: "from → via → to".
+#let path-line(..hops) = text(size: lbl, hops.pos().join([ #sym.arrow.r ]))
 #let zone(name, pub, app, data) = block(
   width: 100%, inset: 6pt, radius: 3pt, stroke: (paint: az-c, thickness: 0.9pt, dash: "dashed"),
   stack(spacing: 5pt,
@@ -56,6 +60,14 @@
       res[Internet gateway],
       res[S3 gateway endpoint],
     ),
+    // The routes and flows that the subnet boxes below imply, stated as paths.
+    block(width: 100%, inset: 5pt, radius: 2pt, stroke: 0.6pt + grey, {
+      set par(leading: 0.45em, justify: false)
+      text(weight: "bold")[Ways in and out] + linebreak()
+      path-line[Prefix list][ALB (`alb`, TCP 80)][ECS tasks (`svc`, TCP 8589)] + linebreak()
+      path-line[Private application subnets][fck-nat ENI][internet gateway] + [; ] + path-line[private application subnets][S3 gateway endpoint (image layers)] + linebreak()
+      text(fill: platform, weight: "bold")[Into the data subnets, only:] + [ ] + path-line[`svc`][RDS, TCP 5432] + [; ] + path-line[`dbinit`][RDS, TCP 5432] + [; ] + path-line[`svc`][Valkey, TCP 6379] + [. Out of the data subnets: nothing.]
+    }),
     block(width: 100%, inset: 7pt, radius: 3pt, stroke: 1.2pt + vpc-c, {
       text(weight: "bold", fill: vpc-c)[VPC #raw("10.50.0.0/16"), Region ap-southeast-1]
       h(1fr)
@@ -68,7 +80,7 @@
           subnet([Private application], "10.50.10.0/24", app-rt, stroke: platform, fill: platform-fill,
             [#res([ECS tasks], sg: "svc") #res([db-init], sg: "dbinit")]),
           subnet([Data], "10.50.20.0/24", data-rt, stroke: platform, fill: white, warn: no-out,
-            [#res([Valkey node], sg: "cache")]),
+            [#res([Valkey node], sg: "cache") #in-flow[← TCP 6379 from `svc`]]),
         ),
         zone("ap-southeast-1b",
           subnet([Public], "10.50.1.0/24", pub-rt, stroke: pub-c, fill: pub-fill,
@@ -76,7 +88,7 @@
           subnet([Private application], "10.50.11.0/24", app-rt, stroke: platform, fill: platform-fill,
             [#res([ECS tasks], sg: "svc") #res([db-init], sg: "dbinit")]),
           subnet([Data], "10.50.21.0/24", data-rt, stroke: platform, fill: white, warn: no-out,
-            [#res([RDS instance], sg: "rds")]),
+            [#res([RDS instance], sg: "rds") #in-flow[← TCP 5432 from `svc`, `dbinit`]]),
         ),
       )
       v(4pt)

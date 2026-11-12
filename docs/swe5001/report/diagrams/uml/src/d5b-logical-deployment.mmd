@@ -12,18 +12,18 @@ deploymentDiagram
     node Lb["Load balancer"]
     rectangle "Application tier" as AppTier {
         node IdN["Application server"] {
-            environment IdJ["Java 21 runtime"] {
-                artifact IdA["identity-svc.jar"]
+            environment IdJ["Language runtime"] {
+                artifact IdA["identity-svc\nservice package"]
             }
         }
         node CoN["Application server"] {
-            environment CoJ["Java 21 runtime"] {
-                artifact CoA["commerce-svc.jar"]
+            environment CoJ["Language runtime"] {
+                artifact CoA["commerce-svc\nservice package"]
             }
         }
         node NtN["Application server"] {
-            environment NtJ["Java 21 runtime"] {
-                artifact NtA["notification-svc.jar"]
+            environment NtJ["Language runtime"] {
+                artifact NtA["notification-svc\nservice package"]
             }
         }
     }
@@ -41,8 +41,8 @@ deploymentDiagram
     IdN -- Idp : HTTPS
     CoN -- Pay : HTTPS
     Pay -- Edge : HTTPS
-    AppTier -- Cache : TLS
-    AppTier -- Db : JDBC, TLS
+    AppTier -- Cache : all services, TLS
+    AppTier -- Db : all services, SQL over TLS
     CoN -- Broker : HTTPS
     NtN -- Broker : HTTPS
 %% at Spa 0,0
