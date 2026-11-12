@@ -67,10 +67,25 @@ class ReviewedCheckerTests(unittest.TestCase):
         self.assertIsNotNone(baseline_call, 'Baseline JSON must retain an explicit immutable revision')
         baseline_rev = baseline_call[1]
         # The receipt postdates the evidence merge, so the explicit pin must
-        # override that default. It must also be reachable from dev or prod:
-        # an ancestor of HEAD is not enough, because on a PR branch HEAD
-        # includes the PR's own commits, which squash merging discards.
+        # override that default.
         self.assertNotEqual(baseline_rev, reviewed.EVIDENCE)
+        for section in ('04-3-security.typ', '05-devops.typ', '01-introduction.typ'):
+            for path, expected in paths:
+                with self.subTest(path=path, section=section):
+                    self.assertEqual(reviewed.snapshot(path, section, None), expected)
+                    self.assertEqual(reviewed.snapshot(path, section, 'freeze'), reviewed.APP)
+                    self.assertEqual(reviewed.snapshot(path, section, '"' + baseline_rev + '"'), baseline_rev)
+        # Chapter 5 forwards an explicit freeze even for its inspected paths.
+        self.assertEqual(reviewed.snapshot('.github/CODEOWNERS', '05-devops.typ', 'freeze'), reviewed.APP)
+
+    def test_baseline_pin_reachable_from_dev_or_prod(self):
+        # An ancestor of HEAD is not enough: on a PR branch HEAD includes the
+        # PR's own commits, which squash merging discards. Skipped only when
+        # neither remote ref is fetched, so it never hides the routing checks.
+        path = 'docs/swe5001/evidence/20261113-ci-check-cost-estimate/development-baseline.json'
+        baseline_rev = reviewed.re.search(
+            r'#src\("' + reviewed.re.escape(path) + r'", rev: "([0-9a-f]{40})"\)',
+            reviewed.text('sections/05-devops.typ'))[1]
         protected = [ref for ref in ('origin/dev', 'origin/prod')
                      if subprocess.run(['git', '-C', str(reviewed.ROOT), 'rev-parse', '--verify', '-q', ref],
                                        capture_output=True).returncode == 0]
@@ -80,14 +95,6 @@ class ReviewedCheckerTests(unittest.TestCase):
             subprocess.run(['git', '-C', str(reviewed.ROOT), 'merge-base', '--is-ancestor', baseline_rev, ref],
                            capture_output=True).returncode == 0 for ref in protected),
             baseline_rev + ' is not reachable from ' + ' or '.join(protected))
-        for section in ('04-3-security.typ', '05-devops.typ', '01-introduction.typ'):
-            for path, expected in paths:
-                with self.subTest(path=path, section=section):
-                    self.assertEqual(reviewed.snapshot(path, section, None), expected)
-                    self.assertEqual(reviewed.snapshot(path, section, 'freeze'), reviewed.APP)
-                    self.assertEqual(reviewed.snapshot(path, section, '"' + baseline_rev + '"'), baseline_rev)
-        # Chapter 5 forwards an explicit freeze even for its inspected paths.
-        self.assertEqual(reviewed.snapshot('.github/CODEOWNERS', '05-devops.typ', 'freeze'), reviewed.APP)
 
     def run_report(self, transform=lambda name, content: content):
         original_text = reviewed.text
