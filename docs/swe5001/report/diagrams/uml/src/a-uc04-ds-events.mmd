@@ -28,8 +28,8 @@ sequenceDiagram
     Note over Svc,Cache: COMMIT. Relay of the outbox rows: @sec-a-notifications
     rect
         Note over Tx,Cache: AFTER_COMMIT: synchronous calls, outside the settlement transaction; a failure is logged and cannot undo the join
+        Tx->>Share: onMemberJoined(event)
         opt event.attributed() (A1)
-            Tx->>Share: onMemberJoined(event)
             critical share credit, REQUIRES_NEW, 10 s
                 Share->>Credits: recordIfAbsent(credit)
                 Credits-->>Share: boolean

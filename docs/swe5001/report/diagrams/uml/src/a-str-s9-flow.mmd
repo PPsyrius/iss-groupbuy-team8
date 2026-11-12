@@ -11,8 +11,12 @@ sequenceDiagram
     participant Hdl as :NotificationEventHandler
 
     critical settlement transaction, REQUIRED, READ COMMITTED, 10 s (commerce-svc)
+        Note over Tx,Out: collapsed: StripeCheckoutService.fulfilOrCompensate → OrderFulfilmentAdapter.fulfil → admit
         Tx->>Svc: joinConfirmed(dealId, paid, sharerUserId)
-        Svc->>Pub: publishEvent(event: TeamSucceeded)
+        Svc->>Pub: publishEvent(event: MemberJoined)
+        opt the team fills
+            Svc->>Pub: publishEvent(event: TeamSucceeded)
+        end
         Pub-->>Svc: registered, no subscriber runs yet
         Svc-->>Tx: ParticipationResult
         rect

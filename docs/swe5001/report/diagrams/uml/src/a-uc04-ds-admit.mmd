@@ -9,7 +9,7 @@ sequenceDiagram
     create participant Res as result : ParticipationResult
     participant Pub as :ApplicationEventPublisher
 
-    Note over OFA,Repo: B7: inside the settlement transaction; lock 5, the receipt
+    Note over OFA,Repo: B7: settlement transaction; receipt lock
     OFA->>Svc: joinConfirmed(dealId, paid, sharerUserId)
     Svc->>Repo: reserveAndLock(paymentId, fingerprint, userId)
     Repo-->>Svc: ParticipationReceipt
@@ -18,6 +18,9 @@ sequenceDiagram
     end
     Svc->>Repo: lockDeal(dealId): lock 1, held
     Svc->>Repo: currentTime()
+    break no team (A6): compensation(dealId, GROUPBUY_PLACEHOLDER) and complete, without joinPaid
+        Svc-->>OFA: result: compensation_required
+    end
     Svc->>Repo: hasActiveMember(dealId, userId)
     Svc->>Deal: joinPaid(paid, alreadyMember, now)
     Deal->>Paid: requirePrice(dealPrice, currency)
@@ -36,7 +39,7 @@ sequenceDiagram
             Svc->>Pub: publishEvent(TeamSucceeded)
         end
         Svc-->>OFA: result: applied
-    else refused: no team, DEAL_CLOSED, DEAL_FULL, ALREADY_MEMBER or PAYMENT_MISMATCH (A6, A7)
+    else DEAL_CLOSED, DEAL_FULL, ALREADY_MEMBER or PAYMENT_MISMATCH (A6, A7)
         Deal-->>Svc: BizException
         Svc->>Res: «create» compensation(dealId, code)
         Svc->>Repo: complete(paymentId, result, userId, now)

@@ -18,7 +18,7 @@ classDiagram
     }
     class TeamPriceAppServiceImpl {
         <<application service, Conc>>
-        -QUOTE_LIFETIME: Duration = 15 min
+        ~QUOTE_LIFETIME: Duration = 15 min
         +issueQuote(productId: UUID, ownerId: UUID): TeamPriceQuote
     }
     class TeamPriceRepository {
