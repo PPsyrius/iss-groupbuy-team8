@@ -1,13 +1,13 @@
 %% frame: BlocBuy SWE5001 communication paths
 deploymentDiagram
     device Browser["Buyer's browser"]
-    node Cdn["Amazon CloudFront"] <<global edge>>
+    node Cdn["Amazon\nCloudFront"] <<global edge>>
     node Stripe["Stripe"] <<external system>>
     node Google["Google Sign-In"] <<external system>>
     node S3["Amazon S3"] <<bucket>> : SPA files (OAC)
     zone "VPC 10.50.0.0/16" {
         zone "Public" {
-            node Alb["Application Load Balancer"]
+            node Alb["Application\nLoad Balancer"]
             node Nat["fck-nat"]
         }
         zone "Private" {
@@ -18,7 +18,7 @@ deploymentDiagram
             }
         }
         zone "Data" {
-            node Cache["ElastiCache Valkey"] : TLS 6379
+            node Cache["ElastiCache\nValkey"] : TLS 6379
             node Rds["RDS PostgreSQL"] : TLS 5432
         }
     }

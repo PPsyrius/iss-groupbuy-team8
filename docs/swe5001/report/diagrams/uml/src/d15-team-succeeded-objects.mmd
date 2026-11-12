@@ -1,4 +1,4 @@
-%% frame: A team of two at the commit of the join that fills it (design objects)
+%% frame: Object view: a team of two at the commit of the join that fills it
 classDiagram
     class i1["i1 : PurchaseIntent"] {
     }
@@ -11,10 +11,6 @@ classDiagram
     class leader["leader : PaidMember"] {
         userId = u1
         status = "paid"
-    }
-    class credit["credit : ShareCredit"] {
-        sharerUserId = u1
-        inviteeUserId = u2
     }
     class deal["deal : GroupDeal"] {
         leaderUserId = u1
@@ -39,7 +35,6 @@ classDiagram
 %% at pay1 0,1
 %% at o1 0,2
 %% at leader 0,3
-%% at credit 1,1
 %% at deal 1,2
 %% at i2 2,0
 %% at pay2 2,1
@@ -53,5 +48,3 @@ classDiagram
     o2 -- member : orderId
     deal -- leader : dealId
     deal -- member : dealId
-    credit -- deal : dealId
-    credit -- pay2 : paymentId

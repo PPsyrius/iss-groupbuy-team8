@@ -1,39 +1,39 @@
 %% frame: Promotion into prod and the SWE5001 environment
 activityDiagram
-    lane "swe5001-release-gate.yml (PR into prod)" {
+    lane "swe5001-release-gate.yml" {
         start S
-        action PR["Open the promotion PR, dev into prod"]
-        action PS["promotion-source: head is this repository's dev"]
+        action PR["Open the promotion\nPR, dev into prod"]
+        action PS["promotion-source:\nhead is our dev"]
         fork FG
-        action SI["service-images: build and scan, no export"]
-        action IP["infra-plan: infra-swe5001 checks"]
+        action SI["service-images: build\nand scan, no export"]
+        action IP["infra-plan:\ninfra-swe5001 checks"]
         join J
         decision G
         end EB
-        action Merge["Merge commit into prod"]
+        action Merge["Merge commit\ninto prod"]
         end E1
     }
-    lane "swe5001-deploy.yml (on push to prod, swe5001-demo)" {
+    lane "swe5001-deploy.yml (push to prod)" {
         start S3
-        action Img["images: build, scan, export"]
+        action Img["images: build,\nscan, export"]
         decision D1
-        action Pub["publish: push to ECR, record candidate digests"]
+        action Pub["publish: push to ECR,\ncandidate digests"]
         decision D2
         merge F2
-        action Up["up:\nenv-up.sh --candidate,\nsmoke suite"]
+        action Up["up: env-up.sh\n--candidate,\nsmoke suite"]
         decision Ok
         merge F3
         action Rel["release: publish SPA,\npromote the digests"]
         merge M
         action Down["down (always):\nenv-down.sh,\nenv-status.sh"]
-        action Ev["evidence (always): merge stage receipts"]
+        action Ev["evidence (always):\nmerge stage receipts"]
         end E
     }
     lane "swe5001-env.yml" {
         start S2
-        action Cron["Nightly at 23:00 SGT (cron 0 15 * * *)"]
-        action Disp["dispatch (on dev): start down on prod"]
-        action Sess["session (on prod): env-down.sh"]
+        action Cron["Nightly at 23:00 SGT\n(cron 0 15 * * *)"]
+        action Disp["dispatch (on dev):\nstart down on prod"]
+        action Sess["session (on prod):\nenv-down.sh"]
         end E2
     }
     S --> PR
@@ -44,7 +44,7 @@ activityDiagram
     SI --> J
     IP --> J
     J --> G
-    G --> Merge : [3 checks green, code-owner approval]
+    G --> Merge : [3 checks green, approved]
     G --> EB : [else]
     Merge --> E1
     S3 --> Img
