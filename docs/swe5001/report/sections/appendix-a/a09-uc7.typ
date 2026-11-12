@@ -2,7 +2,7 @@
 
 == UC7 Share an Invitation <sec-a-uc07>
 
-UC7 lets a member of an open team share an invite link. When another buyer joins the team through that link, BlocBuy records who shared it and, once the join is final, records one share credit for the sharer. UC7 extends UC4 (@sec-a-uc04) at the extension point _admission_, under the condition {joined through an invite link}. A join without a link is unchanged, and attribution can never block or undo a paid join. The design questions are an unguessable reference that grants nothing, an anonymous lookup that cannot be abused, and a credit that must not share the fate of the money. UC7 is designed and built; its status on AWS is given by capability in @tbl-status.
+UC7 lets a member of an open team share an invite link. When another buyer joins the team through that link, BlocBuy records who shared it and, once the join is final, records one share credit for the sharer. UC7 extends UC4 (@sec-a-uc04) at the extension point _admission_, under the condition {joined through an invite link}. A join without a link is unchanged, and attribution can never block or undo a paid join. The design questions are an unguessable reference that grants nothing, an anonymous lookup that cannot be abused, and a credit that must not share the fate of the money. UC7 is designed and built; its status on AWS is given by capability in the status table of report §2.2.
 
 === Use Case and Flows of Events <sec-a-uc07-flows>
 

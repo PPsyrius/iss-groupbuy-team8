@@ -98,5 +98,6 @@ classDiagram
     OutboxEventTransport <|.. BatchingOutboxEventTransport
     BatchingOutboxEventTransport <|-- SqsOutboxEventTransport
     BatchingOutboxEventTransport <|-- SnsOutboxEventTransport
-    BatchingOutboxEventTransport ..> OutboxMessageFactory
+    SnsOutboxEventTransport ..> OutboxMessageFactory
+    SqsOutboxEventTransport ..> OutboxMessageFactory
     OutboxMessageFactory ..> IntegrationEventEnvelope : «create»

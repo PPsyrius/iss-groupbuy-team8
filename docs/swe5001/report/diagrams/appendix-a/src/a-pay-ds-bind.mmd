@@ -30,7 +30,7 @@ sequenceDiagram
         Svc->>Repo: findById(id)
         Repo-->>Svc: Optional of CheckoutPayment
         Svc->>Port: lockForSettlement(quote): lock 1 team, lock 2 intent
-        Svc->>Repo: lock(id): lock 4, the payment row
+        Svc->>Repo: lock(id): lock 3, the payment row
         Repo-->>Svc: CheckoutPayment
         Svc->>Svc: matches(current, session)
         break session does not match the saved payment
