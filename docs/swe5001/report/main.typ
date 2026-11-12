@@ -59,15 +59,46 @@
   outline(title: none, depth: 3, indent: n => n * 0.5cm)
 }
 #pagebreak()
+// The lists of figures and tables print only the first sentence of each caption (S-D10): the
+// caption's content up to its first ". " (a text ending in "." followed by a space counts too),
+// with code, links and emphasis before that point kept as they are. A caption with no such point
+// prints whole. The figure itself keeps its full caption.
+#let first-sentence(body) = {
+  let kids = if body.func() == [].func() { body.children } else { (body,) }
+  let out = ()
+  for (i, k) in kids.enumerate() {
+    if k.func() == text {
+      let t = k.text
+      let at = t.position(". ")
+      if at != none { out.push(text(t.slice(0, at + 1))); return out.join() }
+      let next = kids.at(i + 1, default: none)
+      if t.ends-with(".") and (next == none or next == [ ]) { out.push(k); return out.join() }
+    }
+    out.push(k)
+  }
+  out.join()
+}
+// The entry is rebuilt like the built-in one (a link around prefix, body, leader and page), in
+// body ink as in the Contents (the template's `show link` would turn the whole entry blue); a
+// link inside the caption stays blue. The leader and page number never wrap apart.
+#let short-entry(it) = context {
+  let el = it.element
+  let ink = text.fill
+  let body = if el.caption == none { it.body() } else { first-sentence(el.caption.body) }
+  let leader = if it.fill == none { h(1fr) } else { box(width: 1fr, it.fill) }
+  link(el.location(), { set text(fill: ink); it.indented(it.prefix(), [#body~#leader~#it.page()]) })
+}
 #{
   front-title[List of figures]
   show outline.entry: set block(spacing: 9pt)
+  show outline.entry: short-entry
   outline(title: none, target: figure.where(kind: image))
 }
 #pagebreak()
 #{
   front-title[List of tables]
   show outline.entry: set block(spacing: 9pt)
+  show outline.entry: short-entry
   outline(title: none, target: figure.where(kind: table))
 }
 
