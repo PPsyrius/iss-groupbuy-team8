@@ -976,7 +976,16 @@
   }
   // Lane headers.
   let LT = lanes.map(l => s-text(l.name, max: 60mm))
-  let lane-head = if lanes.len() > 0 { calc.max(..LT.map(t => pt-of(if lr { measure(t).width } else { measure(t).height }))) + 8 } else { 0.0 }
+  // The header is as thick as a title is tall: an LR title turns -90deg, so its height is still the
+  // header's thickness, and its width is a length its lane (rows a0..a1) must reach.
+  let lane-head = if lanes.len() > 0 { calc.max(..LT.map(t => pt-of(measure(t).height))) + 8 } else { 0.0 }
+  if lr {
+    for (i, l) in lanes.enumerate() {
+      let span = range(l.a0, l.a1 + 1).map(r => rowH.at(r)).sum() + (l.a1 - l.a0) * sp.gy
+      let need = pt-of(measure(LT.at(i)).width) + 8
+      if span < need { rowH.at(l.a1) += need - span }
+    }
+  }
   let lane-gap = if lanes.len() > 0 { 2 * s-pad } else { 0.0 }
   // The cell that stands for an end of an edge: an element's own, or, for a group, its cell
   // nearest the other end.
@@ -1104,7 +1113,8 @@
   }
   let is-bar(id) = kind-of(id) in ("fork", "join")
   let ball(id) = kind-of(id) == "interface"
-  let pull(id, k) = if ball(id) and k == "requires" { s-socket } else { 0.0 }
+  // A required interface's edge stops at its socket, s-socket from the ball's centre.
+  let pull(id, k) = if ball(id) and k == "requires" { s-socket - s-ball } else { 0.0 }
   // Polyline of an edge, from the source's outline to the target's.
   let path(ed, r) = {
     let a = A.at(ed.from)
