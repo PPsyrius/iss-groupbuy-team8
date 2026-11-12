@@ -13,15 +13,15 @@ The platform measures how it runs today, and stores the data to measure how the 
 
 #figure(
   table(
-    columns: (1.6fr, 2fr, 2fr),
-    table.header([Measure], [Why it matters], [Data already stored]),
-    [Team fill rate and time to fill, per product], [Shows which offers and team sizes work, and when deadlines are too short], [`biz_group_deal` and `biz_group_member` with their timestamps],
-    [Referral conversion], [Shows whether sharing brings new buyers, the platform's growth engine], [`biz_share_invite`, `biz_share_credit`, `biz_purchase_intent.sharer_user_id`],
-    [Start-to-success conversion], [Shows how many started teams succeed], [`biz_group_deal` status and timestamps],
-    [Refund rate per product], [Shows offers that repeatedly fail to fill], [Refunds and expired teams],
+    columns: (1.3fr, 1.5fr, 2.1fr, 2.1fr),
+    table.header([Measure], [Why it matters], [Stored data it comes from], [From the three events alone]),
+    [Team fill rate and time to fill, per product], [Shows which offers and team sizes work, and when deadlines are too short], [`biz_group_deal`: `product_id`, `status`, `start_time`, `success_time`, `expire_time`], [Fill rate: yes, because `TeamSucceeded` and `TeamExpired` carry `productId`. Time to fill: approximate, by pairing a START `PaymentSucceeded` (its `businessId` is the team's id) with that team's `TeamSucceeded`],
+    [Referral conversion], [Shows whether sharing brings new buyers, the platform's growth engine], [`biz_share_invite` (`deal_id`, `sharer_user_id`), `biz_share_credit` (`sharer_user_id`, `invitee_user_id`, `credit_time`), `sharer_user_id` on `biz_group_member` and `biz_purchase_intent`], [No: no event carries an invite, a sharer or a credit],
+    [Start-to-success conversion], [Shows how many started teams succeed], [`biz_group_deal`: `status`, `start_time`, `success_time`], [Approximate: START `PaymentSucceeded` events against `TeamSucceeded` events; a START payment refused at settlement creates no team but still emits `PaymentSucceeded`],
+    [Refund rate per product], [Shows offers that repeatedly fail to fill], [`biz_refund` (`deal_id`, `reason`, `status`) joined to `biz_group_deal.product_id`], [No: no refund event exists; `TeamExpired` per product is a proxy that misses payments refused at settlement],
   ),
   kind: table,
-  caption: [Business measures designed on stored data. Source: #src("docs/swe5001/presentation/src/slides-backup.js")[presentation backup slide B11].],
+  caption: [Business measures designed on stored data. Source: #src("docs/swe5001/presentation/src/slides-backup.js")[presentation backup slide B11]. Tables and columns from the Flyway migrations V5, V9, V18 and V19; event payloads from `TeamSucceededV1`, `TeamExpiredV1` and `PaymentSucceededV1`.],
 ) <tbl-analytics>
 
-Designed but not implemented: an analytics consumer is a read-only subscriber on the event topic, built exactly like the audit queue (§4.4), so `commerce-svc` does not change. Estimated: the study's pipeline from SNS through Firehose into S3, queried with Athena, costs about US\$0.20 a month (#src("docs/swe5001/architecture-options-study/04-aws-cost-estimate.md")[cost estimate]).
+Designed but not implemented: an analytics consumer is a read-only subscriber on the event topic, built exactly like the audit queue (§4.4), so `commerce-svc` does not change. The topic carries only `TeamSucceeded`, `TeamExpired` and `PaymentSucceeded`, so on its own it supplies the fill rate per product and approximate time to fill and start-to-success conversion (@tbl-analytics). Referral conversion and the refund rate need a read-only extract of the stored tables, which is not designed yet. Estimated: the study's pipeline from SNS through Firehose into S3, queried with Athena, costs about US\$0.20 a month (#src("docs/swe5001/architecture-options-study/04-aws-cost-estimate.md")[cost estimate]).
