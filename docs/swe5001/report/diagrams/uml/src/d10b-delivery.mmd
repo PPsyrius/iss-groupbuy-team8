@@ -9,9 +9,9 @@ activityDiagram
         action IP["infra-plan:\ninfra-swe5001 checks"]
         join J
         decision G
-        end EB
+        flowend EB
         action Merge["Merge commit\ninto prod"]
-        end E1
+        flowend E1
     }
     lane "swe5001-deploy.yml (push to prod)" {
         start S3
@@ -27,14 +27,14 @@ activityDiagram
         merge M
         action Down["down (always):\nenv-down.sh,\nenv-status.sh"]
         action Ev["evidence (always):\nmerge stage receipts"]
-        end E
+        flowend E
     }
     lane "swe5001-env.yml" {
         start S2
         action Cron["Nightly at 23:00 SGT\n(cron 0 15 * * *)"]
         action Disp["dispatch (on dev):\nstart down on prod"]
         action Sess["session (on prod):\nenv-down.sh"]
-        end E2
+        flowend E2
     }
     S --> PR
     PR --> PS

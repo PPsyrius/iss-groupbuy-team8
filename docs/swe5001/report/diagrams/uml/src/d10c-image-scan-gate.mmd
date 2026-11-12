@@ -7,8 +7,8 @@ activityDiagram
         action TB["Trivy image\nscan: fixable\nHIGH or\nCRITICAL"]
         decision VB
         action FB["Job fails:\ndocker check\nred, merge\nblocked"]
-        end EFB
-        end EB
+        flowend EFB
+        flowend EB
     }
     lane "swe5001-service-images.yml: build" {
         start SI
@@ -17,11 +17,11 @@ activityDiagram
         action TI["Trivy image\nscan: fixable\nHIGH or\nCRITICAL"]
         decision VI
         action FI["Job fails:\nservice-images\nred: prod\ncheck blocks\npromotion; dev\nmerge stops by\nteam rule"]
-        end EFI
+        flowend EFI
         decision UP
         action EX["Export the\nscanned image\n(docker save),\nupload it"]
-        end EI
-        end EN
+        flowend EI
+        flowend EN
     }
     SB --> BB
     BB --> HB
