@@ -32,7 +32,7 @@ Two of the briefing's five success criteria are met by built work: the seed, pro
     [Q5], [Technical and non-technical benefits, demonstrated], [§6.2, §4.1–§4.4], [@tbl-success; the paid buyer journey was not run on the three-service runtime], [Mixed, per row of @tbl-success],
     [Q6], [Value of cloud-native design], [§6.3], [Disposable runtime rebuilt from zero, pay per session, scale-out, managed services (@tbl-cloud-value)], [On AWS; cost calculated (one term estimated)],
     [Q7], [Lifecycle parts automated and effort saved], [§5.3], [Build, scan, create, smoke, release and destroy are automated (@tbl-delivery-timings); no manual baseline was timed, so effort saved is not measured], [On AWS (promotion runs); saving not measured],
-    [Q8], [Effort within about ten person-days each], [§2.3], [About 50 person-days to 19 Oct; two members above ten; phase D not estimated (@tbl-effort)], [Agreed estimate],
+    [Q8], [Effort within about ten person-days each], [§2.3], [About 50 person-days to 19 Oct and about 71.5 in total; phase D (the remarks and the report) took the total above the guideline (@tbl-effort)], [Agreed estimate],
   ),
   kind: table,
   caption: [Briefing questions Q1–Q8 and where they are answered. Source: briefing V2.6.],
