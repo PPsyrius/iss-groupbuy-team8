@@ -19,13 +19,13 @@ componentDiagram
     }
     CoSvc -() IEv : async
     Broker -( IEv : async
-    Broker --> NQ
-    Broker --> AQ
+    NQ ..> Broker
+    AQ ..> Broker
     NtSvc ..> NQ : async
     IdSvc ..> IdDb : sync
     CoSvc ..> CoDb : sync
     NtSvc ..> NtDb : sync
-    AppT ..> Sess : sync
+    AppT ..> Sess : sync, all three
 %% route ortho
 %% route NtSvc NtDb hv
 %% route AppT Sess hv

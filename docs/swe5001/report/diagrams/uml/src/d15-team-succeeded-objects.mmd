@@ -1,0 +1,57 @@
+%% frame: A team of two at the commit of the join that fills it (design objects)
+classDiagram
+    class i1["i1 : PurchaseIntent"] {
+    }
+    class pay1["pay1 : CheckoutPayment"] {
+        status = SUCCEEDED
+    }
+    class o1["o1 : Order"] {
+        status = CONFIRMED
+    }
+    class leader["leader : PaidMember"] {
+        userId = u1
+        status = "paid"
+    }
+    class credit["credit : ShareCredit"] {
+        sharerUserId = u1
+        inviteeUserId = u2
+    }
+    class deal["deal : GroupDeal"] {
+        leaderUserId = u1
+        targetSize = 2
+        currentSize = 2
+        status = SUCCEEDED
+    }
+    class i2["i2 : PurchaseIntent"] {
+        sharerUserId = u1
+    }
+    class pay2["pay2 : CheckoutPayment"] {
+        status = SUCCEEDED
+    }
+    class o2["o2 : Order"] {
+        status = CONFIRMED
+    }
+    class member["member : PaidMember"] {
+        userId = u2
+        status = "paid"
+    }
+%% at i1 0,0
+%% at pay1 0,1
+%% at o1 0,2
+%% at leader 0,3
+%% at credit 1,1
+%% at deal 1,2
+%% at i2 2,0
+%% at pay2 2,1
+%% at o2 2,2
+%% at member 2,3
+    i1 -- pay1 : fulfilledPaymentId
+    pay1 -- o1 : placement.paymentId
+    o1 -- leader : orderId
+    i2 -- pay2 : fulfilledPaymentId
+    pay2 -- o2 : placement.paymentId
+    o2 -- member : orderId
+    deal -- leader : dealId
+    deal -- member : dealId
+    credit -- deal : dealId
+    credit -- pay2 : paymentId

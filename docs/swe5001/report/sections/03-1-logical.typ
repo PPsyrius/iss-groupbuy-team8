@@ -27,11 +27,11 @@ BlocBuy is one codebase that runs as three services on AWS. The split follows tr
     [Domain and integration events], [Process], [UML component diagrams], [Which events cross which boundary], [Developer and operator], [@fig-d8-domain-events, @fig-d8b-integration-events, @tbl-domain-events],
     [Code layers], [Development], [COLA layer list and rule table], [Where code may depend on what], [Developer], [@tbl-arch-rules],
     [Physical deployment (physical detail deployment)], [Physical], [UML deployment diagrams], [Where each part runs and how the nodes talk], [Operator and architect], [@fig-d5-deployment, @fig-d5a-communication-paths],
-    [Network and security], [Physical], [AWS architecture icons convention], [What can reach the data tier], [Security reviewer], [@fig-d6-network],
+    [Network and security], [Physical], [AWS group notation], [What can reach the data tier], [Security reviewer], [@fig-d6-network],
     [Workload placement], [Physical], [Table], [Which compute runs each kind of workload], [Architect and operator], [@tbl-workload-compute],
     [Data ownership], [Physical], [UML class diagrams with «table»], [Which service owns which table], [Developer and database administrator], [@fig-d9a-identity-data, @fig-d9b-notification-data, @fig-d9c-commerce-team-data, @fig-d9d-commerce-payment-data],
-    [Delivery pipeline], [Development], [UML activity diagrams], [How a change reaches production], [Operator], [@fig-d10a-ci-image-chain, @fig-d10b-delivery],
-    [Settlement design], [Scenarios and logical], [UML class and sequence diagrams], [How a paid join is admitted or refunded], [Developer], [@fig-d11-uc4-design-classes, @fig-d12a-two-buyers-start, @fig-d12b-two-buyers-join, @fig-race-last-seat],
+    [Delivery pipeline], [Development], [UML activity diagrams], [How a change reaches production], [Operator], [@fig-d10a-ci-image-chain, @fig-d10c-image-scan-gate, @fig-d10b-delivery],
+    [Settlement design], [Scenarios and logical], [UML class, sequence and object diagrams], [How a paid join is admitted or refunded], [Developer], [@fig-d11-uc4-design-classes, @fig-d12a-two-buyers-start, @fig-d12b-two-buyers-join, @fig-d15-team-succeeded-objects, @fig-race-last-seat],
     [Expiry design], [Process], [UML class and sequence diagrams], [How expiry and refunds stay consistent], [Developer], [@fig-d13-expiry-design-classes, @fig-d14a-team-expiry, @fig-d14b-refund-retry, @fig-d14c-outbox-relay],
   ),
   kind: table,
@@ -181,11 +181,11 @@ Five developers worked in parallel, so 19 automated architecture checks (@tbl-ar
 
 @fig-d3-logical-view shows the request path: who calls which interface, and the external systems. @fig-d3b-logical-events-data shows the published events and the data stores. Both use UML component notation with role names only; @tbl-logical-physical maps each element to its product.
 
-#afig("d5b-logical-deployment", [Logical deployment view (UML deployment diagram). Tiers map to node types without products: each service is a jar in a language runtime on its own application server node; @tbl-logical-physical names the products.])
+#afig("d5b-logical-deployment", [Logical deployment view (UML deployment diagram). Tiers map to node types without products: each service is one service package in a language runtime on its own application server node, and all three use the session store and the database server; @tbl-logical-physical names the products.])
 
-#afig("d3-logical-view", [Logical view, request path (UML component diagram). Producers and consumers reach the subsystems only through the edge gateway, and the one synchronous call between subsystems is `commerce-svc` requiring `UserAppService`.])
+#afig("d3-logical-view", [Logical view, request path (UML component diagram; red fill = core subdomain, blue = web client). Producers and consumers reach the subsystems only through the edge gateway, and the one synchronous call between subsystems is `commerce-svc` requiring `UserAppService`.])
 
-#afig("d3b-logical-events-data", [Logical view, events and data (UML component diagram). `commerce-svc` publishes PublishedEvents V1 once and the message broker fans it out to one queue per consumer; the audit queue has no consumer, so a new subscriber needs only a new queue. Each subsystem owns its data store, and all three use the shared session store.])
+#afig("d3b-logical-events-data", [Logical view, events and data (UML component diagram; red fill = holds the core subdomains, amber = messaging). `commerce-svc` publishes PublishedEvents V1 once and the message broker fans it out to one queue per consumer; the audit queue has no consumer, so a new subscriber needs only a new queue. Each subsystem owns its data store, and all three use the shared session store (the line from the tier frame).])
 
 ==== Subsystem and solution element catalogue
 
@@ -411,7 +411,7 @@ The study recommended one Team Purchase context for `groupbuy` and `order` (§4.
 1. *Language test.* A "quote" in `catalog` (`TeamPriceQuote`) is an exploratory price for a browsing buyer; it holds no stock and lapses without side effects. In `payment` (`CheckoutQuote`), a "quote" is a frozen financial commitment bound to a `PurchaseIntent` and a Stripe session. Likewise, `GroupDeal` in `groupbuy` models the team's size and window rules, while `Order` in `order` models one buyer's receipt and product snapshot.
 2. *Upstream and downstream test.* For every pair of collaborating contexts and external providers, we decided which side sets the contract (upstream, U) and which side adapts (downstream, D), and chose the DDD pattern in @fig-d4-context-map and @tbl-context-map.
 
-Arrows in @fig-d4-context-map point from the downstream context to the upstream one; @tbl-context-map lists each pair upstream first. The map capitalises the context names; the table uses the Java package names. Shaded contexts are the core subdomains.
+Arrows in @fig-d4-context-map point from the downstream context to the upstream one; @tbl-context-map lists each pair upstream first. The map capitalises the context names; the table uses the Java package names. Shaded contexts are the core subdomains. One edge uses a label from outside the standard context-map set: `order` depends on the ports that `payment` declares, as a downstream context does, but at run time `payment` calls `order` through them. Customer–Supplier or Conformist would name the dependency and hide that inversion, so the map labels the edge with Fowler's Separated Interface.
 
 #figure(
   table(

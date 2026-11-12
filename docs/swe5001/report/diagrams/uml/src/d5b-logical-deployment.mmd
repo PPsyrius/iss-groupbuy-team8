@@ -13,17 +13,17 @@ deploymentDiagram
     rectangle "Application tier" as AppTier {
         node IdN["Application server"] {
             environment IdJ["Language runtime"] {
-                artifact IdA["identity-svc.jar"]
+                artifact IdA["identity-svc\nservice package"]
             }
         }
         node CoN["Application server"] {
             environment CoJ["Language runtime"] {
-                artifact CoA["commerce-svc.jar"]
+                artifact CoA["commerce-svc\nservice package"]
             }
         }
         node NtN["Application server"] {
             environment NtJ["Language runtime"] {
-                artifact NtA["notification-svc.jar"]
+                artifact NtA["notification-svc\nservice package"]
             }
         }
     }
@@ -41,8 +41,8 @@ deploymentDiagram
     IdN -- Idp : HTTPS
     CoN -- Pay : HTTPS
     Pay -- Edge : HTTPS
-    AppTier -- Cache : TLS
-    AppTier -- Db : JDBC, TLS
+    AppTier -- Cache : all services, TLS
+    AppTier -- Db : all services, SQL over TLS
     CoN -- Broker : HTTPS
     NtN -- Broker : HTTPS
 %% at Spa 0,0

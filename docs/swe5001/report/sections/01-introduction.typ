@@ -11,7 +11,7 @@ BlocBuy is a community group-buying platform: buyers form a team at a team price
 
 *What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They run on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchange events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. Terraform creates the runtime for each working session and destroys it afterwards. The logical design is in §3.1 and the physical design in §3.2.
 
-*Status on 11 November 2026.* We promoted the three-service release to `prod` and smoke-tested it through CloudFront on 17, 19 and 20 October and on 10 and 11 November (§2.2, §6.6). The promotions of 17 October, 10 November and 11 November built the runtime from zero on AWS. The last one, on 11 November between 10:37 and 11:31, released source `3a893036`, created 120 resources, passed its smoke test and destroyed the 120 resources again. On 10 November on AWS, we verified the placement and connectivity of the separate data subnets for one working session (AD-15, §3.2; AISS-07; #src("docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November record]). That session's HTTP campaign failed acceptance, and the nightly cleanup destroyed its runtime at 07:52, ending the session's manual pool and scaling experiment (§5.3). On 11 November on AWS, the V2 baseline on the monolith passed every plateau up to 200 requests per second (req/s), and the V3 runs r1, r2 and r3 on the distributed runtime failed; we traced r3 to the load generator's network path. The fourth run, V3 r4, moved the generator onto AWS and delivered the whole V3 schedule up to 600 req/s with no errors or drops, while commerce scaled from one to six tasks. Its observation record is incomplete, and maximum capacity and linear scaling remain unproven (§4.1, AISS-12). After the presentation we worked through the assessors' remarks; §6.1 maps each to its answer. Several availability drills have local results only (AISS-13). §2.2 gives the evidence status of each capability, and §3.4 the remaining limitations. Times in this report are Singapore time (SGT, UTC+8). Repository links point to commit #raw(freeze.slice(0, calc.min(8, freeze.len()))), the state of the repository on 11 November.
+*Status on 11 November 2026.* The three-service release runs on AWS: promotions built it from zero and passed the smoke test on 17 October and on 10 and 11 November, and on 10 November we verified the separate data subnets (AD-15, §3.2). On 11 November the load test V3 r4 delivered the whole schedule up to 600 requests per second (req/s) with no errors while commerce scaled from one to six tasks, although maximum capacity and linear scaling remain unproven (§4.1, AISS-12). Several availability drills have local results only (AISS-13). §2.2 gives the evidence status of each capability, §6.6 the dated runs, §6.1 the answer to each of the assessors' remarks and §3.4 the remaining limitations. Times in this report are Singapore time (SGT, UTC+8). Repository links point to commit #raw(freeze.slice(0, calc.min(8, freeze.len()))), the state of the repository on 11 November.
 
 == Business Needs
 
@@ -110,7 +110,7 @@ SWE5001 changed how BlocBuy is built and run, not what it does. The business fun
 
 === Functionality in scope
 
-Every use case keeps its SWE5006 behaviour in the monolith and has one owning service in the distributed topology (@tbl-scope-uc, @fig-d2-use-cases). UC3–UC6 form the group-buying core. Its critical flows, joining a team by paying (UC4 with UC10) and team expiry with refunds (UC5, UC6), are designed in §3.2.4.
+Every use case keeps its SWE5006 behaviour in the monolith and has one owning service in the distributed topology (@tbl-scope-uc, @fig-d2-use-cases). UC3–UC6 form the group-buying core. Its critical flows, joining a team by paying (UC4 with UC10) and team expiry with refunds (UC5, UC6), are designed in §3.2.4. The numbering follows the #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], with two changes: the proposal left notification unnumbered and put referral credit inside UC7, so this report numbers every use case in @fig-d2-use-cases and splits the credit into UC12. UC10 to UC12 are numbered for this report; the #src("docs/sprint2-progress-report.typ")[Sprint 2 progress report] used UC10 for the payment and order system of record, which this UC10 covers from the buyer's side.
 
 #figure(
   table(
@@ -130,7 +130,7 @@ Every use case keeps its SWE5006 behaviour in the monolith and has one owning se
     [UC12], [Credit the sharer of a referred join (extends UC4)], [commerce], [Unchanged; stays an in-process subscriber after the join commits],
   ),
   kind: table,
-  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], where notification was unnumbered and UC7 also covered referral credit; this report numbers every use case in @fig-d2-use-cases and splits the credit into UC12. UC10 to UC12 are numbered for this report: the #src("docs/sprint2-progress-report.typ")[Sprint 2 progress report] used UC10 for the payment and order system of record, which this UC10 covers from the buyer's side.],
+  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], renumbered as described above.],
 ) <tbl-scope-uc>
 
 #afig("d2-use-cases", lbl: <fig-d2-use-cases>, float: true, [Use case view (UML use case diagram). UC3 and UC4 always include UC10; UC6 extends UC5 when the team expired, and UC12 extends UC4 when the join used an invite link.])
@@ -165,8 +165,8 @@ Seller self-service is out of scope as well. SWE5006 excluded a merchant self-se
     [API gateway with partner keys, quotas and rate limits], [Designed, not built; external partners have no entry point], [§3.1.4.6, AISS-04],
     [Service-to-service token or mutual Transport Layer Security (TLS) on internal calls], [Designed, not built; internal endpoints rely on network rules], [AISS-04],
     [Amazon Relational Database Service (RDS) across several Availability Zones (Multi-AZ), a Valkey replica and a NAT instance per zone], [Designed for production, not built; one of each today], [AISS-01],
-    [Stock reservation], [Studied, not designed], [—],
-    [Distributed tracing with AWS Distro for OpenTelemetry and X-Ray], [Studied, not designed; only a trace-ID header is propagated], [§4.4],
+    [Stock reservation], [Designed in the options study (study AD-04), not built], [—],
+    [Distributed tracing with AWS Distro for OpenTelemetry and X-Ray], [Designed in the options study (study AD-11), not built; only a trace-ID header is propagated], [§4.4],
     [Analytics pipeline (SNS → Firehose → S3 → Athena)], [Studied, not designed; operational analytics only], [§6.5],
     [AWS WAF (web application firewall) on the SWE5001 distribution], [Cut on 11 October to stay within the effort guideline], [§4.3],
   ),
