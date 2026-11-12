@@ -20,14 +20,14 @@ sequenceDiagram
     Wh->>App: handleStripeWebhook(payload, signatureHeader)
     App->>Svc: handleWebhook(rawBody, signature)
     critical settlement tx: REQUIRED, READ COMMITTED, 10 s
-        Svc->>Svc: settle(session, eventId, type, operator, id)
         Svc->>Pay: claimEvent(eventId, type)
-        Svc->>Ofa: lockForSettlement(quote): lock 1 (no team row yet), lock 2 intent
-        Svc->>Pay: lock(id): lock 3 payment
+        Svc->>Ofa: lockForSettlement(quote) {lock 2; no team row yet}
+        Svc->>Pay: lock(id) {lock 3}
         Svc->>Ofa: fulfil(event)
-        Ofa->>Grp: startConfirmed(terms, paid)
-        Grp-->>Ofa: ParticipationResult: applied, team OPEN, 1 of 2
-        Ofa-->>Svc: Outcome(dealId, orderId, null): leader's order PENDING
+        Ofa->>Grp: startConfirmed(terms, paid) {receipt after lock 3}
+        Grp-->>Ofa: ParticipationResult {team OPEN, 1 of 2}
+        Ofa-->>Svc: Outcome(dealId, orderId, null)
+        Svc->>Pay: recordOutcome(…, "FULFILLED")
     end
     Svc-->>App: void
     App-->>Wh: void

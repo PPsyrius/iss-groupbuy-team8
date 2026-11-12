@@ -10,6 +10,7 @@ classDiagram
         <<interface, repository, Pers, Conc>>
         +lockDeal(dealId: UUID): Optional~GroupDeal~
         +currentTime(): Instant
+        +dueForExpiry(now, limit): List~UUID~
         +expire(before, after, now): void
     }
     class GroupDealExpirySweeper {

@@ -71,7 +71,7 @@ classDiagram
 
 Anything else fails loudly, because the translator itself silently drops lines it does not understand.
 
-- `classDiagram`: `class X { … }` with members one per line (a line with `(` is an operation, otherwise an attribute or enumeration literal), `<<stereo>>` inside the body or as `<<stereo>> X`, `X : member`, `class X~T~` generics, `direction`. Relations `<|--` `..|>` `*--` `o--` `-->` `..>` `--` `..` in either direction, with `"mult"` on either end and `: label`. Every class must be declared with `class X` (a typo would otherwise create a box).
+- `classDiagram`: `class X { … }` with members one per line (a line with `(` is an operation, otherwise an attribute or enumeration literal), `<<stereo>>` inside the body or as `<<stereo>> X`, `X : member`, `class X~T~` generics, `direction`. Relations `<|--` `..|>` `*--` `o--` `-->` `..>` `--` `..` in either direction, with `"mult"` on either end and `: label`. Every class must be declared with `class X` (a typo would otherwise create a box). A `%% objects` line right after `classDiagram` (opt-in) draws an object diagram: instance names `name : Class` are underlined and there is no operations compartment; link an ID slot to the object it names with a dashed `..>`.
 - `sequenceDiagram`: `actor X`, `participant X as Name`, `create participant X as Name` (the next message to it draws «create»), `destroy X`; messages `->>` sync, `-)` async, `-->>` return, each with a `: label`; `activate`/`deactivate` or none (activations are inferred, and the generator passes `continuousActivations`: an activation that an `alt` branch or a `break` ends and the flow after it resumes is one unbroken bar, as in UML); `alt`/`else`, `opt`, `loop`, `par`/`and`, `critical`/`option`, `break`, plain `rect`; `Note over A,B: text`. Every participant must be declared before use.
 - `stateDiagram-v2`: `[*]`, `state "Name" as X`, `state X <<choice>>` (or fork, join), `A --> B : trigger [guard] / effect`, `X : entry / …` (body lines), a self-transition (drawn inside the state), `direction`.
 - `componentDiagram`, `deploymentDiagram`, `usecaseDiagram`, `activityDiagram`: see the next section.
@@ -176,7 +176,7 @@ componentDiagram
 - Sequence diagrams: up to 8 lifelines read well; at 10 a «boundary» stereotype just overflows its head box. Split a long flow at a natural seam (before and after payment; receipt and transaction) and link the parts with a `@fig-…` note.
 - A return message goes back to its caller, one lifeline at a time; do not jump to the actor.
 - Lifelines are `:Class`. Name the interface the caller holds, unless the diagram shows what happens inside the implementation (then name the class, for example `:GroupDealPurchaseSupportImpl`). Two objects of one class: `txA : StripeCheckoutService`.
-- Mark each transaction with `critical <name>, <isolation>, <timeout>`, row locks as explicit messages (`lockDeal(dealId): lock 1, the team row`), and step tags (`B4`) in a `Note over` at the start of each step group.
+- Mark each transaction with `critical <name>, <isolation>, <timeout>`, row locks as explicit messages with the lock as a UML constraint, not as a return value (`lockDeal(dealId) {lock 1}`), and step tags (`B4`) in a `Note over` at the start of each step group.
 
 ## Gotchas
 

@@ -164,13 +164,15 @@
 #let member-max = 56mm
 
 // One class box: name compartment (role tint), then attribute and operation compartments,
-// drawn even when empty, as Visual Paradigm does.
-#let class-box(name, stereo: none, attrs: (), ops: (), abstract: false, max: member-max) = context {
+// drawn even when empty, as Visual Paradigm does. An object (`object: true`, opt-in) is an
+// instance specification: its `name : Class` is underlined and it has no operations compartment.
+#let class-box(name, stereo: none, attrs: (), ops: (), abstract: false, object: false, max: member-max) = context {
   set text(size: uml-size, fill: ink)
   set par(leading: 0.3em, justify: false)
   let head = align(center, {
     if stereo != none { text("«" + stereo + "»"); linebreak() }
-    text(weight: "bold", style: if abstract { "italic" } else { "normal" }, breakable(name))
+    let shown = text(weight: "bold", style: if abstract { "italic" } else { "normal" }, breakable(name))
+    if object { underline(shown) } else { shown }
   })
   let natural = calc.max(
     measure(text(size: uml-size, weight: "bold", name)).width,
@@ -196,7 +198,7 @@
     inset: (x: 4.5pt, y: 2.5pt),
     stroke: w-box + ink,
     fill: (_, y) => if y == 0 { role-fill(stereo) } else { white },
-    head, comp(attrs), comp(ops),
+    head, comp(attrs), ..(if object { () } else { (comp(ops),) }),
   ))
 }
 
@@ -225,7 +227,7 @@
 // rels: array of (from, to, kind, label, mfrom, mto, bend)
 // A wide or tall diagram first closes up its gaps, then wraps its members at narrower widths.
 #let class-diagram(classes, rels, frame: none, min-gap: (0pt, 0pt), host: none) = {
-  let boxes(max) = classes.map(c => node(c.pos, class-box(c.name, stereo: c.stereo, attrs: c.attrs, ops: c.ops, abstract: c.abstract, max: max), name: label(c.id)))
+  let boxes(max) = classes.map(c => node(c.pos, class-box(c.name, stereo: c.stereo, attrs: c.attrs, ops: c.ops, abstract: c.abstract, object: c.at("object", default: false), max: max), name: label(c.id)))
   let edges = rels.map(r => {
     let style = rel-style.at(r.kind, default: rel-style.assoc)
     let args = (label(r.from), label(r.to))
