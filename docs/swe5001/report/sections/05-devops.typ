@@ -82,7 +82,7 @@ CI scans each built container image, not only its dependencies (F2). The SWE5001
     [Policy], [`scan-type=image`, `scanners=vuln`, `severity=HIGH,CRITICAL`, `ignore-unfixed=true`],
     [Failure], [`exit-code=1` fails the image job],
     [Blocked jobs], [`publish` needs `images`, `up` needs `publish`, `release` needs `up`; the release gate reports `service-images` as failed],
-    [Paths without a fresh scan], [The shared `dev` EC2 delivery rebuilds and relies on the pre-merge scan (below, AISS-20). A later SWE5001 session reuses the recorded release digests without a new scan (below)],
+    [Paths without a fresh scan], [The shared `dev` EC2 delivery rebuilds and relies on the pre-merge scan (below, AISS-20). A later SWE5001 session reuses the recorded release digests without a new scan (below, AISS-21)],
   ),
   kind: table,
   caption: [Image-scan gate in the SWE5001 image workflow. Source: #src(".github/workflows/swe5001-service-images.yml")[`swe5001-service-images.yml`] and #src(".github/workflows/swe5001-deploy.yml")[`swe5001-deploy.yml`].],
@@ -106,7 +106,7 @@ The gate ignores unfixed vulnerabilities and lower severities, so a pass does no
 
 The promotion scanned its push commit; the PR jobs scanned GitHub's merge commit, not the reported head. These runs show the scan order and the publication path; that a failed scan blocks publication follows from the job dependencies, not from a test with a vulnerable image. Configured, not tested: ECR also scans each pushed image (`scan_on_push`) and refuses to overwrite a tag (`IMMUTABLE`, #src("infra/swe5001/foundation/ecr.tf")[`ecr.tf`]); those findings are not part of the gate. `sbom.yml` produces a source inventory on each `v*` tag and weekly; we keep no per-image SBOM for SWE5001 images.
 
-*Two image gaps remain (F2).* First, released digests are not re-scanned. A later session started from `swe5001-env.yml` takes the recorded release digests by default (its `up` input `release`), and no job scans them again; the weekly `security.yml` jobs scan the file system and the IaC configuration, not images. A vulnerability published after the promotion therefore reaches a later session unnoticed. Second, no workflow signs an image or records a provenance attestation: the digest identifies the image that was scanned, but it does not prove where that image was built. AISS-20 covers only the `dev` delivery; these two gaps have no AISS item yet (#src(".github/workflows/swe5001-env.yml")[`swe5001-env.yml`], #src(".github/workflows/security.yml")[`security.yml`]).
+*Two image gaps remain (F2).* First, released digests are not re-scanned. A later session started from `swe5001-env.yml` takes the recorded release digests by default (its `up` input `release`), and no job scans them again; the weekly `security.yml` jobs scan the file system and the IaC configuration, not images. A vulnerability published after the promotion therefore reaches a later session unnoticed. Second, no workflow signs an image or records a provenance attestation: the digest identifies the image that was scanned, but it does not prove where that image was built. §3.4 records them as AISS-21 and AISS-22; AISS-20 is the `dev` delivery (#src(".github/workflows/swe5001-env.yml")[`swe5001-env.yml`], #src(".github/workflows/security.yml")[`security.yml`]).
 
 == Continuous Delivery
 <sec-continuous-delivery>
