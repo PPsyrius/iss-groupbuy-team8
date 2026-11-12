@@ -131,7 +131,7 @@
     [IAM], [AWS Identity and Access Management],
     [KV], [Key–value (store)],
     [NAT], [Network address translation],
-    [NFR-nn], [Non-functional requirement nn of the proposal],
+    [NFR-nn], [Quality requirement nn in the #src("docs/quality/nfr-register.md")[NFR register]],
     [OIDC], [OpenID Connect],
     [PCI], [Payment Card Industry (data security standard)],
     [PII], [Personally identifiable information],
