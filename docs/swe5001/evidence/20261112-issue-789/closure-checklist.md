@@ -1,4 +1,6 @@
-# Issue #789 — upcoming PR closure checklist
+# Issue #789 — historical closure checklist and report follow-up
+
+12 November publication update: PR #795 merged at `27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6`, closing #789. The checklist and exact-base receipts below describe that earlier handoff, not current publication status. The newer report follow-up targets PR #801's branch; it needs its own source/PDF verification. The historical checker accepts `--report-root <original-combined-report>` and compares frozen metadata against the reachable #795 merge, without requiring an orphaned object.
 
 The PR answers [#789](https://github.com/PPsyrius/iss-groupbuy-team8/issues/789) and [Liu Jin's ten-point review](https://github.com/PPsyrius/iss-groupbuy-team8/issues/789#issuecomment-6813180582). The [140-page styled PDF](../20261112-peer-style-pdf-review/README.md) is the preserved before artifact; the separate corrected build is recorded below. Use `Closes #789` in the PR body; integration and acceptance are pre-merge checks.
 

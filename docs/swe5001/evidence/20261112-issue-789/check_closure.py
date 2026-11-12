@@ -10,11 +10,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[4])
     parser.add_argument('--peer-root', type=Path)
+    parser.add_argument('--report-root', type=Path, help='Original combined-layout report for historical source regression; not verification of a newer split report')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     root = args.repo.resolve()
     package = root / 'docs/swe5001/evidence/20261112-issue-789'
-    report = root / 'docs/swe5001/report'
+    report = args.report_root.resolve() if args.report_root else root / 'docs/swe5001/report'
     facts = json.loads((package / 'facts.json').read_text(encoding='utf-8'))
     cleanup = json.loads((package / 'cleanup.json').read_text(encoding='utf-8'))
     manifest = json.loads((package / 'peer-base.json').read_text(encoding='utf-8'))
@@ -64,7 +65,7 @@ def main():
     check('nine-original-r4-core-files-unchanged', all(sha(root / (name := 'docs/swe5001/evidence/20261111-v3-r4/' + file)) == original[name] for file in core))
     frozen = root / 'docs/swe5001/evidence/20261111-v3-r4'
     for current, historical in (('README.original-20261111.md', 'README.md'), ('SHA256SUMS.original-20261111', 'SHA256SUMS')):
-        p = subprocess.run(['git', '-C', str(root), 'show', '0405b1f0cbfd5442cb3dfef084c69f785b272d82:docs/swe5001/evidence/20261111-v3-r4/' + historical], capture_output=True)
+        p = subprocess.run(['git', '-C', str(root), 'show', '27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6:docs/swe5001/evidence/20261111-v3-r4/' + current], capture_output=True)
         check('frozen-original-metadata:' + historical, p.returncode == 0 and (frozen / current).read_bytes() == p.stdout)
     check('peer-patch-sha256-matches-manifest', sha(package / 'peer-report.patch') == manifest['patchSha256'])
     check('peer-patch-matches-recorded-build-base', manifest['base'] == facts['peerSourceReviewed'] == '02c7b822354656a4b6b7d269c876bc0e76635295')
@@ -83,7 +84,7 @@ def main():
         check('peer-no-unnecessary-identifiers', '402178232802' not in psec and 'p-4hlb2c8g' not in psec)
         check('peer-current-cleanup-and-image-limitations', all(s in pops for s in ('12:13:20', '12:06:02', 'Later reuse and supply-chain limits', 'no image signing or provenance attestation')))
 
-    result = {'scope': 'Read-only source/data/patch regression checks for #789; PDF/URI/font verification is recorded separately', 'checks': checks, 'passed': sum(checks.values()), 'failed': [k for k, v in checks.items() if not v], 'peerFixtureChecked': bool(args.peer_root), 'cloudOrPublicationMutation': False}
+    result = {'scope': 'Historical combined-layout source/data/patch regression for #789, not current split-report verification; PDF/URI/font verification is separate', 'reportRoot': str(report), 'checks': checks, 'passed': sum(checks.values()), 'failed': [k for k, v in checks.items() if not v], 'peerFixtureChecked': bool(args.peer_root), 'cloudOrPublicationMutation': False}
     if args.output:
         args.output.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
     print(json.dumps(result, indent=2))

@@ -1,6 +1,6 @@
 # Reply draft for #789
 
-Add the PR URL when opened. [Evidence package](https://github.com/PPsyrius/iss-groupbuy-team8/tree/docs/swe5001-must-fix-evidence/docs/swe5001/evidence/20261112-issue-789) contains the detailed answers, cleanup projection, effort estimate and peer patch.
+Preserved reply draft; this does not assert it was posted. [PR #795](https://github.com/PPsyrius/iss-groupbuy-team8/pull/795) merged the [evidence package](https://github.com/PPsyrius/iss-groupbuy-team8/tree/27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6/docs/swe5001/evidence/20261112-issue-789), closing #789. The remaining body records the earlier proposal, not current publication status.
 
 1. **Cleanup:** nightly down ran late and failed on S3 reads. Separate operator recovery removed 127 runtime resources by 12:13:20 SGT on 12 November; generator retirement completed by 12:06:02. Empty managed state, normal env-status exit 0 and 51 direct checks passed. All 71 log objects were archive/readback-verified before source deletion; 13 R4 objects and one encrypted disk snapshot remain private and chargeable. Foundation/edge/SWE5006 were not targeted; no GitHub-role expansion.
 2. **Post-R4 events:** attribute the ECS readback to Lim, read 12 November: six → two tasks at 23:09–23:21 SGT and a Spot interruption at 22:53:48 after the workload. This is not a controlled recovery drill or repaired canonical monitoring coverage.
