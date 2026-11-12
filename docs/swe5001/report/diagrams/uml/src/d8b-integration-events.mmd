@@ -17,7 +17,7 @@ componentDiagram
     Relay ..> Outbox : claims due rows
     Relay ..> Topic : publishes V1 events
     QN ..> Topic : subscribed; eventType in three types
-    QA ..> Topic : subscribed; eventType prefix Team
+    QA ..> Topic : eventType Team*
     Consumer ..> QN : polls
     Consumer ..> Handler : handle
     Later .. QA

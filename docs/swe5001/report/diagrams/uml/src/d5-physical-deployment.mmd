@@ -1,10 +1,9 @@
-%% frame: BlocBuy SWE5001 distributed environment
+%% frame: BlocBuy SWE5001 distributed environment, Region ap-southeast-1
 deploymentDiagram
     device Browser["Buyer's browser"]
     node Cdn["Amazon CloudFront"] <<global edge>>
     node Stripe["Stripe"] <<external system>>
     node Google["Google Sign-In"] <<external system>>
-    node Region["Region ap-southeast-1"] {
         node Vpc["VPC 10.50.0.0/16"] {
             node AzA["AZ ap-southeast-1a"] {
                 zone "Public 10.50.0.0/24" {
@@ -39,11 +38,10 @@ deploymentDiagram
             }
         }
         node S3["Amazon S3"] <<bucket>> : SPA files
-        note Tasks["Tasks per service, both\nzones together:\nidentity-svc 1,\ncommerce-svc 2 to 6,\nnotification-svc 1 to 4.\nECS places each task in\neither private subnet."]
+        note Tasks["Tasks per service,\nboth zones together:\nidentity-svc 1,\ncommerce-svc 2 to 6,\nnotification-svc\n1 to 4. ECS places\neach task in either\nprivate subnet."]
         node Sns["domain-events"] <<SNS topic>> :::messaging
         node QNt["notification"] <<SQS queue>> :::messaging : and its DLQ
         node QAu["audit"] <<SQS queue>> :::messaging : and its DLQ
-    }
 %% at Browser 0,0
 %% at Cdn 1,0
 %% at S3 2,1
@@ -55,10 +53,10 @@ deploymentDiagram
 %% at CoB 1,4
 %% at Cache 0,6
 %% at Rds 1,6
-%% at Tasks 2,2
-%% at Sns 2,3
-%% at QNt 2,4
-%% at QAu 2,5
+%% at Tasks 2,6
+%% at Sns 2,2
+%% at QNt 2,3
+%% at QAu 2,4
 %% at Stripe 1,7
 %% at Google 2,7
 %% at Nat 0,2
