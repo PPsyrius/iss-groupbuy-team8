@@ -1,0 +1,143 @@
+{
+  "at": "2026-11-11T08:21:25.132860+00:00",
+  "files": [
+    {
+      "path": "tooling/Dockerfile.operator",
+      "sha256": "64acd6a2bca9a4a85c2d025881716fa515ddb0593a421ac94d1f7d9ab4f254fe"
+    },
+    {
+      "path": "tooling/activate-combined-cpu-guard.py",
+      "sha256": "77c1eb4fa61c91554603ae5e37bc6e5538d1c9650ff44d0229ae445e7d1f5668"
+    },
+    {
+      "path": "tooling/apply-combined-db-first.py",
+      "sha256": "eb1435564dfee55a8dd4fd98ab98433ef6ae22e919c9d932a40917dd7ed4504a"
+    },
+    {
+      "path": "tooling/apply-combined-task-rollout.py",
+      "sha256": "48b10991b55c0ee2a3cb1cc010cb4b07c5d77caff29f4a3adcba0749a873848d"
+    },
+    {
+      "path": "tooling/audit-subnets.py",
+      "sha256": "8e965f7b150218e3109f4029164354cf13b7befebffafd4fffce50732c97082b"
+    },
+    {
+      "path": "tooling/audit-v3-r2-raw.py",
+      "sha256": "2c501d064006579bb7d1d6c96b2439033ad0c63a980ecc3e604037620e4b3147"
+    },
+    {
+      "path": "tooling/diagnose-v3-client.py",
+      "sha256": "44762686b67453cbf2e9cc67365babdc9844a9f109ab97a32bed77dff344d803"
+    },
+    {
+      "path": "tooling/diagnose-v3-server.py",
+      "sha256": "0810326037726530f3fd41b79325cc0d21154c3757da3e7b0adb25d3a7e53470"
+    },
+    {
+      "path": "tooling/freeze-v3-r2-provenance.py",
+      "sha256": "57cd43c1ae726c9a1a950c847d925e7ee9f9a9298ff671525cada4e25d52ebea"
+    },
+    {
+      "path": "tooling/inspect-v3-r2-settings.py",
+      "sha256": "32fb511bdb92040df7d7e0b211542e5d55e193d0edd87893740566e9743e6d70"
+    },
+    {
+      "path": "tooling/local-prepare.py",
+      "sha256": "22fbf302692f946a2a793c81c99bfe44f87621a01f0aee6ca8ebfeaa7c25cddc"
+    },
+    {
+      "path": "tooling/refresh-role-window.py",
+      "sha256": "94e6c1896cc6db4293b24b898b54c0cd988bb2e58c6780f2d5e006982fd20b9f"
+    },
+    {
+      "path": "tooling/release-lock.json",
+      "sha256": "ff95f6da3f5b073f6d7aee8f52b02ee0227c75ee383bbf4267168af926bca8f0"
+    },
+    {
+      "path": "tooling/review-regional-quota.py",
+      "sha256": "e7481fd2863efa8969beb05eb5f47db509763f0e980a9614fa16e8dbda9b2fda"
+    },
+    {
+      "path": "tooling/review-v3-r2-coverage.py",
+      "sha256": "f87bdf7e19b75bd0dbc9445572523b078700842e99d648fd7e251339f1a78b3f"
+    },
+    {
+      "path": "tooling/run-approved-v3-r2.ps1",
+      "sha256": "3d7f18bd27ebbc5bf1dba8d8682ff3fef4e8f1194b55d49ed58e02cfad8ca35b"
+    },
+    {
+      "path": "tooling/seal-v3-r2-evidence.py",
+      "sha256": "23d11e1e1e2251773aabae533b782d46b9bdba33926a3ea933d4836d56cb46fa"
+    },
+    {
+      "path": "tooling/v3_r2_review_test.py",
+      "sha256": "af1422bc6f27355e31941379d6653d2ee6137a22e6179b6d13407a5838c4b4a3"
+    },
+    {
+      "path": "deployment/OPERATIONAL-RECEIPT.md",
+      "sha256": "20e6e2c284898bcfd24e1369f7d30550d9ec792429f731b2587bca20b11db9c6"
+    },
+    {
+      "path": "deployment/combined-plan-review-v2.json",
+      "sha256": "6c9c71e59de56ff54df2226dc2c23b1acf0218bc4520dc55306cadc2de366b69"
+    },
+    {
+      "path": "deployment/db-first-apply-exit.json",
+      "sha256": "3e0e34f87a674cb97a490c0f6eff8735d29b03ecf83d6b5dd0449e9c9aec32cf"
+    },
+    {
+      "path": "deployment/db-first-completed.json",
+      "sha256": "bd6716beea9a5c6eac0cc3c12e4ca8ff56091e3c234ceee3275e8b4365eb85f8"
+    },
+    {
+      "path": "deployment/db-first-intent.json",
+      "sha256": "8d8bf985b082a4657cc69fc94e0da603c5576e24c1304e98f0febfc436e2c6d3"
+    },
+    {
+      "path": "deployment/db-first-plan-review-v2.json",
+      "sha256": "bac8b75dec208e25dc388b48e8c76b028122312c486a23a642cb83cff6ed9884"
+    },
+    {
+      "path": "deployment/execution-authority.json",
+      "sha256": "44b89058f996f2ac68e828393eb7d2341802778ac8453c157e949c21df0fca9d"
+    },
+    {
+      "path": "deployment/guard-activation-completed.json",
+      "sha256": "e2ddfc6d8127d718a62a3011ff08833d122a7a488d65cb73918282849ea4cdcc"
+    },
+    {
+      "path": "deployment/guard-activation-intent.json",
+      "sha256": "f3b2733c3958fff86afab386d17661515b3ebb7caf99da0fccbd039c4c5adcff"
+    },
+    {
+      "path": "deployment/guard-activation-plan-review.json",
+      "sha256": "1ce03de6b06b5e55af4a44e6713337b52c97a5a6532d7434d94c4d4859b18c77"
+    },
+    {
+      "path": "deployment/idle-cpu-readiness.jsonl",
+      "sha256": "eb84d943bf2781f1f431e1a25d8cca9c9e44028c220215429b266d8613528617"
+    },
+    {
+      "path": "deployment/local-overlay-recipe-active.json",
+      "sha256": "8c5e2ac61a671cc4bc4c7ec7c27844aadf5f59c72e7f812d2e4581b1bc45d349"
+    },
+    {
+      "path": "deployment/local-overlay-recipe-v2.json",
+      "sha256": "db4db1b05fefc005365df9a372dc76abe98e58f939723d9ecd9f7298d69d74b3"
+    },
+    {
+      "path": "deployment/phase-b-completed.json",
+      "sha256": "9f71a5718fe718f2d701b3a996c3c18187617f8801e849622cbfec278b4f45ae"
+    },
+    {
+      "path": "deployment/phase-b-intent.json",
+      "sha256": "41302b2db0bab68d1b036cd2fe8dfad8122668fbff03a8538a65b20b1dd03259"
+    },
+    {
+      "path": "deployment/phase-b-plan-review.json",
+      "sha256": "f9f98df61262c0f58f5e8854ee07eec48a7e0dd05c1f25e0bb7bc7e879a7ff82"
+    }
+  ],
+  "scope": "Selected non-secret sources and filtered deployment receipts only; no credentials, raw Terraform HCL/plan/state/inputs/private logs.",
+  "driver": "Unchanged committed checkout; session-only adapter/overlays separately identified; no merged ownership claim."
+}

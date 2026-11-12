@@ -1,0 +1,64 @@
+# Active-flow subset diagnostic — one case, V3r4 HARD HOLD
+
+**Outcome: holding 1,000 original TCP sockets while only 100 VUs actively issue HTTP substantially attenuated the earlier failure, but did not produce a fully clean native path or a V3-ready result.** High-phase HTTP errors were **0/17,206**, both native HTTPS controls were clean, and all 1,000 original socket inodes survived every high-phase sample; nevertheless gateway/external ping failed **1/30 and 3/30**, with another external ping failure just after the container exited. Actual offered traffic was below 600 RPS, and exact phase k6 byte attribution plus one request-start bin are incomplete. This supports active-flow/traffic-pattern sensitivity as a discriminator, not a specific faulty component or a remedy. **The 21:00 SGT checkpoint outcome is NO-GO for releasing R4 on this evidence; no automatic 21:30 launch permission.**
+
+## Scope, timing and guards
+
+- One actual case, no retries: same laptop, pinned `grafana/k6:1.6.1@sha256:a5ad6bc089a08d77c3ec49f3db8c6fa7a148e4073efcac44c675dbaf3568d8e1`, 8 CPUs/8 GiB, default bridge/MTU 1500, default HTTP negotiation and no GODEBUG. Only the authorized static root received load GETs, with body discarded, redirects disabled and the unchanged 10-second timeout; destination values are not retained in outputs.
+- Fixed 1,000 VUs, one iteration per VU, 60-second hard cap: each VU makes exactly one warm GET, scheduled at 60 new VUs/s from scenario seconds 2 through 18.65, then idles to a common second-29 deadline. Only VUs 1–100 issue high-phase GETs, at six slots/s each with 1/600-second cross-VU offsets; overdue slots are skipped, never replayed in a catch-up burst. The other 900 issue no HTTP keepalive pulses and sleep until second 59. This is closed-loop diagnostic pacing, **not** an arrival-rate workload or a fewer-VU V3 fix.
+- Explicit cleanup coordination clearance was received before launch. Docker was empty at initial preflight, before container creation and immediately before releasing HTTP. No unrelated running container was waited out, stopped or removed. All seven workers used thread throttle 12 and were Running with baseline samples; before HTTP, TCP had seven samples and cgroup resource sampling had two actual samples. The pre-high gate verified all 1,000 unique warm VUs completed without error, 1,000 positive connects, 1,000 original established sockets/active opens, zero SYN retransmits, nine resource samples and seven Running workers, **6.935 seconds before high**.
+- Docker container interval: **2026-11-11 12:42:46.120Z–12:43:53.893Z**. Scenario: **12:42:54.539Z**; first warm GET **12:42:56.540Z**; last warm completion **12:43:13.215Z**; high **12:43:23.539Z–12:43:53.539Z**; final VU-end observation **12:43:53.546Z**. All 1,000 VUs ended, none were interrupted. The earliest warm connection's age at Docker finish is bounded above by **57.354 seconds**, below approximately 60 seconds. Controls/workers finished by **12:44:11.156Z / 20:44:11 SGT**.
+- No commerce API requests, actual V3/R4, AWS writes, host/network/security/elevation changes, installs, image operations, Git/worktree operations or changes to previous campaign evidence were performed. Existing source/previous-diagnostic before/after SHA-256 values match. No SMPS/MIMO/coalescing/MTU trial was repeated, and no host/Wi-Fi/AP/router component is blamed.
+
+## Exact request and timing results
+
+| Metric | Warm/common deadline: 29 s | High: 30 s |
+| --- | ---: | ---: |
+| Intended request slots | 1,000 once-only | 18,000 |
+| Tagged requests offered / completed | 1,000 / 1,000 | **17,206 / 17,206** |
+| Completed before phase end | 1,000 | **17,202**; four finish just after nominal high end |
+| Errors / timeouts / EOF | 0 / 0 / 0 | **0 / 0 / 0** |
+| VUs issuing requests | 1,000 | **100**, with the other 900 idle |
+| Skipped high slots, not dropped-arrival metrics | Not applicable | **794 / 18,000 = 4.411%** |
+| Positive connect / TLS timings | 1,000 / 1,000 | **0 / 0** |
+| HTTP duration median / p95 / p99 / max, ms | 10.619 / 24.810 / 73.214 / 98.189 | **9.139 / 58.564 / 290.680 / 3,961.540** |
+| Connect positive median / p95 / max, ms | 6.134 / 13.980 / 1,013.064 | No positive samples |
+| TLS positive median / p95 / max, ms | 8.239 / 14.905 / 25.335 | No positive samples |
+| Exact k6 received/sent bytes by phase | **Unavailable**, not zero | **Unavailable**, not zero |
+
+All received responses were HTTP/2 and status 200: 1,000 warm and 17,206 high. Full precise duration, blocked, connect, TLS, TTFB, send, receive and launch-lateness distributions are retained in `original-summary.json` and `analysis.json`. The exporter succeeded, but its tautological thresholds and Docker exit zero are **not** acceptance gates.
+
+Tagged high requests divided by 30 seconds are **573.533/s**; exact recorded nonnegative in-window start bins contain **17,205 starts = 573.5/s**. One VU-1 high-tagged start is absent from those bins, consistent with a slightly early wakeup at the boundary; its exact timestamp was not captured, so do not claim all 17,206 starts were inside the exact UTC window. Completion bins reconcile to all 17,206 and the in-window completion rate is **573.4/s**. Recorded starts were **1,613 in the first four seconds**, then **15,592 in the remaining 26 seconds = 599.692/s**; thus the actual high phase must not be described as an uninterrupted delivered 600 RPS. This pacing has no constant-arrival-rate `dropped_iterations` interpretation.
+
+## Original transport retention and sampled bytes
+
+Reference pool: the sample ending **12:43:23.324641Z**, immediately before high, contains 1,000 original established socket inodes, 1,000 active opens, zero attempt failures, zero retransmitted TCP segments and zero SYN retransmits. Every one of the **29 high samples**, ending from **high +0.781 through +29.014 seconds**, retains **all 1,000/1,000 original inodes**. Established count and active opens remain 1,000; SYN retransmits, attempt failures and retransmitted segments remain zero. Therefore the surviving original idle-socket lower bound is **1,000 minus at most 100 active originals = all 900 idle originals** at each observation, not merely an equal count of replacement sockets. Samples do not prove continuous between-sample activity, exact per-VU socket ownership, NAT mapping retention or survival beyond teardown; the last sample precedes the phase end by approximately 0.99 seconds.
+
+Exact **overall** k6 bytes are **147,807,467 received and 3,290,304 sent**. Phase `data_received`/`data_sent` submetrics are zero despite those positive totals: these long per-VU iterations finish with the `idle` tag, so built-in byte emissions were not captured at request-level phase boundaries. This is an instrumentation limitation, **not zero traffic**, and cannot be repaired by relabeling overall bytes. No rerun was made. The independently retained exact IPv4 namespace sample deltas are warm **17,495,100 inbound / 2,878,532 outbound bytes** over reads beginning 12:42:55.048277Z through ending 12:43:23.324641Z, and high **167,489,606 inbound / 7,902,864 outbound bytes** over reads beginning 12:43:24.240757Z through ending 12:43:52.552563Z. These are incomplete-window, non-atomic namespace counters with different accounting, **not exact phase k6 bytes or NIC wire throughput**.
+
+## Native controls and resource/interference coverage
+
+Pings run at approximately one per target per second, with 600-ms configured reply timeout; native regional STS and non-AWS HTTPS run at no more than one per target per two seconds, with 2-second connect/3-second total timeout, IPv4/HTTP1.1, no redirect or retry and bodies discarded. STS 302 is a successful transport response. Quoted status `"000"` parsing was independently fixture-tested. Counts assign by probe start; raw receipts preserve exact start/end timestamps, response status and process exit independently.
+
+| Probe-start interval | Gateway failures | External ping failures | Regional HTTPS failures | Non-AWS HTTPS failures |
+| --- | --- | --- | --- | --- |
+| Idle-before, 15 s | 0/15 | 0/15 | 0/8 | 0/8 |
+| Same-container readiness/before scenario | 0/9 | 0/9 | 0/4 | 0/4 |
+| Warm, 29 s | 0/29 | 0/29 | 0/15 | 0/15 |
+| **High, 30 s** | **1/30** | **3/30** | **0/15** | **0/15** |
+| After case, before formal post interval | 0/1 | **1/1** | No starts | No starts |
+| Idle-after, 15 s | 0/15 | 0/14 | 0/8 | 0/8 |
+
+Exact high ping failures start at external **12:43:24.038666Z (+0.500 s)**, **12:43:49.195348Z (+25.656 s)**, **12:43:50.197699Z (+26.659 s)**, and gateway **12:43:50.229047Z (+26.690 s)**. Another external failure starts **12:43:54.230767Z**, approximately 0.338 seconds after Docker exit and before the formal post interval begins at 12:43:54.282955Z. One successful gateway probe starts before and completes across that post boundary. These sparse ping failures prevent a clean-control claim; their cause cannot be isolated from this single run, and their native timeout/status behavior is not equated with k6's longer HTTP timeout.
+
+Resource sampling actually ran: **10 valid cgroup samples and 10 Windows Docker-backend CPU-delta observations in each warm and high phase**. High sampled peaks were **48.677% of one CPU core = 6.085% of the eight-core quota**, **550,891,520 bytes / 525.371 MiB of 8 GiB**, and Docker-backend aggregate **56.754% of one core**. Warm peaks were 41.933% of one core, 428,204,032 bytes, and backend 27.597% of one core. Sampled cgroup throttling/OOM events and CPU-pressure avg10 were zero; Docker records no OOM kill. This establishes sampled quota/process headroom, **not every Windows kernel, driver, NIC, AP or router resource**. All seven jobs completed without recorded worker errors; no queued-resource-worker bug recurred.
+
+Two-second inventories and bounded daemon start/die/OOM event history observe **no unrelated container during this unit**, and Docker is empty at the final controller receipt. The earlier Blender work reported by the main session was before this case; this unit did not stop/remove user work or clean any image/container. Event history and snapshots are bounded observations, not a claim to exhaustive host process isolation.
+
+## Interpretation and required next discriminator
+
+Compared with the prior warm 1,000-active/1,000-total case (11.395% HTTP errors plus sustained native HTTPS failures), the new 100-active/1,000-total case has zero HTTP errors, no HTTPS-control failures and full original-pool retention, but still brief native ping loss and pacing shortfall. Together with the prior clean 100-active/100-total case, this makes **retained socket count alone insufficient for the severe failure** and keeps active-flow fanout, burst/packet scheduling or their shared-path interaction as plausible discriminators. It does **not** prove fanout alone: this is a single noncontemporaneous 30-second closed-loop case rather than the prior 45-second arrival-rate high phase; achieved rate, traffic spacing, active connection ages, instrumentation and initial behavior differ. Original V3 already warmed its pool; neither a cold-start-only nor five-minute DNS-renewal explanation is established here.
+
+**Required next discriminator, only under separate authorization:** a matched-actual-rate and matched-spacing fanout comparison with retained pool held at 1,000, accompanied by timestamp-aligned passive observations on the host/gateway path to locate the residual loss and distinguish packet/burst effects from active-flow count. Repair phase-byte attribution and boundary-start accounting offline first. This unit does **not** authorize that experiment, a repeat full-1,000-active failure, host toggles, longer final timeouts, fewer final VUs or R4. Final baseline remains **1,000 preallocated/max VUs, 600 RPS, 30 minutes and all original acceptance gates unchanged**.
+
+Primary evidence: `run-receipt.json`, `created-state.json`, `started-state.json`, `finished-state.json`, `k6-console.redacted.log`, `original-summary.json`, `parsed-k6-observations.json`, `control-*.jsonl`, `tcp-samples.jsonl`, `resource-samples.jsonl`, `container-inventory.jsonl`, `container-events.json`, `analysis.json`, `verification.json`, offline fixture/source receipts and `retained-files.json` SHA-256 manifest. The original executed scripts and their offline hashes are preserved unchanged; only this new unit's metadata receipt has its non-identifying wildcard bind address redacted, with before/after hashes in `privacy-redaction-receipt.json`. **Verification is not all-passed: phase-byte attribution and one request-start bin remain incomplete.** Previous source/campaign evidence was read/hashed only; no canonical report/NFR/agile file was edited because the authorized output scope is this new temporary folder.

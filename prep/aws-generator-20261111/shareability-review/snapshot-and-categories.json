@@ -1,0 +1,615 @@
+{
+  "utc": "2026-11-11T13:38:10.0635026Z",
+  "files": [
+    {
+      "path": "docs/agile/sprint-04/log/2026-11-11.md",
+      "bytes": 3727,
+      "sha256": "ad0dcc48fdf70c7f6b4d5b8f6d01ebd27ce3bfa409c3c20567b04ffdb15239dd"
+    },
+    {
+      "path": "docs/quality/nfr-register.md",
+      "bytes": 41961,
+      "sha256": "268296955e6ab8133c6b204ac0dca37b17d795dd4fce98d456a292e515b5472b"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/AWS-GENERATOR.md",
+      "bytes": 5008,
+      "sha256": "141fc2880369b172a812d31b3d8efbf90ed377dc8741e625ed1d714abf27527e"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/active-flow-review/README.md",
+      "bytes": 12810,
+      "sha256": "4ee18b8432627b450ffe6c4e83001dc87c492fa8a178ae269ecfc0bce70c5606"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/active-flow-review/verification.json",
+      "bytes": 814,
+      "sha256": "7a57ee59bde34856c08d7a3426f9459c98fee9848ac463bd207348e2d0ec9b25"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/main-active-flow-check.json",
+      "bytes": 1226,
+      "sha256": "03105ff8119f899c137a701dc7687da79f07035640dbd640977b59283a4f7ed9"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/minimal-collection-integration/INTEGRATION.md",
+      "bytes": 17452,
+      "sha256": "cbad8293f0f20664f847cc274fcb432e8c93a9db1aff5f16c4b35af379862145"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/minimal-collection-integration/RUNNER-FIX-MAP.md",
+      "bytes": 10229,
+      "sha256": "69cd92c8e43d9a46ab24d2021cd91703dc7ecbf94797f49cea6e18e3e9d68541"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/minimal-collection-integration/runner-review-receipt.json",
+      "bytes": 1048,
+      "sha256": "a98efc97c1416b427336f4b5587716ac38018400f0b1012096a1c9a17f730f94"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/mitigation-reassessment/REVIEW.md",
+      "bytes": 12028,
+      "sha256": "ddb9f6bfc7251fb19709c094c10127a8bb00061fcff22a2d9d65b80f0be836ef"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/r4-critical-path-review/READINESS.md",
+      "bytes": 7421,
+      "sha256": "4b47e50758198e6744b810c44cf37d4e8123c4d0542e19ad9838c2cba1d63ae4"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/retained-files.json",
+      "bytes": 2103,
+      "sha256": "ef51ac973f3e30f510b81762a0e854b7bd0d755190517409061520037f54a8ed"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/DIAGNOSIS.md",
+      "bytes": 22412,
+      "sha256": "aba71c2d0d824e2e040a8780361c080cf842dcde88597f869d04c4ab86ed1113"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/APPROVAL-PROPOSAL.md",
+      "bytes": 9502,
+      "sha256": "592d31036cdcb2ea0eb79ee658144be219acf62c23e74d03db448923fd53154b"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/FINDINGS.md",
+      "bytes": 15212,
+      "sha256": "a786dc140c9405eeb743de8d31159725ae6461653bdd5483464d51983deae69d"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/summary.json",
+      "bytes": 4969,
+      "sha256": "d4b848e78f4bb3dc676af2c300bc4df344ee5e387d79be02af5d1a483650091f"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/evidence-review/acceptance-and-coverage.json",
+      "bytes": 4910,
+      "sha256": "14347c9d02a3e49346d052e0ac2aafe21fcbc05471454ccd207761e2e5e6255e"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/evidence-review/analyzer-cli-receipt.json",
+      "bytes": 292,
+      "sha256": "9540194e8fbf2273b794374bd317a54442ffdb445a557a39bfe6477645c015d7"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/evidence-review/analyzer-cli.stderr.txt",
+      "bytes": 39,
+      "sha256": "0bef11cd521fcc383b042a38afcade09e58631214a0c0b999640b615cff64969"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/evidence-review/experiment-design-review.json",
+      "bytes": 6512,
+      "sha256": "c0b4facfccd446d5a3d8dc9e18b50032cfb5a63f4ff8c1e4254a2fb218b6e5bb"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/evidence-review/experiment-design-review.md",
+      "bytes": 11629,
+      "sha256": "dc6a6e82b85e09e3b8cddda74298b71d0ec7aac44219e43cb86649942103f349"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/evidence-review/integrity-receipt.json",
+      "bytes": 2086,
+      "sha256": "135638bd12b5ef143a2da1acdda611f34c97fcd429cfa806fbf28009411a3cc2"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/evidence-review/REVIEW.md",
+      "bytes": 12012,
+      "sha256": "3699c693f150d40b1e7b7bbce30957824bc65c631faa892aee475a058b293ce6"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/rate-concurrency-review/analysis.json",
+      "bytes": 110731,
+      "sha256": "9a3935dc7c253e44b5f40304904c54cac733a2725146122c10fe2d437c4bb602"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/rate-concurrency-review/matrix-receipt.json",
+      "bytes": 3009,
+      "sha256": "e8c67deb483a1f3fb8890a2e34d13e7ac3438d0a5b8d51fe844f96369685d3c4"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/rate-concurrency-review/README.md",
+      "bytes": 11052,
+      "sha256": "198d2f3131fb7f5cc148eb3b0e672f2b690d5479d6ca47571505dccc1a8c9872"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/retained-files.json",
+      "bytes": 4371,
+      "sha256": "a81529844bf092fdba7e79799bba8590f95e2e1025e53f67b95e596b71f4a6bc"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/windows-review/review-receipt.json",
+      "bytes": 5670,
+      "sha256": "b276f20284531ec865f5003b0ef2f818694efa5eb68dfade968fd4328fcaed2e"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/windows-review/REVIEW.md",
+      "bytes": 15047,
+      "sha256": "082b24f2ad3e26d46e61fcc34c7d626e65ccff9b5582278bbcf84ace9e96013f"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/execution.json",
+      "bytes": 1022,
+      "sha256": "b4a045947b2c7a1589257ab83fae0b4584834e5193255bdb6942defb6b671dfb"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/application-review/FINDINGS.md",
+      "bytes": 18251,
+      "sha256": "b973a1f14374a5d19ce33e19671ec89f4b55194e1a0fc322fd942d51008facaf"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/evidence-review/acceptance-boundary-prototype/README.md",
+      "bytes": 7728,
+      "sha256": "c1ed26b536e60bc64e7ec66b698b061ebef84c5a41e28395cb55aecac59d95f7"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/image-cleanup-20261111-123616/disk-after.txt",
+      "bytes": 298,
+      "sha256": "5116613f344366c8a23e620fa44e9d9449165bcab0ba7a2f1cdeaf5d2d4b1bdf"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/image-cleanup-20261111-123616/disk-before.txt",
+      "bytes": 298,
+      "sha256": "b323f29cf68670fe440191d5255c656f937276d8ef153a02bd6872ee2e5aed10"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/image-cleanup-20261111-123616/removal-results.json",
+      "bytes": 2151,
+      "sha256": "cd08199de70ef3560d26cae21f7259b12353072c8644177c2e4a3b8c978589c2"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/image-cleanup-20261111-123616/verification.json",
+      "bytes": 722,
+      "sha256": "d9d67bacaa351dc89d9c6ca3be07f401db72d9815cd448ed3aa1325f8f0ba056"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/main-prototype-check/receipt.json",
+      "bytes": 189,
+      "sha256": "19e5686affcdff5a71e3ce7cb81ec1ab66bf6dc946d7ad9e35f83931b5852097"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/main-warm-check/receipt.json",
+      "bytes": 1514,
+      "sha256": "594c6ca83fa4cd31f29ab2f5697f2d0fff08f7d5f6674c4ed21f5ce9998bf2b3"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/rate-concurrency-review/warm-establishment/README.md",
+      "bytes": 12800,
+      "sha256": "20487bf0cf16ac4c92754deacf64b66f9015fc9694035452e743fecfaadf44de"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/retained-files.json",
+      "bytes": 2823,
+      "sha256": "adc5ca8b190b2730322925c0f13c6cf27f1bb92fc59db6b43de899efd1a18f32"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/runtime-compatibility-review/REVIEW.md",
+      "bytes": 18714,
+      "sha256": "9917ffd02910eabec9cbe3d669d7f4d358e277519b5f384019ba15408ffcb860"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/tcp-nat-review/README.md",
+      "bytes": 13172,
+      "sha256": "ce87a05c6a204ed7bc3b0c7ef01bdcecf2506ea4818962e2a3995326b96854f5"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/followups/windows-review/r3-connection-lifecycle/REVIEW.md",
+      "bytes": 12532,
+      "sha256": "f7eff551aa71b8e93c03d5a0490e0dd247ecf93f8976a1df39468e83d1882fc9"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/launch.json",
+      "bytes": 617,
+      "sha256": "73d3968d2ffc10a350ed0a7c50da3aa7d46140725244ae20ac6f9d6f1fed4dc5"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/alb-delivery-after.json",
+      "bytes": 13793,
+      "sha256": "1fcd9c87dd0e3798f6c7a567591d389d3b627681477d46cf111e9d0e5a212690"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/evidence-manifest.json",
+      "bytes": 23948,
+      "sha256": "4eeb7a22fc3d5ec9f1957cda0dc9edd631e9949fe8d9b00c98c70090c159fbfd"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/load/acceptance-precheck-refusal.json",
+      "bytes": 343,
+      "sha256": "95e7d3dd6d0cb134778924cbbddcc2a3d1b962a37e624699c5e12d8ae4ec5996"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/load/independent-floor-restoration.json",
+      "bytes": 2840,
+      "sha256": "7286be59326e0f7d700a86204adc2c47f19ffc02109998d9aeaecf9c9f183e66"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/load/observer-result.json",
+      "bytes": 905,
+      "sha256": "9124846d4b6bd711616fd91a1ffcee76d29d55ac02ae1324310482eda4db5487"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/load/raw-audit.json",
+      "bytes": 1324,
+      "sha256": "66a7661fff19f241c309b91c398df11436858b5445228d39bb833d8e9ea8f5a3"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/original-archive-verification.json",
+      "bytes": 6103,
+      "sha256": "92934fb7b9d3f2db9afd6cd6142a186dcc17c960f72066cc48990837059b9910"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/postrun/network-final-state.json",
+      "bytes": 282,
+      "sha256": "1f0ffba972832d69a42e2115695b2218d1a0af8351b2b34566c5cb29712915cd"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/postrun/network-review.json",
+      "bytes": 1694,
+      "sha256": "179f400916f187a04bdecdff4a061f98ddb91eb1ef3f184a9796550aacd74d87"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/postrun/outcome.json",
+      "bytes": 928,
+      "sha256": "96414bea1b1c7b8d93da4dde73ce99045cafcb23ff9633473c670adc7905cfa0"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/retained-files.json",
+      "bytes": 2064,
+      "sha256": "081f85aa35524be6dcd09b214b81a9f1aad2fb6a7e8cee14d1b28237dc61d032"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/supplemental/result.json",
+      "bytes": 753,
+      "sha256": "d53b8f58765ffbfa1edd217b0ed4a294ad2d9ef0591485964c7c0b01897c0585"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/alb-delivery-before-final.json",
+      "bytes": 1012,
+      "sha256": "a8f4e5b0f75a03bf08ae11cede77fc4a253a9d6ee7531a5bc2582965730159ed"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/applied-readback.json",
+      "bytes": 1048,
+      "sha256": "3fc44c2854f82476c91d93200d0115e0e5e463b64b508068a2ef50c4945b2294"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/authority.json",
+      "bytes": 402,
+      "sha256": "ff837e99cbf69dd8f6ec74b68af02c9478c4f0a2f5e9ff81a29db584dabbaaeb"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/offline-controls-tests.log",
+      "bytes": 109,
+      "sha256": "593e9e9d1d0cfc786e8bf6df874603f07feccafec406ece4bfe8193224f905c8"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/overlay-recipe.json",
+      "bytes": 2170,
+      "sha256": "15a4311cd1b08837f4449451d2260029fc077f0f40fe547b519b711c199a91fb"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/plan-review.json",
+      "bytes": 1159,
+      "sha256": "427fe58ff68beaf0ac28b2fd222b673062b3d959a54ec5db29ec6df6b7d2acdf"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/policy-binding-source.diff",
+      "bytes": 3486,
+      "sha256": "0fd84bd720966c7569d203f32e71730385104c522b9bde865ae333d184b2ea99"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/policy-binding-tests-v2.log",
+      "bytes": 5187,
+      "sha256": "2028071415acc4acc2ce44a4a28ea5e8d4080b7e3281bcd2d6dba4ada1c41c47"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/post-apply-drift.json",
+      "bytes": 204,
+      "sha256": "6044324644f6e16217bd883e17cf0aeb070c25ee99eb6f8b510e9372d418a022"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/budget-recovery.json",
+      "bytes": 357,
+      "sha256": "397a8937c9222177318014260e98225472a6ee0e1cb6b0866c74b80b1d23a53b"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/connection-budget.json",
+      "bytes": 262,
+      "sha256": "8c8f44ee367b31ec3bda3ad4a7c7e6430d94810b0d5e339c9b2008f11699f04e"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/credential-window-before-observer.json",
+      "bytes": 428,
+      "sha256": "167a910404902d1562c7d448ee0ce58adb14a3a6c7e09b773ece6e22b21dafab"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/final-review.json",
+      "bytes": 730,
+      "sha256": "a2db31f7eee8dfca34d46b527220e2bd11fed674df3c837724c9518be2f42798"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/generator-readiness.json",
+      "bytes": 576,
+      "sha256": "2636b0659e943dcd3e4d3e3b8e9858e0ef5d7b68e210d32d7cfb94655c94cecc"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/http-readiness.json",
+      "bytes": 616,
+      "sha256": "a908f0fe0cadd1efd9163512bcca33599041fbb8cc3c777826bfdd6d9d5a4abd"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/one-task-readiness.json",
+      "bytes": 769,
+      "sha256": "173745850fb19cf9eead34c1df2e8edb1dc8bd839ac1630c1f3e5cdb55401a21"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/prior-evidence-verification.json",
+      "bytes": 461,
+      "sha256": "2252d67919d8ccf29cadd064c705220d54e6c753eb69c57baf88e50094eb5975"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/regional-quota-review.json",
+      "bytes": 2104,
+      "sha256": "52f3fef6d0d1f6425e54284f26d223b80b0fa4d1510560e9a0a124834155568c"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/replacement-budget.json",
+      "bytes": 263,
+      "sha256": "3a378a78a19a9f8d35e3fb73d7b62f8bc584e72db5edb765595bae77f6021cff"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/runtime-settings.json",
+      "bytes": 6186,
+      "sha256": "0316b6ff97d6e5128a746221b82f317dd20e94e2719c07a0ca941ca14dcc0dfb"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/scaling-margin-review.json",
+      "bytes": 1839,
+      "sha256": "73c4662a6aa2a5c1e1975f26e1b39167d3a6f4c9cfae6eb794cfda17775d7482"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/subnet-review.json",
+      "bytes": 687,
+      "sha256": "5a85c4b229dadf4588ba2ad0f633bff7ee5a30c23efd1be00f501a6863cff10d"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/target-readiness-refusal-followup.json",
+      "bytes": 576,
+      "sha256": "659511f78e31a9fbd36396509d428efeb0c2a841b0be2339fff410a0cdaf251f"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/tooling-tests.json",
+      "bytes": 592,
+      "sha256": "84d78ae8ced480bff76f171226c305e4280cedd16e55d544b8c390ab39caf9cb"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/README-at-launch.md",
+      "bytes": 4670,
+      "sha256": "28ff433d846178b18e73925d07a7b59ea0f1ad32feb52fa5842881937e27268b"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/retained-files.json",
+      "bytes": 4276,
+      "sha256": "9b4f46275deb4e066236b30f1097d6ee7af3c817f42ea75807aa2fe56a2b11be"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/README.md",
+      "bytes": 11858,
+      "sha256": "d738300c10f819efa74a7a595db34a0d1dd4c82fbbdd96cb765913a04333d69b"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/retained-files.json",
+      "bytes": 5144,
+      "sha256": "696efa32ae1c5195dc4e4e35d2789aec9ac1d81af203b4559b37b62f13233881"
+    },
+    {
+      "path": "perf/k6/lib.mjs",
+      "bytes": 23362,
+      "sha256": "e58d67966f8ed2945e44d60931a495dddf24a926551340fef10341129995d267"
+    },
+    {
+      "path": "perf/k6/lib.test.mjs",
+      "bytes": 25532,
+      "sha256": "75cb758188718834a725628d25bc43ee0dc10fc8471ad5fa715454b0bf1561ef"
+    },
+    {
+      "path": "perf/k6/README.md",
+      "bytes": 19448,
+      "sha256": "903f1aeaa340381945bded6d5bb313e8e19917956ba9992ddf7a8a913485947c"
+    },
+    {
+      "path": "perf/k6/scaling.mjs",
+      "bytes": 11508,
+      "sha256": "2dde635653a10c0f6c56b3319b93a9c7836f1658ce7d2c22ed67c26c7d02209d"
+    },
+    {
+      "path": "perf/k6/scaling.test.mjs",
+      "bytes": 19032,
+      "sha256": "f545af29192ccb3b0745b931c2904819004306be2698e89889ba171f65ba7c14"
+    }
+  ],
+  "count": 89,
+  "sharelistSha256": "8de83106646d4bb5c7cc9352bdb80e5e76ba8941b7e7f672eef55e0f38ffa75f",
+  "hashConvention": "SHA-256 of UTF-8 no-BOM sorted repository-relative paths, LF-separated with terminal LF; file hashes are working-tree bytes",
+  "findings": [
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/minimal-collection-integration/INTEGRATION.md",
+      "category": "operator-filesystem",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/APPROVAL-PROPOSAL.md",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/FINDINGS.md",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/FINDINGS.md",
+      "category": "cloudfront-public-not-secret",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/summary.json",
+      "category": "account-id-review",
+      "count": 8
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/rate-concurrency-review/analysis.json",
+      "category": "account-id-review",
+      "count": 8
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/alb-delivery-after.json",
+      "category": "account-id-review",
+      "count": 83
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/evidence-manifest.json",
+      "category": "account-id-review",
+      "count": 2
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/load/independent-floor-restoration.json",
+      "category": "account-id-review",
+      "count": 5
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/original-archive-verification.json",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/postrun/network-review.json",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/alb-delivery-before-final.json",
+      "category": "account-id-review",
+      "count": 6
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/applied-readback.json",
+      "category": "account-id-review",
+      "count": 5
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/budget-recovery.json",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/generator-readiness.json",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/one-task-readiness.json",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/regional-quota-review.json",
+      "category": "account-id-review",
+      "count": 5
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/runtime-settings.json",
+      "category": "account-id-review",
+      "count": 13
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/target-readiness-refusal-followup.json",
+      "category": "private-ip",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/retained-files.json",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/retained-files.json",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "perf/k6/lib.mjs",
+      "category": "operator-filesystem",
+      "count": 1
+    },
+    {
+      "path": "perf/k6/lib.mjs",
+      "category": "account-id-review",
+      "count": 2
+    },
+    {
+      "path": "perf/k6/lib.test.mjs",
+      "category": "operator-filesystem",
+      "count": 1
+    },
+    {
+      "path": "perf/k6/lib.test.mjs",
+      "category": "account-id-review",
+      "count": 8
+    },
+    {
+      "path": "perf/k6/lib.test.mjs",
+      "category": "aws-endpoint-review",
+      "count": 3
+    },
+    {
+      "path": "perf/k6/lib.test.mjs",
+      "category": "email-review",
+      "count": 1
+    },
+    {
+      "path": "perf/k6/README.md",
+      "category": "cloudfront-public-not-secret",
+      "count": 1
+    },
+    {
+      "path": "perf/k6/scaling.mjs",
+      "category": "account-id-review",
+      "count": 1
+    },
+    {
+      "path": "perf/k6/scaling.test.mjs",
+      "category": "account-id-review",
+      "count": 5
+    },
+    {
+      "path": "perf/k6/scaling.test.mjs",
+      "category": "aws-endpoint-review",
+      "count": 2
+    }
+  ],
+  "limitations": [
+    "Heuristic category matches require review; not a credential/PII absence guarantee.",
+    "Only explicit prospective allowlist; no history, broader index, stashes, private sessions, raw payloads or report drafts.",
+    "No source edits, builds, host Node/Java, AWS calls, traffic or publication."
+  ]
+}

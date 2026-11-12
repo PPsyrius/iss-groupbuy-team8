@@ -1,0 +1,172 @@
+# Follow-up local checks — 10 November 2026
+
+Refs #458/#591 / NFR-64. The operator authorized checking both earlier lists, one by one, while away. This record extends the [initial local negative control](README.md); it does not replace or improve the failed AWS acceptance result. Generated credentials and TLS private keys stay outside Git. No AWS startup, load, apply, teardown or publication is authorized.
+
+## Scope and sequence
+
+| Requested check | Local procedure | Status |
+| --- | --- | --- |
+| Original 1: profile catalogue | Initial JFR/GC/pool/SQL/cache recording, followed by the five variations below | Eighteen local variations audited; cold overload reproduced |
+| Original 2: fix a measured bottleneck | Require a reproduced symptom and identical before/after workload/resource limits before changing application code | Warmed cache-fault improvement measured; cold/control failures prevent accepting the candidate |
+| Original 3: scaling delay | Source review, mocked Terraform tests, strict preflight/analyzer tests and offline review of retained CPU/alarm timing | Local checks complete; undeployed/unproven |
+| Original 4: AWS validation | Readiness/design review only; no AWS operation | Blocked pending separate explicit authorization |
+| Follow-up 1: TLS / dependency latency | Fresh PostgreSQL/Redis TLS with certificate verification; warmed control, downstream PostgreSQL +2/+5 ms and Redis +50 ms | All four 200-RPS cases completed without errors/drops |
+| Follow-up 2: shared task resources | Actual Envoy 1.40.2 and Java in the same Docker cgroup, total 0.5 CPU / 1 GiB; direct and proxied traffic | 200 RPS passed; both 400-RPS attempts dropped arrivals, so neither proves capacity |
+| Follow-up 3: cold starts | New JVM and empty local cache; first-healthy traffic versus later warmed traffic | Cold overload reproduced twice; more CPU improved it, but no factorial case passed every local screen |
+| Follow-up 4: background work | Synthetic unpaid expiry fixture, schedulers and outbox relay to local ElasticMQ only; payment checkout off | Warmed expiry run passed while 200 real local expiry/outbox publications occurred; cold idle run failed |
+| Follow-up 5: failure amplification | Cache flush, Redis latency beyond its three-second timeout, proxy outage and recovery | Healthy warmed control/flush passed; slow/unavailable Redis reproduced failures; recovery passed |
+
+The sequential harness targets only loopback from each local application's Docker network namespace. All data services and fault-control APIs are on the existing internal local network without published ports. Every case retains summary, raw samples, exit code, fault-action timestamps, pool/GC metrics and resource samples, including failures/drops. Earlier successful phases are not used to hide later failures. Only matrix-created application containers are paused between groups to prevent interference; original baseline containers remain untouched and nothing is deleted.
+
+The first harness attempt failed artifact permissions before usable load, returning k6 exit 255 and no summaries. Its receipts, local fixture seed and fault actions remain outside Git; these are tooling failures, not application measurements. The corrected attempt uses a fresh `Matrix2` database, new container/result names, verified non-root application output permission and a root-only diagnostic generator so it can write controller-created result directories. Application UID remains 10001. Missing summaries or generator startup exits now stop subsequent cases; threshold exit 99 is preserved as a measured failure rather than retried. No failed receipt is overwritten.
+
+TLS uses an ephemeral local CA and verifies PostgreSQL hostnames and the Java Redis trust chain. Toxiproxy 2.13.0 injects deterministic downstream stream delays, not a claimed reproduction of AWS RTT. Envoy and the JVM share one enforced quota, not two independent half-core containers. This is a generic Envoy stress/isolation check, **not** AWS's managed Service Connect build/configuration; proxied ingress deliberately adds work not proven to exist on the AWS ALB catalogue path. Fresh JVM/cache measurements are first-healthy tests, not complete deployment/SLO readiness measurements. The synthetic expiry fixture creates no payments or refunds; it is background interference testing, not V4 drain acceptance.
+
+## First complete matrix findings
+
+The independent raw audit matched all eighteen summaries on requests, errors, drops and p95, including the failed cases. Diagnostic HTTP latency here uses wall-clock time including response validation, unlike the initial negative control's HTTP-only trend. Arrival phase boundaries can contribute one extra scheduled request; these diagnostic counts are not the canonical acceptance driver's exact-budget proof.
+
+| Case | Requests / errors / drops | p95 (ms) | Interpretation |
+| --- | --- | ---: | --- |
+| TLS control, 200 RPS | 12,001 / 0 / 0 | 52 | Certificate-verified local dependencies alone did not reproduce overload |
+| PostgreSQL +2 ms / +5 ms downstream | 12,001 / 0 / 0 each | 11 / 20 | No failure at these delays; sequential warmup prevents attributing the lower p95 to delay |
+| Redis +50 ms downstream | 12,001 / 0 / 0 | 58 | Bounded moderate cache delay alone did not break this warmed run |
+| Shared budget direct / proxied, 200 RPS | 12,001 / 0 / 0 each | 62 / 3 | Both completed; order/warmup confounds a direct proxy-cost comparison |
+| Shared budget proxied, 400 RPS | 23,998 / 0 / 3 | 82 | Dropped arrivals invalidate a capacity claim; check generator preallocation before blaming the backend |
+| Cold first-healthy JVM/cache, 200 RPS | 6,286 / 4,966 / 5,715 | 10,001 | Reproduced local overload, not proof of the original AWS cause |
+| Same JVM warmed, 200 RPS | 12,001 / 0 / 0 | 74 | Strong startup/warmup sensitivity; not a randomized resource comparison |
+| Cold scheduler-enabled idle run | 9,102 / 903 / 2,899 | 10,000 | Cold failure confounds scheduler attribution |
+| Later warmed expiry run, 200 RPS ×150 s | 30,000 / 0 / 0 | 69 | 200 teams expired, 200 outbox events published locally, zero payments; not V4 drain/autoscaling acceptance |
+
+Cold resource observations show median **50.20% of one core**, essentially the entire half-core quota, sampled Hikari pending up to **190** and cumulative pool timeouts up to **585**. Peak sampled memory was about 581 MB, below the 1 GiB limit; cumulative GC pauses through the cold and warmed pair were about 3.52 s, maximum 404 ms. Four cold-run metric reads failed and remain missing, not zero. These observations support CPU/startup contention with connection-wait amplification; they do not prove that PostgreSQL SQL execution was slow or justify enlarging the pool.
+
+The first fault-group control also failed while cold (3,556 errors / 5,013 drops), and later fault cases overlapped recovery/warmup. Those outcomes are preserved, but cannot isolate cache flush/outage effects against a healthy control. The follow-up uses the now-warmed same JVM, a clean healthy control, exact recorded fault actions and a fully preallocated 1,000-VU pool. A separate cold factorial holds the five-connection pool and 200-RPS workload fixed while varying CPU/memory: 0.5 CPU / 1 GiB, 1 CPU / 1 GiB (isolation only, not a valid Fargate pair), 0.5 CPU / 2 GiB and 1 CPU / 2 GiB. No resource change is applied to AWS or yet proposed as a proven fix.
+
+## Warmed isolation and resource comparison
+
+| Case | Requests / errors / drops | p95 (ms) | Outcome |
+| --- | --- | ---: | --- |
+| Warmed healthy control / cache flush, 200 RPS | 12,001 / 0 / 0 each | 3 / 3 | Cache expiry by itself did not reproduce the failure |
+| Warmed Redis +3500 ms, active about 25 s | 11,931 / 1,598 / 2,070 | 10,000 | Confirmed local slow-cache amplification against a healthy control |
+| Warmed Redis proxy unavailable, about 25 s | 10,795 / 2,606 / 3,206 | 10,001 | Confirmed local outage amplification |
+| Warmed recovery, 200 RPS | 12,001 / 0 / 0 | 3 | Recovery observed, not an AWS recovery-time guarantee |
+| Reused proxy JVM, 400 RPS, all 1000 VUs preallocated | 22,908 / 95 / 1,092 | 3,097 | Not capacity evidence; dependency connections/cache had also experienced earlier faults while this JVM was paused |
+| Fresh 0.5 CPU / 1 GiB, 200 RPS | 8,666 / 1,999 / 3,334 | 10,001 | Cold overload reproduced again |
+| Fresh 1 CPU / 1 GiB | 12,000 / 22 / 0 | 2,219 | CPU-only isolation, not deployable Fargate sizing; latency screen failed |
+| Fresh 0.5 CPU / 2 GiB | 10,064 / 619 / 1,936 | 9,603 | More memory alone did not fix startup overload |
+| Fresh 1 CPU / 2 GiB | 12,001 / 11 / 0 | 2,248 | Fewer errors/no drops, but failed the local all-run latency screen; no complete-fix claim |
+
+The local all-run screen is diagnostic, not a substitute for V3's event-relative three-minute latency exclusion. Do not silently convert these results into either passing or failing AWS event-window acceptance. The resource experiment supports investigating CPU/startup headroom; it does not justify blindly doubling resources, increasing pools, ignoring cold failures or claiming linearity. All earlier failures are retained.
+
+## Measured cache-amplification fix candidate
+
+The focused saturation regression failed on the released implementation with `Saturated display cache issued another Redis read`. The candidate adds a non-waiting 16-operation bulkhead only to optional display-cache MGET/population work; saturated reads use the existing bounded PostgreSQL fallback, and saturated population is skipped. `AFTER_COMMIT` evictions, authentication Redis behavior, shared timeouts, Hikari limits, health policy and all HTTP contracts remain unchanged. [Owning decision](../../../../backend/docs/design/best-open-deal-cache.md#2026-11-10--bound-optional-cache-work-under-a-slow-store).
+
+Focused Docker tests turned green (16 cache tests) and the commerce package built. Baseline JAR SHA-256 remains `37c7c7332b5d40e5c940241e75a180d9cfb2b6df020663b233008e61ec7e2960`; the **uncommitted candidate**, not released `93984f61`, is `d572a6b3459a7f5297139d4926f6ac86cc74e0401c514883df039a6b0bc0813d`. Paired measurement uses a fresh local PostgreSQL fixture restored from the same synthetic domain for both arms, the same TLS, half-core/1-GiB limits, pool five, 200 RPS, 1000 preallocated/maximum VUs, 120-second warmup and identical fault timings. The extra fixture avoids relaxing the local connection budget while retaining completed containers. These match nominal conditions, not achieved warmup/readiness: both warmups failed, and only the baseline's immediately following control passed.
+
+## Paired result and stop decision
+
+All **41 completed cases** (18 initial matrix, 11 resource/warmed cases, 12 paired cases) independently match raw requests, errors, drops and p95. Selected [audits, summaries, scripts and receipts](matrix/retained-files.json) are retained with byte hashes; [47 external artifact hashes](matrix/external-artifacts.json) identify private raw streams, JFR recordings and JARs. Private fixture credentials, TLS keys, database snapshots and full process-bearing recordings are excluded from Git. The earlier eighteen exit-255 tooling failures remain separate, not measurements.
+
+| Paired phase | Released baseline: errors / drops / p95 ms | Candidate v1: errors / drops / p95 ms |
+| --- | --- | --- |
+| First-healthy 120-second warmup | 8,351 / 9,330 / 10,001 | 12,084 / 11,663 / 10,001 |
+| Following healthy control | 0 / 0 / 75 | 63 / 0 / 2,246 |
+| Later flush | 0 / 0 / 3 | 0 / 0 / 5 |
+| Redis +3500 ms fault/recovery window | 1,576 / 2,074 / 10,001 | 0 / 0 / 17 |
+| Redis proxy outage/recovery window | 2,607 / 3,213 / 10,001 | 0 / 0 / 91 |
+| Final healthy recovery | 0 / 0 / 3 | 0 / 0 / 5 |
+
+**Do not deploy or accept v1 as the overall fix.** It bounded warmed cache-failure amplification in this sample, but did not establish startup non-regression. The cold candidate reached its half-core quota; the subsequent control sampled Hikari pending up to 191 and 63 additional timeouts. Missing cold metrics are not evidence of zero waiters/timeouts. Streaming JFR found about 3.54 s baseline versus 4.09 s candidate cumulative GC pause and 122.95 s versus 169.83 s cumulative compilation-event duration across their workload windows; these overlapping event-duration totals are not wall time or causal proof. Full Maven verification ran on the same 16-logical-CPU Docker host around 06:54–07:00 UTC, overlapping the candidate but not baseline, with a 2-CPU/4-GiB builder plus separate Testcontainers; this is an additional confound. A single sequential pair cannot isolate the startup difference to the code.
+
+The v1 permit also covers JSON decoding/serialization, so CPU-bound processing can occupy slots even after Redis I/O finishes and trigger extra source fallback. This is a plausible scope risk, not a profiler-proven root cause; no speculative v2 or silent replacement of the v1 evidence was made. Next justified work is an isolated, counterbalanced startup comparison without concurrent builds and, if demonstrated, a decoding/serialization concurrency regression before narrowing the permit scope. Keep all limits and gates fixed. Cold readiness/warmup remains unresolved even on the released baseline.
+
+Health is a separate limitation: the candidate still returned existing `503/DOWN` health responses during Redis faults (one slow-store and two outage samples), despite successful catalogue fallback; baseline fault probes instead included five-second probe timeouts. No auth/health dependency was removed to manufacture availability. Successful fallback does not prove ALB target availability, ECS health, or AWS recovery.
+
+Full verification initially failed on two Docker-daemon bind errors for `/work/backend/elasticmq.conf`, not cache assertions; bootstrap/services and aggregate coverage were therefore not completed. The corrected v1 rerun mounted the existing build volume at a matching daemon-visible Temp path and supplied the same ElasticMQ configuration there. All **11 modules passed** `./mvnw -B -ntp -T 2 clean verify -Pci` in 21:08, with **2,058 discovered tests, zero failures/errors and one existing opt-in `PerformanceBaselineIT` skip**. No skip flag was supplied or gate relaxed. Aggregate inspection still shows missed cache lines/branches despite exercised unit cases; coverage attribution needs reconciliation before a quality-gate claim. This completed snapshot predates the new v2 tests/code, so it is not v2 verification. Source/design secret scanning passed; the broader scan's unchanged synthetic Stripe fixture is [classified without suppression](matrix/cache-gitleaks-review.json).
+
+Work continues after this checkpoint: both deterministic codec-concurrency cases failed on v1 because CPU-only decoding/serialization occupied all store slots. The I/O-only v2 change makes all **18 focused tests pass** and packages successfully; JAR SHA-256 `f4c7372bef03a6627331a469113e3a341f5531485f36da90213ff9861d621dc1`. V1 remains separately preserved. V2 changes permit placement only, not the slot limit, cache authority, eviction, auth, health, timeout, pool or workload. This demonstrates the scope issue, not its responsibility for the historical AWS failure or the observed cold-start difference.
+
+The isolated runtime comparison planned a fresh-JVM/cache ABBA sequence (released baseline, v2, v2, released baseline), holding the same half-core/1-GiB/pool-five/200-RPS/1000-VU limits and 120-second warmup plus healthy control. Concurrent builds/verification were refused, and at least 3 GiB available host memory was required. It **aborted during the first v2 arm**, so no completed counterbalanced result exists:
+
+| Isolated phase | Requests / errors / drops | p95 ms | Outcome |
+| --- | --- | ---: | --- |
+| Released baseline A cold warmup | 14,331 / 8,790 / 9,669 | 10,001 | Failed |
+| Released baseline A subsequent control | 12,001 / 0 / 0 | 81 | Passed |
+| I/O-only v2 A cold warmup | 12,375 / 12,034 / 11,625 | 10,001 | Failed, adverse startup observation remains |
+| I/O-only v2 A subsequent control | No usable workload; setup GET timed out | Unknown | k6 exit 107; empty zero-valued metrics are **not** a pass |
+
+The harness refused the remaining arms and warmed faults after that setup failure. New comparison applications were stopped, not deleted, after their JFR recordings were saved; historical containers/fixtures remain untouched. The [retained v2 inputs/audits](scope-v2/retained-files.json) confirm the three completed measurements and mark the setup failure unusable. **V2 is not accepted for deployment:** narrowing codec scope fixed the deterministic defect, but did not resolve cold overload or establish non-regression. Earlier failures are unchanged.
+
+V2 subsequently [passed its own full eleven-module verification](verification-v2/README.md), `./mvnw -B -ntp clean verify -Pci`, in 25:58: **2,060 discovered tests, zero failures/errors, one existing opt-in performance skip**, no skip flags. The verified commerce artifact exactly matches diagnostic v2, including whole-JAR and cache class hashes. The verified monolith's OpenAPI is byte-identical to `contracts/openapi.json`; no API/client changes were made. Serial execution still left cache unit branches absent from the aggregate, so the gap cannot be attributed solely to parallel Maven execution. Coverage collection/agent attribution remains unresolved; Maven success is not a new-code coverage or runtime acceptance claim.
+
+The failed startup recording showed JSON log formatting among prominent execution-sample leaves, while a safe streaming log review counted about 16.9 MB baseline versus 20.9 MB v2 logs in their two-minute warmups (1,905 versus 2,339 ERROR records, mainly transaction-acquisition failures). These are log counts, not request/error totals, and logging may be a consequence rather than the cause of overload. A next local diagnostic will hold the same v2 JAR/resources/workload and cap only structured stack traces to 2,048 characters, using Spring Boot's [documented property](https://docs.spring.io/spring-boot/4.1/reference/features/logging.html#features.logging.structured.customizing-stack-traces). Every error event, severity and acceptance gate stays intact; existing full-stack failures remain preserved. This is an unproven local cost-isolation experiment, not a production logging change or matched ABBA result.
+
+### Logging-cost diagnostic outcome
+
+The six-case raw audit matches summaries and confirms the local cap was effective (largest observed stack trace 2,048 characters). It **did not resolve cold overload**: warmup had **11,850 errors / 12,376 completed requests, 11,624 drops and p95 10,001 ms**; the next control had **44 errors, zero drops and p95 2,165 ms**. Later flush and recovery passed; warmed slow-store/outage windows each had zero errors/drops and p95 **3/36 ms**, but these use the explicitly different local logging setting, not a default-config acceptance result. No completed matched ABBA or startup non-regression claim is supplied.
+
+Observed warmup log volume was about 7.17 MB, including 2,608 ERROR records, versus the earlier v2 sample's 20.85 MB / 2,339 ERROR records. Error events/severity were not disabled; different request outcomes and sequential sampling preclude treating this as a controlled performance saving. Selected [audits/receipts/hashes](logging-diagnostic/retained-files.json) preserve the negative result. **Keep production logging unchanged**; narrowing log payload is not established as the startup fix. There are now 50 usable matrix/resource/paired/startup/logging measurements, plus the eighteen initial output-permission failures and one later unusable setup failure, all classified separately.
+
+### Coverage-collection follow-up
+
+Both focused `ci` and plain-profile probes confirmed that JaCoCo is attached. Three forced terminations in the original full run show unit JVMs waiting in `ForkedBooter.acknowledgedExit`, before normal shutdown-hook dumping. Default pipes and Surefire 3.5.6's [documented TCP transport](https://maven.apache.org/surefire-archives/surefire-3.5.6/maven-surefire-plugin/examples/process-communication.html) both reproduced one forced termination and missing cache probes despite Maven exits zero. Parent stacks instead show Maven/Jansi's output consumer blocked writing the Windows-mounted log, delaying `BYE_ACK`; this is a local capture defect, not an application/AWS shutdown diagnosis. No POM/plugin/timeout/coverage-policy change was made.
+
+Write logs on the named Linux build volume and copy them after Maven exits: the focused run recovered **84/84 v2 cache probes with no forced termination**. The first full run then failed on missing `../../contracts/openapi.json`; its sanitized failure is retained in [capture evidence](coverage-capture/README.md). Restoring parent repository links/contracts in each disposable container allowed a fresh full eleven-module `clean verify -Pci` to pass in **7:17, 2,060 tests, zero failures/errors, one existing opt-in skip**, with no forced JVMs and **zero missed cache lines/branches**. Verified commerce equals diagnostic v2 and OpenAPI remains byte-identical; see [complete v2 verification](verification-v2-linux/README.md). Original incomplete reports remain unchanged. This resolves v2 capture attribution, not runtime startup or v3 verification.
+
+### C1-only diagnostic — rejected
+
+The six raw-audited cases used local `-XX:TieredStopAtLevel=1`, ordinary full logging and unchanged resources/gates. Baseline cold warmup still had **389 errors / 967 drops, p95 6,811.8 ms**; its healthy 200-RPS control passed (p95 28 ms), but warmed 400 RPS had **60 errors / 9,996 drops, p95 5,588 ms**. V2 cold warmup had **1,581 errors / 5,286 drops**, its following control **751 errors / 2,581 drops, p95 9,937.05 ms**, and warmed 400 RPS **1,087 errors / 12,871 drops**. V2 warmed faults were correctly refused after its failed healthy control. This did not complete a matched ABBA or test default-JVM fault behavior. JFR records crypto prominence and v2 GC max/total **6,602.6/11,779.2 ms**, versus baseline **272.6/2,873.3 ms**; recordings are diagnostic, not causal proof. [Receipts and audits](jit-diagnostic/README.md) preserve the negative result. Production compiler settings stay unchanged. The completed usable count is **56 cases**, plus eighteen permission failures and one unusable exit-107 setup failure.
+
+### Current v3 candidate — runtime comparison completed, not accepted
+
+V2's new healthy-concurrency regression failed as intended (19 tests / one failure). The [superseding design](../../../../backend/docs/design/best-open-deal-cache.md#same-day-supersession--failure-triggered-backoff-v3) replaces the fixed slots with failure-triggered one-second monotonic cooldown and one recovery probe; healthy concurrency is unchanged. Initial [focused red/green](backoff-v3-focused/README.md): **29/29 green tests**, runtime commerce package SHA-256 `0252c3ab81b9cc662b6a1e1cdb5e8044829180ca2ab36ef8fba701834cc9cc34`; that snapshot matched machine-formatted inputs. Later reviewed source is separately attributed below. No TTL/payload, invalidation, auth, health, shared timeout, pool or acceptance-gate change.
+
+The default-JVM/full-logging comparison completed baseline A / v3 A / v3 B / baseline B, each with a fresh JVM/cache, 0.5 CPU / 1 GiB / pool five / 200 RPS / 1,000 VUs and 120-second cold warmup. Both A-arm healthy controls passed, allowing identical flush/slow/outage/recovery phases. All **16 measurements** have independent raw audits, including failures; the cumulative usable diagnostic count is **72**, excluding the eighteen permission failures and one unusable setup failure. [Receipts, audits and recording hashes](backoff-v3/retained-files.json) retain the complete comparison without concurrent builds or another AWS run.
+
+| Fresh arm / phase | Errors / completed requests | Drops | p95 ms | Local screen |
+| --- | ---: | ---: | ---: | --- |
+| Baseline A cold | 9,855 / 13,498 | 10,503 | 10,001 | Failed |
+| Baseline A healthy control | 0 / 12,001 | 0 | 421 | Passed |
+| V3 A cold | 7,128 / 15,724 | 8,277 | 10,001 | Failed |
+| V3 A healthy control | 0 / 12,001 | 0 | 78 | Passed |
+| V3 B cold | 8,032 / 15,125 | 8,876 | 10,001 | Failed |
+| V3 B healthy control | 0 / 12,001 | 0 | 90 | Passed |
+| Baseline B cold | 8,892 / 13,809 | 10,192 | 10,001 | Failed |
+| Baseline B healthy control | 19 / 12,001 | 0 | 1,469 | Failed latency |
+
+Baseline A's slow/outage windows had **1,489/2,609 errors, 2,017/3,230 drops and p95 10,000/10,001 ms**. V3 A reduced these to **one/zero errors and zero drops**, but p95 **2,663/1,804 ms** still failed the unchanged 800-ms local screen. Both flush and recovery windows passed, p95 3 ms. V3's two warmed healthy controls passed; its cold runs still failed. Two samples per arm do not establish a statistical guarantee, every-request latency bound or AWS cause/capacity. The initial concurrent timeout burst remains a design limitation, not something to hide by omitting fault-transition samples.
+
+**Not accepted as the overall performance fix or PR-ready.** [Two full-verification failures](verification-v3-failed/failures.json) are preserved: first an unused SpotBugs suppression, then eight `BestOpenDealCacheIT` failures caused by outage cooldown leaking into subsequent methods. The first aborted reactor could retain older skipped-module targets, so its mixed report counts/aggregate are explicitly excluded; later runs preclean every module.
+
+Independent concurrency review also found an older failure could overwrite a newer cooldown/probe. The two-case deterministic regression failed on the measured implementation, then **31/31 focused tests passed** after ordered atomic publication. Only a newer sampled deadline replaces existing state; equal/newer windows and active probes are preserved, including monotonic wraparound. The outage integration method now invalidates its Spring context after completion, without a production reset API, sleeps or removed assertions. [Review corrections and source hashes](review-corrections/retained-files.json) bind reviewed package `07f46aa3998d0e20f46dfb019f3c71dfef52d7aa5d1f9c206e7cf8dc64fdcb92`. This is a functional correction after the runtime snapshot, **not** equivalent measured bytecode. Its [own full eleven-module verification](verification-v3-reviewed/README.md) subsequently passed in **7:23: 2,073 tests, zero failures/errors, one existing opt-in skip**, complete cache aggregate lines/branches, no lost JVMs and unchanged OpenAPI. Cold-start overload, fault latency and Redis-dependent health remain unresolved; static success does not convert earlier runtime failures into passes.
+
+### Independent measurement audit
+
+The GC timer-max helper incorrectly summed label-series maxima. The [separate correction receipt](review-corrections/backoff-v3-gc-max-correction.json) recomputes all sixteen cases without changing frozen inputs, HTTP counts, latency or gates; fourteen derived gauge records change. Cold sampled GC-max gauges are baseline A **211 ms**, v3 A **226 ms**, v3 B **242 ms**, baseline B **285 ms**, not the summed **479/436/564/590 ms**. These are sampled rolling timer-max gauges, not exact individual pauses or complete phase maxima. Historical copies of the same helper also require this interpretation correction before citing GC-max gauges; independent JFR/GC-log pause measurements are unaffected. The separately named future analyzer uses maximum for `*_max`, while counts/durations remain summed.
+
+“Cold” here means a fresh JVM/cache followed by administrative health UP and one unmeasured successful catalogue setup GET, not an untouched route/cache or demonstrated steady state. PostgreSQL data/page caches and statement statistics persist across ABBA arms; cumulative SQL totals are not phase deltas. Saved GC headers show one available CPU, Serial GC and a 768-MiB heap, consistent across arms; sampled host memory and generator CPU do not prove absence of all host/I/O pressure. Current ingress is direct HTTP with dependency TLS, not Envoy. The earlier staged HTTP-only 400-RPS result differs in warmup and latency definition, so it is not a matched TLS control. Prometheus timeouts stretch nominal monitoring cadence during overload; missing scrapes are not zero values. Neither these limitations nor the correction erase the observed request failures.
+
+### Startup-codec candidate — rejected after failed controls
+
+Phase profiling found first-use cache deserialization and repeated property-source lookup contention; the setup list GET populated offers but did not read them back. The next narrow candidate resolved the raw profile/default once per bean and reused Jackson's typed `ObjectReader` for `Entry`, retaining existing mapper serialization, TTLs, batching, ordered backoff, timeouts, pools and health. Within that rejected candidate, the namespace was fixed until bean recreation; no production runtime-refresh mechanism was found. Jackson 3.1.7 eager root-deserializer prefetch is not a representative decode, does not remove per-entry value-buffer creation, and may defer resolution after a prefetch exception. It was a measured hypothesis, not a guaranteed startup fix or synthetic warmup.
+
+The new [once-only-resolution regression](codec-focused/focused-summary.json) fails on reviewed v3, then all **32 focused tests** and commerce packaging pass for candidate SHA-256 `0cdf2416f7784331542f21d977d80d9c9208863965d4948716ab2b9814090bff`. The first red fixture produced a mock-response shape error rather than the intended assertion and was preserved separately; corrected stubbing still verifies exact keys/payloads and reproduces the intended failure. Fresh default-JVM baseline/candidate ABBA used unchanged cold/control/fault phases, no extra setup GETs, no build overlap and no relaxed screen.
+
+**Rejected:** candidate A/B cold warmups had **12,022/11,477 errors and 11,679/11,595 drops**, p95 10,001 ms. Both following healthy controls also failed: **110/69 errors**, zero drops, p95 **3,713/2,717 ms**. Candidate A faults were correctly refused. Baseline A cold had 8,123 errors / 9,323 drops and its healthy control passed (zero errors/drops, p95 94 ms); baseline B cold also failed severely (11,384 errors / 11,638 drops), and its control failed p95 (856 ms, four errors). Startup variability remains, but the candidate plainly did not establish non-regression. Do not hide these adverse observations behind its focused or later static results.
+
+Only the rejected optimization and its policy-specific test were removed from the active tree; their full source snapshots remain [preserved](codec-rejected-source/README.md). The restoration receipt proves the current cache main/test and outage IT exactly equal the complete 2,073-test reviewed-v3 snapshot, retaining ordered backoff and context isolation. The rejected candidate's [own full build](verification-codec/README.md) passed all eleven modules in **8:13, 2,074 tests, zero failures/errors, one existing opt-in skip**, complete cache coverage and unchanged OpenAPI; that does not supersede its failed runtime controls. The [independent raw audit/JFR collection](codec-startup/README.md) is complete for all twelve usable codec measurements, bringing the cumulative usable diagnostic count to **84**, excluding eighteen permission failures and one unusable setup failure. No experimental warmup, transaction change, TLS-off run, new cache deadline, health relaxation or pool change was applied to the restored source.
+
+The first-five-second Jackson-inclusive monitor durations remain substantial: baseline A/B **9.44/5.80 aggregate thread-seconds**, candidate A/B **7.80/11.09**. These overlapping durations are attributed by event start, not clipped wall time or CPU time; two samples per arm do not establish a precise causal effect. They do not demonstrate that prefetch removed the first-use problem, and the failed controls independently reject it. Original scripts/receipts, all raw/recording hashes and the attribution-only README amendment are preserved; the amendment verifies both archived original and amended README bytes rather than replacing measurement hashes.
+
+## Scaling guard review
+
+Local reruns: Terraform fmt/validate and **24** mocked runtime tests; **50** Node configuration/analysis tests; shellcheck and **16** preflight contracts; **8** pool safety and **23** load-observer Python tests passed. These verify source-level safety, not AWS deployment or autoscaling effectiveness.
+
+The retained CPU series crosses the proposed 70% threshold in the 19:47 UTC minute with zero errors/drops, then drops below it; it crosses again at 19:50 before failures begin at 19:53. One-minute bucket ends are not observed alarm delivery times. The CPU guard may respond to warmup as well as demand and increase cost; the existing request policy may still scale in even though the new guard itself never does. No counterfactual task-count graph, latency pass or guaranteed earlier task readiness is fabricated. The guard remains default-off until reviewed live validation.
+
+## AWS readiness boundary
+
+Before any later authorized billable session: reviewed committed tooling SHA, fresh immutable application artifact, working temporary workstation AWS profiles and credential lifetime, fresh connection budget/configuration proof, chosen guard state with exact alarm/policy binding, persistent collector plus independent restoration, and explicit retention before scheduled deletion. Use unchanged acceptance gates and distinguish JVM ready, ECS running, ALB healthy and actual traffic delivery. No AWS credentials are requested in chat.
+
+The unchanged 30-minute V3 ramp does not by itself provide fixed one/two/three/four-task maximum sustainable throughputs. To claim 80% linearity, separately authorize bounded fixed-replica windows with controlled autoscaling, the same workload/data/resource limits, warmup and stable measurement, and define `throughput(n) / (n × throughput(1)) >= 0.8` on valid, non-generator-limited measurements. That additional workload must not be silently appended or substituted for the original V3 campaign. Otherwise leave linearity explicitly unproven.

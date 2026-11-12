@@ -1,0 +1,11 @@
+{
+  "scope": "Read-only allowlisted marker classification of the two k6 Request Failed warnings that were not request-timeout warnings. URLs and raw warning text were not saved.",
+  "requestTimeoutWarnings": 4446,
+  "remainingWarnings": [
+    {"at": "2026-11-11T08:25:55Z", "marker": "unexpected EOF"},
+    {"at": "2026-11-11T08:26:33Z", "marker": "unexpected EOF"}
+  ],
+  "limits": "An unexpected EOF does not by itself locate the disconnect at the generator, ISP, edge, origin connection or application. No per-request native error tags were retained by the unchanged driver.",
+  "rawEvidenceChanged": false,
+  "runtimeMutationPerformed": false
+}

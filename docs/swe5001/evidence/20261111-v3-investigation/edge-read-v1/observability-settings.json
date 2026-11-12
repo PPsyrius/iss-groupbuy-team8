@@ -1,0 +1,20 @@
+{
+  "loggingEnabled": false,
+  "httpVersion": "http2",
+  "origins": [
+    {
+      "id": "s3-spa",
+      "connectionAttempts": 3,
+      "connectionTimeout": 10,
+      "readTimeout": null,
+      "keepaliveTimeout": null
+    },
+    {
+      "id": "alb-runtime",
+      "connectionAttempts": 3,
+      "connectionTimeout": 10,
+      "readTimeout": 30,
+      "keepaliveTimeout": 5
+    }
+  ]
+}

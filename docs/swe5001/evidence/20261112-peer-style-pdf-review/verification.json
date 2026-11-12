@@ -1,0 +1,92 @@
+{
+  "scope": "Read-only focused review of the supplied styled peer PDF against #789, including its ten-point review comment; not report-wide acceptance",
+  "reviewedAtUtc": "2026-11-12T04:32:48.1566937+00:00",
+  "input": {
+    "pages": 140,
+    "sha256": "b31c14b7d67b61b536b7c6fc958473fee8a06e5c628ad5efe64fa8bb63487621",
+    "compilationSourceShaIndependentlyVerified": false,
+    "changed": false,
+    "filename": "SWE5001-Team8-Report-DRAFT-2026-11-12-style.pdf"
+  },
+  "comparison": {
+    "devRead": "7c33c25a37ede8c369fbe08b786310c37e9e3922",
+    "existingPatchBase": "521a896b2248562bd08f07ab979d2392bc1e8785",
+    "issue": "https://github.com/PPsyrius/iss-groupbuy-team8/issues/789",
+    "evidencePrFound": false,
+    "peerBranchRead": "02c7b822354656a4b6b7d269c876bc0e76635295"
+  },
+  "pdfChecks": {
+    "uniqueUriAnnotations": 199,
+    "relativeUriAnnotations": 0,
+    "pageBoundaryTextOverflows": 0,
+    "allTypographyAndAppendixTraceabilityCertified": false,
+    "textAndLinksExtractedPages": 140,
+    "visuallyInspectedPhysicalPages": [
+      21,
+      104,
+      105,
+      107,
+      109,
+      110,
+      113,
+      122,
+      123,
+      124,
+      125,
+      126,
+      131,
+      139
+    ]
+  },
+  "evidencePathCheck": {
+    "distinctEvidenceFilePaths": 30,
+    "allExternalLinksHttpChecked": false,
+    "distinctAbsentFromCurrentDev": 21,
+    "method": "Exact path existence in the complete current dev tree; not an HTTP/browser link-authorization check"
+  },
+  "findings": {
+    "staleCleanupPage": 131,
+    "imageAssuranceLimitationsPages": [
+      122,
+      123,
+      124
+    ],
+    "incorrectCommitted12000Pages": [
+      104,
+      110
+    ],
+    "umlSemanticsPages": [
+      125,
+      126
+    ],
+    "unprovenRdsBottleneckPage": 105,
+    "unnecessaryIdentifierPage": 113,
+    "regionWrappingIssueReproducedOnPage105": false,
+    "wrong10NovChartUnderR4CaptionPage": 109,
+    "metricsTableMissingExplicitTarget5xxAndScaleOutConditionPage": 105,
+    "stalePhaseDAgreementPage": 21
+  },
+  "preservation": {
+    "noPublicationOrCloudMutation": true,
+    "reportAndExistingHandoffFilesUnchanged": 45,
+    "suppliedPdfUnchanged": true,
+    "originalR4AndAuditPackagesUnchanged": true,
+    "priorReceiptsRemainTheirEarlierByteSnapshots": true,
+    "prior83PageReviewNotRewritten": true
+  },
+  "secretScan": {
+    "findings": 0,
+    "sourceHashes": {
+      "docs/swe5001/evidence/20261112-peer-style-pdf-review/README.md": "3a7399ecc1fce523a258d57ebc72702e47e9560da822036979a5357e8c2db8e4",
+      "docs/agile/sprint-04/log/2026-11-12.md": "ada9c98a743b61890fc03e6bcf4396193ecd20def66eee4e903e9ee02201ef48"
+    },
+    "scope": "New review prose and amended consolidated daily log, plus full extracted text of this 140-page PDF; not binary PDF/history/private operator artifacts; receipt itself excluded",
+    "pdfExtractedTextSha256": "fd2a6670c242bfc00b06f106f86db88024badb71231ca1a9783847879f004fc8",
+    "repositoryFiles": 2,
+    "exitCode": 0,
+    "image": "ghcr.io/gitleaks/gitleaks:v8.30.1",
+    "pdfExtractedTextFiles": 1
+  },
+  "verdict": "Not ready for issue 789 closure; remaining source fixes, publication/integration and a fresh peer PDF review required",
+  "localMarkdownLinksChecked": 11
+}

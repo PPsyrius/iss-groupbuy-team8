@@ -1,0 +1,46 @@
+{
+  "label": "backoff-base-a-slow",
+  "app": "blocbuy-matrix2-backoff-base-a",
+  "rate": 200,
+  "seconds": 70,
+  "port": 8589,
+  "startedAt": "2026-11-10T09:43:21.411Z",
+  "actions": [
+    {
+      "afterSeconds": 15,
+      "description": "Inject 3500 ms downstream Redis latency"
+    },
+    {
+      "afterSeconds": 40,
+      "description": "Remove Redis latency; observe recovery"
+    }
+  ],
+  "actualLimits": {
+    "nanoCpus": 500000000,
+    "memoryBytes": 1073741824
+  },
+  "hostMemory": {
+    "MemTotal": 16510500864,
+    "MemAvailable": 5485428736,
+    "SwapTotal": 4294967296,
+    "SwapFree": 4177420288
+  },
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-candidate:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

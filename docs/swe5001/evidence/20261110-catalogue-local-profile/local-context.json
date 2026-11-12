@@ -1,0 +1,26 @@
+{
+  "sourceSha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1",
+  "source": "Released backend tree; no backend diff; CRLF normalized only in disposable Docker build",
+  "build": "Maven package -pl services/commerce-svc -am -Dmaven.test.skip=true -Djacoco.skip=true; compile/package and formatting gates, not full verify",
+  "jarSha256": "37c7c7332b5d40e5c940241e75a180d9cfb2b6df020663b233008e61ec7e2960",
+  "evidenceKind": "local-diagnostic-not-AWS-acceptance",
+  "cpuLimit": 0.5,
+  "memoryBytes": 1073741824,
+  "maximumPoolSize": 5,
+  "isolation": "Internal Docker network; no published ports; no AWS credentials or outbound access",
+  "differences": [
+    "x86_64 Docker Desktop and JDK image versus ARM64 Fargate JRE",
+    "Local PostgreSQL/Redis versus RDS/Valkey TLS and network",
+    "No CloudFront/ALB/Service Connect",
+    "Schedulers, event relay and Stripe checkout explicitly off",
+    "Standard demo seed only; no real-user data",
+    "Diagnostic schedule and JFR overhead, not acceptance workload"
+  ],
+  "imageIds": {
+    "eclipse-temurin:21-jdk-noble": "sha256:114cabb73033ca4ce7ceec3deb62396bc1b716282bae051ed3c1d82e38fcab2d",
+    "grafana/k6:1.6.1": "sha256:a5ad6bc089a08d77c3ec49f3db8c6fa7a148e4073efcac44c675dbaf3568d8e1",
+    "redis:8.10": "sha256:f245f4c83b84a9e9a0588da1c9456e579455310f0945d5db52cd2ba27f2000cc",
+    "postgres:18": "sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6"
+  },
+  "driverSha256": "87b2e34ef489723a23ca7ab5741c873be0845fef279b1587bcd7eef22cf5957e"
+}

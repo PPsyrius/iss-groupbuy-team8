@@ -1,0 +1,813 @@
+{
+  "kind": "private-additive-backoff-v3-gc-max-correction",
+  "evidenceKind": "local-diagnostic-not-AWS-acceptance",
+  "createdAt": "2026-11-10T10:14:20.819496+00:00",
+  "metric": "jvm_gc_pause_seconds_max",
+  "unit": "seconds",
+  "correction": "At each successful scrape, take max across matching label series, not sum; then preserve the original first/last successful-scrape boundaries and take max across those scrape aggregates.",
+  "limits": "These are sampled, potentially rolling/expiring timer-max gauges, not exact individual GC-pause durations or complete phase maxima. Scrape boundaries, missing readings and pre-phase retained maxima remain unchanged. No GC-log or JFR reinterpretation; no raw HTTP stream rescan.",
+  "sourceAnalysis": {
+    "path": "backoff-v3-analysis.json",
+    "sha256Before": "83d75843dea3b338f76c21b9be4f35942dd1eed8e4bbad55e577ec80ff308e41",
+    "sha256After": "83d75843dea3b338f76c21b9be4f35942dd1eed8e4bbad55e577ec80ff308e41",
+    "byteIdentical": true
+  },
+  "originalInputsSha256": {
+    "backoff-v3-index.json": "ceed84f71a642bde38878a1902847da5aea56e4f4c405708d1c440cabd81f515",
+    "backoff-v3-analysis.json": "83d75843dea3b338f76c21b9be4f35942dd1eed8e4bbad55e577ec80ff308e41",
+    "analyze-backoff-v3.py": "bc419f52124fd71901f05d6f471ae6e1092459215dec683e939d6210f2b6ab7d",
+    "backoff-base-a-warmup/monitor.jsonl": "a78dabdca847bfbd843beed38c3f27a60fa011cad7fb7c3e06123a54791cec6f",
+    "backoff-base-a-warmup/audit.json": "4dee7ab4568124c0c27eb2d9664c9ba53efd2539d0bef5559ef79b65bfa44423",
+    "backoff-base-a-warmup/summary.json": "a10f117682147310b2ae8ca7603c57a44a0e7f15679377e2729bbffd9db74e97",
+    "backoff-base-a-warmup/exit.txt": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455",
+    "backoff-base-a-control/monitor.jsonl": "fcf62e1fa161d0a5203bf0ec7f94ab03a912133c4358e0e617ac06fbeddb767c",
+    "backoff-base-a-control/audit.json": "ad4e0c569bc499d0a8bfe7fe29ac9d50b0284aa7d906adbf06ef5ee747ed017d",
+    "backoff-base-a-control/summary.json": "7325e7690870f220a0f4e6a8d1f298a8084da79c5a006f8d9b864a1b5cce2595",
+    "backoff-base-a-control/exit.txt": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "backoff-base-a-flush/monitor.jsonl": "9eaa4d7d76a28159654dd71e2c47548b6d4df1fd6dd2aec513ff80321f59f3c2",
+    "backoff-base-a-flush/audit.json": "c8966f5eb4997d28dcafee5869606a783eefd2bf2860d65bcefc5aeff678cb6e",
+    "backoff-base-a-flush/summary.json": "8fb8a87124d29fedb6e89a0b163c4b9236bdb6aea81e93c3249828f8c13f0333",
+    "backoff-base-a-flush/exit.txt": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "backoff-base-a-slow/monitor.jsonl": "419c13f3a7b938ab9a9c94bf20be4a11c0ab9c0892c608903fa142c3273cf935",
+    "backoff-base-a-slow/audit.json": "8c520a0d675cc154a9e0a9114c3021a79090aa0e234c1a64c3c620bebe524fdb",
+    "backoff-base-a-slow/summary.json": "71fc6bbee4a46a0ea79179f3f2f317a43867134c07a45aef9841daf4ea5449e5",
+    "backoff-base-a-slow/exit.txt": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455",
+    "backoff-base-a-down/monitor.jsonl": "21375f928a555b1f96fd66ce948177f67fc23ff79268af565a8d29715807e064",
+    "backoff-base-a-down/audit.json": "af73b3b801319cd46ecbe2e9ed5c67b0c3d6de68e76fdac60e8e0443776ec745",
+    "backoff-base-a-down/summary.json": "1497a0bac74a28cff854873a422acd642c44029c6d70be5efb9dc0468bfa79bf",
+    "backoff-base-a-down/exit.txt": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455",
+    "backoff-base-a-recovery/monitor.jsonl": "fb106dd35bd9b66000280f94c66e0b110b623e1a3594c4713ef5c5cfe0d7f999",
+    "backoff-base-a-recovery/audit.json": "4d086aceeab92a9f55cf52dcee0201bb89d29048b0b8f633311fd5569681b5f1",
+    "backoff-base-a-recovery/summary.json": "19f8d65b2df5066ff59ea2f8dcf06a6a3875e4ca8ea7c89c8e4cb84a7ad80bc2",
+    "backoff-base-a-recovery/exit.txt": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "backoff-v3-a-warmup/monitor.jsonl": "8c19b6da892e26faee8d3591bd8b7ff75999384de6f0c9e1bfdb8dc5f814325b",
+    "backoff-v3-a-warmup/audit.json": "7dc69e59476143367e096afcf9100290664b16f7ee6530baaa1b2ddb160a1aad",
+    "backoff-v3-a-warmup/summary.json": "31608c9a88624002789f88ee9a44b9a47be1c262f0f7f8cff01d22c44ae47fe4",
+    "backoff-v3-a-warmup/exit.txt": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455",
+    "backoff-v3-a-control/monitor.jsonl": "e48add9daa6f281dcd879269e26c315eae82f1187f23f17c57c66de3001018b2",
+    "backoff-v3-a-control/audit.json": "37e9a82473e4e8c3ddb85f67fbb6ff57cc0b142cff33ac4cabb269634d2a3ead",
+    "backoff-v3-a-control/summary.json": "6ac678d65002825cc36f28b699494ff21c8432ebd1bbf4fc2efbe8d969b125a6",
+    "backoff-v3-a-control/exit.txt": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "backoff-v3-a-flush/monitor.jsonl": "67ba5bb2acf262220f0f1c1a51d34ae0a8cdb142d1fcfd3d36e8ad4596bacafc",
+    "backoff-v3-a-flush/audit.json": "019c855d242e23198b6ab8d87d0fc7bf93b752a3d14dba6d4edb7e5afa77fa64",
+    "backoff-v3-a-flush/summary.json": "e810a1e0a4c26aea20060c256f94147457c124cfe086f859795ce65b1e74d654",
+    "backoff-v3-a-flush/exit.txt": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "backoff-v3-a-slow/monitor.jsonl": "76d220bb2d6a785c85dac053d1478836e817c047d302ae5db6979902898bc948",
+    "backoff-v3-a-slow/audit.json": "901f976c3eba94e6abd1b0cfc8e59f6c0261047a2cc8bdf52513d692b83abf72",
+    "backoff-v3-a-slow/summary.json": "e70f2da9d3fdc1b0f113f070b5b846751a1a93714ae4970c1a7371f284ec0f77",
+    "backoff-v3-a-slow/exit.txt": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455",
+    "backoff-v3-a-down/monitor.jsonl": "00c5c95847d0d1ad65e1c79548995497e55e1f9e03ba1d62a1d7daa3b1f16db1",
+    "backoff-v3-a-down/audit.json": "7b8b5346d5fddb36bf57a9476838ff501d5370510b3e44a097dbf6d3c9c2236a",
+    "backoff-v3-a-down/summary.json": "44ecb52a396d07e89fe445aa3d9e060545d6e3bb956dbcf38a84165d2bcb95ac",
+    "backoff-v3-a-down/exit.txt": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455",
+    "backoff-v3-a-recovery/monitor.jsonl": "31062ddcd320fcb8776d5f1bc5e0e58ab524d4a1f4a65eafdef309d2747eeaaa",
+    "backoff-v3-a-recovery/audit.json": "97342722852dcbc3c99cdf77ef53538c4df472e1bfe2482d90a2fbb3f5879d05",
+    "backoff-v3-a-recovery/summary.json": "cb06e9690d29d0a9d26e2367a940b80e4c2831d0153a402d04b52e8de9d4ca5e",
+    "backoff-v3-a-recovery/exit.txt": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "backoff-v3-b-warmup/monitor.jsonl": "0f8ae957fd01cd485a74226d15d270ecc4aa9ad774c007a72df04f17eecc3928",
+    "backoff-v3-b-warmup/audit.json": "c01033295631f45757d5e9bc664ddfdf7214a2bd0f5e28e629664f085c9e9c17",
+    "backoff-v3-b-warmup/summary.json": "811f5203d3503fe7359971ae4a180b3fb96b193556fe133cc32ac318b07f39d7",
+    "backoff-v3-b-warmup/exit.txt": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455",
+    "backoff-v3-b-control/monitor.jsonl": "7751796bc126ac0af205882b437ee733072c2f4a6ed57a92f4cab3aaae44eccc",
+    "backoff-v3-b-control/audit.json": "bfec66c8ed5d28361cc0c68627d5f4f5c7957a2f5edab857bf9a51450048af4e",
+    "backoff-v3-b-control/summary.json": "98379a24f44e58da9e0e78b7fe018d83dd11006756467964993ce4dd5f37c2ed",
+    "backoff-v3-b-control/exit.txt": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "backoff-base-b-warmup/monitor.jsonl": "e8d205804612c38d8d8b672aa13a7956320e8356f5504f4a108548f582c1fda0",
+    "backoff-base-b-warmup/audit.json": "4c5e682985e448a03af6bde1e4b3e3c65b56b6de141757323f95effe1be5ca60",
+    "backoff-base-b-warmup/summary.json": "ef2cfce32af6d169cc76e28c7fb04b47c1ac7f01386d46178236150e25b087b8",
+    "backoff-base-b-warmup/exit.txt": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455",
+    "backoff-base-b-control/monitor.jsonl": "8fc647b5730bd5535d526d55df5637fb3d6d7103f5da3a02358be3765b5ed566",
+    "backoff-base-b-control/audit.json": "d170c2726376d28e2b5e52d45913d2b020512633d10f13e06c9d9d69a84fdf1a",
+    "backoff-base-b-control/summary.json": "6af6207b71cc627d9a80cb0a766b1c0de919e7866b8f87c9e935b40fdf70a5d4",
+    "backoff-base-b-control/exit.txt": "8c1f1046219ddd216a023f792356ddf127fce372a72ec9b4cdac989ee5b0b455"
+  },
+  "assertions": {
+    "allFrozenInputsByteIdentical": true,
+    "onlyGcMaxFieldDiffersInAmendedCases": true,
+    "httpCountsLatenciesAndGatesMatchExistingSummaryAuditAndAnalysis": true,
+    "noRawSamplesRescanned": true,
+    "noOriginalEvidenceOverwritten": true,
+    "futureAnalyzerParsedAndFiveFocusedGaugeAssertionsPassed": true,
+    "futureAnalyzerNotExecuted": true
+  },
+  "futureAnalyzer": {
+    "path": "analyze-backoff-v3-corrected.py",
+    "sha256": "61b96d57fd5350ade70086cd1a9feaf55110c36cd34160d5898fea05a84e75fa",
+    "behaviorChange": "Use max only for names ending in _max; retain sum for every other series.",
+    "outputSafety": "Separate filenames with exclusive creation; original audit.json and analysis.json are never written."
+  },
+  "caseCount": 16,
+  "changedCaseCount": 14,
+  "cases": [
+    {
+      "label": "backoff-base-a-warmup",
+      "monitorSha256": "a78dabdca847bfbd843beed38c3f27a60fa011cad7fb7c3e06123a54791cec6f",
+      "monitorSamples": 12,
+      "successfulMetricScrapes": 5,
+      "oldReportedSeconds": {
+        "first": 0.169,
+        "last": 0.479,
+        "max": 0.479
+      },
+      "correctedSeconds": {
+        "first": 0.163,
+        "last": 0.211,
+        "max": 0.211
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 13498,
+          "browse_errors": 9855,
+          "detail_requests": 4048,
+          "list_requests": 9450,
+          "dropped_iterations": 10503
+        },
+        "latencyMs": {
+          "avg": 8832.679582160321,
+          "med": 10000,
+          "p(95)": 10001,
+          "p(99)": 10004,
+          "max": 10059
+        },
+        "exitCode": 99,
+        "allDiagnosticScreensPassed": false,
+        "thresholdResults": {
+          "browse_latency": {
+            "p(95)<800": false
+          },
+          "dropped_iterations": {
+            "count==0": false
+          },
+          "browse_errors": {
+            "rate<0.01": false
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-base-a-control",
+      "monitorSha256": "fcf62e1fa161d0a5203bf0ec7f94ab03a912133c4358e0e617ac06fbeddb767c",
+      "monitorSamples": 12,
+      "successfulMetricScrapes": 12,
+      "oldReportedSeconds": {
+        "first": 0.479,
+        "last": 0.316,
+        "max": 0.479
+      },
+      "correctedSeconds": {
+        "first": 0.211,
+        "last": 0.211,
+        "max": 0.211
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 12001,
+          "browse_errors": 0,
+          "list_requests": 8401,
+          "detail_requests": 3600
+        },
+        "latencyMs": {
+          "avg": 70.36905257895175,
+          "med": 3,
+          "p(95)": 421,
+          "p(99)": 816,
+          "max": 1686
+        },
+        "exitCode": 0,
+        "allDiagnosticScreensPassed": true,
+        "thresholdResults": {
+          "browse_latency": {
+            "p(95)<800": true
+          },
+          "browse_errors": {
+            "rate<0.01": true
+          },
+          "dropped_iterations": {
+            "count==0": true
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-base-a-flush",
+      "monitorSha256": "9eaa4d7d76a28159654dd71e2c47548b6d4df1fd6dd2aec513ff80321f59f3c2",
+      "monitorSamples": 13,
+      "successfulMetricScrapes": 13,
+      "oldReportedSeconds": {
+        "first": 0.305,
+        "last": 0.008,
+        "max": 0.305
+      },
+      "correctedSeconds": {
+        "first": 0.2,
+        "last": 0.008,
+        "max": 0.2
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 12001,
+          "browse_errors": 0,
+          "list_requests": 8401,
+          "detail_requests": 3600
+        },
+        "latencyMs": {
+          "avg": 2.6060328305974503,
+          "med": 2,
+          "p(95)": 3,
+          "p(99)": 25,
+          "max": 153
+        },
+        "exitCode": 0,
+        "allDiagnosticScreensPassed": true,
+        "thresholdResults": {
+          "browse_latency": {
+            "p(95)<800": true
+          },
+          "dropped_iterations": {
+            "count==0": true
+          },
+          "browse_errors": {
+            "rate<0.01": true
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-base-a-slow",
+      "monitorSha256": "419c13f3a7b938ab9a9c94bf20be4a11c0ab9c0892c608903fa142c3273cf935",
+      "monitorSamples": 11,
+      "successfulMetricScrapes": 9,
+      "oldReportedSeconds": {
+        "first": 0.008,
+        "last": 0.054,
+        "max": 0.054
+      },
+      "correctedSeconds": {
+        "first": 0.008,
+        "last": 0.054,
+        "max": 0.054
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 11984,
+          "browse_errors": 1489,
+          "list_requests": 8390,
+          "detail_requests": 3594,
+          "dropped_iterations": 2017
+        },
+        "latencyMs": {
+          "avg": 2141.246745660881,
+          "med": 2,
+          "p(95)": 10000,
+          "p(99)": 10001,
+          "max": 10002
+        },
+        "exitCode": 99,
+        "allDiagnosticScreensPassed": false,
+        "thresholdResults": {
+          "browse_latency": {
+            "p(95)<800": false
+          },
+          "dropped_iterations": {
+            "count==0": false
+          },
+          "browse_errors": {
+            "rate<0.01": false
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-base-a-down",
+      "monitorSha256": "21375f928a555b1f96fd66ce948177f67fc23ff79268af565a8d29715807e064",
+      "monitorSamples": 10,
+      "successfulMetricScrapes": 8,
+      "oldReportedSeconds": {
+        "first": 0.054,
+        "last": 0.358,
+        "max": 0.358
+      },
+      "correctedSeconds": {
+        "first": 0.054,
+        "last": 0.256,
+        "max": 0.256
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 10771,
+          "browse_errors": 2609,
+          "list_requests": 7540,
+          "detail_requests": 3231,
+          "dropped_iterations": 3230
+        },
+        "latencyMs": {
+          "avg": 3723.0304521400058,
+          "med": 1603,
+          "p(95)": 10001,
+          "p(99)": 10001,
+          "max": 10011
+        },
+        "exitCode": 99,
+        "allDiagnosticScreensPassed": false,
+        "thresholdResults": {
+          "browse_errors": {
+            "rate<0.01": false
+          },
+          "dropped_iterations": {
+            "count==0": false
+          },
+          "browse_latency": {
+            "p(95)<800": false
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-base-a-recovery",
+      "monitorSha256": "fb106dd35bd9b66000280f94c66e0b110b623e1a3594c4713ef5c5cfe0d7f999",
+      "monitorSamples": 13,
+      "successfulMetricScrapes": 13,
+      "oldReportedSeconds": {
+        "first": 0.358,
+        "last": 0.358,
+        "max": 0.358
+      },
+      "correctedSeconds": {
+        "first": 0.256,
+        "last": 0.256,
+        "max": 0.256
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 12001,
+          "browse_errors": 0,
+          "list_requests": 8401,
+          "detail_requests": 3600
+        },
+        "latencyMs": {
+          "avg": 2.0117490209149236,
+          "med": 2,
+          "p(95)": 3,
+          "p(99)": 4,
+          "max": 58
+        },
+        "exitCode": 0,
+        "allDiagnosticScreensPassed": true,
+        "thresholdResults": {
+          "browse_latency": {
+            "p(95)<800": true
+          },
+          "browse_errors": {
+            "rate<0.01": true
+          },
+          "dropped_iterations": {
+            "count==0": true
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-v3-a-warmup",
+      "monitorSha256": "8c19b6da892e26faee8d3591bd8b7ff75999384de6f0c9e1bfdb8dc5f814325b",
+      "monitorSamples": 12,
+      "successfulMetricScrapes": 6,
+      "oldReportedSeconds": {
+        "first": 0.192,
+        "last": 0.436,
+        "max": 0.436
+      },
+      "correctedSeconds": {
+        "first": 0.106,
+        "last": 0.226,
+        "max": 0.226
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 15724,
+          "browse_errors": 7128,
+          "detail_requests": 4716,
+          "list_requests": 11008,
+          "dropped_iterations": 8277
+        },
+        "latencyMs": {
+          "avg": 7405.388514372933,
+          "med": 7643.5,
+          "p(95)": 10001,
+          "p(99)": 10002,
+          "max": 10022
+        },
+        "exitCode": 99,
+        "allDiagnosticScreensPassed": false,
+        "thresholdResults": {
+          "browse_latency": {
+            "p(95)<800": false
+          },
+          "browse_errors": {
+            "rate<0.01": false
+          },
+          "dropped_iterations": {
+            "count==0": false
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-v3-a-control",
+      "monitorSha256": "e48add9daa6f281dcd879269e26c315eae82f1187f23f17c57c66de3001018b2",
+      "monitorSamples": 12,
+      "successfulMetricScrapes": 12,
+      "oldReportedSeconds": {
+        "first": 0.436,
+        "last": 0.327,
+        "max": 0.436
+      },
+      "correctedSeconds": {
+        "first": 0.226,
+        "last": 0.226,
+        "max": 0.226
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 12001,
+          "browse_errors": 0,
+          "list_requests": 8401,
+          "detail_requests": 3600
+        },
+        "latencyMs": {
+          "avg": 17.2783101408216,
+          "med": 2,
+          "p(95)": 78,
+          "p(99)": 104,
+          "max": 256
+        },
+        "exitCode": 0,
+        "allDiagnosticScreensPassed": true,
+        "thresholdResults": {
+          "browse_errors": {
+            "rate<0.01": true
+          },
+          "dropped_iterations": {
+            "count==0": true
+          },
+          "browse_latency": {
+            "p(95)<800": true
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-v3-a-flush",
+      "monitorSha256": "67ba5bb2acf262220f0f1c1a51d34ae0a8cdb142d1fcfd3d36e8ad4596bacafc",
+      "monitorSamples": 13,
+      "successfulMetricScrapes": 13,
+      "oldReportedSeconds": {
+        "first": 0.101,
+        "last": 0.25,
+        "max": 0.253
+      },
+      "correctedSeconds": {
+        "first": 0.101,
+        "last": 0.152,
+        "max": 0.152
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 12001,
+          "browse_errors": 0,
+          "list_requests": 8401,
+          "detail_requests": 3600
+        },
+        "latencyMs": {
+          "avg": 2.4669610865761187,
+          "med": 2,
+          "p(95)": 3,
+          "p(99)": 6,
+          "max": 228
+        },
+        "exitCode": 0,
+        "allDiagnosticScreensPassed": true,
+        "thresholdResults": {
+          "browse_errors": {
+            "rate<0.01": true
+          },
+          "dropped_iterations": {
+            "count==0": true
+          },
+          "browse_latency": {
+            "p(95)<800": true
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-v3-a-slow",
+      "monitorSha256": "76d220bb2d6a785c85dac053d1478836e817c047d302ae5db6979902898bc948",
+      "monitorSamples": 14,
+      "successfulMetricScrapes": 14,
+      "oldReportedSeconds": {
+        "first": 0.25,
+        "last": 0.16,
+        "max": 0.25
+      },
+      "correctedSeconds": {
+        "first": 0.152,
+        "last": 0.152,
+        "max": 0.152
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 14001,
+          "browse_errors": 1,
+          "list_requests": 9801,
+          "detail_requests": 4200
+        },
+        "latencyMs": {
+          "avg": 328.58888650810655,
+          "med": 2,
+          "p(95)": 2663,
+          "p(99)": 3550,
+          "max": 6183
+        },
+        "exitCode": 99,
+        "allDiagnosticScreensPassed": false,
+        "thresholdResults": {
+          "browse_latency": {
+            "p(95)<800": false
+          },
+          "dropped_iterations": {
+            "count==0": true
+          },
+          "browse_errors": {
+            "rate<0.01": true
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-v3-a-down",
+      "monitorSha256": "00c5c95847d0d1ad65e1c79548995497e55e1f9e03ba1d62a1d7daa3b1f16db1",
+      "monitorSamples": 14,
+      "successfulMetricScrapes": 14,
+      "oldReportedSeconds": {
+        "first": 0.16,
+        "last": 0.008,
+        "max": 0.16
+      },
+      "correctedSeconds": {
+        "first": 0.152,
+        "last": 0.008,
+        "max": 0.152
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 14001,
+          "browse_errors": 0,
+          "list_requests": 9801,
+          "detail_requests": 4200
+        },
+        "latencyMs": {
+          "avg": 178.099135776016,
+          "med": 2,
+          "p(95)": 1804,
+          "p(99)": 3210,
+          "max": 4246
+        },
+        "exitCode": 99,
+        "allDiagnosticScreensPassed": false,
+        "thresholdResults": {
+          "browse_errors": {
+            "rate<0.01": true
+          },
+          "browse_latency": {
+            "p(95)<800": false
+          },
+          "dropped_iterations": {
+            "count==0": true
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-v3-a-recovery",
+      "monitorSha256": "31062ddcd320fcb8776d5f1bc5e0e58ab524d4a1f4a65eafdef309d2747eeaaa",
+      "monitorSamples": 13,
+      "successfulMetricScrapes": 13,
+      "oldReportedSeconds": {
+        "first": 0.008,
+        "last": 0.008,
+        "max": 0.008
+      },
+      "correctedSeconds": {
+        "first": 0.008,
+        "last": 0.008,
+        "max": 0.008
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 12001,
+          "browse_errors": 0,
+          "list_requests": 8401,
+          "detail_requests": 3600
+        },
+        "latencyMs": {
+          "avg": 2.0324972918923425,
+          "med": 2,
+          "p(95)": 3,
+          "p(99)": 5,
+          "max": 78
+        },
+        "exitCode": 0,
+        "allDiagnosticScreensPassed": true,
+        "thresholdResults": {
+          "browse_latency": {
+            "p(95)<800": true
+          },
+          "dropped_iterations": {
+            "count==0": true
+          },
+          "browse_errors": {
+            "rate<0.01": true
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-v3-b-warmup",
+      "monitorSha256": "0f8ae957fd01cd485a74226d15d270ecc4aa9ad774c007a72df04f17eecc3928",
+      "monitorSamples": 12,
+      "successfulMetricScrapes": 6,
+      "oldReportedSeconds": {
+        "first": 0.2,
+        "last": 0.5640000000000001,
+        "max": 0.5640000000000001
+      },
+      "correctedSeconds": {
+        "first": 0.126,
+        "last": 0.242,
+        "max": 0.242
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 15125,
+          "browse_errors": 8032,
+          "detail_requests": 4536,
+          "list_requests": 10589,
+          "dropped_iterations": 8876
+        },
+        "latencyMs": {
+          "avg": 7790.809785123967,
+          "med": 9998,
+          "p(95)": 10001,
+          "p(99)": 10002,
+          "max": 10016
+        },
+        "exitCode": 99,
+        "allDiagnosticScreensPassed": false,
+        "thresholdResults": {
+          "browse_errors": {
+            "rate<0.01": false
+          },
+          "browse_latency": {
+            "p(95)<800": false
+          },
+          "dropped_iterations": {
+            "count==0": false
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-v3-b-control",
+      "monitorSha256": "7751796bc126ac0af205882b437ee733072c2f4a6ed57a92f4cab3aaae44eccc",
+      "monitorSamples": 12,
+      "successfulMetricScrapes": 12,
+      "oldReportedSeconds": {
+        "first": 0.5640000000000001,
+        "last": 0.344,
+        "max": 0.5640000000000001
+      },
+      "correctedSeconds": {
+        "first": 0.242,
+        "last": 0.242,
+        "max": 0.242
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 12001,
+          "browse_errors": 0,
+          "list_requests": 8401,
+          "detail_requests": 3600
+        },
+        "latencyMs": {
+          "avg": 23.862678110157486,
+          "med": 2,
+          "p(95)": 90,
+          "p(99)": 325,
+          "max": 986
+        },
+        "exitCode": 0,
+        "allDiagnosticScreensPassed": true,
+        "thresholdResults": {
+          "browse_errors": {
+            "rate<0.01": true
+          },
+          "browse_latency": {
+            "p(95)<800": true
+          },
+          "dropped_iterations": {
+            "count==0": true
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-base-b-warmup",
+      "monitorSha256": "e8d205804612c38d8d8b672aa13a7956320e8356f5504f4a108548f582c1fda0",
+      "monitorSamples": 11,
+      "successfulMetricScrapes": 5,
+      "oldReportedSeconds": {
+        "first": 0.184,
+        "last": 0.59,
+        "max": 0.59
+      },
+      "correctedSeconds": {
+        "first": 0.179,
+        "last": 0.285,
+        "max": 0.285
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 13809,
+          "browse_errors": 8892,
+          "detail_requests": 4142,
+          "list_requests": 9667,
+          "dropped_iterations": 10192
+        },
+        "latencyMs": {
+          "avg": 8644.67405315374,
+          "med": 10000,
+          "p(95)": 10001,
+          "p(99)": 10002,
+          "max": 10014
+        },
+        "exitCode": 99,
+        "allDiagnosticScreensPassed": false,
+        "thresholdResults": {
+          "browse_errors": {
+            "rate<0.01": false
+          },
+          "dropped_iterations": {
+            "count==0": false
+          },
+          "browse_latency": {
+            "p(95)<800": false
+          }
+        }
+      }
+    },
+    {
+      "label": "backoff-base-b-control",
+      "monitorSha256": "8fc647b5730bd5535d526d55df5637fb3d6d7103f5da3a02358be3765b5ed566",
+      "monitorSamples": 12,
+      "successfulMetricScrapes": 12,
+      "oldReportedSeconds": {
+        "first": 0.59,
+        "last": 0.38699999999999996,
+        "max": 0.59
+      },
+      "correctedSeconds": {
+        "first": 0.285,
+        "last": 0.285,
+        "max": 0.285
+      },
+      "httpEvidenceUnchanged": {
+        "rawCounts": {
+          "browse_requests": 12001,
+          "browse_errors": 19,
+          "list_requests": 8401,
+          "detail_requests": 3600
+        },
+        "latencyMs": {
+          "avg": 378.85609532538956,
+          "med": 31,
+          "p(95)": 1469,
+          "p(99)": 2359,
+          "max": 3989
+        },
+        "exitCode": 99,
+        "allDiagnosticScreensPassed": false,
+        "thresholdResults": {
+          "browse_latency": {
+            "p(95)<800": false
+          },
+          "dropped_iterations": {
+            "count==0": true
+          },
+          "browse_errors": {
+            "rate<0.01": true
+          }
+        }
+      }
+    }
+  ]
+}

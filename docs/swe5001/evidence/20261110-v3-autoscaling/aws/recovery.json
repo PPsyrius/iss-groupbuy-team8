@@ -1,0 +1,71 @@
+{
+  "at": "2026-11-09T20:31:37.165948Z",
+  "targets": {
+    "ScalableTargets": [
+      {
+        "ServiceNamespace": "ecs",
+        "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+        "ScalableDimension": "ecs:service:DesiredCount",
+        "MinCapacity": 2,
+        "MaxCapacity": 6,
+        "RoleARN": "arn:aws:iam::402178232802:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService",
+        "CreationTime": "2026-11-09T17:39:35.591000+00:00",
+        "SuspendedState": {
+          "DynamicScalingInSuspended": false,
+          "DynamicScalingOutSuspended": false,
+          "ScheduledScalingSuspended": false
+        },
+        "ScalableTargetARN": "arn:aws:application-autoscaling:ap-southeast-1:402178232802:scalable-target/0ec5abd087886f6246ec83566c0b97889a53"
+      }
+    ]
+  },
+  "observation": {
+    "services": [
+      {
+        "name": "commerce-svc",
+        "status": "ACTIVE",
+        "desired": 2,
+        "running": 3,
+        "pending": 0,
+        "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32",
+        "deployments": [
+          {
+            "rolloutState": "COMPLETED"
+          }
+        ],
+        "events": [
+          {
+            "id": "2a98c11f-f214-4712-b4bc-c39b806a195a",
+            "createdAt": "2026-11-09T20:27:46.603000+00:00",
+            "message": "(service commerce-svc) has reached a steady state."
+          },
+          {
+            "id": "f33aca90-d232-4de2-a837-62a78f47d980",
+            "createdAt": "2026-11-09T20:27:46.529000+00:00",
+            "message": "(service commerce-svc, taskSet ecs-svc/9262474610117844056) has begun draining connections on 1 tasks."
+          },
+          {
+            "id": "4b80f7e2-93af-4c68-a372-a80208a1d5ec",
+            "createdAt": "2026-11-09T20:27:46.526000+00:00",
+            "message": "(service commerce-svc) deregistered 1 targets in (target-group arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3)"
+          },
+          {
+            "id": "75616921-5294-4de0-afd1-4bd312629505",
+            "createdAt": "2026-11-09T20:27:37.192000+00:00",
+            "message": "(service commerce-svc) has stopped 1 running tasks: (task c8eeffffb8504ba3b4c0bc782f8ebadf)."
+          },
+          {
+            "id": "428c6a8c-6bd0-4126-aa10-bad952bae4df",
+            "createdAt": "2026-11-09T20:04:51.320000+00:00",
+            "message": "(service commerce-svc) has reached a steady state."
+          }
+        ]
+      }
+    ],
+    "failures": [],
+    "observedAt": "2026-11-09T20:31:37.965144Z"
+  },
+  "problems": [],
+  "missingObservationsAfter": "2026-11-09T20:03:47.522113Z",
+  "collection": "Recovery of stored metrics/history only; no replacement observation timeline or load"
+}

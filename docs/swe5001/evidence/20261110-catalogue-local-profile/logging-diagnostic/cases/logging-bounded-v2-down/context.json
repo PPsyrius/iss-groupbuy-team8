@@ -1,0 +1,46 @@
+{
+  "label": "logging-bounded-v2-down",
+  "app": "blocbuy-matrix2-logging-bounded-v2",
+  "rate": 200,
+  "seconds": 70,
+  "port": 8589,
+  "startedAt": "2026-11-10T08:13:37.628Z",
+  "actions": [
+    {
+      "afterSeconds": 15,
+      "description": "Disable matrix Redis proxy"
+    },
+    {
+      "afterSeconds": 40,
+      "description": "Restore matrix Redis proxy"
+    }
+  ],
+  "actualLimits": {
+    "nanoCpus": 500000000,
+    "memoryBytes": 1073741824
+  },
+  "hostMemory": {
+    "MemTotal": 16510500864,
+    "MemAvailable": 5477892096,
+    "SwapTotal": 4294967296,
+    "SwapFree": 4213272576
+  },
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-candidate:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

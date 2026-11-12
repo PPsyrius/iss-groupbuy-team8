@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "label": "startup-base-a-warmup",
+      "app": "blocbuy-matrix2-startup-base-a",
+      "rate": 200,
+      "seconds": 120,
+      "port": 8589,
+      "startedAt": "2026-11-10T07:35:06.779Z",
+      "finishedAt": "2026-11-10T07:37:13.566Z",
+      "exitCode": 99
+    },
+    {
+      "label": "startup-base-a-control",
+      "app": "blocbuy-matrix2-startup-base-a",
+      "rate": 200,
+      "seconds": 60,
+      "port": 8589,
+      "startedAt": "2026-11-10T07:37:13.760Z",
+      "finishedAt": "2026-11-10T07:38:14.131Z",
+      "exitCode": 0
+    },
+    {
+      "label": "startup-scope-a-warmup",
+      "app": "blocbuy-matrix2-startup-scope-a",
+      "rate": 200,
+      "seconds": 120,
+      "port": 8589,
+      "startedAt": "2026-11-10T07:38:47.583Z",
+      "finishedAt": "2026-11-10T07:41:00.073Z",
+      "exitCode": 99
+    },
+    {
+      "label": "startup-scope-a-control",
+      "app": "blocbuy-matrix2-startup-scope-a",
+      "rate": 200,
+      "seconds": 60,
+      "port": 8589,
+      "startedAt": "2026-11-10T07:41:00.272Z",
+      "finishedAt": "2026-11-10T07:41:10.654Z",
+      "exitCode": 107
+    }
+  ],
+  "completedABBA": false,
+  "reason": "V2 control setup GET timed out (exit 107); remaining arms/faults refused. Empty metrics do not establish zero errors or usable load.",
+  "limits": "Three usable diagnostic measurements plus one setup failure; no startup non-regression, AWS acceptance or production logging claim."
+}

@@ -1,0 +1,209 @@
+{
+  "kind": "local-verification-log-capture-diagnosis-not-AWS-root-cause",
+  "runs": [
+    {
+      "label": "default-pipes-host-log",
+      "exitCode": 0,
+      "forcedTerminationMessages": 1,
+      "cacheUnitExecutionData": [],
+      "lastModuleTestSummary": {
+        "tests": 375,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "privateLog": {
+        "path": "cache-channel-pipes.log",
+        "bytes": 484452,
+        "sha256": "6700ab543ab13d6811b384562cd9a58c0de05599e7598555ebfeb391641bf495"
+      }
+    },
+    {
+      "label": "tcp-host-log",
+      "exitCode": 0,
+      "forcedTerminationMessages": 1,
+      "cacheUnitExecutionData": [],
+      "lastModuleTestSummary": {
+        "tests": 375,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "privateLog": {
+        "path": "cache-channel-tcp.log",
+        "bytes": 484452,
+        "sha256": "4558d92bbdc65e8d05202bda042d27f75bee0d61ce214af5f4fbd18f5a8464aa"
+      }
+    },
+    {
+      "label": "default-pipes-linux-log",
+      "exitCode": 0,
+      "forcedTerminationMessages": 0,
+      "cacheUnitExecutionData": [
+        "blocbuy-infrastructure/target/jacoco.exec classId=7042d1244e2fede3 coveredProbes=84 totalProbes=84"
+      ],
+      "lastModuleTestSummary": {
+        "tests": 375,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "privateLog": {
+        "path": "cache-linux-unit.log",
+        "bytes": 484503,
+        "sha256": "fbae56d5ba614fd9fc358640589816cfe801f29c4f492cc8cdd356e94a14533e"
+      }
+    }
+  ],
+  "privateArtifacts": [
+    {
+      "path": "cache-ack-parent-stacks/1.txt",
+      "testOutputConsumerInNativeFileWrite": false,
+      "bytes": 28742,
+      "sha256": "41244353d55a6712f0327d0f72ce5f876d7e2453b291958c5df715ae92827383"
+    },
+    {
+      "path": "cache-ack-parent-stacks/10.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 26315,
+      "sha256": "71abf8cef6351533983c036b480461782bfba7183205c8fa57f1126c12584b86"
+    },
+    {
+      "path": "cache-ack-parent-stacks/11.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 24894,
+      "sha256": "f67d5fedfb9c27507213f3c73903c9063bac3a2d34274c218496dd8a0f5939f1"
+    },
+    {
+      "path": "cache-ack-parent-stacks/12.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 24589,
+      "sha256": "a2648880f6cb8b173e7e6103f489d665825ffb7a86b429985bada8e72fa45024"
+    },
+    {
+      "path": "cache-ack-parent-stacks/13.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 24884,
+      "sha256": "eed298afecfa01775945e9a54c936ffef41644beac953703b8078ba0dd44c3a7"
+    },
+    {
+      "path": "cache-ack-parent-stacks/14.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 24590,
+      "sha256": "73154c4a73aa6ceeb87ca5ed3e619fed6260d0b84784cc7d3be1c4f9b0b2d3e6"
+    },
+    {
+      "path": "cache-ack-parent-stacks/15.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 24590,
+      "sha256": "d34c8897b3146667c5a2ff7b7f5359ac152010d47d76e4ffb69c0e3a6e196fa8"
+    },
+    {
+      "path": "cache-ack-parent-stacks/16.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 24896,
+      "sha256": "e9d79308330f0fd545c678290ca05ce1b36310391792ec78d12adc36eeaccf45"
+    },
+    {
+      "path": "cache-ack-parent-stacks/17.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 24896,
+      "sha256": "8d6631a3a708bf9ec03c7a1468bf77ada31fd1fc586f411aa85db17d5a22b063"
+    },
+    {
+      "path": "cache-ack-parent-stacks/18.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 24590,
+      "sha256": "454addf8d299117da2fdf8e0b1e3e63317c165f4b78dc933f1b91f2cd8a02785"
+    },
+    {
+      "path": "cache-ack-parent-stacks/2.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 30343,
+      "sha256": "aa78177e2fd5f4b2eaae2120468d71cdbd8a5ee5ff4569bd58b59f3bd6f0aa24"
+    },
+    {
+      "path": "cache-ack-parent-stacks/3.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 30637,
+      "sha256": "7729e42f1c39ba27fb63f6eee010f1ba44df9eebd9fb5fd38ddff798880e2b90"
+    },
+    {
+      "path": "cache-ack-parent-stacks/4.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 30650,
+      "sha256": "07967b345f3b6ce9d13318f9820bca80ba12d82c9bfe581c625e91569fc0c341"
+    },
+    {
+      "path": "cache-ack-parent-stacks/5.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 30332,
+      "sha256": "83c0b66b4c3c1cceacb8b37e28ff9d591443378cc7c0ec3a01a480b3a005dcc1"
+    },
+    {
+      "path": "cache-ack-parent-stacks/6.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 26291,
+      "sha256": "fbc55ebb65066e6707a7bdc0ca2401d4234d1576f9211d3760e72f3a356eb746"
+    },
+    {
+      "path": "cache-ack-parent-stacks/7.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 26303,
+      "sha256": "c547c18e2534c9103f106d07b3af437e373215a9625118c9ce68053188e34400"
+    },
+    {
+      "path": "cache-ack-parent-stacks/8.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 25997,
+      "sha256": "b9d9b354101f038d2db80992ffc36ef2643cfdcb0f68d388d5efb31bb85f35b3"
+    },
+    {
+      "path": "cache-ack-parent-stacks/9.txt",
+      "testOutputConsumerInNativeFileWrite": true,
+      "bytes": 25997,
+      "sha256": "b8b546966a5f6be9011722db13aee383f29e1d3027637b658ab15c81acea4251"
+    },
+    {
+      "path": "cache-coverage-agent-probe.json",
+      "bytes": 74,
+      "sha256": "88177154980de8f89d9ddb16b4551e557bc87b57f8add8554f26e8068de8d436"
+    },
+    {
+      "path": "cache-coverage-agent-ci.txt",
+      "bytes": 173,
+      "sha256": "8b00da49e18f6aae1027f3d52e273fed868b4df87d6ca04b13f51c90c131c9e7"
+    },
+    {
+      "path": "cache-coverage-agent-plain.txt",
+      "bytes": 173,
+      "sha256": "8b00da49e18f6aae1027f3d52e273fed868b4df87d6ca04b13f51c90c131c9e7"
+    },
+    {
+      "path": "cache-channel-original-pom.xml",
+      "bytes": 17492,
+      "sha256": "39f9ec569f4e76abe599d90a2c922049bfddfa331953098dbfe3d5797d94659d"
+    },
+    {
+      "path": "cache-channel-tcp-pom.xml",
+      "bytes": 17603,
+      "sha256": "775b8bff900cd07d045280d2774d679428b1fe1e5a5faf76f7be43f9a01e3cdc"
+    }
+  ],
+  "parentStackFinding": {
+    "samples": 18,
+    "nativeOutputWriteSamples": 17,
+    "safeFrameChain": [
+      "FileOutputStream.write",
+      "AnsiOutputStream.write",
+      "DirectConsoleOutput.writeTestOutput",
+      "TestSetRunListener.writeTestOutput",
+      "ForkClient$StdOutListener.handle",
+      "ThreadedStreamConsumer$Pumper.run"
+    ],
+    "interpretation": "Parent log-output draining can delay BYE_ACK until the fork is halted; full test logs were captured on a Windows bind mount. This is a local verification-harness issue, not demonstrated application/AWS shutdown failure."
+  },
+  "checkoutPomUnchanged": true,
+  "decision": "Write Maven/Jansi output to the existing named Linux build volume, copy it to the host after the run; preserve every test/output and original POM, plugin version, timeout and coverage configuration.",
+  "limits": "These are focused upstream-reactor unit diagnostics, not full-backend verification or runtime acceptance. The fresh all-module aggregate must separately prove coverage; no old or synthesized probes are merged."
+}

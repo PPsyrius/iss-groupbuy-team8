@@ -1,0 +1,8 @@
+{
+  "finishedAtUtc": "2026-11-11T04:44:27.3655103+00:00",
+  "k6Exit": 0,
+  "attachExit": 0,
+  "limits": "ECS observations and generator headroom still require review; no capacity or scaling claim.",
+  "calibrationExit": 0,
+  "rawEvidence": "C:\\Users\\sirip\\AppData\\Local\\Temp\\opencode\\swe5001-rerun-prep-20261111\\v2-20261111-monolith-r1"
+}

@@ -1,0 +1,6 @@
+{
+  "at": "2026-11-11T09:39:55.149256+00:00",
+  "scope": "Historical CloudWatch metric/log reads only, account 402178232802/ap-southeast-1, original r2 workload window. No application load/settings/teardown.",
+  "awsMaxAttempts": 1,
+  "rawMessagesPersisted": false
+}

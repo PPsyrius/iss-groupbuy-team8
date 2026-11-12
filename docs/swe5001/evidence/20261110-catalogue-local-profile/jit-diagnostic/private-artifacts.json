@@ -1,0 +1,65 @@
+{
+  "retention": "Private local Temp; raw streams/JFR/GC logs are not copied to Git",
+  "files": [
+    {
+      "path": "matrix-v2/jit-base-warmup/samples.jsonl",
+      "bytes": 71111486,
+      "sha256": "a8b99eb23e24de60e4516df3568d413ea9c69bd9e0b95416fe7ec94ae8c5957d"
+    },
+    {
+      "path": "matrix-v2/jit-base-control/samples.jsonl",
+      "bytes": 36909953,
+      "sha256": "86ba3ba95231dae4fbabf094cd46da570b63a51539477e9fea0fefd835481215"
+    },
+    {
+      "path": "matrix-v2/jit-base-warm400/samples.jsonl",
+      "bytes": 44619523,
+      "sha256": "2604909ff74dd5a44894c6de7032efa8b26c6e50f7972aa18c557c42b3482d50"
+    },
+    {
+      "path": "matrix-v2/jit-scope-warmup/samples.jsonl",
+      "bytes": 58511835,
+      "sha256": "d34ba8b8d487ebfc48bf174502f26477aeea8953900e84a7fecae98bd3478d9c"
+    },
+    {
+      "path": "matrix-v2/jit-scope-control/samples.jsonl",
+      "bytes": 29447285,
+      "sha256": "39e2f50b820ce6a15ee9e5ecddb4b1a15f2d327868d15b8888f708af688a835f"
+    },
+    {
+      "path": "matrix-v2/jit-scope-warm400/samples.jsonl",
+      "bytes": 36138926,
+      "sha256": "a5c456725c2237bf9c2042b9c205342cb2d8147bcdcdba405e00f6d3f80578e5"
+    },
+    {
+      "path": "matrix-v2/jit-base.jfr",
+      "bytes": 16799040,
+      "sha256": "05ba7859bfefbc8ad21abcec2727aee13756e347e88dfd66dd98f99d10982153"
+    },
+    {
+      "path": "matrix-v2/jit-base-gc.log",
+      "bytes": 265616,
+      "sha256": "ea43c19402083c3bd226a6a0b8f2151abc2eae957ee89613e19dc6ce84e1db34"
+    },
+    {
+      "path": "matrix-v2/jit-base-vm-flags.txt",
+      "bytes": 508,
+      "sha256": "17f7ac2ad991d96a45f105e2f1f1bdcf427ca3066330856d3091e81ffd16e3c3"
+    },
+    {
+      "path": "matrix-v2/jit-scope.jfr",
+      "bytes": 21019595,
+      "sha256": "b6177056574b92ef89d9eee6b813592016e56b393c21333f4d191e2753d4e8ec"
+    },
+    {
+      "path": "matrix-v2/jit-scope-gc.log",
+      "bytes": 272579,
+      "sha256": "4c9d10410f659f6841182a93fe9814396f341aa549e5f3d47458c6c9ad3addd3"
+    },
+    {
+      "path": "matrix-v2/jit-scope-vm-flags.txt",
+      "bytes": 508,
+      "sha256": "17f7ac2ad991d96a45f105e2f1f1bdcf427ca3066330856d3091e81ffd16e3c3"
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+%% frame: UC4 design classes across the COLA layers: adapter, application, domain, infrastructure (commerce-svc)
+classDiagram
+    class StripeWebhookController {
+        <<controller, Ext, Sec>>
+        +handleStripeEvent(payload, signatureHeader): Result~Void~
+    }
+    class PaymentAppService {
+        <<interface>>
+        +handleStripeWebhook(payload, signatureHeader): void
+    }
+    class StripePaymentAppService {
+        <<application service, Ext>>
+    }
+    class StripeCheckoutService {
+        <<application service, Ext, Conc>>
+        -tx: TransactionTemplate
+        +handleWebhook(rawBody, signature): void
+    }
+    class OrderFulfilmentAdapter {
+        <<adapter, application service, Dist, Conc>>
+        +lockForSettlement(quote: CheckoutQuote): void
+        +fulfil(event: PaymentSucceeded): PaymentBusinessPort.Outcome
+    }
+    class PaidGroupDealService {
+        <<application service, Conc, Evt>>
+        +startConfirmed(terms, paid): ParticipationResult
+        +joinConfirmed(dealId, paid, sharerUserId): ParticipationResult
+    }
+    class CheckoutPayment {
+        <<aggregate root, record>>
+        +status: CheckoutPayment.Status
+        +succeed(): CheckoutPayment
+    }
+    class CheckoutPaymentRepository {
+        <<interface, repository, Pers, Conc>>
+        +claimEvent(eventId: String, type: String): boolean
+        +lock(id: UUID): CheckoutPayment
+        +requireRefund(payment, reason, eventId): void
+        +recordOutcome(paymentId, dealId, orderId, outcome): void
+    }
+    class PaymentBusinessPort {
+        <<interface, Dist, Conc>>
+        +lockForSettlement(quote: CheckoutQuote): void
+        +fulfil(event: PaymentSucceeded): PaymentBusinessPort.Outcome
+    }
+    class GroupDeal {
+        <<aggregate root, Pers>>
+        -targetSize: int
+        -currentSize: int
+        -status: DealStatus
+        +joinPaid(payment, alreadyMember, now): PaidAdmission
+    }
+    class PaidGroupDealRepository {
+        <<interface, repository, Pers, Conc>>
+        +lockDeal(dealId: UUID): Optional~GroupDeal~
+    }
+    class PaidGroupDealMapper {
+        <<interface, mapper, Pers, Conc>>
+        +updateDeal(deal, expectedSize, expectedStatus): int
+    }
+    class PaidGroupDealRepositoryImpl {
+        <<adapter, Pers>>
+    }
+    class CheckoutPaymentRepositoryImpl {
+        <<adapter, Pers>>
+    }
+%% at StripeWebhookController 0,1
+%% at PaymentAppService 0,2
+%% at StripePaymentAppService 1,1
+%% at StripeCheckoutService 2,1
+%% at OrderFulfilmentAdapter 3,1
+%% at PaidGroupDealService 4,1
+%% at CheckoutPayment 0,3
+%% at CheckoutPaymentRepository 1,2
+%% at PaymentBusinessPort 2,2
+%% at GroupDeal 3,2
+%% at PaidGroupDealRepository 4,2
+%% at PaidGroupDealMapper 3,3
+%% at PaidGroupDealRepositoryImpl 4,3
+%% at CheckoutPaymentRepositoryImpl 1,3
+    StripeWebhookController "1" --> "1" PaymentAppService
+    StripePaymentAppService ..|> PaymentAppService
+    StripePaymentAppService "1" --> "0..1" StripeCheckoutService
+%% mside StripePaymentAppService StripeCheckoutService left right
+    StripeCheckoutService "1" --> "1" CheckoutPaymentRepository
+%% mside StripeCheckoutService CheckoutPaymentRepository left left
+    StripeCheckoutService "1" --> "1" PaymentBusinessPort
+    OrderFulfilmentAdapter ..|> PaymentBusinessPort
+    OrderFulfilmentAdapter "1" --> "1" PaidGroupDealService
+    PaidGroupDealService "1" --> "1" PaidGroupDealRepository
+    PaidGroupDealService ..> GroupDeal
+    PaidGroupDealRepository ..> GroupDeal
+    CheckoutPaymentRepository ..> CheckoutPayment
+    PaidGroupDealRepositoryImpl ..|> PaidGroupDealRepository
+    PaidGroupDealRepositoryImpl "1" --> "1" PaidGroupDealMapper
+    CheckoutPaymentRepositoryImpl ..|> CheckoutPaymentRepository

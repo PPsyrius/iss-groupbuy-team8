@@ -1,0 +1,57 @@
+{
+  "at": "2026-11-11T10:25:11.441256+00:00",
+  "planExit": 2,
+  "sha256": "7cca6e1ab5b89bbbbe4e5e51eb276ebcd360daf4dd33d6d82d97111cb2d0e8f5",
+  "changes": [
+    {
+      "address": "aws_appautoscaling_policy.commerce_requests[0]",
+      "actions": [
+        "update"
+      ]
+    },
+    {
+      "address": "aws_lb.this",
+      "actions": [
+        "update"
+      ]
+    },
+    {
+      "address": "aws_s3_bucket.r3_alb_logs",
+      "actions": [
+        "create"
+      ]
+    },
+    {
+      "address": "aws_s3_bucket_ownership_controls.r3_alb_logs",
+      "actions": [
+        "create"
+      ]
+    },
+    {
+      "address": "aws_s3_bucket_policy.r3_alb_logs",
+      "actions": [
+        "create"
+      ]
+    },
+    {
+      "address": "aws_s3_bucket_public_access_block.r3_alb_logs",
+      "actions": [
+        "create"
+      ]
+    },
+    {
+      "address": "aws_s3_bucket_server_side_encryption_configuration.r3_alb_logs",
+      "actions": [
+        "create"
+      ]
+    },
+    {
+      "address": "module.client_service[\"commerce-svc\"].aws_lb_target_group.this",
+      "actions": [
+        "update"
+      ]
+    }
+  ],
+  "review": "pass",
+  "loadStarted": false
+}

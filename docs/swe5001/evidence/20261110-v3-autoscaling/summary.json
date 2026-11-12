@@ -1,0 +1,585 @@
+{
+  "schema": 1,
+  "context": {
+    "baseUrl": "https://d3lvq02o2e7tcn.cloudfront.net",
+    "mode": "v3",
+    "topology": "distributed",
+    "knee": 200,
+    "remote": true,
+    "stageSeconds": 60,
+    "generator": {
+      "preAllocatedVUs": 1000,
+      "maxVUs": 1000
+    },
+    "evidenceKind": "aws-preflight-required",
+    "expectedImageDigest": "sha256:c8ba2a7a09115a0d459f648d3ea57faf13709975a0c1e960d7f385372cd351d9",
+    "testSha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1",
+    "imageSha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1",
+    "runLabel": "20261110-v3-194543"
+  },
+  "preflight": {
+    "schema": 1,
+    "account": "402178232802",
+    "region": "ap-southeast-1",
+    "cluster": "blocbuy-swe5001",
+    "collectedAt": "2026-11-09T19:44:31.273164Z",
+    "toolingSha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1",
+    "mode": "v3",
+    "baseUrl": "https://d3lvq02o2e7tcn.cloudfront.net",
+    "services": {
+      "services": [
+        {
+          "serviceName": "commerce-svc",
+          "status": "ACTIVE",
+          "desiredCount": 1,
+          "runningCount": 1,
+          "pendingCount": 0,
+          "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32",
+          "deployments": [
+            {
+              "rolloutState": "COMPLETED"
+            }
+          ],
+          "loadBalancers": [
+            {
+              "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+              "containerName": "commerce-svc",
+              "containerPort": 8589
+            }
+          ]
+        }
+      ],
+      "failures": []
+    },
+    "tasks": {
+      "tasks": [
+        {
+          "taskArn": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/c8eeffffb8504ba3b4c0bc782f8ebadf",
+          "taskDefinitionArn": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32",
+          "lastStatus": "RUNNING",
+          "desiredStatus": "RUNNING",
+          "availabilityZone": "ap-southeast-1b",
+          "containers": [
+            {
+              "name": "commerce-svc",
+              "imageDigest": "sha256:c8ba2a7a09115a0d459f648d3ea57faf13709975a0c1e960d7f385372cd351d9"
+            },
+            {
+              "name": "ecs-service-connect-2RqbBN",
+              "imageDigest": null
+            }
+          ]
+        }
+      ],
+      "failures": []
+    },
+    "targets": {
+      "ScalableTargets": [
+        {
+          "ServiceNamespace": "ecs",
+          "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+          "ScalableDimension": "ecs:service:DesiredCount",
+          "MinCapacity": 1,
+          "MaxCapacity": 6,
+          "RoleARN": "arn:aws:iam::402178232802:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService",
+          "CreationTime": "2026-11-09T17:39:35.591000+00:00",
+          "SuspendedState": {
+            "DynamicScalingInSuspended": false,
+            "DynamicScalingOutSuspended": false,
+            "ScheduledScalingSuspended": false
+          },
+          "ScalableTargetARN": "arn:aws:application-autoscaling:ap-southeast-1:402178232802:scalable-target/0ec5abd087886f6246ec83566c0b97889a53"
+        }
+      ]
+    },
+    "policies": {
+      "ScalingPolicies": [
+        {
+          "PolicyARN": "arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:abd08788-6f62-46ec-8356-6c0b97889a53:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-requests-per-target",
+          "PolicyName": "blocbuy-swe5001-commerce-requests-per-target",
+          "ServiceNamespace": "ecs",
+          "ResourceId": "service/blocbuy-swe5001/commerce-svc",
+          "ScalableDimension": "ecs:service:DesiredCount",
+          "PolicyType": "TargetTrackingScaling",
+          "TargetTrackingScalingPolicyConfiguration": {
+            "TargetValue": 12000,
+            "PredefinedMetricSpecification": {
+              "PredefinedMetricType": "ALBRequestCountPerTarget",
+              "ResourceLabel": "app/blocbuy-swe5001/1035f33091ca9c6a/targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3"
+            },
+            "ScaleOutCooldown": 60,
+            "ScaleInCooldown": 180,
+            "DisableScaleIn": false
+          },
+          "Alarms": [
+            {
+              "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-e46b6c17-e12d-4297-be3e-5282c4b120fa",
+              "AlarmARN": "arn:aws:cloudwatch:ap-southeast-1:402178232802:alarm:TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-e46b6c17-e12d-4297-be3e-5282c4b120fa"
+            },
+            {
+              "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmLow-506e63a6-6549-4df7-a24e-b83a49edf677",
+              "AlarmARN": "arn:aws:cloudwatch:ap-southeast-1:402178232802:alarm:TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmLow-506e63a6-6549-4df7-a24e-b83a49edf677"
+            }
+          ],
+          "CreationTime": "2026-11-09T17:39:36.361000+00:00"
+        }
+      ]
+    },
+    "routing": {
+      "edge": {
+        "id": "E3N39GHVFV6CT3",
+        "domainName": "d3lvq02o2e7tcn.cloudfront.net",
+        "status": "Deployed",
+        "enabled": true,
+        "behaviors": [
+          {
+            "pathPattern": "/api/*",
+            "targetOriginId": "alb-runtime",
+            "functions": 0,
+            "lambdas": 0,
+            "cachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+          }
+        ],
+        "origins": [
+          {
+            "id": "s3-spa",
+            "domainName": "blocbuy-swe5001-spa-402178232802.s3.ap-southeast-1.amazonaws.com",
+            "path": "",
+            "protocolPolicy": null,
+            "httpPort": null,
+            "httpsPort": null
+          },
+          {
+            "id": "alb-runtime",
+            "domainName": "blocbuy-swe5001-2122046892.ap-southeast-1.elb.amazonaws.com",
+            "path": "",
+            "protocolPolicy": "http-only",
+            "httpPort": 80,
+            "httpsPort": 443
+          }
+        ]
+      },
+      "targetGroups": [
+        {
+          "arn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+          "loadBalancerArns": [
+            "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:loadbalancer/app/blocbuy-swe5001/1035f33091ca9c6a"
+          ],
+          "port": 8589,
+          "protocol": "HTTP"
+        }
+      ],
+      "loadBalancers": [
+        {
+          "arn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:loadbalancer/app/blocbuy-swe5001/1035f33091ca9c6a",
+          "dnsName": "blocbuy-swe5001-2122046892.ap-southeast-1.elb.amazonaws.com",
+          "type": "application",
+          "state": "active"
+        }
+      ],
+      "listeners": [
+        {
+          "arn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:listener/app/blocbuy-swe5001/1035f33091ca9c6a/2a72494f26c24985",
+          "loadBalancerArn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:loadbalancer/app/blocbuy-swe5001/1035f33091ca9c6a",
+          "port": 80,
+          "protocol": "HTTP"
+        }
+      ],
+      "rulesListenerArn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:listener/app/blocbuy-swe5001/1035f33091ca9c6a/2a72494f26c24985",
+      "rules": [
+        {
+          "priority": "5",
+          "isDefault": false,
+          "actions": [
+            {
+              "type": "fixed-response",
+              "targetGroupArn": null,
+              "forwardGroups": null
+            }
+          ],
+          "hasTransforms": false,
+          "conditionFields": [
+            "path-pattern"
+          ],
+          "pathPatterns": [
+            "/internal/*",
+            "/api/internal/*"
+          ],
+          "hasPathRegex": false,
+          "originHeaderMatches": false
+        },
+        {
+          "priority": "10",
+          "isDefault": false,
+          "actions": [
+            {
+              "type": "forward",
+              "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-identity-svc/1e85a4561b4957f7",
+              "forwardGroups": [
+                {
+                  "arn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-identity-svc/1e85a4561b4957f7",
+                  "weight": 1
+                }
+              ]
+            }
+          ],
+          "hasTransforms": false,
+          "conditionFields": [
+            "http-header",
+            "path-pattern"
+          ],
+          "pathPatterns": [
+            "/api/v1/users/*",
+            "/api/v1/auth/*"
+          ],
+          "hasPathRegex": false,
+          "originHeaderMatches": true
+        },
+        {
+          "priority": "20",
+          "isDefault": false,
+          "actions": [
+            {
+              "type": "forward",
+              "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-notification-svc/87290f36b7c01cee",
+              "forwardGroups": [
+                {
+                  "arn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-notification-svc/87290f36b7c01cee",
+                  "weight": 1
+                }
+              ]
+            }
+          ],
+          "hasTransforms": false,
+          "conditionFields": [
+            "path-pattern",
+            "http-header"
+          ],
+          "pathPatterns": [
+            "/api/v1/notifications*"
+          ],
+          "hasPathRegex": false,
+          "originHeaderMatches": true
+        },
+        {
+          "priority": "30",
+          "isDefault": false,
+          "actions": [
+            {
+              "type": "forward",
+              "targetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+              "forwardGroups": [
+                {
+                  "arn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3",
+                  "weight": 1
+                }
+              ]
+            }
+          ],
+          "hasTransforms": false,
+          "conditionFields": [
+            "http-header",
+            "path-pattern"
+          ],
+          "pathPatterns": [
+            "/api/*"
+          ],
+          "hasPathRegex": false,
+          "originHeaderMatches": true
+        },
+        {
+          "priority": "default",
+          "isDefault": true,
+          "actions": [
+            {
+              "type": "fixed-response",
+              "targetGroupArn": null,
+              "forwardGroups": null
+            }
+          ],
+          "hasTransforms": false,
+          "conditionFields": [],
+          "pathPatterns": [],
+          "hasPathRegex": false,
+          "originHeaderMatches": false
+        }
+      ]
+    },
+    "collector": {
+      "state": "uncommitted-operator-helper",
+      "sha256": "b7ad2480dee30c54907333339342cdce53b155ca52750321ee5547e44b5e18d0",
+      "driverSourceSha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1"
+    }
+  },
+  "finishedAt": "2026-11-09T20:15:46.605Z",
+  "summary": {
+    "options": {
+      "summaryTrendStats": [
+        "avg",
+        "min",
+        "med",
+        "max",
+        "p(95)",
+        "p(99)"
+      ],
+      "summaryTimeUnit": "",
+      "noColor": false
+    },
+    "state": {
+      "isStdOutTTY": false,
+      "isStdErrTTY": false,
+      "testRunDurationMs": 1801470.762897
+    },
+    "metrics": {
+      "http_req_sending": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "avg": 0.047977193095435175,
+          "min": -3.519656,
+          "med": 0.04322,
+          "max": 5.919322,
+          "p(95)": 0.078331,
+          "p(99)": 0.11844776000000001
+        }
+      },
+      "http_req_connecting": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "avg": 0.029378643504887537,
+          "min": 0,
+          "med": 0,
+          "max": 7099.740913,
+          "p(95)": 0,
+          "p(99)": 0
+        }
+      },
+      "http_req_blocked": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "avg": 0.033187377939018624,
+          "min": 0,
+          "med": 0.000222,
+          "max": 4118.817491,
+          "p(95)": 0.000304,
+          "p(99)": 0.000369
+        }
+      },
+      "http_req_duration{expected_response:true}": {
+        "values": {
+          "min": 6.15681,
+          "med": 14.531948,
+          "max": 9995.014211,
+          "p(95)": 3888.8585820999997,
+          "p(99)": 4984.853865659999,
+          "avg": 812.2803341423903
+        },
+        "type": "trend",
+        "contains": "time"
+      },
+      "checks": {
+        "values": {
+          "passes": 621401,
+          "fails": 15423,
+          "rate": 0.9757813775862719
+        },
+        "type": "rate",
+        "contains": "default"
+      },
+      "http_req_waiting": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "avg": 1013.9039115357971,
+          "min": 0,
+          "med": 14.64952,
+          "max": 10012.040664,
+          "p(95)": 4187.3698423999995,
+          "p(99)": 10000.153809039999
+        }
+      },
+      "http_req_receiving": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "max": 9964.3929,
+          "p(95)": 0.2837041999999997,
+          "p(99)": 1.2257207200000002,
+          "avg": 1.6095416062089427,
+          "min": 0,
+          "med": 0.043054
+        }
+      },
+      "vus_max": {
+        "type": "gauge",
+        "contains": "default",
+        "values": {
+          "value": 1000,
+          "min": 1000,
+          "max": 1000
+        }
+      },
+      "iteration_duration": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "p(95)": 4190.72835035,
+          "p(99)": 10000.636973769999,
+          "avg": 1015.8827668800627,
+          "min": 7.244892,
+          "med": 15.015609000000001,
+          "max": 10013.378595
+        }
+      },
+      "http_req_tls_handshaking": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "avg": 0.014323463405174102,
+          "min": 0,
+          "med": 0,
+          "max": 98.043983,
+          "p(95)": 0,
+          "p(99)": 0
+        }
+      },
+      "dropped_iterations": {
+        "type": "counter",
+        "contains": "default",
+        "values": {
+          "count": 89175,
+          "rate": 49.501219690401726
+        },
+        "thresholds": {
+          "count==0": {
+            "ok": false
+          }
+        }
+      },
+      "vus": {
+        "type": "gauge",
+        "contains": "default",
+        "values": {
+          "min": 0,
+          "max": 1000,
+          "value": 0
+        }
+      },
+      "data_sent": {
+        "type": "counter",
+        "contains": "data",
+        "values": {
+          "rate": 19332.088933819243,
+          "count": 34826193
+        }
+      },
+      "browse_latency": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "p(95)": 4191,
+          "p(99)": 10000,
+          "avg": 1015.7689691343292,
+          "min": 6,
+          "med": 15,
+          "max": 10013
+        },
+        "thresholds": {
+          "p(95)<800": {
+            "ok": false
+          }
+        }
+      },
+      "http_reqs": {
+        "contains": "default",
+        "values": {
+          "count": 636825,
+          "rate": 353.5028228689664
+        },
+        "type": "counter"
+      },
+      "http_req_failed": {
+        "type": "rate",
+        "contains": "default",
+        "values": {
+          "fails": 621402,
+          "rate": 0.024218584383464845,
+          "passes": 15423
+        }
+      },
+      "data_received": {
+        "type": "counter",
+        "contains": "data",
+        "values": {
+          "count": 2273662805,
+          "rate": 1262114.7408152511
+        }
+      },
+      "browse_requests": {
+        "type": "counter",
+        "contains": "default",
+        "values": {
+          "count": 636824,
+          "rate": 353.50226776697946
+        }
+      },
+      "iterations": {
+        "type": "counter",
+        "contains": "default",
+        "values": {
+          "count": 636824,
+          "rate": 353.50226776697946
+        }
+      },
+      "http_req_duration": {
+        "type": "trend",
+        "contains": "time",
+        "values": {
+          "p(95)": 4190.3713652,
+          "p(99)": 10000.20246524,
+          "avg": 1015.5614303350874,
+          "min": 0,
+          "med": 14.794724,
+          "max": 10012.07825
+        }
+      },
+      "browse_errors": {
+        "values": {
+          "rate": 0.024218622413728127,
+          "passes": 15423,
+          "fails": 621401
+        },
+        "thresholds": {
+          "rate<0.01": {
+            "ok": false
+          }
+        },
+        "type": "rate",
+        "contains": "default"
+      }
+    },
+    "setup_data": {
+      "ids": [
+        "a0000000-0000-7000-8000-000000000010",
+        "a0000000-0000-7000-8000-000000000009",
+        "a0000000-0000-7000-8000-000000000008",
+        "a0000000-0000-7000-8000-000000000007",
+        "a0000000-0000-7000-8000-000000000006",
+        "a0000000-0000-7000-8000-000000000005",
+        "a0000000-0000-7000-8000-000000000004",
+        "a0000000-0000-7000-8000-000000000003",
+        "a0000000-0000-7000-8000-000000000002",
+        "a0000000-0000-7000-8000-000000000001"
+      ]
+    },
+    "root_group": {
+      "name": "",
+      "path": "",
+      "id": "d41d8cd98f00b204e9800998ecf8427e",
+      "groups": [],
+      "checks": []
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "files": [
+    {
+      "sha256": "96414bea1b1c7b8d93da4dde73ce99045cafcb23ff9633473c670adc7905cfa0",
+      "path": "postrun/outcome.json",
+      "bytes": 928
+    },
+    {
+      "sha256": "179f400916f187a04bdecdff4a061f98ddb91eb1ef3f184a9796550aacd74d87",
+      "path": "postrun/network-review.json",
+      "bytes": 1694
+    },
+    {
+      "sha256": "1f0ffba972832d69a42e2115695b2218d1a0af8351b2b34566c5cb29712915cd",
+      "path": "postrun/network-final-state.json",
+      "bytes": 282
+    },
+    {
+      "sha256": "66a7661fff19f241c309b91c398df11436858b5445228d39bb833d8e9ea8f5a3",
+      "path": "load/raw-audit.json",
+      "bytes": 1324
+    },
+    {
+      "sha256": "9124846d4b6bd711616fd91a1ffcee76d29d55ac02ae1324310482eda4db5487",
+      "path": "load/observer-result.json",
+      "bytes": 905
+    },
+    {
+      "sha256": "95e7d3dd6d0cb134778924cbbddcc2a3d1b962a37e624699c5e12d8ae4ec5996",
+      "path": "load/acceptance-precheck-refusal.json",
+      "bytes": 343
+    },
+    {
+      "sha256": "7286be59326e0f7d700a86204adc2c47f19ffc02109998d9aeaecf9c9f183e66",
+      "path": "load/independent-floor-restoration.json",
+      "bytes": 2840
+    },
+    {
+      "sha256": "d53b8f58765ffbfa1edd217b0ed4a294ad2d9ef0591485964c7c0b01897c0585",
+      "path": "supplemental/result.json",
+      "bytes": 753
+    },
+    {
+      "sha256": "4eeb7a22fc3d5ec9f1957cda0dc9edd631e9949fe8d9b00c98c70090c159fbfd",
+      "path": "evidence-manifest.json",
+      "bytes": 23948
+    },
+    {
+      "sha256": "92934fb7b9d3f2db9afd6cd6142a186dcc17c960f72066cc48990837059b9910",
+      "path": "original-archive-verification.json",
+      "bytes": 6103
+    },
+    {
+      "sha256": "1fcd9c87dd0e3798f6c7a567591d389d3b627681477d46cf111e9d0e5a212690",
+      "path": "alb-delivery-after.json",
+      "bytes": 13793
+    }
+  ],
+  "scope": "Allowlisted outcome and hash metadata only; no private raw plans/access logs/application payloads/credentials",
+  "campaignUnchanged": true,
+  "at": "2026-11-11T11:32:32.2431965+00:00"
+}

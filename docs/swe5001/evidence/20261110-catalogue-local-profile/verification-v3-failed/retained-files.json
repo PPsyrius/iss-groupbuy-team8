@@ -1,0 +1,11 @@
+{
+  "kind": "preserved-v3-verification-failures",
+  "files": [
+    {
+      "path": "failures.json",
+      "bytes": 1735,
+      "sha256": "09834bffb77f98105cc5e8b116bc5a9c6170079080d59cdb3cb8d37e5988c5d1"
+    }
+  ],
+  "limits": "No raw logs, properties, exception bodies or credentials copied; no gate relaxed."
+}

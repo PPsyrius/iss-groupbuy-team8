@@ -1,0 +1,15 @@
+# Reply draft for #789
+
+Add the PR URL when opened. [Evidence package](https://github.com/PPsyrius/iss-groupbuy-team8/tree/docs/swe5001-must-fix-evidence/docs/swe5001/evidence/20261112-issue-789) contains the detailed answers, cleanup projection, effort estimate and peer patch.
+
+1. **Cleanup:** nightly down ran late and failed on S3 reads. Separate operator recovery removed 127 runtime resources by 12:13:20 SGT on 12 November; generator retirement completed by 12:06:02. Empty managed state, normal env-status exit 0 and 51 direct checks passed. All 71 log objects were archive/readback-verified before source deletion; 13 R4 objects and one encrypted disk snapshot remain private and chargeable. Foundation/edge/SWE5006 were not targeted; no GitHub-role expansion.
+2. **Post-R4 events:** attribute the ECS readback to Lim, read 12 November: six → two tasks at 23:09–23:21 SGT and a Spot interruption at 22:53:48 after the workload. This is not a controlled recovery drill or repaired canonical monitoring coverage.
+3. **Launch:** a hard observer-window refusal was followed by a separate owner-directed wrapper running the unchanged workload. It did not invoke the original runner's main/guard validation; the refusal remains retained.
+4. **Clients:** Pan confirmed the same laptop/Docker Desktop for 10 November and r1–r3; R4 used AWS. Identical network conditions and a shared cause of all prior failures are not established.
+5. **Gates:** 500/800 ms appear in Liu Jin's plan dated 29 September, merged in #259 at `fe4e9803`; Pan implemented later tooling. They cover baseline calibration and scale-out service outside grace, not the broader NFR-15 scenario. Personal rationale for the exact values was not recorded.
+6. **Tag:** `v0.2.0-swe5001-submission` marks the 4 November snapshot at `9f3a9cfe`, not an ECS release. [Run 41763057192](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/41763057192) failed at Trivy image scan; build/contract/Sonar/boot checks passed, publication/deployment skipped. Signature trust and specific CVEs were not independently established.
+7. **Effort:** reconstructed 48 h / 6 h = 8 additional pd, 19.5 total; sensitivity 6.2–10.7 additional pd. This is not measured time or a newly confirmed team agreement; other members' estimates were not assessed.
+8. **Owners:** Pan accepts AISS-19/20; AISS-07 is Liu Jin (design), Pan (verification). Ownership is not security remediation.
+9. **Review:** reviewed the supplied 140-page styled PDF and built a corrected 141-page peer fixture against `02c7b822`. The 23-file patch covers all ten review points, including the actual R4 chart, metrics, policy provenance, image-assurance limits and UML. Original PDF/R4 bytes are preserved; full Appendix acceptance is outside this review.
+
+The PR covers the evidence restoration, three-audit corrections and #789 follow-up. Its body uses `Closes #789`; peer integration, rebuilt-result review and applicable CI are pre-merge checks. Pin new evidence citations before submission.

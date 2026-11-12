@@ -1,0 +1,54 @@
+{
+  "preparedAtUtc": "2026-11-11T07:42:15.613284+00:00",
+  "repositoryChanged": false,
+  "additionalRepositoryWorkspaceCreated": false,
+  "overlays": {
+    "infra/swe5001/runtime/ecs.tf": {
+      "overlay": "runtime-ecs.tf",
+      "originalSha256": "77b790dd2c51d3be9fd25dced34657b6dbc0f92f2be02eab25f8572f9a864079",
+      "overlaySha256": "707de4d629ad15880132ada95c844b1fa4ed016ec14342975b93d09b28129084"
+    },
+    "infra/swe5001/runtime/data-stores.tf": {
+      "overlay": "runtime-data-stores.tf",
+      "originalSha256": "10cde9c97c4365f340e6573aa178dbe22515e5db263cff2eea32115608761bcd",
+      "overlaySha256": "b656dd4dcdcdc51b3536296178a4f0fa3ec79fd9170351675eb2fe69cbc97bf6"
+    },
+    "infra/swe5001/runtime/observability.tf": {
+      "overlay": "runtime-observability.tf",
+      "originalSha256": "29c26900f484ba8a3a0902b8de3c87f31edd1492779bfcfdeebdedf45e522ee4",
+      "overlaySha256": "3cfdd0bd9a8a210edb930804950539a9f674eeb8b569d9d904c2e5329049edd6"
+    },
+    "infra/swe5001/modules/network/fck-nat.tf": {
+      "overlay": "network-fck-nat.tf",
+      "originalSha256": "d8d24a943500415445190e3a87a2d9ad95e2a14fbed14a77e08cf8214fe66a5f",
+      "overlaySha256": "dfb22180484ef8cbb1da4fa9e3ef41ab827754dcf324c858539d43b29726c5f3"
+    },
+    "infra/swe5001/modules/rds-postgres/main.tf": {
+      "overlay": "rds-main.tf",
+      "originalSha256": "cc806f11ea6feeab92ef975034200b967ba749bd5249dc74b7123dcc167f115e",
+      "overlaySha256": "2274897ba63759e61a59b2e8a8512d3e02fe02288b669b6bfafdd621a1c983d8"
+    },
+    "infra/swe5001/modules/ecs-service/main.tf": {
+      "overlay": "ecs-service-main-v2.tf",
+      "originalSha256": "7d455565296d9cfde9a3d571d06502b49a844ca2370605673abc868f3d7cda55",
+      "overlaySha256": "09c796757e190719db27cd1fc5a040cecfd4611cd262e18c3dc79a14637ce631"
+    }
+  },
+  "plannedCommerceCpuUnits": 1024,
+  "plannedCommerceMemoryMiB": 2048,
+  "plannedDatabaseClass": "db.t4g.small",
+  "plannedCpuThresholdPercent": 50,
+  "newGuardInitiallyDisabled": true,
+  "plannedNormalCommerceFloor": 2,
+  "preservation": "Keep actual Fargate base two and Spot base zero; normalize NAT heredoc CRLF to the deployed LF bytes; preserve rds.force_ssl=1 with its observed pending-reboot apply-method representation. No ignore_changes or refresh suppression introduced.",
+  "lifecycle": "Create new task-definition revisions before deregistering old ones; no service replacement is allowed. Preserve rollback source data; a deactivated old ARN alone is not a guaranteed rollback path.",
+  "sourceProvenance": "Unchanged committed driver/source plus explicitly hashed local Terraform overlays. This is not a merged repository change.",
+  "applied": false,
+  "containerPreservationCorrection": {
+    "at": "2026-11-11T07:49:04.399950+00:00",
+    "fields": "Explicit hostPort=containerPort, protocol=tcp and empty systemControls/volumesFrom, matching the current registered definition exactly.",
+    "imagesEnvironmentAndSecretReferencesChanged": false,
+    "strictContainerEqualityCheckRetained": true,
+    "earlierPlanPreserved": "combined-review.tfplan and its blocked review remain unchanged; use distinct v2 plan/receipt names"
+  }
+}

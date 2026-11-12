@@ -4,4 +4,21 @@
 # Frozen delivery inputs are byte-hashed; preserve their bytes on Windows checkouts.
 /docs/ci/evidence/dora-metrics-*-inputs.json text eol=lf
 # Appendix A diagrams: the generator writes LF and --check compares bytes; keep Windows checkouts in LF.
-/docs/swe5001/report/diagrams/appendix-a/** text eol=lf
+/docs/swe5001/report/diagrams/uml/** text eol=lf
+# The R4 exporter checks its generated SVG byte-for-byte.
+/docs/swe5001/report/diagrams/performance-v3-timeline.svg text eol=lf
+# Frozen diagnostic artefacts carry byte hashes; do not normalise their line endings.
+/docs/swe5001/evidence/20261110-catalogue-local-profile/** -text
+/docs/swe5001/evidence/20261110-v3-autoscaling/** -text
+# These retained packages contain both LF and CRLF hash-bound originals.
+/docs/swe5001/evidence/20261111-load-reruns/** -text
+/docs/swe5001/evidence/20261111-v3-investigation/** -text
+/docs/swe5001/evidence/20261111-v3-r3/** -text
+# R4 projections and CSVs are byte-hashed; preserve the portable package exactly.
+/docs/swe5001/evidence/20261111-v3-r4/** -text
+# Audit follow-up inventories and final-byte receipts must retain their reviewed bytes.
+/docs/swe5001/evidence/20261112-audit-followup/** -text
+# Later factual handoffs retain their own byte-specific verification scope.
+/docs/swe5001/evidence/20261112-issue-789/** -text
+# The supplied-PDF review and its byte-specific metadata are dated evidence.
+/docs/swe5001/evidence/20261112-peer-style-pdf-review/** -text

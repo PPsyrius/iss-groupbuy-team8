@@ -1,0 +1,59 @@
+%% frame: BlocBuy logical deployment, no products
+deploymentDiagram
+    device Client["Buyer's device"] {
+        environment Browser["Web browser"] {
+            artifact Spa["SPA bundle"]
+        }
+    }
+    node Edge["Content delivery edge"]
+    node Store["Static file store"]
+    node Idp["Identity provider"] <<external system>>
+    node Pay["Payment provider"] <<external system>>
+    node Lb["Load balancer"]
+    rectangle "Application tier" as AppTier {
+        node IdN["Application server"] {
+            environment IdJ["Language runtime"] {
+                artifact IdA["identity-svc\nservice package"]
+            }
+        }
+        node CoN["Application server"] {
+            environment CoJ["Language runtime"] {
+                artifact CoA["commerce-svc\nservice package"]
+            }
+        }
+        node NtN["Application server"] {
+            environment NtJ["Language runtime"] {
+                artifact NtA["notification-svc\nservice package"]
+            }
+        }
+    }
+    rectangle "Data and messaging tier" {
+        node Cache["Cache and session store"] : key-value, shared
+        node Db["Database server"] : one database per service
+        node Broker["Message broker"] : topic, queues, DLQs
+    }
+    Client -- Edge : HTTPS
+    Edge -- Store : HTTPS
+    Client -- Idp : HTTPS
+    Edge -- Lb : HTTP
+    Lb -- AppTier : HTTP
+    CoN -- IdN : HTTP
+    IdN -- Idp : HTTPS
+    CoN -- Pay : HTTPS
+    Pay -- Edge : HTTPS
+    AppTier -- Cache : all services, TLS
+    AppTier -- Db : all services, SQL over TLS
+    CoN -- Broker : HTTPS
+    NtN -- Broker : HTTPS
+%% at Spa 0,0
+%% at Edge 1,0
+%% at Store 2,0
+%% at Idp 0,1
+%% at Lb 1,1
+%% at Pay 2,1
+%% at IdA 0,2
+%% at CoA 1,2
+%% at NtA 2,2
+%% at Cache 0,3
+%% at Db 1,3
+%% at Broker 2,3

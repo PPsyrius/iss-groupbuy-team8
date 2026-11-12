@@ -1,0 +1,19 @@
+{
+  "syntheticCaptureContractTests": {
+    "passed": 2,
+    "failed": 0,
+    "scope": "One-cycle mocked AWS/HTTP; outputs retained under control-tests; no real request performed"
+  },
+  "at": "2026-11-11T10:34:38.8089909+00:00",
+  "offlineControlTests": {
+    "passed": 6,
+    "log": "offline-controls-tests.log",
+    "failed": 0
+  },
+  "verificationLevel": "Focused regression and synthetic control tests, not a full application build or performance acceptance",
+  "nodeRegressionTests": {
+    "passed": 53,
+    "log": "policy-binding-tests-v2.log",
+    "failed": 0
+  }
+}

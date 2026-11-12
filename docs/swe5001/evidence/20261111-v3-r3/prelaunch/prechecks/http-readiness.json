@@ -1,0 +1,25 @@
+{
+  "at": "2026-11-11T10:31:35.234397+00:00",
+  "requests": [
+    {
+      "at": "2026-11-11T10:31:35.138968+00:00",
+      "kind": "health",
+      "status": 200,
+      "seconds": 0.07594971400249051
+    },
+    {
+      "at": "2026-11-11T10:31:35.187095+00:00",
+      "kind": "catalogue",
+      "status": 200,
+      "seconds": 0.04812230800234829
+    },
+    {
+      "at": "2026-11-11T10:31:35.230841+00:00",
+      "kind": "catalogue",
+      "status": 200,
+      "seconds": 0.0437413200015726
+    }
+  ],
+  "applicationPayloadRetained": false,
+  "scope": "Three sequential readiness reads; no retries or capacity claim"
+}

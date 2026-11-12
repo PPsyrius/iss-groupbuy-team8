@@ -1,0 +1,14 @@
+{
+  "sourceSha256": "696c7d2c131676c2e69e8432d5e13776d569bdb3834450b621a7be3d0e1f1057",
+  "samples": 47,
+  "bytes": 58656,
+  "first": "2026-11-11T04:33:27Z",
+  "last": "2026-11-11T04:45:41Z",
+  "maxGapSeconds": 17.0,
+  "bracketsWholeLoad": true,
+  "stableOneTaskAndRevisionAtEverySample": true,
+  "eventsDuringLoad": [],
+  "observerExitCode": 255,
+  "disposition": "Retained observations cover the entire V2 workload and a post-run sample; later collector failure remains retained.",
+  "limits": "Sampled service observations do not establish saturation, distributed capacity, fault recovery or host/network headroom."
+}

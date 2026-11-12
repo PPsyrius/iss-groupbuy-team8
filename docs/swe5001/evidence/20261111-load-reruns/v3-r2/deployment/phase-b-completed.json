@@ -1,0 +1,33 @@
+{
+  "at": "2026-11-11T08:10:06.214988+00:00",
+  "services": [
+    {
+      "service": "identity-svc",
+      "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-identity-svc:20",
+      "cpu": "512",
+      "memory": "1024",
+      "desired": 1,
+      "running": 1
+    },
+    {
+      "service": "commerce-svc",
+      "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:37",
+      "cpu": "1024",
+      "memory": "2048",
+      "desired": 2,
+      "running": 2
+    },
+    {
+      "service": "notification-svc",
+      "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-notification-svc:34",
+      "cpu": "512",
+      "memory": "1024",
+      "desired": 1,
+      "running": 1
+    }
+  ],
+  "guardThreshold": 50,
+  "guardActionsEnabled": false,
+  "httpLoadStarted": false,
+  "teardownPerformed": false
+}

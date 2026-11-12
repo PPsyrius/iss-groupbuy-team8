@@ -1,0 +1,27 @@
+%% frame: PurchaseIntent lifecycle (UC3, UC4 and Pay upfront)
+stateDiagram-v2
+    state "Issued" as Issued
+    state "Lapsed" as Lapsed
+    state "Fulfilled" as Fulfilled
+    state "Expired" as Expired
+    state "Closed" as Closed
+    Issued : no fulfilled payment, expiredAt null
+    Lapsed : a deadline passed, not swept
+    Fulfilled : fulfilledPaymentId set
+    Expired : expiredAt set
+    Closed : paid, owed back; out of the sweep
+    [*] --> Issued : «create» issue / save(intent)
+    Issued --> Issued : paid [base refuses] / refund
+    Issued --> Fulfilled : fulfilBy(paymentId) [accepted] / markFulfilled
+    Fulfilled --> Fulfilled : paid [other payment] / refund
+    Issued --> Lapsed : when(now ≥ a deadline)
+    Lapsed --> Lapsed : paid / refund, BUSINESS_EXPIRED
+    Lapsed --> Expired : expireOne [unpaid] / markExpired
+    Lapsed --> Closed : expireOne [paid] / excludePaidFromExpiry
+    Expired --> Expired : paid / refund, BUSINESS_EXPIRED
+%% at __start0 1,0
+%% at Issued 1,1
+%% at Fulfilled 2,2
+%% at Lapsed 0,2
+%% at Expired 0,3
+%% at Closed 1,3

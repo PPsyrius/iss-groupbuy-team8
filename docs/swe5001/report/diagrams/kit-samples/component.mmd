@@ -1,0 +1,56 @@
+%% frame: BlocBuy services by tier
+componentDiagram
+    actor Buyer
+    rectangle "Presentation tier" {
+        component Web["BlocBuy web app"] :::platform
+    }
+    package "Application tier" {
+        interface IAuth["Auth API"]
+        interface IDeals["Group deal API"]
+        component Identity["identity-svc"] <<subsystem>> {
+            component Iam["Identity and access"] <<bounded context>> : generic subdomain
+        }
+        component Commerce["commerce-svc"] <<subsystem>> {
+            component Deals["Group buying"] <<bounded context>> :::business : core subdomain
+            component Pay["Payments"] <<bounded context>> : supporting subdomain
+        }
+        component Notify["notification-svc"] <<subsystem>> {
+            component Ntf["Notifications"] <<bounded context>> : generic subdomain
+        }
+    }
+    rectangle "Integration tier" {
+        component Events["Integration events"] <<topic>>
+    }
+    zone "Third party" {
+        component Stripe["Stripe"] <<external system>>
+    }
+    rectangle "Data tier" {
+        database Cache["Redis 8"]
+        database Db["PostgreSQL 18"]
+    }
+    Buyer --> Web : HTTPS
+    Identity -() IAuth
+    Commerce -() IDeals
+    Web -( IAuth : REST
+    Web -( IDeals : REST
+    Deals "D" ..> "U" Iam : Conformist
+    Deals -- Pay : Partnership
+    Pay "D" ..> "U" Stripe : ACL
+    Ntf "D" ..> "U" Deals : OHS/PL
+    Pay ..> Events : publishes
+    Events ..> Notify : delivers
+    Iam ..> Cache : sessions
+    Ntf ..> Db : JDBC
+%% route ortho
+%% at Buyer 1,0
+%% at Web 1,1
+%% at IAuth 0,2
+%% at IDeals 1,2
+%% at Iam 0,3
+%% at Deals 1,3
+%% at Pay 2,3
+%% at Stripe 3,3
+%% at Ntf 1,4
+%% at Events 2,5
+%% at Cache 0,6
+%% at Db 1,6

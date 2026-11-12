@@ -1,0 +1,27 @@
+{
+  "at": "2026-11-11T11:17:13.828297Z",
+  "samples": 157,
+  "timerCompleted": true,
+  "maximumSampleGapSeconds": 41.878859,
+  "errors": [
+    {
+      "at": "2026-11-11T10:49:24.659692Z",
+      "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+    },
+    {
+      "at": "2026-11-11T10:52:46.743595Z",
+      "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+    },
+    {
+      "at": "2026-11-11T10:59:01.564508Z",
+      "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+    },
+    {
+      "at": "2026-11-11T11:00:34.573905Z",
+      "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+    }
+  ],
+  "collectionComplete": false,
+  "restorationPerformed": false,
+  "restoration": "Explicit short load-capture.py restore command required; no observer mutation or teardown"
+}

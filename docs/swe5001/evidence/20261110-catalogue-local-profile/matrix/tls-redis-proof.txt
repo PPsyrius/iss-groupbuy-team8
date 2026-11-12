@@ -1,0 +1,11 @@
+Can't use SSL_get_servername
+CONNECTION ESTABLISHED
+Protocol version: TLSv1.3
+Ciphersuite: TLS_AES_256_GCM_SHA384
+Peer certificate: CN = toxiproxy
+Hash used: SHA256
+Signature type: RSA-PSS
+Verification: OK
+Verified peername: toxiproxy
+Server Temp Key: X25519, 253 bits
+DONE

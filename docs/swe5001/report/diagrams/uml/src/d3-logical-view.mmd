@@ -1,0 +1,74 @@
+%% frame: BlocBuy logical view: request interfaces by tier
+componentDiagram
+    actor Admin["Platform administrator"] <<producer>>
+    actor Leader["Team leader"] <<producer>>
+    actor Member["Member"] <<consumer>>
+    package "Presentation tier" {
+        component Web["Web client"] :::platform
+        component Edge["CDN and edge gateway"]
+    }
+    interface IAuth["AuthAPI"]
+    interface ICom["CommerceAPI"]
+    interface INtf["NotificationAPI"]
+    package "Application tier" {
+        component IdSvc["identity-svc"] <<subsystem>>
+        interface IUser["UserAppService"]
+        component CoSvc["commerce-svc"] <<subsystem>> {
+            component Catalog["Catalog"]
+            component GroupBuy["GroupBuy"] :::business
+            component Order["Order"] :::business
+            component Payment["Payment"]
+        }
+        component NtSvc["notification-svc"] <<subsystem>>
+        interface IOidc["OIDC sign-in"]
+        interface IEv["PublishedEvents V1"]
+        interface IHook["PaymentWebhookAPI"]
+    }
+    interface IPay["CheckoutAPI"]
+    component IdP["Identity provider"] <<external system>>
+    component PayP["Payment provider"] <<external system>>
+    Admin --> Web
+    Leader --> Web
+    Member --> Web
+    Web ..> Edge : sync
+    Edge -( IAuth : sync
+    Edge -( ICom : sync
+    Edge -( INtf : sync
+    IdSvc -() IAuth
+    CoSvc -() ICom
+    NtSvc -() INtf
+    IdSvc -() IUser
+    CoSvc -( IUser : sync
+    IdSvc -( IOidc : sync
+    IdP -() IOidc
+    CoSvc -() IEv : async
+    Payment -() IHook
+    PayP -( IHook : sync
+    Payment -( IPay : sync
+    PayP -() IPay
+%% route ortho
+%% route Edge IAuth hv
+%% route Edge INtf hv
+%% route Admin Web vh
+%% route Member Web vh
+%% at Admin 1,0
+%% at Leader 2,0
+%% at Member 3,0
+%% at Web 2,1
+%% at Edge 2,2
+%% at IAuth 0,3
+%% at ICom 2,3
+%% at INtf 4,3
+%% at IdSvc 0,4
+%% at IUser 1,4
+%% at Catalog 2,4
+%% at GroupBuy 3,4
+%% at Order 2,5
+%% at Payment 3,5
+%% at NtSvc 4,4
+%% at IOidc 0,5
+%% at IEv 1,5
+%% at IHook 4,5
+%% at IPay 3,6
+%% at IdP 0,6
+%% at PayP 4,6

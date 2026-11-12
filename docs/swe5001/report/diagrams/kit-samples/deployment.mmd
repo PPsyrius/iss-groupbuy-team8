@@ -1,0 +1,37 @@
+%% frame: BlocBuy on AWS, SWE5001 environment
+deploymentDiagram
+    device Browser["Buyer's browser"]
+    node Cdn["Amazon CloudFront"] <<node>>
+    node Region["AWS ap-southeast-1"] <<region>> {
+        node Vpc["BlocBuy VPC"] <<vpc>> {
+            zone "Public subnets" {
+                node Alb["Application Load Balancer"] <<node>>
+            }
+            zone "Private subnets" {
+                environment IdTask["identity-svc task"] {
+                    artifact IdImg["identity-svc image"]
+                }
+                environment CoTask["commerce-svc task"] {
+                    artifact CoImg["commerce-svc image"]
+                }
+            }
+            zone "Data subnets" {
+                node Rds["Amazon RDS for PostgreSQL"] <<execution environment>>
+            }
+        }
+        node Bus["Amazon SNS and SQS"] <<node>> :::messaging
+    }
+    Browser -- Cdn : HTTPS
+    Cdn -- Alb : HTTP 80 /api/*
+    Alb -- IdTask : HTTP 8081
+    Alb -- CoTask : HTTP 8082
+    CoTask -- Rds : JDBC over TLS
+    CoTask -- Bus : HTTPS (AWS SDK)
+%% route ortho
+%% at Browser 1,0
+%% at Cdn 0,1
+%% at Alb 1,2
+%% at IdImg 0,3
+%% at CoImg 1,3
+%% at Rds 1,4
+%% at Bus 2,3

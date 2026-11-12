@@ -1,0 +1,90 @@
+{
+  "reviewDate": "2026-11-11",
+  "reviewType": "read-only Windows/network diagnostic review",
+  "r4Gate": "HOLD: root-cause component remains unisolated; no deadline override",
+  "finding": "Load-dependent shared host/access-path degradation; not uniquely localized to Wi-Fi driver, RF, AP, gateway or WAN",
+  "rankedHypotheses": [
+    {"rank": 1, "hypothesis": "Shared-path queueing or packet-processing pressure", "confidence": "strong failure-class evidence; component unknown"},
+    {"rank": 2, "hypothesis": "TCP connection creation, concurrent flow, NAT/session or SYN-handling pressure", "confidence": "plausible; no synchronized SYN/session counts"},
+    {"rank": 3, "hypothesis": "RF airtime/retries/interference or client/AP compatibility", "confidence": "plausible; no AP/radio retry counters"},
+    {"rank": 4, "hypothesis": "Windows driver/offload, host scheduling or shared filter-path interaction", "confidence": "possible; no causal offload or DPC evidence"},
+    {"rank": 5, "hypothesis": "WAN/upstream queueing or policing", "confidence": "not excluded; gateway ICMP behavior makes WAN-only account less compelling"}
+  ],
+  "keyNewFindings": {
+    "gatewayExperimentFailedStsControls": 8,
+    "gatewayExperimentFailedStsDnsCompletedButNoTcpCompletion": 8,
+    "failedStsMaximumDnsSeconds": 0.019261,
+    "eventWindowStartUtc": "2026-11-11T10:35:00Z",
+    "eventWindowEndUtc": "2026-11-11T11:56:14.1261991Z",
+    "systemRecordsRead": 30,
+    "selectedSystemWlanRecords": 4,
+    "wlanOperationalRecords": 15,
+    "observedStopStartSequences": "11:30:22-26 and 11:33:47-51 UTC align with MIMO apply and restore",
+    "selectedNetwtwNdisTcpipEvents": 0,
+    "packetCoalescing": "Enabled; documented broadcast/multicast mechanism, not TCP RSC; weak next trial",
+    "tcpRsc": "Enabled and operational for IPv4/IPv6",
+    "mimoRestored": "Auto SMPS, value 0, verified in active-adapter query",
+    "bandwidthControlCaveat": "Clean sequential transfer about 17.1 Mbps; static workload roughly 28-36 Mbps; not matched",
+    "gatewayIcmpCaveat": "Observed timeouts do not uniquely prove packet-loss location"
+  },
+  "weakenedAsSoleCauses": [
+    "commerce/backend processing",
+    "Docker-container-only path fault",
+    "HTTP/2-only behavior",
+    "bridge MTU issue remediated by the existing MTU-1400 test",
+    "Auto-SMPS-only behavior",
+    "DNS-only failure"
+  ],
+  "notRuledOut": [
+    "driver/AP/radio silent queueing or retries",
+    "shared Docker-induced host-path pressure",
+    "router NAT/SYN/session or CPU pressure",
+    "bandwidth/airtime contention or competing traffic",
+    "transient host port exhaustion during load",
+    "host filter/offload/scheduling interaction",
+    "upstream queueing"
+  ],
+  "nextDiscriminators": [
+    {"test": "Use existing delegated diagnostic with synchronized timing and state counters", "permission": "coordinate with parent; do not overlap additional traffic"},
+    {"test": "AP retries/airtime/channel events and gateway CPU/queues/NAT/SYN counters", "permission": "router/AP read access required"},
+    {"test": "Second-device wired and wireless controls during one approved diagnostic", "permission": "device-owner approval and traffic coordination; not executed"},
+    {"test": "Independent byte-rate, established-pool-size and connection-churn comparisons", "permission": "fresh static-traffic authorization; not executed"},
+    {"test": "Metadata-only TCP/DPC/drop capture if needed", "permission": "usually administrator/security-owner approval; privacy plan; not executed"},
+    {"test": "Single-setting per-adapter RSC A/B only if indicated", "permission": "administrator plus explicit approval and exact rollback; not executed"}
+  ],
+  "actions": {
+    "intentionalConnectivityOrLoadProbes": 0,
+    "hostConfigurationChanges": 0,
+    "elevationAttempts": 0,
+    "installs": 0,
+    "containerOrNetworkCreation": 0,
+    "awsChanges": 0,
+    "gitCommandsOrChanges": 0,
+    "repositoryWrites": 0,
+    "sealedCampaignWrites": 0,
+    "existingDiagnosisWritesOutsideNewOutputDirectory": 0,
+    "eventCollectorExecutions": 1,
+    "metadataCollectorsExecuted": ["collect-passive-metadata.ps1", "collect-targeted-metadata.ps1"],
+    "artifactOnlyProjectionExecuted": "summarize-existing.ps1"
+  },
+  "collectionException": {
+    "command": "netstat -s -p tcp",
+    "unexpectedBehavior": "Included endpoint listing and may have performed reverse-name lookups; listing transiently displayed in a file read",
+    "remediation": "Endpoint listing removed from new JSON receipt; future collector changed to -n and numeric-counter allowlist; not rerun",
+    "strictZeroIncidentalTrafficClaim": false,
+    "fullPrivacyOutputComplianceClaim": false,
+    "noIntentionalLoadOrConnectivityProbeClaim": true
+  },
+  "limitations": [
+    "No load-synchronized counter interval, AP/router telemetry or packet-drop localization",
+    "Event absence does not rule out silent driver/RF/offload defects",
+    "Initial broad query included absent adapters; targeted active-adapter receipt is authoritative for current adapter settings",
+    "RSS query unavailable, not evidence of fault",
+    "Cumulative TCP statistics cannot be attributed to R3",
+    "No application verification, acceptance pass or R4 execution",
+    "Source hashes identify read artifacts, not sealed-campaign completeness verification",
+    "Repository evidence updates intentionally deferred under output-only temporary-directory scope"
+  ],
+  "report": "REVIEW.md",
+  "supportingReceipts": ["windows-network-event-metadata.json", "passive-host-metadata.json", "targeted-passive-metadata.json", "existing-artifact-projection.json", "source-hashes.json"]
+}

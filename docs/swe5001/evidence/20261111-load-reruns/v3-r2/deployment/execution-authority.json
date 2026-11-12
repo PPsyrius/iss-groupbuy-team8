@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "date": "2026-11-11",
+  "operatorClarification": "My approval is get everything done alongside the new round of V3. Just no tear down yet.",
+  "supersedes": "Earlier plan-first-only execution restriction, not the scope/safety gates or preservation requirements.",
+  "approvedConditionalScope": [
+    "Reviewed same-image commerce task increase from 512 CPU units/1024 MiB to 1024 CPU units/2048 MiB",
+    "Reviewed in-place RDS change from db.t4g.micro to db.t4g.small, retaining PostgreSQL 18.3, TLS, storage, credentials, database contents and network controls",
+    "Positive-only 50% CPU guard, one 60-second period, add one task, 60-second cooldown, staged disabled until deployment/ownership/readback gates pass",
+    "Necessary controlled service/scaling pause/resume and normal-floor/one-task baseline preparation, with snapshots and independent recovery receipts",
+    "Exactly one fresh unchanged V3 campaign after all new sizing, SQL budget, readiness, credential/observer and preflight gates pass"
+  ],
+  "constraints": "No unrelated ECS service replacement, NAT change, SSL weakening, credential rotation, pool/timeout/health/workload/acceptance relaxation, automatic HTTP retry, Git commit/push/PR/promotion or unreviewed drift application. Preserve every prior failed result and plan.",
+  "teardownAuthorised": false,
+  "nightlySafetyNetChangeAuthorised": false,
+  "failurePolicy": "Stop and preserve receipts when a gate fails or effects are ambiguous. Do not broaden the apply or retry the workload automatically.",
+  "newDatabaseLimitGate": "Measure actual post-resize SQL limits; require full replacement-envelope budget with unchanged owner/operator/headroom allowances before any load. Do not assume the new class's effective max_connections.",
+  "workloadSource": "Unchanged committed k6 driver at b911ea63795c5ddb7db1f7918f7f7af03a2745ff; record local overlay/helper hashes separately."
+}

@@ -1,0 +1,100 @@
+%% frame: Promotion into prod and the SWE5001 environment
+activityDiagram
+    lane "swe5001-release-gate.yml" {
+        start S
+        action PR["Open the promotion\nPR, dev into prod"]
+        action PS["promotion-source:\nhead is our dev"]
+        fork FG
+        action SI["service-images: build\nand scan, no export"]
+        action IP["infra-plan:\ninfra-swe5001 checks"]
+        join J
+        decision G
+        flowend EB
+        action Merge["Merge commit\ninto prod"]
+        flowend E1
+    }
+    lane "swe5001-deploy.yml (push to prod)" {
+        start S3
+        action Img["images: build,\nscan, export"]
+        decision D1
+        action Pub["publish: push to ECR,\ncandidate digests"]
+        decision D2
+        merge F2
+        action Up["up: env-up.sh\n--candidate,\nsmoke suite"]
+        decision Ok
+        merge F3
+        action Rel["release: publish SPA,\npromote the digests"]
+        merge M
+        action Down["down (always):\nenv-down.sh,\nenv-status.sh"]
+        action Ev["evidence (always):\nmerge stage receipts"]
+        flowend E
+    }
+    lane "swe5001-env.yml" {
+        start S2
+        action Cron["Nightly at 23:00 SGT\n(cron 0 15 * * *)"]
+        action Disp["dispatch (on dev):\nstart down on prod"]
+        action Sess["session (on prod):\nenv-down.sh"]
+        flowend E2
+    }
+    S --> PR
+    PR --> PS
+    PS --> FG
+    FG --> SI
+    FG --> IP
+    SI --> J
+    IP --> J
+    J --> G
+    G --> Merge : [3 checks green, approved]
+    G --> EB : [else]
+    Merge --> E1
+    S3 --> Img
+    Img --> D1
+    D1 --> Pub : [passed]
+    D1 --> F2 : [failed]
+    Pub --> D2
+    D2 --> Up : [passed]
+    D2 --> F2 : [failed]
+    F2 --> F3
+    Up --> Ok
+    Ok --> Rel : [passed]
+    Ok --> F3 : [failed]
+    F3 --> M
+    Rel --> M
+    M --> Down
+    Down --> Ev
+    Ev --> E
+    S2 --> Cron
+    Cron --> Disp
+    Disp --> Sess
+    Sess --> E2
+%% at S 0,0
+%% at PR 0,1
+%% at PS 0,2
+%% at FG 0,3
+%% at SI 0,4
+%% at IP 1,4
+%% at J 0,5
+%% at G 0,6
+%% at EB 1,6
+%% at Merge 0,7
+%% at E1 0,8
+%% at S3 3,0
+%% at Img 2,0
+%% at D1 2,1
+%% at Pub 2,2
+%% at D2 2,3
+%% at F2 3,3
+%% at Up 2,4
+%% at Ok 2,5
+%% at F3 3,5
+%% at Rel 2,6
+%% at M 3,6
+%% at Down 3,7
+%% at Ev 3,8
+%% at E 2,8
+%% at S2 4,0
+%% at Cron 4,1
+%% at Disp 4,2
+%% at Sess 4,3
+%% at E2 4,4
+%% route D1 F2 hv

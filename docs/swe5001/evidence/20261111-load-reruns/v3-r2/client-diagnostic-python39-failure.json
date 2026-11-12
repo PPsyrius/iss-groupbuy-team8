@@ -1,0 +1,10 @@
+{
+  "errorType": "ValueError",
+  "rawDataChanged": false,
+  "exit": 1,
+  "next": "Run the exact frozen diagnostic source on already-tested Python 3.13; preserve this tooling failure and original raw bytes.",
+  "command": "Frozen diagnose-v3-client.py on Python 3.9.25, offline",
+  "at": "2026-11-11T08:47:21.2901263+00:00",
+  "workloadRetried": false,
+  "reason": "Python 3.9 fromisoformat rejected nanosecond k6 timestamps"
+}

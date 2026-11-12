@@ -33,6 +33,10 @@ export function configure(env) {
   const preAllocatedVUs = integer(env.PREALLOCATED_VUS || 100, 'PREALLOCATED_VUS', 1, 1000);
   const maxVUs = integer(env.MAX_VUS || 400, 'MAX_VUS', preAllocatedVUs, 1000);
   const knee = mode === 'v3' ? integer(env.KNEE_RPS, 'KNEE_RPS', 1, 200) : null;
+  if (mode !== 'v3' && env.SCALING_REQUESTS_PER_TARGET !== undefined) throw new Error('SCALING_REQUESTS_PER_TARGET belongs only to V3');
+  // Policy headroom is independent of the unchanged offered-load candidate.
+  const scalingRequestsPerTarget = mode === 'v3'
+    ? integer(env.SCALING_REQUESTS_PER_TARGET === undefined ? knee * 60 : env.SCALING_REQUESTS_PER_TARGET, 'SCALING_REQUESTS_PER_TARGET', 1, 12000) : null;
   if (env.CONFIRM_CPU_HEADROOM !== undefined && !['true', 'false'].includes(env.CONFIRM_CPU_HEADROOM)) {
     throw new Error('CONFIRM_CPU_HEADROOM must explicitly be true or false');
   }
@@ -78,7 +82,7 @@ export function configure(env) {
     const expected = baselineRequestLimit(stageSeconds);
     thresholds.browse_requests = [`count>=${expected}`, `count<=${expected}`];
   }
-  return { baseUrl, mode, topology, knee, remote, stageSeconds,
+  return { baseUrl, mode, topology, knee, scalingRequestsPerTarget, remote, stageSeconds,
     generator: { preAllocatedVUs, maxVUs }, cpuHeadroom,
     evidenceKind: remote ? 'aws-preflight-required' : 'local-fixture', expectedImageDigest: env.EXPECTED_IMAGE_DIGEST || null,
     testSha: env.TEST_SHA, imageSha: env.IMAGE_SHA, runLabel: env.RUN_LABEL,
@@ -231,7 +235,7 @@ export function validatePreflight(snapshot, config, now = Date.now()) {
         policy.ResourceId !== resourceId || policy.PolicyType !== 'TargetTrackingScaling' ||
         tracking?.PredefinedMetricSpecification?.PredefinedMetricType !== 'ALBRequestCountPerTarget' ||
         tracking?.PredefinedMetricSpecification?.ResourceLabel !== routing.resourceLabel ||
-        tracking?.TargetValue !== config.knee * 60) throw new Error('V3 requires active 1..6 HTTP scaling at the calibrated target');
+        tracking?.TargetValue !== config.scalingRequestsPerTarget) throw new Error('V3 requires active 1..6 HTTP scaling at the explicitly bound target');
     const extra = policies.filter(p => p !== policy);
     if (!config.cpuHeadroom && extra.length) throw new Error('Additional scaling policy requires explicit CPU headroom confirmation');
     if (config.cpuHeadroom) {

@@ -1,0 +1,65 @@
+{
+  "at": "2026-11-11T08:13:53.740489+00:00",
+  "account": "402178232802",
+  "region": "ap-southeast-1",
+  "quotas": {
+    "onDemand": {
+      "quotaCode": "L-3032A538",
+      "name": "Fargate On-Demand vCPU resource count",
+      "appliedVcpus": 30.0
+    },
+    "spot": {
+      "quotaCode": "L-36FBB829",
+      "name": "Fargate Spot vCPU resource count",
+      "appliedVcpus": 30.0
+    }
+  },
+  "allRegionalEcsClusterCount": 1,
+  "tasks": [
+    {
+      "cluster": "blocbuy-swe5001",
+      "task": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/2dfc8eab7aa24311bfb9bdcdc3972d7c",
+      "status": "RUNNING",
+      "capacityProvider": "FARGATE",
+      "vcpus": 1.0
+    },
+    {
+      "cluster": "blocbuy-swe5001",
+      "task": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/396d209b7b534f66823b078c1cc94cf4",
+      "status": "RUNNING",
+      "capacityProvider": "FARGATE",
+      "vcpus": 0.5
+    },
+    {
+      "cluster": "blocbuy-swe5001",
+      "task": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/6d6b00a16ec14e1e84a6f3eb4f1861b6",
+      "status": "RUNNING",
+      "capacityProvider": "FARGATE",
+      "vcpus": 1.0
+    },
+    {
+      "cluster": "blocbuy-swe5001",
+      "task": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/811344963e1b41638397d979e22b9312",
+      "status": "RUNNING",
+      "capacityProvider": "FARGATE",
+      "vcpus": 0.5
+    }
+  ],
+  "observedUsageVcpus": {
+    "onDemand": 3.0,
+    "spot": 0
+  },
+  "allService200PercentEnvelopeVcpus": 17,
+  "conservativeRequiredVcpus": {
+    "onDemand": 20.0,
+    "spot": 17
+  },
+  "remainingVcpus": {
+    "onDemand": 10.0,
+    "spot": 13.0
+  },
+  "fits": true,
+  "method": "Applied regional quotas; all ECS clusters, desired-RUNNING Fargate tasks including pending/provisioning. Add full 17-vCPU envelope separately to both pools without subtracting existing SWE5001 usage.",
+  "limitations": "Point-in-time ECS accounting, not a capacity reservation or independent AWS-managed non-ECS usage guarantee; no concurrent deployment is permitted.",
+  "runtimeMutationPerformed": false
+}

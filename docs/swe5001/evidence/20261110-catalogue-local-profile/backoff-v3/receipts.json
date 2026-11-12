@@ -1,0 +1,440 @@
+{
+  "evidenceKind": "local-diagnostic-not-AWS-acceptance",
+  "startedAt": "2026-11-10T09:38:34.542Z",
+  "finishedAt": "2026-11-10T10:02:07.566Z",
+  "completed": true,
+  "conditions": {
+    "rate": 200,
+    "cpu": 0.5,
+    "memoryBytes": 1073741824,
+    "pool": 5,
+    "preAllocatedVUs": 1000,
+    "maxVUs": 1000,
+    "warmupSeconds": 120,
+    "notes": "ABBA baseline A / failure-backoff v3 A / v3 B / baseline B; fresh JVM/cache per arm, same synthetic database, default JVM/full logging. Identical flush/slow/outage/recovery on A arms only after a passing healthy 200-RPS control. Failed cold/control cases retained; no fault attribution on unhealthy controls. No concurrent build, scheduling, payment or cloud access. Only newly created comparison apps stopped after recordings; historical fixtures untouched."
+  },
+  "artifactHashes": {
+    "commerce-baseline.jar": "37c7c7332b5d40e5c940241e75a180d9cfb2b6df020663b233008e61ec7e2960",
+    "commerce-backoff-v3.jar": "0252c3ab81b9cc662b6a1e1cdb5e8044829180ca2ab36ef8fba701834cc9cc34"
+  },
+  "refusedFaultCases": null,
+  "problems": [],
+  "cases": [
+    {
+      "label": "backoff-base-a-warmup",
+      "app": "blocbuy-matrix2-backoff-base-a",
+      "startedAt": "2026-11-10T09:39:12.724Z",
+      "finishedAt": "2026-11-10T09:41:20.040Z",
+      "rate": 200,
+      "seconds": 120,
+      "exitCode": 99,
+      "result": {
+        "requests": 13498,
+        "errors": {
+          "rate": 0.73010816417247,
+          "passes": 9855,
+          "fails": 3643
+        },
+        "latency": {
+          "avg": 8832.679582160321,
+          "med": 10000,
+          "min": 56,
+          "max": 10059,
+          "p(95)": 10001,
+          "p(99)": 10004
+        },
+        "drops": 10503
+      }
+    },
+    {
+      "label": "backoff-base-a-control",
+      "app": "blocbuy-matrix2-backoff-base-a",
+      "startedAt": "2026-11-10T09:41:20.230Z",
+      "finishedAt": "2026-11-10T09:42:20.637Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "fails": 12001,
+          "rate": 0,
+          "passes": 0
+        },
+        "latency": {
+          "p(95)": 421,
+          "p(99)": 816,
+          "avg": 70.36905257895175,
+          "med": 3,
+          "min": 1,
+          "max": 1686
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "backoff-base-a-flush",
+      "app": "blocbuy-matrix2-backoff-base-a",
+      "startedAt": "2026-11-10T09:42:20.816Z",
+      "finishedAt": "2026-11-10T09:43:21.229Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 12001
+        },
+        "latency": {
+          "min": 1,
+          "max": 153,
+          "p(95)": 3,
+          "p(99)": 25,
+          "avg": 2.6060328305974503,
+          "med": 2
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "backoff-base-a-slow",
+      "app": "blocbuy-matrix2-backoff-base-a",
+      "startedAt": "2026-11-10T09:43:21.411Z",
+      "finishedAt": "2026-11-10T09:44:31.842Z",
+      "rate": 200,
+      "seconds": 70,
+      "exitCode": 99,
+      "result": {
+        "requests": 11984,
+        "errors": {
+          "rate": 0.12424899866488652,
+          "passes": 1489,
+          "fails": 10495
+        },
+        "latency": {
+          "avg": 2141.246745660881,
+          "med": 2,
+          "min": 1,
+          "max": 10002,
+          "p(95)": 10000,
+          "p(99)": 10001
+        },
+        "drops": 2017
+      }
+    },
+    {
+      "label": "backoff-base-a-down",
+      "app": "blocbuy-matrix2-backoff-base-a",
+      "startedAt": "2026-11-10T09:44:32.023Z",
+      "finishedAt": "2026-11-10T09:45:42.413Z",
+      "rate": 200,
+      "seconds": 70,
+      "exitCode": 99,
+      "result": {
+        "requests": 10771,
+        "errors": {
+          "rate": 0.24222449169065083,
+          "passes": 2609,
+          "fails": 8162
+        },
+        "latency": {
+          "p(95)": 10001,
+          "p(99)": 10001,
+          "avg": 3723.0304521400058,
+          "med": 1603,
+          "min": 1,
+          "max": 10011
+        },
+        "drops": 3230
+      }
+    },
+    {
+      "label": "backoff-base-a-recovery",
+      "app": "blocbuy-matrix2-backoff-base-a",
+      "startedAt": "2026-11-10T09:45:42.594Z",
+      "finishedAt": "2026-11-10T09:46:43.028Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "fails": 12001,
+          "rate": 0,
+          "passes": 0
+        },
+        "latency": {
+          "max": 58,
+          "p(95)": 3,
+          "p(99)": 4,
+          "avg": 2.0117490209149236,
+          "med": 2,
+          "min": 1
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "backoff-v3-a-warmup",
+      "app": "blocbuy-matrix2-backoff-v3-a",
+      "startedAt": "2026-11-10T09:47:16.361Z",
+      "finishedAt": "2026-11-10T09:49:21.917Z",
+      "rate": 200,
+      "seconds": 120,
+      "exitCode": 99,
+      "result": {
+        "requests": 15724,
+        "errors": {
+          "rate": 0.45331976596285933,
+          "passes": 7128,
+          "fails": 8596
+        },
+        "latency": {
+          "p(95)": 10001,
+          "p(99)": 10002,
+          "avg": 7405.388514372933,
+          "med": 7643.5,
+          "min": 436,
+          "max": 10022
+        },
+        "drops": 8277
+      }
+    },
+    {
+      "label": "backoff-v3-a-control",
+      "app": "blocbuy-matrix2-backoff-v3-a",
+      "startedAt": "2026-11-10T09:49:22.094Z",
+      "finishedAt": "2026-11-10T09:50:22.591Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 12001
+        },
+        "latency": {
+          "min": 1,
+          "max": 256,
+          "p(95)": 78,
+          "p(99)": 104,
+          "avg": 17.2783101408216,
+          "med": 2
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "backoff-v3-a-flush",
+      "app": "blocbuy-matrix2-backoff-v3-a",
+      "startedAt": "2026-11-10T09:50:22.762Z",
+      "finishedAt": "2026-11-10T09:51:23.159Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "fails": 12001,
+          "rate": 0,
+          "passes": 0
+        },
+        "latency": {
+          "avg": 2.4669610865761187,
+          "med": 2,
+          "min": 1,
+          "max": 228,
+          "p(95)": 3,
+          "p(99)": 6
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "backoff-v3-a-slow",
+      "app": "blocbuy-matrix2-backoff-v3-a",
+      "startedAt": "2026-11-10T09:51:23.333Z",
+      "finishedAt": "2026-11-10T09:52:33.738Z",
+      "rate": 200,
+      "seconds": 70,
+      "exitCode": 99,
+      "result": {
+        "requests": 14001,
+        "errors": {
+          "rate": 7.142346975216056e-05,
+          "passes": 1,
+          "fails": 14000
+        },
+        "latency": {
+          "p(95)": 2663,
+          "p(99)": 3550,
+          "avg": 328.58888650810655,
+          "med": 2,
+          "min": 1,
+          "max": 6183
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "backoff-v3-a-down",
+      "app": "blocbuy-matrix2-backoff-v3-a",
+      "startedAt": "2026-11-10T09:52:33.917Z",
+      "finishedAt": "2026-11-10T09:53:44.371Z",
+      "rate": 200,
+      "seconds": 70,
+      "exitCode": 99,
+      "result": {
+        "requests": 14001,
+        "errors": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 14001
+        },
+        "latency": {
+          "p(95)": 1804,
+          "p(99)": 3210,
+          "avg": 178.099135776016,
+          "med": 2,
+          "min": 1,
+          "max": 4246
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "backoff-v3-a-recovery",
+      "app": "blocbuy-matrix2-backoff-v3-a",
+      "startedAt": "2026-11-10T09:53:44.546Z",
+      "finishedAt": "2026-11-10T09:54:44.972Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 12001
+        },
+        "latency": {
+          "p(99)": 5,
+          "avg": 2.0324972918923425,
+          "med": 2,
+          "min": 1,
+          "max": 78,
+          "p(95)": 3
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "backoff-v3-b-warmup",
+      "app": "blocbuy-matrix2-backoff-v3-b",
+      "startedAt": "2026-11-10T09:55:18.025Z",
+      "finishedAt": "2026-11-10T09:57:24.273Z",
+      "rate": 200,
+      "seconds": 120,
+      "exitCode": 99,
+      "result": {
+        "requests": 15125,
+        "errors": {
+          "rate": 0.5310413223140495,
+          "passes": 8032,
+          "fails": 7093
+        },
+        "latency": {
+          "avg": 7790.809785123967,
+          "med": 9998,
+          "min": 937,
+          "max": 10016,
+          "p(95)": 10001,
+          "p(99)": 10002
+        },
+        "drops": 8876
+      }
+    },
+    {
+      "label": "backoff-v3-b-control",
+      "app": "blocbuy-matrix2-backoff-v3-b",
+      "startedAt": "2026-11-10T09:57:24.443Z",
+      "finishedAt": "2026-11-10T09:58:24.833Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 12001
+        },
+        "latency": {
+          "avg": 23.862678110157486,
+          "med": 2,
+          "min": 1,
+          "max": 986,
+          "p(95)": 90,
+          "p(99)": 325
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "backoff-base-b-warmup",
+      "app": "blocbuy-matrix2-backoff-base-b",
+      "startedAt": "2026-11-10T09:58:57.955Z",
+      "finishedAt": "2026-11-10T10:01:05.441Z",
+      "rate": 200,
+      "seconds": 120,
+      "exitCode": 99,
+      "result": {
+        "requests": 13809,
+        "errors": {
+          "rate": 0.643927873126222,
+          "passes": 8892,
+          "fails": 4917
+        },
+        "latency": {
+          "avg": 8644.67405315374,
+          "med": 10000,
+          "min": 740,
+          "max": 10014,
+          "p(95)": 10001,
+          "p(99)": 10002
+        },
+        "drops": 10192
+      }
+    },
+    {
+      "label": "backoff-base-b-control",
+      "app": "blocbuy-matrix2-backoff-base-b",
+      "startedAt": "2026-11-10T10:01:05.632Z",
+      "finishedAt": "2026-11-10T10:02:06.206Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 99,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0.001583201399883343,
+          "passes": 19,
+          "fails": 11982
+        },
+        "latency": {
+          "avg": 378.85609532538956,
+          "med": 31,
+          "min": 1,
+          "max": 3989,
+          "p(95)": 1469,
+          "p(99)": 2359
+        },
+        "drops": 0
+      }
+    }
+  ]
+}

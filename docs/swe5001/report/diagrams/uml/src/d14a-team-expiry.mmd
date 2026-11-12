@@ -1,0 +1,45 @@
+%% frame: Team expiry: one team expires, with its subscribers at commit (design)
+sequenceDiagram
+    participant Job as :TeamExpirySweepJob
+    participant Sw as :GroupDealExpirySweeper
+    participant Px as proxy : GroupDealExpiryService
+    participant Repo as :PaidGroupDealRepository
+    participant Deal as before : GroupDeal
+    participant OLS as :OrderLifecycleSubscriber
+    participant Ref as :TeamExpiryRefundSubscriber
+    participant RSvc as :TeamExpiryRefundService
+    participant Out as :IntegrationOutboxWriter
+
+    Note over Job,Deal: every PT1M, LeasedJobRunner.run takes the lease "team-expiry-sweep" (PT2M) and calls sweepOnce(leaseValid); if another server holds it, nothing runs
+    Job->>Sw: sweep(100, leaseValid)
+    Sw->>Repo: currentTime()
+    Repo-->>Sw: Instant now
+    Sw->>Repo: dueForExpiry(now, limit)
+    Repo-->>Sw: List of UUID
+    loop each dealId, while leaseValid
+        Sw->>Px: expireOne(dealId)
+        critical expireOne, REQUIRED, default isolation, 10 s
+            Px->>Repo: lockDeal(dealId) {lock 1}
+            Repo-->>Px: Optional of GroupDeal
+            Px->>Repo: currentTime()
+            Repo-->>Px: Instant now
+            Px->>Deal: expire(now)
+            break DEAL_CLOSED: already resolved
+                Deal-->>Px: BizException DEAL_CLOSED
+                Px-->>Sw: false
+            end
+            Deal-->>Px: after (EXPIRED)
+            Px->>Repo: expire(before, after, now)
+            Note over Px,Out: publishEvent(TeamExpired) on ApplicationEventPublisher only registers the event; at BEFORE_COMMIT the transaction owner calls each listener in @Order (10, 20, then lowest precedence): orders cancelled, one refund obligation per paid member, one TeamExpiredV1 row in sys_outbox
+            Px->>OLS: onTeamExpired(event)
+            OLS-->>Px: void
+            Px->>Ref: onTeamExpired(event)
+            Ref->>RSvc: recordExpiredTeam(dealId) {lock 3}
+            RSvc-->>Ref: void
+            Ref-->>Px: void
+            Px->>Out: onTeamExpired(event)
+            Out-->>Px: void
+        end
+        Px-->>Sw: true
+    end
+    Sw-->>Job: Result(due, expired, alreadyResolved, failed)

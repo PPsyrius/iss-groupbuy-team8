@@ -1,0 +1,19 @@
+{
+  "services": [
+    {
+      "name": "commerce-svc",
+      "status": "INACTIVE",
+      "desired": 0,
+      "running": 0,
+      "pending": 0,
+      "revision": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32",
+      "deployments": [
+        {
+          "state": "COMPLETED"
+        }
+      ],
+      "events": []
+    }
+  ],
+  "failures": []
+}

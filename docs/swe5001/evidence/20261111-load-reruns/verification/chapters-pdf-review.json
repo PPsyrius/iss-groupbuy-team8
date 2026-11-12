@@ -1,0 +1,33 @@
+{
+  "target": "Chapters 1\u20136 only, excluding cover/Appendix A",
+  "pages": 78,
+  "sectionPages": {
+    "new-results": [
+      54
+    ],
+    "guard-limits": [
+      54
+    ],
+    "fresh-network": [
+      60
+    ],
+    "operational-provenance": [
+      73
+    ]
+  },
+  "relativeUriCount": 0,
+  "pageBoundaryOverflows": [
+    {
+      "page": 27,
+      "text": "IntegrationOutboxWriter.onPaymentSucceede",
+      "box": [
+        444.486328125,
+        172.72933959960938,
+        596.88818359375,
+        178.92453002929688
+      ]
+    }
+  ],
+  "originalFailuresAndVariantResultsPresent": true,
+  "limitations": "Full main.typ build failed with 8-GiB OOM. Draft evidence URLs are local/pending publication and final pinning. Existing other-owner layout issues are not silently fixed."
+}

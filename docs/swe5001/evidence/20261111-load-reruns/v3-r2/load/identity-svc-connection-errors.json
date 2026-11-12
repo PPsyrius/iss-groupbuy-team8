@@ -1,0 +1,4 @@
+{
+  "matches": [],
+  "limit": "Matches per log event, not distinct requests/exceptions; message bodies are never retained"
+}

@@ -1,0 +1,16 @@
+{
+  "at": "2026-11-11T10:33:17.124249+00:00",
+  "results": [
+    {
+      "campaign": "v3-20261111-distributed-r1",
+      "filesVerified": 94,
+      "manifestSha256": "9b2828d2fabb3bd060f136d59a313423c83da6579b82397da3bdd437a876bb35"
+    },
+    {
+      "campaign": "v3-20261111-distributed-r2",
+      "filesVerified": 119,
+      "manifestSha256": "1e3357a769de64ec7c9225fd7e7ceaba34072a6443b70119be34a2388a297f71"
+    }
+  ],
+  "allOriginalBytesUnchanged": true
+}

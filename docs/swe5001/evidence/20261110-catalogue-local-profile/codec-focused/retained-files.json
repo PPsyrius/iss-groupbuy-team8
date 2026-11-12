@@ -1,0 +1,21 @@
+{
+  "kind": "codec-lifecycle-red-green-checkpoint",
+  "files": [
+    {
+      "path": "focused-summary.json",
+      "bytes": 2598,
+      "sha256": "761704c5ba2862893d1a8dc1f28f8cad4f43c9d3f908dc1c6e78a51fa93e7373"
+    },
+    {
+      "path": "run-codec-regression-v1.sh",
+      "bytes": 2505,
+      "sha256": "1989532deaf55ccd1ae944eb8d69c1ce5e7b0f5780c0fc904d2510e4b1761406"
+    },
+    {
+      "path": "run-codec-regression.sh",
+      "bytes": 2520,
+      "sha256": "a2add4a369be18959e6887726603f588238b98cbfb9a3f942c4d80e44a0a0e77"
+    }
+  ],
+  "limits": "Initial fixture error retained separately; no private test output/properties or bodies copied."
+}

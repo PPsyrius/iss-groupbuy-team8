@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "context": {
+    "baseUrl": "https://d3lvq02o2e7tcn.cloudfront.net",
+    "mode": "v2",
+    "topology": "monolith",
+    "knee": null,
+    "remote": true,
+    "stageSeconds": 60,
+    "generator": {
+      "preAllocatedVUs": 1000,
+      "maxVUs": 1000
+    },
+    "cpuHeadroom": null,
+    "evidenceKind": "aws-preflight-required",
+    "expectedImageDigest": "sha256:a0379552af144645dfef295681c76128d7bee0c1ddaa3be8dff3a6f03bd24b3e",
+    "testSha": "b911ea63795c5ddb7db1f7918f7f7af03a2745ff",
+    "imageSha": "3a893036d70d028b29ae13ebf820283571c1ae00",
+    "runLabel": "20261111-v2-monolith-r1"
+  },
+  "hasAwsPreflight": true,
+  "requiresOperatorReview": true,
+  "kneeRps": 200,
+  "requestsPerTargetPerMinute": 12000,
+  "saturationObserved": false,
+  "note": "Candidate derived from monolith browse capacity; distributed V3 must validate it. No automatic AWS/GitHub writes.",
+  "plateaus": [
+    {
+      "rps": 10,
+      "completed": 600,
+      "p95Ms": 112.04999999999995,
+      "errorRate": 0,
+      "passed": true
+    },
+    {
+      "rps": 20,
+      "completed": 1200,
+      "p95Ms": 36.049999999999955,
+      "errorRate": 0,
+      "passed": true
+    },
+    {
+      "rps": 40,
+      "completed": 2400,
+      "p95Ms": 27.049999999999727,
+      "errorRate": 0,
+      "passed": true
+    },
+    {
+      "rps": 60,
+      "completed": 3600,
+      "p95Ms": 52,
+      "errorRate": 0,
+      "passed": true
+    },
+    {
+      "rps": 80,
+      "completed": 4800,
+      "p95Ms": 18,
+      "errorRate": 0,
+      "passed": true
+    },
+    {
+      "rps": 100,
+      "completed": 6000,
+      "p95Ms": 17,
+      "errorRate": 0,
+      "passed": true
+    },
+    {
+      "rps": 125,
+      "completed": 7500,
+      "p95Ms": 17,
+      "errorRate": 0,
+      "passed": true
+    },
+    {
+      "rps": 150,
+      "completed": 9000,
+      "p95Ms": 19,
+      "errorRate": 0,
+      "passed": true
+    },
+    {
+      "rps": 175,
+      "completed": 10500,
+      "p95Ms": 47,
+      "errorRate": 0,
+      "passed": true
+    },
+    {
+      "rps": 200,
+      "completed": 12000,
+      "p95Ms": 18,
+      "errorRate": 0,
+      "passed": true
+    }
+  ]
+}

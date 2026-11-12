@@ -1,0 +1,27 @@
+{
+  "label": "jobs-with-expiry",
+  "app": "blocbuy-matrix2-jobs",
+  "rate": 200,
+  "seconds": 150,
+  "port": 8589,
+  "startedAt": "2026-11-10T06:05:01.398Z",
+  "actions": [],
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-tls:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

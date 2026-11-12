@@ -1,0 +1,55 @@
+{
+  "at": "2026-11-11T11:12:13.484969+00:00",
+  "networkControlSamplesInLoad": 119,
+  "firstSample": "2026-11-11T10:39:45.667105+00:00",
+  "lastSample": "2026-11-11T11:09:16.920241+00:00",
+  "networkGroups": [
+    {
+      "target": "dedicated-static",
+      "probes": 119,
+      "transportErrors": 4,
+      "statusCodes": [
+        0,
+        200
+      ],
+      "p95TotalMs": 1709.769,
+      "maximumTotalMs": 5001.554999999999
+    },
+    {
+      "target": "regional-sts",
+      "probes": 119,
+      "transportErrors": 13,
+      "statusCodes": [
+        0,
+        302
+      ],
+      "p95TotalMs": 1737.1760000000002,
+      "maximumTotalMs": 3232.724
+    }
+  ],
+  "generatorNamespaceTcpCounterDelta": {
+    "ActiveOpens": 605,
+    "AttemptFails": 0,
+    "EstabResets": 0,
+    "InSegs": 4840354,
+    "OutSegs": 4094144,
+    "RetransSegs": 58,
+    "InErrs": 0,
+    "OutRsts": 249
+  },
+  "hostWideIpv4TcpCounterDelta": {
+    "Reset Connections": 41,
+    "Segments Retransmitted": 144500,
+    "Passive Opens": 144,
+    "Current Connections": 854,
+    "Segments Sent": 2471227,
+    "Failed Connection Attempts": 252,
+    "Segments Received": 4731424,
+    "Active Opens": 3151
+  },
+  "limits": [
+    "Controls are two low-rate non-commerce transfers per 15 seconds, not the application workload. They use the generator network namespace, and its TCP counters include both k6 and controls.",
+    "Host TCP counters cover all Windows processes, not exclusively Docker, the ISP or this destination.",
+    "Differences bracket control samples, not exact execution endpoints. Clean controls do not exclude application-specific or earlier network stalls; errors do not locate a unique network cause."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "source": "Operator-provided successful cap-pools.py --resume output",
+  "recordedAtUtc": "2026-11-09T19:41:42Z",
+  "account": "402178232802",
+  "region": "ap-southeast-1",
+  "cluster": "blocbuy-swe5001",
+  "recoveryDirectory": "/home/cloudshell-user/swe5001-pool-cap-x58it_59",
+  "services": [
+    { "name": "identity-svc", "revision": 18, "poolOverride": 5, "healthy": true, "releasedDigestUnchanged": true, "repeatedRollout": false },
+    { "name": "commerce-svc", "revision": 32, "poolOverride": 5, "healthy": true, "releasedDigestUnchanged": true },
+    { "name": "notification-svc", "revision": 30, "poolOverride": 5, "healthy": true, "releasedDigestUnchanged": true }
+  ],
+  "countsChanged": false,
+  "scalingSettingsChanged": false,
+  "terraformStateReconciled": false,
+  "loadStartedAtThisCheckpoint": false,
+  "teardownPerformed": false
+}

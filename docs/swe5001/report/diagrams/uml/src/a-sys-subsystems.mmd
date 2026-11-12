@@ -1,0 +1,74 @@
+%% frame: BlocBuy subsystems: three services by COLA layer (backend ADR 0008)
+componentDiagram
+    component IdSvc["identity-svc"] <<subsystem>> {
+        package "adapter" as IdAdp {
+            note IdAdpN["AuthController,\nLoginSessionPublisher,\nInternalUserController (internal)"]
+        }
+        package "application" as IdApp {
+            note IdAppN["UserAppServiceImpl,\nLoginAuthorizationService,\nOAuthLoginAppServiceImpl"]
+        }
+        package "domain" as IdDom {
+            note IdDomN["aggregates: User,\nOAuthIdentity\nports: UserRepository,\nOAuthIdentityGateway,\nLoginSnapshotGateway"]
+        }
+        package "infrastructure" as IdInf {
+            note IdInfN["UserRepositoryImpl,\nSysUserMapper,\nGoogleOAuthGateway,\nStpInterfaceImpl,\nRedisLoginSnapshotGateway"]
+        }
+    }
+    interface IUser["UserAppService"]
+    component CoSvc["commerce-svc"] <<subsystem>> {
+        package "adapter" as CoAdp {
+            note CoAdpN["controllers: Product,\nAdminListing, GroupDeal,\nOrder, StripeCheckout,\nStripeWebhook"]
+        }
+        package "application" as CoApp {
+            note CoAppN["StripeCheckoutService,\nOrderFulfilmentAdapter,\nPaidGroupDealService,\nOutboxRelayService, subscribers\nport: UserAppService"]
+        }
+        package "domain" as CoDom {
+            note CoDomN["aggregates: GroupDeal,\nPurchaseIntent, Order,\nCheckoutPayment, Product\nports: PaymentIntentPort,\nPaymentBusinessPort,\nOutboxEventTransport, repositories"]
+        }
+        package "infrastructure" as CoInf {
+            note CoInfN["repositories, mappers,\nStripeCheckoutGateway,\nIntegrationOutboxWriter,\nSnsOutboxEventTransport,\nSessionStpInterface"]
+        }
+    }
+    interface IEv["PublishedEvents V1"]
+    component NoSvc["notification-svc"] <<subsystem>> {
+        package "adapter" as NoAdp {
+            note NoAdpN["NotificationController"]
+        }
+        package "application" as NoApp {
+            note NoAppN["NotificationAppService,\nNotificationEventAppService"]
+        }
+        package "domain" as NoDom {
+            note NoDomN["aggregate: Notification\nports:\nNotificationEventHandler,\nNotificationRepository,\nConsumedMessageRepository"]
+        }
+        package "infrastructure" as NoInf {
+            note NoInfN["IntegrationEventDecoder,\nNotificationRepositoryImpl,\nSessionStpInterface,\nSqsNotificationEventConsumer"]
+        }
+    }
+    IdAdp ..> IdApp
+    IdApp ..> IdDom
+    IdInf ..> IdDom
+    CoAdp ..> CoApp
+    CoApp ..> CoDom
+    CoInf ..> CoDom
+    NoAdp ..> NoApp
+    NoApp ..> NoDom
+    NoInf ..> NoDom
+    IdAdp -() IUser
+    CoSvc -( IUser : «HTTP»
+    CoInf -() IEv : «async»
+    NoInf -( IEv
+%% route ortho
+%% at IdAdpN 0,0
+%% at IdAppN 0,1
+%% at IdDomN 0,2
+%% at IdInfN 0,3
+%% at IUser 1,0
+%% at CoAdpN 2,0
+%% at CoAppN 2,1
+%% at CoDomN 2,2
+%% at CoInfN 2,3
+%% at IEv 3,3
+%% at NoAdpN 4,0
+%% at NoAppN 4,1
+%% at NoDomN 4,2
+%% at NoInfN 4,3

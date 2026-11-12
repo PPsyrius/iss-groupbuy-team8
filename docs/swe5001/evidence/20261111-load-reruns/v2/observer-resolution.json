@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "originalFailurePreservedAt": "observer-failure.json",
+  "operatorObservationSha256": "696c7d2c131676c2e69e8432d5e13776d569bdb3834450b621a7be3d0e1f1057",
+  "hashVerified": true,
+  "samples": 47,
+  "firstObservationUtc": "2026-11-11T04:33:27Z",
+  "lastObservationUtc": "2026-11-11T04:45:41Z",
+  "maximumObservationGapSeconds": 17,
+  "wholeLoadIntervalBracketed": true,
+  "everyObservedTaskCount": 1,
+  "everyObservedTaskRevision": "blocbuy-swe5001-monolith:7",
+  "everyObservedDeploymentCompleted": true,
+  "serviceEventsDuringWorkload": 0,
+  "observerExitCode": 255,
+  "plannedFifteenMinuteObservationCompleted": false,
+  "disposition": "Accept the V2 HTTP and sampled-stability result for the fully covered ten-minute measurement. Retain the later credential-provider failure; do not call collection a complete fifteen-minute success.",
+  "testedLowerBoundRps": 200,
+  "saturationObserved": false,
+  "candidateRequestsPerTargetPerMinute": 12000,
+  "candidatePersistedOrApplied": false,
+  "remaining": ["post-run route/digest readback", "server-metric corroboration", "separately authorised monolith teardown", "separately designed and authorised distributed V3 with reliable persistent observation"]
+}

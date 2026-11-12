@@ -1,0 +1,10 @@
+{
+  "kind": "offline-scoped-evidence-audit-not-secret-scanner-or-runtime-acceptance",
+  "hashedFiles": 480,
+  "filesParsedAndChecked": 505,
+  "localLinksChecked": 64,
+  "verifiedAttributionOnlyRetentionAddenda": 1,
+  "privateConfiguredValuesChecked": 3,
+  "privateValueHits": 0,
+  "limits": "Only scoped retained evidence/touched cache files; complements Gitleaks, does not replace it. No external link or hosted quality gate asserted."
+}

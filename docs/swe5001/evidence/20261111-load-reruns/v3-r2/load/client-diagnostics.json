@@ -1,0 +1,384 @@
+{
+  "runLabel": "20261111-v3-distributed-r2",
+  "executionStartUtc": "2026-11-11T08:16:02.752527+00:00",
+  "executionEndUtc": "2026-11-11T08:46:03.344000+00:00",
+  "peakActiveVUs": 1000,
+  "configuredMaxVUs": 1000,
+  "httpStatusesIncludingOneSetupRequest": {
+    "200": 715581,
+    "0": 4448,
+    "503": 113
+  },
+  "nativeHttpErrorCodes": {},
+  "completionTimeMinuteBins": [
+    {
+      "minuteFromExecutionStart": 0,
+      "p95Ms": 38.0,
+      "browseRequests": 3336,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 3337
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 5
+    },
+    {
+      "minuteFromExecutionStart": 1,
+      "p95Ms": 20.0,
+      "browseRequests": 5270,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 5270
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 3
+    },
+    {
+      "minuteFromExecutionStart": 2,
+      "p95Ms": 18.0,
+      "browseRequests": 7190,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 7190
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 3
+    },
+    {
+      "minuteFromExecutionStart": 3,
+      "p95Ms": 20.0,
+      "browseRequests": 9111,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 9111
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 9
+    },
+    {
+      "minuteFromExecutionStart": 4,
+      "p95Ms": 27.0,
+      "browseRequests": 11031,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 11031
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 10
+    },
+    {
+      "minuteFromExecutionStart": 5,
+      "p95Ms": 20.0,
+      "browseRequests": 13187,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 13187
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 37
+    },
+    {
+      "minuteFromExecutionStart": 6,
+      "p95Ms": 21.0,
+      "browseRequests": 15587,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 15587
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 45
+    },
+    {
+      "minuteFromExecutionStart": 7,
+      "p95Ms": 25.0,
+      "browseRequests": 17991,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 17991
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 43
+    },
+    {
+      "minuteFromExecutionStart": 8,
+      "p95Ms": 25.0,
+      "browseRequests": 20384,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 20384
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 25
+    },
+    {
+      "minuteFromExecutionStart": 9,
+      "p95Ms": 9999.0,
+      "browseRequests": 21937,
+      "browseErrors": 1197,
+      "droppedIterations": 5,
+      "httpStatuses": {
+        "200": 20740,
+        "0": 1197
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 996
+    },
+    {
+      "minuteFromExecutionStart": 10,
+      "p95Ms": 10000.0,
+      "browseRequests": 25834,
+      "browseErrors": 2686,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "0": 2686,
+        "200": 23148
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 910
+    },
+    {
+      "minuteFromExecutionStart": 11,
+      "p95Ms": 261.0,
+      "browseRequests": 27723,
+      "browseErrors": 424,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 27299,
+        "0": 424
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 220
+    },
+    {
+      "minuteFromExecutionStart": 12,
+      "p95Ms": 7173.0,
+      "browseRequests": 23577,
+      "browseErrors": 219,
+      "droppedIterations": 5796,
+      "httpStatuses": {
+        "200": 23358,
+        "0": 106,
+        "503": 113
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 1000
+    },
+    {
+      "minuteFromExecutionStart": 13,
+      "p95Ms": 2003.5999999999985,
+      "browseRequests": 33069,
+      "browseErrors": 26,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 33043,
+        "0": 26
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 728
+    },
+    {
+      "minuteFromExecutionStart": 14,
+      "p95Ms": 3871.0,
+      "browseRequests": 34615,
+      "browseErrors": 6,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 34609,
+        "0": 6
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 823
+    },
+    {
+      "minuteFromExecutionStart": 15,
+      "p95Ms": 6336.799999999996,
+      "browseRequests": 36125,
+      "browseErrors": 3,
+      "droppedIterations": 57,
+      "httpStatuses": {
+        "200": 36122,
+        "0": 3
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 978
+    },
+    {
+      "minuteFromExecutionStart": 16,
+      "p95Ms": 54.0,
+      "browseRequests": 36003,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 36003
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 110
+    },
+    {
+      "minuteFromExecutionStart": 17,
+      "p95Ms": 39.0,
+      "browseRequests": 36002,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 36002
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 49
+    },
+    {
+      "minuteFromExecutionStart": 18,
+      "p95Ms": 33.0,
+      "browseRequests": 36001,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 36001
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 80
+    },
+    {
+      "minuteFromExecutionStart": 19,
+      "p95Ms": 24.0,
+      "browseRequests": 36000,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 36000
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 36
+    },
+    {
+      "minuteFromExecutionStart": 20,
+      "p95Ms": 24.0,
+      "browseRequests": 36006,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 36006
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 91
+    },
+    {
+      "minuteFromExecutionStart": 21,
+      "p95Ms": 24.0,
+      "browseRequests": 35999,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 35999
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 79
+    },
+    {
+      "minuteFromExecutionStart": 22,
+      "p95Ms": 24.0,
+      "browseRequests": 36002,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 36002
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 42
+    },
+    {
+      "minuteFromExecutionStart": 23,
+      "p95Ms": 38.0,
+      "browseRequests": 35991,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 35991
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 72
+    },
+    {
+      "minuteFromExecutionStart": 24,
+      "p95Ms": 25.0,
+      "browseRequests": 36010,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 36010
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 26
+    },
+    {
+      "minuteFromExecutionStart": 25,
+      "p95Ms": 25.0,
+      "browseRequests": 32431,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 32431
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 79
+    },
+    {
+      "minuteFromExecutionStart": 26,
+      "p95Ms": 23.0,
+      "browseRequests": 25236,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 25236
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 18
+    },
+    {
+      "minuteFromExecutionStart": 27,
+      "p95Ms": 20.0,
+      "browseRequests": 18030,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 18030
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 14
+    },
+    {
+      "minuteFromExecutionStart": 28,
+      "p95Ms": 26.0,
+      "browseRequests": 10833,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 10833
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 19
+    },
+    {
+      "minuteFromExecutionStart": 29,
+      "p95Ms": 21.0,
+      "browseRequests": 3630,
+      "browseErrors": 0,
+      "droppedIterations": 0,
+      "httpStatuses": {
+        "200": 3630
+      },
+      "errorCodes": {},
+      "peakActiveVUs": 2
+    }
+  ],
+  "limits": "Supplemental diagnostics, not acceptance analysis. Bins use completion timestamps, not scheduled-arrival attribution. No exclusion, threshold, timeout or workload was changed. Client symptoms alone do not establish a server, database, host or network root cause."
+}

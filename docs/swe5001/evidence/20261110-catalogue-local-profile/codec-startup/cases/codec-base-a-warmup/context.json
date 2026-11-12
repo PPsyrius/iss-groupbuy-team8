@@ -1,0 +1,19 @@
+{
+  "label": "codec-base-a-warmup",
+  "app": "blocbuy-matrix2-codec-base-a",
+  "rate": 200,
+  "seconds": 120,
+  "port": 8589,
+  "startedAt": "2026-11-10T10:31:00.084Z",
+  "actions": [],
+  "actualLimits": {
+    "nanoCpus": 500000000,
+    "memoryBytes": 1073741824
+  },
+  "hostMemory": {
+    "MemTotal": 16510500864,
+    "MemAvailable": 5795684352,
+    "SwapTotal": 4294967296,
+    "SwapFree": 4177862656
+  }
+}

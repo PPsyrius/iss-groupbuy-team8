@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "toolingSha": "b911ea63795c5ddb7db1f7918f7f7af03a2745ff",
+  "runLabel": "20261111-v3-distributed-r2",
+  "events": [
+    {
+      "at": "2026-11-11T08:26:44.977000+00:00",
+      "from": 1,
+      "to": 2,
+      "source": "application-autoscaling",
+      "activityId": "040d58b7-b019-4bd1-8e3d-a2a9e8f50e67",
+      "activityCompletedAt": "2026-11-11T08:27:50.440000+00:00",
+      "policy": "blocbuy-swe5001-commerce-requests-per-target"
+    },
+    {
+      "at": "2026-11-11T08:29:44.971000+00:00",
+      "from": 2,
+      "to": 4,
+      "source": "application-autoscaling",
+      "activityId": "92d27207-182a-45e2-a8b4-57deb537bf83",
+      "activityCompletedAt": "2026-11-11T08:30:51.489000+00:00",
+      "policy": "blocbuy-swe5001-commerce-requests-per-target"
+    },
+    {
+      "at": "2026-11-11T08:30:44.952000+00:00",
+      "from": 4,
+      "to": 5,
+      "source": "application-autoscaling",
+      "activityId": "81e4e423-f7d2-4cac-b454-48becaafaed7",
+      "activityCompletedAt": "2026-11-11T08:31:55.368000+00:00",
+      "policy": "blocbuy-swe5001-commerce-requests-per-target"
+    },
+    {
+      "at": "2026-11-11T08:33:11.249000+00:00",
+      "from": 5,
+      "to": 6,
+      "source": "application-autoscaling",
+      "activityId": "110f3e8c-2088-42e9-8378-df37f39b585c",
+      "activityCompletedAt": "2026-11-11T08:34:19.657000+00:00",
+      "policy": "blocbuy-swe5001-commerce-cpu-headroom"
+    }
+  ],
+  "timestampMeaning": "Original successful Application Auto Scaling StartTime, not readiness; includes CPU and request policies. Chronological successful desired-count changes from observed one-task baseline. Unhealthy replacements are not scale-out events.",
+  "normalizationBlockers": [
+    {
+      "activityId": "843fec53-41fe-42f1-9d45-16cc04affc95",
+      "reason": "Non-successful activity; original retained for review"
+    }
+  ]
+}

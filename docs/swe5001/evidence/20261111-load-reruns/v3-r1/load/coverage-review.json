@@ -1,0 +1,292 @@
+{
+  "samples": 160,
+  "first": "2026-11-11T06:17:09.888282Z",
+  "last": "2026-11-11T06:57:09.675873Z",
+  "maximumGapSeconds": 29.241045,
+  "bracketsExecution": true,
+  "sampledRevisionStable": true,
+  "maximumObservedRunningTasks": 7,
+  "originalAnalyzerCountBoundViolations": [
+    {
+      "observedAt": "2026-11-11T06:35:39.882290Z",
+      "desired": 6,
+      "running": 7,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:35:54.851491Z",
+      "desired": 6,
+      "running": 7,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:36:09.976398Z",
+      "desired": 6,
+      "running": 7,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:36:24.821197Z",
+      "desired": 6,
+      "running": 7,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:38:24.880668Z",
+      "desired": 6,
+      "running": 7,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:38:39.854673Z",
+      "desired": 6,
+      "running": 7,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:38:54.880172Z",
+      "desired": 6,
+      "running": 7,
+      "pending": 0
+    }
+  ],
+  "unhealthyTaskReplacementEvents": [
+    {
+      "id": "2ff24229-bb7e-45b5-951b-f1e72716b058",
+      "createdAt": "2026-11-11T06:34:33.509000+00:00",
+      "message": "(service commerce-svc) has started 1 tasks: (task eab4aa3f0f654a129428a872a6cff454). Amazon ECS replaced 1 tasks due to an unhealthy status."
+    },
+    {
+      "id": "6b32942a-a589-46b6-898f-c880075397d6",
+      "createdAt": "2026-11-11T06:37:41.643000+00:00",
+      "message": "(service commerce-svc) has started 1 tasks: (task f616c47c506a483998d3841070ed922e). Amazon ECS replaced 1 tasks due to an unhealthy status."
+    }
+  ],
+  "countChanges": [
+    {
+      "observedAt": "2026-11-11T06:17:09.888282Z",
+      "desired": 2,
+      "running": 2,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:17:39.796006Z",
+      "desired": 1,
+      "running": 1,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:28:54.908063Z",
+      "desired": 2,
+      "running": 1,
+      "pending": 1
+    },
+    {
+      "observedAt": "2026-11-11T06:29:39.941807Z",
+      "desired": 2,
+      "running": 2,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:31:57.606319Z",
+      "desired": 4,
+      "running": 2,
+      "pending": 2
+    },
+    {
+      "observedAt": "2026-11-11T06:32:44.362054Z",
+      "desired": 4,
+      "running": 4,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:34:39.892016Z",
+      "desired": 4,
+      "running": 4,
+      "pending": 1
+    },
+    {
+      "observedAt": "2026-11-11T06:34:54.864089Z",
+      "desired": 6,
+      "running": 4,
+      "pending": 3
+    },
+    {
+      "observedAt": "2026-11-11T06:35:24.890429Z",
+      "desired": 6,
+      "running": 5,
+      "pending": 2
+    },
+    {
+      "observedAt": "2026-11-11T06:35:39.882290Z",
+      "desired": 6,
+      "running": 7,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:36:40.106831Z",
+      "desired": 6,
+      "running": 6,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:37:54.852152Z",
+      "desired": 6,
+      "running": 6,
+      "pending": 1
+    },
+    {
+      "observedAt": "2026-11-11T06:38:24.880668Z",
+      "desired": 6,
+      "running": 7,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:39:09.961854Z",
+      "desired": 6,
+      "running": 6,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:50:39.696937Z",
+      "desired": 5,
+      "running": 6,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:50:54.744893Z",
+      "desired": 5,
+      "running": 5,
+      "pending": 0
+    },
+    {
+      "observedAt": "2026-11-11T06:54:39.694882Z",
+      "desired": 4,
+      "running": 4,
+      "pending": 0
+    }
+  ],
+  "timerCompleted": true,
+  "collectionComplete": false,
+  "collectorErrorsPreserved": [
+    {
+      "at": "2026-11-11T06:32:29.760400Z",
+      "error": "AWS ecs describe-services failed; inspect privately; do not rerun blindly"
+    }
+  ],
+  "connectionLogs": {
+    "identity-svc": {
+      "collectionWindowMatchedLogEvents": 0,
+      "loadWindowMatchedLogEvents": 0,
+      "loadWindowCategoryCounts": {},
+      "limit": "Matched log events, not distinct failed requests or distinct exceptions."
+    },
+    "commerce-svc": {
+      "collectionWindowMatchedLogEvents": 179,
+      "loadWindowMatchedLogEvents": 179,
+      "loadWindowCategoryCounts": {
+        "pool_connection_wait": 179
+      },
+      "limit": "Matched log events, not distinct failed requests or distinct exceptions."
+    },
+    "notification-svc": {
+      "collectionWindowMatchedLogEvents": 0,
+      "loadWindowMatchedLogEvents": 0,
+      "loadWindowCategoryCounts": {},
+      "limit": "Matched log events, not distinct failed requests or distinct exceptions."
+    }
+  },
+  "metricReadbacks": [
+    {
+      "id": "m0",
+      "label": "AWS/ApplicationELB/RequestCount/Sum/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m1",
+      "label": "AWS/ApplicationELB/RequestCountPerTarget/Sum/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m2",
+      "label": "AWS/ApplicationELB/TargetResponseTime/p50/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 30
+    },
+    {
+      "id": "m3",
+      "label": "AWS/ApplicationELB/TargetResponseTime/p95/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 30
+    },
+    {
+      "id": "m4",
+      "label": "AWS/ApplicationELB/TargetResponseTime/p99/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 30
+    },
+    {
+      "id": "m5",
+      "label": "AWS/ApplicationELB/HTTPCode_Target_5XX_Count/Sum/targetgroup/blocbuy-swe5001-commerce-svc/6d9d984be14e3f68",
+      "status": "Complete",
+      "points": 6
+    },
+    {
+      "id": "m6",
+      "label": "AWS/RDS/DatabaseConnections/Maximum/blocbuy-swe5001",
+      "status": "Complete",
+      "points": 42
+    },
+    {
+      "id": "m7",
+      "label": "AWS/RDS/CPUUtilization/Average/blocbuy-swe5001",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m8",
+      "label": "AWS/RDS/FreeableMemory/Minimum/blocbuy-swe5001",
+      "status": "Complete",
+      "points": 42
+    },
+    {
+      "id": "m9",
+      "label": "AWS/ECS/CPUUtilization/Average/identity-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m10",
+      "label": "AWS/ECS/MemoryUtilization/Average/identity-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m11",
+      "label": "AWS/ECS/CPUUtilization/Average/commerce-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m12",
+      "label": "AWS/ECS/MemoryUtilization/Average/commerce-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m13",
+      "label": "AWS/ECS/CPUUtilization/Average/notification-svc",
+      "status": "Complete",
+      "points": 41
+    },
+    {
+      "id": "m14",
+      "label": "AWS/ECS/MemoryUtilization/Average/notification-svc",
+      "status": "Complete",
+      "points": 41
+    }
+  ],
+  "limits": "Geometric coverage and retained data are usable diagnostics, not a successful collection receipt. One ECS read failed; the collector stays incomplete. The error's underlying cause is not established."
+}

@@ -1,0 +1,169 @@
+{
+  "target": "https://d3lvq02o2e7tcn.cloudfront.net",
+  "distribution_from_github_variable": "E3N39GHVFV6CT3",
+  "source_path": "deployment\\frontend\\cloudfront\\response-headers-policy.json",
+  "source_sha256": "0b905c11c43bcf86bceff501cabb5c2c2879dfa600f60038e1881bfceea969ca",
+  "expected_security_headers": {
+    "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'report-sample' 'sha256-38RhXrc7EdReTKsOm23ZPOCUgniTUUcjky8QOOrQx6o=' 'sha256-gYiS/BvZvRcK27JIXTuwhZ3hs2+VJ1X+2gUlE+farlg='; style-src-attr 'none'; img-src 'self' https://dcsjrkmummxi7.cloudfront.net https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests",
+    "strict-transport-security": "max-age=31536000",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    "cross-origin-embedder-policy": "credentialless",
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-resource-policy": "same-origin"
+  },
+  "requests": [
+    {
+      "url": "https://d3lvq02o2e7tcn.cloudfront.net/",
+      "observed_at": "2026-11-09T16:05:25.657456+00:00",
+      "status": 200,
+      "headers": {
+        "content-security-policy": [
+          "default-src 'self'; script-src 'self'; style-src 'self' 'report-sample' 'sha256-38RhXrc7EdReTKsOm23ZPOCUgniTUUcjky8QOOrQx6o=' 'sha256-gYiS/BvZvRcK27JIXTuwhZ3hs2+VJ1X+2gUlE+farlg='; style-src-attr 'none'; img-src 'self' https://dcsjrkmummxi7.cloudfront.net https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+        ],
+        "strict-transport-security": [
+          "max-age=31536000"
+        ],
+        "x-content-type-options": [
+          "nosniff"
+        ],
+        "x-frame-options": [
+          "DENY"
+        ],
+        "referrer-policy": [
+          "strict-origin-when-cross-origin"
+        ],
+        "permissions-policy": [
+          "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        ],
+        "cross-origin-embedder-policy": [
+          "credentialless"
+        ],
+        "cross-origin-opener-policy": [
+          "same-origin"
+        ],
+        "cross-origin-resource-policy": [
+          "same-origin"
+        ]
+      },
+      "mismatched_security_headers": [],
+      "server": [
+        "CloudFront"
+      ],
+      "metadata": {
+        "content-type": "text/html",
+        "cache-control": "no-cache",
+        "etag": "\"ce9a506ff364cbee88f17612a16fdb70\"",
+        "last-modified": "Tue, 20 Oct 2026 14:32:37 GMT",
+        "x-cache": "Miss from cloudfront",
+        "age": null,
+        "x-amz-cf-pop": "SIN3-P4"
+      },
+      "body_bytes": 6612,
+      "body_sha256": "e79e16c4e4aaa7ad4934d66a9b14e36110d443e10903938191e3467f469ed4dc"
+    },
+    {
+      "url": "https://d3lvq02o2e7tcn.cloudfront.net/login",
+      "observed_at": "2026-11-09T16:05:26.057487+00:00",
+      "status": 200,
+      "headers": {
+        "content-security-policy": [
+          "default-src 'self'; script-src 'self'; style-src 'self' 'report-sample' 'sha256-38RhXrc7EdReTKsOm23ZPOCUgniTUUcjky8QOOrQx6o=' 'sha256-gYiS/BvZvRcK27JIXTuwhZ3hs2+VJ1X+2gUlE+farlg='; style-src-attr 'none'; img-src 'self' https://dcsjrkmummxi7.cloudfront.net https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+        ],
+        "strict-transport-security": [
+          "max-age=31536000"
+        ],
+        "x-content-type-options": [
+          "nosniff"
+        ],
+        "x-frame-options": [
+          "DENY"
+        ],
+        "referrer-policy": [
+          "strict-origin-when-cross-origin"
+        ],
+        "permissions-policy": [
+          "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        ],
+        "cross-origin-embedder-policy": [
+          "credentialless"
+        ],
+        "cross-origin-opener-policy": [
+          "same-origin"
+        ],
+        "cross-origin-resource-policy": [
+          "same-origin"
+        ]
+      },
+      "mismatched_security_headers": [],
+      "server": [
+        "CloudFront"
+      ],
+      "metadata": {
+        "content-type": "text/html",
+        "cache-control": "no-cache",
+        "etag": "\"ce9a506ff364cbee88f17612a16fdb70\"",
+        "last-modified": "Tue, 20 Oct 2026 14:32:37 GMT",
+        "x-cache": "Miss from cloudfront",
+        "age": null,
+        "x-amz-cf-pop": "SIN3-P4"
+      },
+      "body_bytes": 6612,
+      "body_sha256": "e79e16c4e4aaa7ad4934d66a9b14e36110d443e10903938191e3467f469ed4dc"
+    },
+    {
+      "url": "https://d3lvq02o2e7tcn.cloudfront.net/assets/index-DxnbuVTu.js",
+      "observed_at": "2026-11-09T16:05:26.152607+00:00",
+      "status": 200,
+      "headers": {
+        "content-security-policy": [
+          "default-src 'self'; script-src 'self'; style-src 'self' 'report-sample' 'sha256-38RhXrc7EdReTKsOm23ZPOCUgniTUUcjky8QOOrQx6o=' 'sha256-gYiS/BvZvRcK27JIXTuwhZ3hs2+VJ1X+2gUlE+farlg='; style-src-attr 'none'; img-src 'self' https://dcsjrkmummxi7.cloudfront.net https://lh3.googleusercontent.com; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+        ],
+        "strict-transport-security": [
+          "max-age=31536000"
+        ],
+        "x-content-type-options": [
+          "nosniff"
+        ],
+        "x-frame-options": [
+          "DENY"
+        ],
+        "referrer-policy": [
+          "strict-origin-when-cross-origin"
+        ],
+        "permissions-policy": [
+          "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+        ],
+        "cross-origin-embedder-policy": [
+          "credentialless"
+        ],
+        "cross-origin-opener-policy": [
+          "same-origin"
+        ],
+        "cross-origin-resource-policy": [
+          "same-origin"
+        ]
+      },
+      "mismatched_security_headers": [],
+      "server": [
+        "CloudFront"
+      ],
+      "metadata": {
+        "content-type": "text/javascript",
+        "cache-control": "public,max-age=31536000,immutable",
+        "etag": "\"fa1ee7022ccfa3339d124e97968f4fac\"",
+        "last-modified": "Tue, 20 Oct 2026 14:32:32 GMT",
+        "x-cache": "Miss from cloudfront",
+        "age": null,
+        "x-amz-cf-pop": "SIN3-P4"
+      },
+      "body_bytes": 233789,
+      "body_sha256": "b81c2ac3e450a4249a2b1436a13879c78dbe789caeb59431445d8654794afa21"
+    }
+  ],
+  "deep_link_same_document": true,
+  "asset_discovered_from_live_html": "https://d3lvq02o2e7tcn.cloudfront.net/assets/index-DxnbuVTu.js",
+  "scope": "Anonymous static SPA GETs only; no browser execution, API, login, AWS mutation or load test"
+}

@@ -230,6 +230,23 @@ function cpuPreflight() {
     actions: [arn], dimensions: [{ Name: 'ClusterName', Value: 'blocbuy-swe5001' }, { Name: 'ServiceName', Value: 'commerce-svc' }] }] };
   return p;
 }
+test('V3 policy headroom preserves workload and gates and refuses live target drift', () => {
+  const input = { ...remoteEnv, MODE: 'v3', TOPOLOGY: 'distributed', KNEE_RPS: '200', PREALLOCATED_VUS: '1000', MAX_VUS: '1000' };
+  const historical = configure(input);
+  const headroom = configure({ ...input, SCALING_REQUESTS_PER_TARGET: '6000' });
+  assert.equal(historical.scalingRequestsPerTarget, 12000);
+  assert.equal(headroom.knee, 200);
+  assert.equal(headroom.scalingRequestsPerTarget, 6000);
+  assert.deepEqual(headroom.options, historical.options);
+  const snapshot = preflight('v3');
+  snapshot.policies.ScalingPolicies[0].TargetTrackingScalingPolicyConfiguration.TargetValue = 6000;
+  validatePreflight(snapshot, headroom);
+  assert.throws(() => validatePreflight(snapshot, historical));
+  snapshot.policies.ScalingPolicies[0].TargetTrackingScalingPolicyConfiguration.TargetValue = 12000;
+  assert.throws(() => validatePreflight(snapshot, headroom));
+  for (const value of ['', '0', '-1', '1.5', '12001', null]) assert.throws(() => configure({ ...input, SCALING_REQUESTS_PER_TARGET: value }));
+  assert.throws(() => configure({ ...env, SCALING_REQUESTS_PER_TARGET: '6000' }));
+});
 const cpuEnv = { ...remoteEnv, MODE: 'v3', TOPOLOGY: 'distributed', KNEE_RPS: '50', CONFIRM_CPU_HEADROOM: 'true' };
 test('CPU guard requires explicit V3 confirmation, not arbitrary extra scaling policies', () => {
   assert.throws(() => configure({ ...remoteEnv, CONFIRM_CPU_HEADROOM: 'true' }), /only to V3/);

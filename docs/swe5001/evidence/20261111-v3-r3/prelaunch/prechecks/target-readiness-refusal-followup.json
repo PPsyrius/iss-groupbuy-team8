@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-11T10:38:49.373489+00:00",
+  "targets": [
+    {
+      "Target": {
+        "Id": "10.50.10.190",
+        "Port": 8589,
+        "AvailabilityZone": "ap-southeast-1a"
+      },
+      "HealthCheckPort": "8589",
+      "TargetHealth": {
+        "State": "healthy"
+      },
+      "AdministrativeOverride": {
+        "State": "no_override",
+        "Reason": "AdministrativeOverride.NoOverride",
+        "Description": "No override is currently active on target"
+      }
+    }
+  ],
+  "scope": "Read-only investigation after one-task readiness refused; no workload"
+}

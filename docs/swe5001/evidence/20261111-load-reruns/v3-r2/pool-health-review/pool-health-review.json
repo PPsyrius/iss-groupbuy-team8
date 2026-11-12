@@ -1,0 +1,33 @@
+{
+  "reviewedAtUtc": "2026-11-11T08:47:05.570932+00:00",
+  "poolWaitLogEvents": 0,
+  "firstPoolWaitUtc": null,
+  "lastPoolWaitUtc": null,
+  "eventsWithParsedPoolCounters": 0,
+  "healthIndicatorMatchedEvents": 0,
+  "parsedTimeoutsMs": {},
+  "sourceFrameCounts": {},
+  "poolWaitMetadata": [],
+  "stoppedTasksDuringLoadStillAvailable": [
+    {
+      "taskArn": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/2dfc8eab7aa24311bfb9bdcdc3972d7c",
+      "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:37",
+      "stoppedAt": "2026-11-11T08:18:01.972000+00:00",
+      "stopCode": "ServiceSchedulerInitiated",
+      "healthStatus": "HEALTHY",
+      "reasonCategory": "other-or-unclassified",
+      "containerExitCodes": [
+        {
+          "name": "commerce-svc",
+          "exitCode": 143
+        },
+        {
+          "name": "ecs-service-connect-jivcn",
+          "exitCode": null
+        }
+      ]
+    }
+  ],
+  "limits": "Counts are matching log events, not unique failed requests. Stopped-task retention may omit older tasks. Log messages, SQL, bind values, cookies and payloads were not saved. Chronology alone does not prove which resource caused a stall.",
+  "runtimeOrStateMutationPerformed": false
+}

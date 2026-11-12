@@ -1,0 +1,42 @@
+%% frame: UC6 B2 to B4: refund obligations inside the expiry transaction (design)
+sequenceDiagram
+    participant Exp as proxy : GroupDealExpiryService
+    participant Pub as :ApplicationEventPublisher
+    participant Sub as :TeamExpiryRefundSubscriber
+    participant Svc as :TeamExpiryRefundService
+    participant Adp as :OrderFulfilmentAdapter
+    participant Set as :GroupDealSettlementSupportImpl
+    participant Deals as :PaidGroupDealRepository
+    participant Deal as :GroupDeal
+    participant Repo as :CheckoutPaymentRepositoryImpl
+    participant Map as :PaymentMapper
+
+    critical expiry transaction, REQUIRED, READ COMMITTED, 10 s
+        Note over Exp,Svc: B1: inside expireOne(dealId), after lock 1 and the guarded expire (@sec-a-uc05)
+        Exp->>Pub: publishEvent(TeamExpired)
+        Pub-->>Exp: held until commit
+        Note over Exp,Adp: BEFORE_COMMIT, on the committing thread, the transaction owner calls each listener: @Order(10) has cancelled the orders (UC5)
+        Exp->>Sub: onTeamExpired(event), @Order(20)
+        Sub->>Svc: recordExpiredTeam(dealId)
+        Note over Svc,Deals: TransactionTemplate joins the expiry transaction (REQUIRED)
+        Note over Svc,Deals: B2: the team must still exist and be EXPIRED
+        Svc->>Adp: lockExpiredTeam(dealId)
+        Adp->>Set: lockExpiredTeam(dealId)
+        Set->>Deals: lockDeal(dealId): lock 1, the team row (already held)
+        Deals-->>Set: Optional(GroupDeal)
+        Set->>Deal: status()
+        Deal-->>Set: DealStatus
+        break team missing or status is not EXPIRED (E1)
+            Set-->>Svc: IllegalStateException, the expiry rolls back
+        end
+        Note over Svc,Map: B3 and B4: eventId = "team-expired-" + dealId
+        Svc->>Repo: requireRefundsForExpiredTeam(dealId, "TEAM_EXPIRED", eventId)
+        Repo->>Map: lockRefundableMemberIds(dealId): lock 3, payments by id
+        Map-->>Repo: List(UUID) locked
+        Repo->>Map: refundExpiredTeam(dealId, reason, eventId)
+        Map-->>Repo: int written
+        break written differs from locked (E1)
+            Repo-->>Svc: IllegalStateException, the expiry rolls back
+        end
+    end
+    Note over Exp,Map: COMMIT: team EXPIRED, orders CANCELLED, one pending biz_refund row per succeeded payment

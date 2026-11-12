@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "toolingSha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1",
+  "runLabel": "20261110-v3-194543",
+  "events": [
+    {
+      "at": "2026-11-09T19:56:39.087Z",
+      "from": 1,
+      "to": 2,
+      "source": "application-autoscaling",
+      "activityId": "4e9b09ac-8e5f-4653-8f8f-44960178d9d0"
+    },
+    {
+      "at": "2026-11-09T19:59:39.060Z",
+      "from": 2,
+      "to": 3,
+      "source": "application-autoscaling",
+      "activityId": "484c41be-af30-497f-9e82-fd85157785a0"
+    },
+    {
+      "at": "2026-11-09T20:02:39.080Z",
+      "from": 3,
+      "to": 4,
+      "source": "application-autoscaling",
+      "activityId": "1ca58f10-06ce-4d7d-aa5e-319595134249"
+    }
+  ],
+  "timestampMeaning": "Original successful activity StartTime: desired-capacity adjustment began, not task-ready time. Original EndTime retained separately.",
+  "observationCoverage": "Partial only, ending 2026-11-09T20:03:47.522113Z; no fabricated post-run observations"
+}

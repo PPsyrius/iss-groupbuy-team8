@@ -1,0 +1,2754 @@
+{
+  "kind": "local-codec-candidate-full-verification-not-performance-acceptance",
+  "command": "./mvnw -B -ntp -T 2 clean verify -Pci",
+  "preclean": "All modules cleaned first to avoid stale skipped-module reports",
+  "exitCode": 0,
+  "logSha256": "b46cf5235e19bf18f6d1b896158352150e13b67f00a37185e7449c250bdd525a",
+  "logRetention": "Private local Temp only; no report properties or exception bodies retained",
+  "forcedTerminationMessages": 0,
+  "buildSuccessBanner": true,
+  "completedAt": "2026-11-10T10:58:16Z",
+  "suites": [
+    {
+      "path": "blocbuy-adapter/target/surefire-reports/TEST-com.blocbuy.common.web.ClientAddressResolverTest.xml",
+      "name": "com.blocbuy.common.web.ClientAddressResolverTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-adapter/target/surefire-reports/TEST-com.blocbuy.common.web.NullableRefCustomizerTest.xml",
+      "name": "com.blocbuy.common.web.NullableRefCustomizerTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-adapter/target/surefire-reports/TEST-com.blocbuy.common.web.ResultTest.xml",
+      "name": "com.blocbuy.common.web.ResultTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-adapter/target/surefire-reports/TEST-com.blocbuy.identity.web.LoginSessionPublisherTest.xml",
+      "name": "com.blocbuy.identity.web.LoginSessionPublisherTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.catalog.query.ListingDetailViewTest.xml",
+      "name": "com.blocbuy.catalog.query.ListingDetailViewTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.catalog.query.ListingQueryTest.xml",
+      "name": "com.blocbuy.catalog.query.ListingQueryTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.catalog.service.AdminListingAppServiceImplTest.xml",
+      "name": "com.blocbuy.catalog.service.AdminListingAppServiceImplTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.catalog.service.CatalogPurchaseSupportImplTest.xml",
+      "name": "com.blocbuy.catalog.service.CatalogPurchaseSupportImplTest",
+      "tests": 28,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.catalog.service.GroupbuyListingDisplayAdapterTest.xml",
+      "name": "com.blocbuy.catalog.service.GroupbuyListingDisplayAdapterTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.catalog.service.PricingStrategyResolverTest.xml",
+      "name": "com.blocbuy.catalog.service.PricingStrategyResolverTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.catalog.service.ProductAppServiceImplTest.xml",
+      "name": "com.blocbuy.catalog.service.ProductAppServiceImplTest",
+      "tests": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.catalog.service.TeamPriceAppServiceImplTest.xml",
+      "name": "com.blocbuy.catalog.service.TeamPriceAppServiceImplTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.catalog.service.TeamTermsAppServiceImplTest.xml",
+      "name": "com.blocbuy.catalog.service.TeamTermsAppServiceImplTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.common.service.OutboxRelayServiceTest.xml",
+      "name": "com.blocbuy.common.service.OutboxRelayServiceTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.groupbuy.service.GroupDealAppServiceImplTest.xml",
+      "name": "com.blocbuy.groupbuy.service.GroupDealAppServiceImplTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.groupbuy.service.GroupDealExpiryServiceTest.xml",
+      "name": "com.blocbuy.groupbuy.service.GroupDealExpiryServiceTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.groupbuy.service.GroupDealExpirySweeperTest.xml",
+      "name": "com.blocbuy.groupbuy.service.GroupDealExpirySweeperTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.groupbuy.service.GroupDealPurchaseSupportImplTest.xml",
+      "name": "com.blocbuy.groupbuy.service.GroupDealPurchaseSupportImplTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.groupbuy.service.GroupDealQueryServiceImplTest.xml",
+      "name": "com.blocbuy.groupbuy.service.GroupDealQueryServiceImplTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.groupbuy.service.GroupDealSettlementSupportImplTest.xml",
+      "name": "com.blocbuy.groupbuy.service.GroupDealSettlementSupportImplTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.groupbuy.service.PaidGroupDealServiceTest.xml",
+      "name": "com.blocbuy.groupbuy.service.PaidGroupDealServiceTest",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.groupbuy.service.ShareCreditSubscriberTest.xml",
+      "name": "com.blocbuy.groupbuy.service.ShareCreditSubscriberTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.groupbuy.service.ShareInviteAppServiceTest.xml",
+      "name": "com.blocbuy.groupbuy.service.ShareInviteAppServiceTest",
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.identity.service.LoginAuthorizationServiceTest.xml",
+      "name": "com.blocbuy.identity.service.LoginAuthorizationServiceTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.identity.service.OAuthLoginAppServiceImplTest.xml",
+      "name": "com.blocbuy.identity.service.OAuthLoginAppServiceImplTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.identity.service.OAuthUserTxServiceTest.xml",
+      "name": "com.blocbuy.identity.service.OAuthUserTxServiceTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.identity.service.UserAppServiceImplTest.xml",
+      "name": "com.blocbuy.identity.service.UserAppServiceImplTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.notification.assembler.NotificationEventAssemblerTest.xml",
+      "name": "com.blocbuy.notification.assembler.NotificationEventAssemblerTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.notification.service.NotificationAppServiceTest.xml",
+      "name": "com.blocbuy.notification.service.NotificationAppServiceTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.notification.service.NotificationEventAppServiceTest.xml",
+      "name": "com.blocbuy.notification.service.NotificationEventAppServiceTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.order.service.OrderAppServiceImplTest.xml",
+      "name": "com.blocbuy.order.service.OrderAppServiceImplTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.order.service.OrderFulfilmentAdapterTest.xml",
+      "name": "com.blocbuy.order.service.OrderFulfilmentAdapterTest",
+      "tests": 40,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.order.service.OrderLifecycleSubscriberTest.xml",
+      "name": "com.blocbuy.order.service.OrderLifecycleSubscriberTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.order.service.PurchaseIntentAppServiceTest.xml",
+      "name": "com.blocbuy.order.service.PurchaseIntentAppServiceTest",
+      "tests": 43,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.order.service.PurchaseIntentExpiryServiceTest.xml",
+      "name": "com.blocbuy.order.service.PurchaseIntentExpiryServiceTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.order.service.PurchaseIntentExpirySweeperTest.xml",
+      "name": "com.blocbuy.order.service.PurchaseIntentExpirySweeperTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.payment.service.AdminPaymentAppServiceTest.xml",
+      "name": "com.blocbuy.payment.service.AdminPaymentAppServiceTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.payment.service.DisabledStripePaymentAppServiceTest.xml",
+      "name": "com.blocbuy.payment.service.DisabledStripePaymentAppServiceTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.payment.service.PaymentBrowserServiceTest.xml",
+      "name": "com.blocbuy.payment.service.PaymentBrowserServiceTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.payment.service.RefundServiceTest.xml",
+      "name": "com.blocbuy.payment.service.RefundServiceTest",
+      "tests": 29,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.payment.service.StripeCheckoutServiceTest.xml",
+      "name": "com.blocbuy.payment.service.StripeCheckoutServiceTest",
+      "tests": 91,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.payment.service.StripeFeatureSwitchTest.xml",
+      "name": "com.blocbuy.payment.service.StripeFeatureSwitchTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.payment.service.StripePaymentAppServiceTest.xml",
+      "name": "com.blocbuy.payment.service.StripePaymentAppServiceTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.payment.service.TeamExpiryRefundServiceTest.xml",
+      "name": "com.blocbuy.payment.service.TeamExpiryRefundServiceTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-application/target/surefire-reports/TEST-com.blocbuy.payment.service.TeamExpiryRefundSubscriberTest.xml",
+      "name": "com.blocbuy.payment.service.TeamExpiryRefundSubscriberTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.architecture.ArchitectureTest.xml",
+      "name": "com.blocbuy.architecture.ArchitectureTest",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.architecture.InternalEndpointRulesTest.xml",
+      "name": "com.blocbuy.architecture.InternalEndpointRulesTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.architecture.InternalPathsContractTest.xml",
+      "name": "com.blocbuy.architecture.InternalPathsContractTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.AuthControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.AuthControllerTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.BlocBuyApplicationTest.xml",
+      "name": "com.blocbuy.bootstrap.BlocBuyApplicationTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.DecimalStringDeserializerTest.xml",
+      "name": "com.blocbuy.bootstrap.DecimalStringDeserializerTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.EndpointAuthSurfaceTest.xml",
+      "name": "com.blocbuy.bootstrap.EndpointAuthSurfaceTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.EventsEnabledContextTest.xml",
+      "name": "com.blocbuy.bootstrap.EventsEnabledContextTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.GlobalExceptionHandlerTest.xml",
+      "name": "com.blocbuy.bootstrap.GlobalExceptionHandlerTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.GroupDealControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.GroupDealControllerTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.HttpProtocolErrorsTest.xml",
+      "name": "com.blocbuy.bootstrap.HttpProtocolErrorsTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.InviteControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.InviteControllerTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.MonolithGrantsAbsentTest.xml",
+      "name": "com.blocbuy.bootstrap.MonolithGrantsAbsentTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.NotificationControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.NotificationControllerTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.OrderControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.OrderControllerTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.OutboxRelayEnabledContextTest.xml",
+      "name": "com.blocbuy.bootstrap.OutboxRelayEnabledContextTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.PaymentBrowserControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.PaymentBrowserControllerTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.ProductControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.ProductControllerTest",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.RefundWorkerWiringTest.xml",
+      "name": "com.blocbuy.bootstrap.RefundWorkerWiringTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.SchedulingEnvironmentTest.xml",
+      "name": "com.blocbuy.bootstrap.SchedulingEnvironmentTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.ShareInviteControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.ShareInviteControllerTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.StripeCheckoutFlagConfigurationTest.xml",
+      "name": "com.blocbuy.bootstrap.StripeCheckoutFlagConfigurationTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.StripeCheckoutFlowTest.xml",
+      "name": "com.blocbuy.bootstrap.StripeCheckoutFlowTest",
+      "tests": 34,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.StripeDevCompatibilityTest.xml",
+      "name": "com.blocbuy.bootstrap.StripeDevCompatibilityTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.StripeDisabledHttpTest.xml",
+      "name": "com.blocbuy.bootstrap.StripeDisabledHttpTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.StripeEc2RolloutWiringTest.xml",
+      "name": "com.blocbuy.bootstrap.StripeEc2RolloutWiringTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.StripeLocalIntegrationTest.xml",
+      "name": "com.blocbuy.bootstrap.StripeLocalIntegrationTest",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.StripeWebhookBoundaryTest.xml",
+      "name": "com.blocbuy.bootstrap.StripeWebhookBoundaryTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.StripeWebhookControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.StripeWebhookControllerTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.StripeWebhookUnknownPaymentTest.xml",
+      "name": "com.blocbuy.bootstrap.StripeWebhookUnknownPaymentTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.TeamPriceControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.TeamPriceControllerTest",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.config.CookieSecurityProfileTest.xml",
+      "name": "com.blocbuy.bootstrap.config.CookieSecurityProfileTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.config.StripeCheckoutRuntimePropertiesTest.xml",
+      "name": "com.blocbuy.bootstrap.config.StripeCheckoutRuntimePropertiesTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.config.StripeOperationsConfigurationTest.xml",
+      "name": "com.blocbuy.bootstrap.config.StripeOperationsConfigurationTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.config.TraceIdFilterTest.xml",
+      "name": "com.blocbuy.bootstrap.config.TraceIdFilterTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.identity.InternalUserControllerTest.xml",
+      "name": "com.blocbuy.bootstrap.identity.InternalUserControllerTest",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.LeasedJobRunnerTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.LeasedJobRunnerTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.OutboxRelayJobTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.OutboxRelayJobTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.OutboxRelayLeaseTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.OutboxRelayLeaseTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.OutboxRetentionJobTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.OutboxRetentionJobTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.PurchaseIntentExpiryJobTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.PurchaseIntentExpiryJobTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.PurchaseIntentExpiryTimerTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.PurchaseIntentExpiryTimerTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.RefundWorkerJobTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.RefundWorkerJobTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.SchedulingPropertiesTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.SchedulingPropertiesTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.TeamExpirySweepJobTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.TeamExpirySweepJobTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-com.blocbuy.bootstrap.scheduling.TeamExpiryTimerTest.xml",
+      "name": "com.blocbuy.bootstrap.scheduling.TeamExpiryTimerTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/surefire-reports/TEST-fixtures.rbac.DistributedRbacTest.xml",
+      "name": "fixtures.rbac.DistributedRbacTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-client/target/surefire-reports/TEST-com.blocbuy.events.contract.IntegrationEventContractTest.xml",
+      "name": "com.blocbuy.events.contract.IntegrationEventContractTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.model.ListingDetailsTest.xml",
+      "name": "com.blocbuy.catalog.model.ListingDetailsTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.model.PricingModeTest.xml",
+      "name": "com.blocbuy.catalog.model.PricingModeTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.model.ProductLifecycleTest.xml",
+      "name": "com.blocbuy.catalog.model.ProductLifecycleTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.model.ProductStatusTest.xml",
+      "name": "com.blocbuy.catalog.model.ProductStatusTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.model.ProductTeamTermsTest.xml",
+      "name": "com.blocbuy.catalog.model.ProductTeamTermsTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.model.ProductTest.xml",
+      "name": "com.blocbuy.catalog.model.ProductTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.model.TeamTermsSpecificationTest.xml",
+      "name": "com.blocbuy.catalog.model.TeamTermsSpecificationTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.pricing.DualPricingStrategyTest.xml",
+      "name": "com.blocbuy.catalog.pricing.DualPricingStrategyTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.pricing.GroupDealOfferTest.xml",
+      "name": "com.blocbuy.catalog.pricing.GroupDealOfferTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.pricing.ListingPriceTest.xml",
+      "name": "com.blocbuy.catalog.pricing.ListingPriceTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.pricing.TeamPricePolicyTest.xml",
+      "name": "com.blocbuy.catalog.pricing.TeamPricePolicyTest",
+      "tests": 27,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.catalog.pricing.TeamPriceQuoteTest.xml",
+      "name": "com.blocbuy.catalog.pricing.TeamPriceQuoteTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.common.exception.BizExceptionTest.xml",
+      "name": "com.blocbuy.common.exception.BizExceptionTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.common.exception.ErrorCodeContractTest.xml",
+      "name": "com.blocbuy.common.exception.ErrorCodeContractTest",
+      "tests": 58,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.common.gateway.RateLimitTest.xml",
+      "name": "com.blocbuy.common.gateway.RateLimitTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.common.model.PageQueryTest.xml",
+      "name": "com.blocbuy.common.model.PageQueryTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.common.model.PageResultTest.xml",
+      "name": "com.blocbuy.common.model.PageResultTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.common.util.UuidV7Test.xml",
+      "name": "com.blocbuy.common.util.UuidV7Test",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.event.MemberJoinedTest.xml",
+      "name": "com.blocbuy.groupbuy.event.MemberJoinedTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.event.TeamLifecycleEventTest.xml",
+      "name": "com.blocbuy.groupbuy.event.TeamLifecycleEventTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.model.DealStatusTest.xml",
+      "name": "com.blocbuy.groupbuy.model.DealStatusTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.model.MemberRoleTest.xml",
+      "name": "com.blocbuy.groupbuy.model.MemberRoleTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.model.NewDealTermsTest.xml",
+      "name": "com.blocbuy.groupbuy.model.NewDealTermsTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.model.PaidGroupDealTest.xml",
+      "name": "com.blocbuy.groupbuy.model.PaidGroupDealTest",
+      "tests": 33,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.model.ParticipationReceiptTest.xml",
+      "name": "com.blocbuy.groupbuy.model.ParticipationReceiptTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.model.ParticipationResultTest.xml",
+      "name": "com.blocbuy.groupbuy.model.ParticipationResultTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.model.ShareCreditTest.xml",
+      "name": "com.blocbuy.groupbuy.model.ShareCreditTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.groupbuy.model.ShareInviteTest.xml",
+      "name": "com.blocbuy.groupbuy.model.ShareInviteTest",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.identity.model.OAuthIdentityTest.xml",
+      "name": "com.blocbuy.identity.model.OAuthIdentityTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.identity.model.OAuthProviderTest.xml",
+      "name": "com.blocbuy.identity.model.OAuthProviderTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.identity.model.RegisterSourceTest.xml",
+      "name": "com.blocbuy.identity.model.RegisterSourceTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.identity.model.UserStatusTest.xml",
+      "name": "com.blocbuy.identity.model.UserStatusTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.identity.model.UserTest.xml",
+      "name": "com.blocbuy.identity.model.UserTest",
+      "tests": 30,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.notification.model.NotificationErrorCodeTest.xml",
+      "name": "com.blocbuy.notification.model.NotificationErrorCodeTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.notification.model.NotificationEventTest.xml",
+      "name": "com.blocbuy.notification.model.NotificationEventTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.notification.model.NotificationTest.xml",
+      "name": "com.blocbuy.notification.model.NotificationTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.order.model.OrderStatusTest.xml",
+      "name": "com.blocbuy.order.model.OrderStatusTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.order.model.OrderTest.xml",
+      "name": "com.blocbuy.order.model.OrderTest",
+      "tests": 39,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.order.model.PurchaseIntentTest.xml",
+      "name": "com.blocbuy.order.model.PurchaseIntentTest",
+      "tests": 34,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.payment.model.CheckoutPaymentTest.xml",
+      "name": "com.blocbuy.payment.model.CheckoutPaymentTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.payment.model.CheckoutQuoteTest.xml",
+      "name": "com.blocbuy.payment.model.CheckoutQuoteTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-domain/target/surefire-reports/TEST-com.blocbuy.payment.model.PaymentFactsTest.xml",
+      "name": "com.blocbuy.payment.model.PaymentFactsTest",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.catalog.gateway.TypeSafeJevListingSearchRerankerTest.xml",
+      "name": "com.blocbuy.catalog.gateway.TypeSafeJevListingSearchRerankerTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.catalog.gateway.TypeSafeJevPropertiesTest.xml",
+      "name": "com.blocbuy.catalog.gateway.TypeSafeJevPropertiesTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.catalog.persistence.ProductConverterTest.xml",
+      "name": "com.blocbuy.catalog.persistence.ProductConverterTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.catalog.persistence.ProductRepositoryImplTest.xml",
+      "name": "com.blocbuy.catalog.persistence.ProductRepositoryImplTest",
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.catalog.persistence.ProductTeamTermsPersistenceTest.xml",
+      "name": "com.blocbuy.catalog.persistence.ProductTeamTermsPersistenceTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.catalog.persistence.TeamPriceRepositoryImplTest.xml",
+      "name": "com.blocbuy.catalog.persistence.TeamPriceRepositoryImplTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.common.config.MyBatisConfigTest.xml",
+      "name": "com.blocbuy.common.config.MyBatisConfigTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.common.config.RbacAutoConfigurationTest.xml",
+      "name": "com.blocbuy.common.config.RbacAutoConfigurationTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.common.config.SessionStpInterfaceTest.xml",
+      "name": "com.blocbuy.common.config.SessionStpInterfaceTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.common.config.StpInterfaceImplTest.xml",
+      "name": "com.blocbuy.common.config.StpInterfaceImplTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.common.gateway.RedisRateLimitGatewayTest.xml",
+      "name": "com.blocbuy.common.gateway.RedisRateLimitGatewayTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.common.persistence.IdentityTablesStayInIdentityMappersTest.xml",
+      "name": "com.blocbuy.common.persistence.IdentityTablesStayInIdentityMappersTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.common.persistence.SchedulerLeaseRepositoryImplTest.xml",
+      "name": "com.blocbuy.common.persistence.SchedulerLeaseRepositoryImplTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.common.persistence.UuidTypeHandlerTest.xml",
+      "name": "com.blocbuy.common.persistence.UuidTypeHandlerTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCacheTest.xml",
+      "name": "com.blocbuy.groupbuy.gateway.RedisOpenDealOfferCacheTest",
+      "tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.groupbuy.persistence.GroupDealConverterTest.xml",
+      "name": "com.blocbuy.groupbuy.persistence.GroupDealConverterTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.groupbuy.persistence.GroupDealRepositoryImplTest.xml",
+      "name": "com.blocbuy.groupbuy.persistence.GroupDealRepositoryImplTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.groupbuy.persistence.PaidGroupDealRepositoryImplTest.xml",
+      "name": "com.blocbuy.groupbuy.persistence.PaidGroupDealRepositoryImplTest",
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.groupbuy.persistence.RedisCachedShareInviteRepositoryTest.xml",
+      "name": "com.blocbuy.groupbuy.persistence.RedisCachedShareInviteRepositoryTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.identity.gateway.GoogleOAuthGatewayTest.xml",
+      "name": "com.blocbuy.identity.gateway.GoogleOAuthGatewayTest",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.identity.gateway.GoogleOAuthPropertiesTest.xml",
+      "name": "com.blocbuy.identity.gateway.GoogleOAuthPropertiesTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.identity.gateway.RedisOAuthStateStoreTest.xml",
+      "name": "com.blocbuy.identity.gateway.RedisOAuthStateStoreTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.identity.persistence.RoleRepositoryImplTest.xml",
+      "name": "com.blocbuy.identity.persistence.RoleRepositoryImplTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.identity.persistence.UserConverterTest.xml",
+      "name": "com.blocbuy.identity.persistence.UserConverterTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.identity.persistence.UserOAuthConverterTest.xml",
+      "name": "com.blocbuy.identity.persistence.UserOAuthConverterTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.identity.persistence.UserOAuthRepositoryImplTest.xml",
+      "name": "com.blocbuy.identity.persistence.UserOAuthRepositoryImplTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.identity.persistence.UserRepositoryImplTest.xml",
+      "name": "com.blocbuy.identity.persistence.UserRepositoryImplTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.integration.outbox.IntegrationOutboxWriterTest.xml",
+      "name": "com.blocbuy.integration.outbox.IntegrationOutboxWriterTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.integration.outbox.OutboxBatchFailureTest.xml",
+      "name": "com.blocbuy.integration.outbox.OutboxBatchFailureTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.integration.outbox.OutboxMessageFactoryTest.xml",
+      "name": "com.blocbuy.integration.outbox.OutboxMessageFactoryTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.integration.outbox.OutboxRelayRepositoryImplTest.xml",
+      "name": "com.blocbuy.integration.outbox.OutboxRelayRepositoryImplTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.integration.outbox.OutboxRetentionRepositoryImplTest.xml",
+      "name": "com.blocbuy.integration.outbox.OutboxRetentionRepositoryImplTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.integration.outbox.OutboxTransportConfigurationTest.xml",
+      "name": "com.blocbuy.integration.outbox.OutboxTransportConfigurationTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.integration.outbox.SnsOutboxEventTransportTest.xml",
+      "name": "com.blocbuy.integration.outbox.SnsOutboxEventTransportTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.integration.outbox.SqsOutboxEventTransportTest.xml",
+      "name": "com.blocbuy.integration.outbox.SqsOutboxEventTransportTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.notification.messaging.IntegrationEventDecoderTest.xml",
+      "name": "com.blocbuy.notification.messaging.IntegrationEventDecoderTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.notification.messaging.NotificationConsumerConfigurationTest.xml",
+      "name": "com.blocbuy.notification.messaging.NotificationConsumerConfigurationTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.notification.messaging.SqsNotificationEventConsumerTest.xml",
+      "name": "com.blocbuy.notification.messaging.SqsNotificationEventConsumerTest",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.order.persistence.OrderConverterTest.xml",
+      "name": "com.blocbuy.order.persistence.OrderConverterTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.order.persistence.PurchaseIntentRepositoryImplTest.xml",
+      "name": "com.blocbuy.order.persistence.PurchaseIntentRepositoryImplTest",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.payment.gateway.StripeCheckoutGatewayTest.xml",
+      "name": "com.blocbuy.payment.gateway.StripeCheckoutGatewayTest",
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.payment.gateway.StripeClientProviderTest.xml",
+      "name": "com.blocbuy.payment.gateway.StripeClientProviderTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.payment.gateway.StripePropertiesTest.xml",
+      "name": "com.blocbuy.payment.gateway.StripePropertiesTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.payment.gateway.StripeRefundGatewayTest.xml",
+      "name": "com.blocbuy.payment.gateway.StripeRefundGatewayTest",
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.payment.persistence.CheckoutPaymentRepositoryImplTest.xml",
+      "name": "com.blocbuy.payment.persistence.CheckoutPaymentRepositoryImplTest",
+      "tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.payment.persistence.PaymentConverterTest.xml",
+      "name": "com.blocbuy.payment.persistence.PaymentConverterTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/surefire-reports/TEST-com.blocbuy.payment.persistence.RefundRepositoryImplTest.xml",
+      "name": "com.blocbuy.payment.persistence.RefundRepositoryImplTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-platform/target/surefire-reports/TEST-com.blocbuy.platform.PlatformAutoConfigurationTest.xml",
+      "name": "com.blocbuy.platform.PlatformAutoConfigurationTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-platform/target/surefire-reports/TEST-com.blocbuy.platform.TraceIdPropagationInterceptorTest.xml",
+      "name": "com.blocbuy.platform.TraceIdPropagationInterceptorTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/commerce-svc/target/surefire-reports/TEST-com.blocbuy.service.commerce.identity.RemoteUserAppServiceTest.xml",
+      "name": "com.blocbuy.service.commerce.identity.RemoteUserAppServiceTest",
+      "tests": 35,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/commerce-svc/target/surefire-reports/TEST-com.blocbuy.service.commerce.identity.UserAppServiceContractTest.xml",
+      "name": "com.blocbuy.service.commerce.identity.UserAppServiceContractTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.AdminListingFlowIT.xml",
+      "name": "com.blocbuy.bootstrap.AdminListingFlowIT",
+      "tests": 55,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.AdminPaymentFlowIT.xml",
+      "name": "com.blocbuy.bootstrap.AdminPaymentFlowIT",
+      "tests": 23,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.BestOpenDealCacheIT.xml",
+      "name": "com.blocbuy.bootstrap.BestOpenDealCacheIT",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.CatalogFieldErrorsIT.xml",
+      "name": "com.blocbuy.bootstrap.CatalogFieldErrorsIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.CatalogListingProgressIT.xml",
+      "name": "com.blocbuy.bootstrap.CatalogListingProgressIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.ConsumedMessageMigrationIT.xml",
+      "name": "com.blocbuy.bootstrap.ConsumedMessageMigrationIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.DemoCatalogSeedIT.xml",
+      "name": "com.blocbuy.bootstrap.DemoCatalogSeedIT",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.InviteRefCacheIT.xml",
+      "name": "com.blocbuy.bootstrap.InviteRefCacheIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.NotificationConsumerElasticMqIT.xml",
+      "name": "com.blocbuy.bootstrap.NotificationConsumerElasticMqIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.NotificationEventHandlingIT.xml",
+      "name": "com.blocbuy.bootstrap.NotificationEventHandlingIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.NotificationMigrationIT.xml",
+      "name": "com.blocbuy.bootstrap.NotificationMigrationIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.NotificationPersistenceIT.xml",
+      "name": "com.blocbuy.bootstrap.NotificationPersistenceIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.OutboxFeatureDisabledIT.xml",
+      "name": "com.blocbuy.bootstrap.OutboxFeatureDisabledIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.OutboxRelayFlowIT.xml",
+      "name": "com.blocbuy.bootstrap.OutboxRelayFlowIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.PaidGroupDealServiceIT.xml",
+      "name": "com.blocbuy.bootstrap.PaidGroupDealServiceIT",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.PerformanceBaselineIT.xml",
+      "name": "com.blocbuy.bootstrap.PerformanceBaselineIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.PurchaseIntentExpiryIT.xml",
+      "name": "com.blocbuy.bootstrap.PurchaseIntentExpiryIT",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.StripeRolloutAcceptanceIT.xml",
+      "name": "com.blocbuy.bootstrap.StripeRolloutAcceptanceIT",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.TeamExpirySchedulingIT.xml",
+      "name": "com.blocbuy.bootstrap.TeamExpirySchedulingIT",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.TeamPriceFlowIT.xml",
+      "name": "com.blocbuy.bootstrap.TeamPriceFlowIT",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.TeamTermsFlowIT.xml",
+      "name": "com.blocbuy.bootstrap.TeamTermsFlowIT",
+      "tests": 22,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.V4ExpiryPipelineIT.xml",
+      "name": "com.blocbuy.bootstrap.V4ExpiryPipelineIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-com.blocbuy.bootstrap.WriteRateLimitIT.xml",
+      "name": "com.blocbuy.bootstrap.WriteRateLimitIT",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-bootstrap/target/failsafe-reports/TEST-fixtures.rbac.LoginSessionRedisIT.xml",
+      "name": "fixtures.rbac.LoginSessionRedisIT",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.catalog.persistence.ProductSearchRepositoryIT.xml",
+      "name": "com.blocbuy.catalog.persistence.ProductSearchRepositoryIT",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.catalog.persistence.TeamPriceRepositoryIT.xml",
+      "name": "com.blocbuy.catalog.persistence.TeamPriceRepositoryIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.common.gateway.RedisRateLimitGatewayIT.xml",
+      "name": "com.blocbuy.common.gateway.RedisRateLimitGatewayIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.common.persistence.SchedulerLeaseRepositoryIT.xml",
+      "name": "com.blocbuy.common.persistence.SchedulerLeaseRepositoryIT",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.groupbuy.persistence.BestOpenDealRepositoryIT.xml",
+      "name": "com.blocbuy.groupbuy.persistence.BestOpenDealRepositoryIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.groupbuy.persistence.PaidGroupDealRepositoryIT.xml",
+      "name": "com.blocbuy.groupbuy.persistence.PaidGroupDealRepositoryIT",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.groupbuy.persistence.ShareAttributionRepositoryIT.xml",
+      "name": "com.blocbuy.groupbuy.persistence.ShareAttributionRepositoryIT",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.groupbuy.persistence.TeamMembershipRepositoryIT.xml",
+      "name": "com.blocbuy.groupbuy.persistence.TeamMembershipRepositoryIT",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.identity.gateway.RedisLoginSnapshotGatewayIT.xml",
+      "name": "com.blocbuy.identity.gateway.RedisLoginSnapshotGatewayIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.integration.outbox.LocalPoisonMessageRehearsalIT.xml",
+      "name": "com.blocbuy.integration.outbox.LocalPoisonMessageRehearsalIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.integration.outbox.OutboxMapperIT.xml",
+      "name": "com.blocbuy.integration.outbox.OutboxMapperIT",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.integration.outbox.OutboxRelayElasticMqIT.xml",
+      "name": "com.blocbuy.integration.outbox.OutboxRelayElasticMqIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.notification.persistence.ConsumedMessageRepositoryIT.xml",
+      "name": "com.blocbuy.notification.persistence.ConsumedMessageRepositoryIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.notification.persistence.NotificationRepositoryIT.xml",
+      "name": "com.blocbuy.notification.persistence.NotificationRepositoryIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-infrastructure/target/failsafe-reports/TEST-com.blocbuy.order.persistence.OrderRepositoryIT.xml",
+      "name": "com.blocbuy.order.persistence.OrderRepositoryIT",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "blocbuy-platform/target/failsafe-reports/TEST-com.blocbuy.platform.ServiceGrantsIT.xml",
+      "name": "com.blocbuy.platform.ServiceGrantsIT",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/commerce-svc/target/failsafe-reports/TEST-com.blocbuy.service.commerce.CommerceOutboxEnabledIT.xml",
+      "name": "com.blocbuy.service.commerce.CommerceOutboxEnabledIT",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/commerce-svc/target/failsafe-reports/TEST-com.blocbuy.service.commerce.CommerceOutboxRelayEnabledIT.xml",
+      "name": "com.blocbuy.service.commerce.CommerceOutboxRelayEnabledIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/commerce-svc/target/failsafe-reports/TEST-com.blocbuy.service.commerce.CommercePaymentAttentionHttpIT.xml",
+      "name": "com.blocbuy.service.commerce.CommercePaymentAttentionHttpIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/commerce-svc/target/failsafe-reports/TEST-com.blocbuy.service.commerce.CommerceServiceApplicationIT.xml",
+      "name": "com.blocbuy.service.commerce.CommerceServiceApplicationIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/commerce-svc/target/failsafe-reports/TEST-com.blocbuy.service.commerce.LocalIdentityOutageRehearsalIT.xml",
+      "name": "com.blocbuy.service.commerce.LocalIdentityOutageRehearsalIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/identity-svc/target/failsafe-reports/TEST-com.blocbuy.service.identity.IdentityServiceApplicationIT.xml",
+      "name": "com.blocbuy.service.identity.IdentityServiceApplicationIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/notification-svc/target/failsafe-reports/TEST-com.blocbuy.service.notification.NotificationConsumerEnabledIT.xml",
+      "name": "com.blocbuy.service.notification.NotificationConsumerEnabledIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/notification-svc/target/failsafe-reports/TEST-com.blocbuy.service.notification.NotificationRuntimeHttpIT.xml",
+      "name": "com.blocbuy.service.notification.NotificationRuntimeHttpIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "path": "services/notification-svc/target/failsafe-reports/TEST-com.blocbuy.service.notification.NotificationServiceApplicationIT.xml",
+      "name": "com.blocbuy.service.notification.NotificationServiceApplicationIT",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 2074,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "coverage": {
+    "aggregateSha256": "a9acb1e3058fff89bc819152aab2e935242c2331782ffd3d216b0c014e10966a",
+    "files": [
+      {
+        "name": "RedisOpenDealOfferCache.java",
+        "counters": [
+          {
+            "type": "INSTRUCTION",
+            "missed": "0",
+            "covered": "483"
+          },
+          {
+            "type": "BRANCH",
+            "missed": "0",
+            "covered": "52"
+          },
+          {
+            "type": "LINE",
+            "missed": "0",
+            "covered": "114"
+          },
+          {
+            "type": "COMPLEXITY",
+            "missed": "0",
+            "covered": "46"
+          },
+          {
+            "type": "METHOD",
+            "missed": "0",
+            "covered": "20"
+          },
+          {
+            "type": "CLASS",
+            "missed": "0",
+            "covered": "3"
+          }
+        ],
+        "lines": [
+          {
+            "nr": "34",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "39",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "40",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "41",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "42",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "56",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "61",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "62",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "68",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "69",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "70",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "71",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "73",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "74",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "75",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "77",
+            "mi": "0",
+            "ci": "9",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "81",
+            "mi": "0",
+            "ci": "9",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "82",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "84",
+            "mi": "0",
+            "ci": "14",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "85",
+            "mi": "0",
+            "ci": "8",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "86",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "87",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "88",
+            "mi": "0",
+            "ci": "8",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "89",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "90",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "91",
+            "mi": "0",
+            "ci": "9",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "94",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "95",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "96",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "97",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "102",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "103",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "105",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "106",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "107",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "109",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "111",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "112",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "113",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "114",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "116",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "123",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "124",
+            "mi": "0",
+            "ci": "7",
+            "mb": "0",
+            "cb": "4"
+          },
+          {
+            "nr": "125",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "126",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "127",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "128",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "129",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "130",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "132",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "133",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "135",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "136",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "137",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "141",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "143",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "144",
+            "mi": "0",
+            "ci": "8",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "145",
+            "mi": "0",
+            "ci": "11",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "146",
+            "mi": "0",
+            "ci": "9",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "147",
+            "mi": "0",
+            "ci": "16",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "148",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "149",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "150",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "151",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "152",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "153",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "154",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "155",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "156",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "157",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "158",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "159",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "160",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "163",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "164",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "166",
+            "mi": "0",
+            "ci": "7",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "167",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "168",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "169",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "170",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "172",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "174",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "177",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "178",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "180",
+            "mi": "0",
+            "ci": "12",
+            "mb": "0",
+            "cb": "4"
+          },
+          {
+            "nr": "181",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "183",
+            "mi": "0",
+            "ci": "7",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "184",
+            "mi": "0",
+            "ci": "10",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "188",
+            "mi": "0",
+            "ci": "10",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "190",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "192",
+            "mi": "0",
+            "ci": "11",
+            "mb": "0",
+            "cb": "4"
+          },
+          {
+            "nr": "193",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "194",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "195",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "198",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "200",
+            "mi": "0",
+            "ci": "6",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "202",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "205",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "207",
+            "mi": "0",
+            "ci": "11",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "209",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "215",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "216",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "217",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "218",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "223",
+            "mi": "0",
+            "ci": "4",
+            "mb": "0",
+            "cb": "2"
+          },
+          {
+            "nr": "225",
+            "mi": "0",
+            "ci": "16",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "226",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "227",
+            "mi": "0",
+            "ci": "3",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "228",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "229",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "232",
+            "mi": "0",
+            "ci": "7",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "236",
+            "mi": "0",
+            "ci": "5",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "239",
+            "mi": "0",
+            "ci": "2",
+            "mb": "0",
+            "cb": "0"
+          },
+          {
+            "nr": "240",
+            "mi": "0",
+            "ci": "1",
+            "mb": "0",
+            "cb": "0"
+          }
+        ]
+      }
+    ]
+  },
+  "cacheCoverageComplete": true,
+  "artifactAttribution": {
+    "focusedReviewedJarSha256": "0cdf2416f7784331542f21d977d80d9c9208863965d4948716ab2b9814090bff",
+    "verifiedCommerceJarSha256": "0cdf2416f7784331542f21d977d80d9c9208863965d4948716ab2b9814090bff",
+    "verifiedMonolithJarSha256": "75fae53e6d8f0efaecd2ea4c131b77f005a4dbec84a396a3561dad7ee81a6fed",
+    "cacheClassSha256": {
+      "com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCache$Entry.class": "549f06a702023ea4929493589e57f50ca8b0c51063a2f3067f2dbec146d45993",
+      "com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCache$RetryWindow.class": "2f2ce47014212bd755c888c1571c22b26f91f1445f7606277831a9126fcb50ac",
+      "com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCache.class": "7f9eba42172a58330ffbc68ed5ce50de5046387338308fa8c2d55f99be4c37d4"
+    },
+    "allThreeCacheClassBytesMatchReviewedPackage": true,
+    "runtimeJarSha256": "0cdf2416f7784331542f21d977d80d9c9208863965d4948716ab2b9814090bff",
+    "allThreeCacheClassBytesMatchRuntimePackage": true,
+    "limits": "Runtime measured this exact cache class snapshot; actual runtime gate outcomes remain independent of static success. Whole-JAR hashes may differ due to packaging timestamps."
+  }
+}

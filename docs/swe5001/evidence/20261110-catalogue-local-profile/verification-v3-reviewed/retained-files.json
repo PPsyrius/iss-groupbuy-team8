@@ -1,0 +1,31 @@
+{
+  "kind": "reviewed-v3-complete-local-verification-not-performance-acceptance",
+  "files": [
+    {
+      "path": "contract-summary.json",
+      "bytes": 494,
+      "sha256": "bfee1a0e76dcb50e8b386a2a160823dccec4ff9ec0ded45651736943abe0793e"
+    },
+    {
+      "path": "full-verification-summary.json",
+      "bytes": 85027,
+      "sha256": "af64a1c6f8a08cb947109d6a01fa044a66d6a2c6fda43edf8c5ca12d6da0abd7"
+    },
+    {
+      "path": "inspect-backoff3-verification.py",
+      "bytes": 4881,
+      "sha256": "233eb3606ae5b66fc350dbe97281164802cc2bfc061df51b0ae1d3acf376926b"
+    },
+    {
+      "path": "run-backoff3-full-verification.sh",
+      "bytes": 2367,
+      "sha256": "15ae17351e0192304585f7b97a5d4bf5e1a8b1109321a1cd3562c1d9be5eeb27"
+    },
+    {
+      "path": "source-snapshot.json",
+      "bytes": 767,
+      "sha256": "df9f6a572aa317800018314c7bb082bbbb1cefc6a899935536105a65a3202bfd"
+    }
+  ],
+  "limits": "Local full gates/coverage/contract only; no hosted CI/Sonar, current-codec verification, AWS or runtime acceptance."
+}

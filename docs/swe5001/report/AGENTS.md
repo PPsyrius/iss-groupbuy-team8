@@ -51,7 +51,7 @@ Every factual claim is one of four kinds. Say which, every time.
 
 - Never upgrade a result: a local result is never written as an AWS result, an estimate never as a measurement, a configured setting never as a tested behaviour.
 - Every number carries its date, its unit and its source. Use the same value everywhere; if two sources disagree, resolve it before writing.
-- Give limits next to the claims they limit (for example: the 19 October run is not valid V3 acceptance evidence because the generator dropped iterations).
+- Give limits next to the claims they limit (for example: V3 r4's k6 success does not replace the analyser's verdict, which is missing because the canonical observer ended early).
 
 ### Claims that are easy to get wrong
 
@@ -63,12 +63,12 @@ Initially checked against the repository on 21 October 2026; the lock-order clar
 | CodeQL | Not running (`ENABLE_CODEQL=false`); static analysis is SonarCloud |
 | CloudFront → ALB | Plain HTTP, restricted by CloudFront's origin-facing prefix list and the `X-Origin-Secret` header; not encrypted |
 | Secrets in state | Database passwords are write-only; the Valkey auth token and the origin secret are in Terraform state |
-| Scaling target | 12,000 requests per target per minute (200 req/s), set in the `swe5001-demo` environment; the checked-in fallback is 200 |
-| Capacity | One 0.5 vCPU commerce task saturates at about 280 req/s; three tasks served about 455 req/s, the generator's limit; linear scaling not proven |
+| Scaling target | Committed: 12,000 requests per target per minute (200 req/s), set in the `swe5001-demo` environment; the checked-in fallback is 200 requests per target per minute (about 3.3 req/s). V3 r3 and r4 ran a session-only 6,000, a 120 s slow start and a 50% CPU guard; these are not committed defaults |
+| Capacity | V3 r4 (11 Nov) delivered the tested 600 req/s browse peak with no errors or drops while commerce scaled one to six; the analyser gave no verdict (observer ended early). Maximum capacity and controlled one-to-four linearity are unproven. The 19 October ALB readings (272–286 req/s on one saturated 0.5 vCPU task, 425–461 req/s on three tasks; [record](../evidence/20261019-v3-autoscaling/v3-alb-per-minute.tsv)) may be cited only as dated observations from a failed run at the committed task size, next to that limit; never as a capacity figure, never for the 1 vCPU tasks of V3 r4, and not rounded to "280 req/s per task" or "455 req/s at three tasks" |
 | Event relay | About 50 events/s, calculated; one copy only, because it runs under the scheduler lease |
-| Lock order | UC4 webhook settlement: team → purchase intent → payment, then fulfilment and order writes (`OrderFulfilmentAdapter.lockForSettlement`, `StripeCheckoutService.settle`; [ADR 0001](../../../backend/docs/adr/0001-payment-business-integration.md)). Expiry's `BEFORE_COMMIT` subscribers run order(10) → payment(20) ([ADR 0002](../../../backend/docs/adr/0002-team-lifecycle-events.md)); subscriber invocation order is not the webhook's row-lock order |
+| Lock order | UC4 webhook settlement: the event claim, then team (lock 1) → purchase intent (lock 2) → payment (lock 3); fulfilment then locks the participation receipt while admitting the member (`PaidGroupDealRepository.reserveAndLock`), saves and links the order, marks the intent fulfilled and, last, takes the product row in the guarded stock update (`OrderFulfilmentAdapter.fulfil`); the receipt and the product row are unnumbered. A START has no team row yet, so it takes lock 2 → lock 3 → receipt. `joinConfirmed` re-takes the team row it already holds (`OrderFulfilmentAdapter.lockForSettlement`, `StripeCheckoutService.settle`, `PaidGroupDealService.joinConfirmed`; [ADR 0001](../../../backend/docs/adr/0001-payment-business-integration.md)). Expiry's `BEFORE_COMMIT` subscribers run order(10) → payment(20) ([ADR 0002](../../../backend/docs/adr/0002-team-lifecycle-events.md)); subscriber invocation order is not the webhook's row-lock order |
 | SNS wait | The 15 minutes in a rebuild is a deliberate wait for subscription filter policies to apply, not for the topic |
-| Data tier | One `db.t4g.micro`, single zone, no backups; one Valkey node; each service has its own database and roles |
+| Data tier | One `db.t4g.micro` (committed; V3 r4 used a session-only `db.t4g.small` with five-connection pools), single zone, no backups; one Valkey node; each service has its own database and roles |
 | Table ownership | Every service database runs the full Flyway migration stream; the runtime role gets data access only to its service's tables (`afterMigrate__service_grants.sql`). Do not write "each database contains only its service's tables" |
 | Referential integrity | No foreign keys or CHECK constraints by team convention; relationships are kept by the application |
 | Not run on AWS | V4 burst, V5 self-healing, V7 poison message, identity outage; local results for the identity outage and a poison message only; V4 and V5 not run |

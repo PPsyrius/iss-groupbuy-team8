@@ -1,0 +1,42 @@
+%% frame: Two buyers, part 2: the member joins by paying and the team succeeds
+sequenceDiagram
+    actor Member as member : Buyer
+    participant Api as api : StripeCheckoutController
+    actor Stripe as stripe : Stripe
+    participant Wh as wh : StripeWebhookController
+    participant App as app : StripePaymentAppService
+    participant Svc as svc : StripeCheckoutService
+    participant Pay as payments : CheckoutPaymentRepository
+    participant Ofa as adapter : OrderFulfilmentAdapter
+    participant Grp as groups : PaidGroupDealService
+    participant Deal as deal : GroupDeal
+
+    Member->>Api: intent(csrf, request)
+    Member->>Api: checkout(csrf, key, request)
+    Api-->>Member: CheckoutResult
+    Stripe->>Wh: handleStripeEvent(payload, signatureHeader)
+    Wh->>App: handleStripeWebhook(payload, signatureHeader)
+    App->>Svc: handleWebhook(rawBody, signature)
+    critical settlement tx: REQUIRED, READ COMMITTED, 10 s
+        Svc->>Pay: claimEvent(eventId, type)
+        Svc->>Ofa: lockForSettlement(quote) {locks 1, 2}
+        Svc->>Pay: lock(id) {lock 3}
+        Svc->>Ofa: fulfil(event)
+        Ofa->>Grp: joinConfirmed(dealId, paid, sharer) {receipt after lock 3}
+        Grp->>Deal: joinPaid(paid, alreadyMember, now)
+        alt a seat is free
+            Deal-->>Grp: PaidAdmission {teamCompleted}
+            Grp-->>Ofa: ParticipationResult {team SUCCEEDED}
+            Ofa-->>Svc: Outcome(dealId, orderId, null)
+            Svc->>Pay: recordOutcome(…, "FULFILLED")
+        else team already full
+            Deal-->>Grp: BizException DEAL_CLOSED
+            Grp-->>Ofa: ParticipationResult {compensation_required}
+            Ofa-->>Svc: Outcome(dealId, null, "GROUP_REJECTED")
+            Svc->>Pay: requireRefund(payment, reason, eventId)
+            Svc->>Pay: recordOutcome(…, "REFUND_REQUIRED")
+        end
+    end
+    Svc-->>App: void
+    App-->>Wh: void
+    Wh-->>Stripe: HTTP 200

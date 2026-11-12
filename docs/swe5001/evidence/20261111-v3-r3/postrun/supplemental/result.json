@@ -1,0 +1,29 @@
+{
+  "at": "2026-11-11T11:17:27.329701+00:00",
+  "samples": 147,
+  "errors": [
+    {
+      "at": "2026-11-11T10:48:11.208707+00:00",
+      "errorType": "ValueError"
+    },
+    {
+      "at": "2026-11-11T10:52:33.381621+00:00",
+      "errorType": "ValueError"
+    },
+    {
+      "at": "2026-11-11T10:52:58.748391+00:00",
+      "errorType": "ValueError"
+    },
+    {
+      "at": "2026-11-11T10:53:21.681160+00:00",
+      "errorType": "ValueError"
+    },
+    {
+      "at": "2026-11-11T10:53:44.015381+00:00",
+      "errorType": "ValueError"
+    }
+  ],
+  "collectionComplete": false,
+  "runtimeMutationPerformed": false,
+  "limits": "Supplemental capture only; CloudWatch ingestion delay may require post-run readback. Does not replace acceptance observer."
+}

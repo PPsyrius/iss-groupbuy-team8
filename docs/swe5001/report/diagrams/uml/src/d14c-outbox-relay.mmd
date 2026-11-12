@@ -1,0 +1,19 @@
+%% frame: After the expiry, part 2: the outbox relay publishes the expiry event (design)
+sequenceDiagram
+    participant RJob as :OutboxRelayJob
+    participant Relay as :OutboxRelayService
+    participant T as :SnsOutboxEventTransport
+    participant Topic as domain-events (topic)
+    participant Q as notification queue (queue)
+
+    loop every 2 s, under the lease "outbox-relay"
+        RJob->>Relay: relayBatch(leaseValid)
+        Note over Relay,Q: the TeamExpiredV1 row, readable only after the expiry committed
+        Relay->>T: publish(events, leaseValid)
+        T->>Topic: PublishBatch(topicArn, entries)
+        Topic-->>T: successful ids, failed ids
+        Topic-)Q: deliver(message)
+        Note over Topic,Q: subscription filter on eventType
+        T-->>Relay: List of OutboxPublishResult
+        Relay-->>RJob: int updated
+    end

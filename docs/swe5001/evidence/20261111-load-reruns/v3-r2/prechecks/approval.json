@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "runLabel": "20261111-v3-distributed-r2",
+  "scope": "One fresh unchanged 30-minute V3 campaign only after the authorised combined capacity/50% guard deployment and every new readiness/budget/observer/preflight gate pass. No automatic HTTP retry or teardown.",
+  "authorisationSource": "../../v3-combined-capacity-plan-20261111/execution-authority.json",
+  "toolingSha": "b911ea63795c5ddb7db1f7918f7f7af03a2745ff",
+  "releasedSourceSha": "3a893036d70d028b29ae13ebf820283571c1ae00",
+  "expectedCommerceDigest": "sha256:f2e65b444395c2e5c26ae8675d4a4c203fbf97f0b3a98ae8e2eb187a6a51d92e",
+  "localAdapterSha256": "22fbf302692f946a2a793c81c99bfe44f87621a01f0aee6ca8ebfeaa7c25cddc",
+  "releaseLockSha256": "ff95f6da3f5b073f6d7aee8f52b02ee0227c75ee383bbf4267168af926bca8f0",
+  "capacityVariant": {"commerceCpuUnits": 1024, "commerceMemoryMiB": 2048, "databaseClass": "db.t4g.small", "cpuGuardThreshold": 50},
+  "candidateRps": 200,
+  "requestTargetPerMinute": 12000,
+  "generator": {"cpus": 8, "memoryGiB": 8, "preallocatedVUs": 1000, "maxVUs": 1000},
+  "previousCampaign": "../../v3-20261111-distributed-r1/evidence-manifest.json",
+  "limits": "New capacity/configuration variant, not a repair of the failed run or a like-for-like per-task capacity comparison with the old 0.5-vCPU monolith. Keep the separate 80%-linearity criterion unclaimed unless independently measured.",
+  "teardownAuthorised": false,
+  "loadStarted": false
+}

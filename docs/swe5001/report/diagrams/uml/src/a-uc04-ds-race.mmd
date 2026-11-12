@@ -1,0 +1,75 @@
+%% frame: UC4: two payments race for the last seat (design)
+sequenceDiagram
+    participant App as :StripePaymentAppService
+    participant A as txA : StripeCheckoutService
+    participant B as txB : StripeCheckoutService
+    participant OFA as :OrderFulfilmentAdapter
+    participant Groups as :PaidGroupDealService
+    participant Repo as :CheckoutPaymentRepository
+
+    activate App
+    Note over App,B: two verified webhooks, one thread each
+    par buyer X's webhook
+        App->>A: handleWebhook(rawX, sigX)
+        activate A
+        critical txA: settlement, REQUIRED, READ COMMITTED, 10 s
+            A->>Repo: claimEvent(eventX, type)
+            activate Repo
+            deactivate Repo
+            A->>OFA: lockForSettlement(quoteX) {locks 1, 2}
+            activate OFA
+            OFA-->>A: void
+            deactivate OFA
+            A->>Repo: lock(paymentX) {lock 3}
+            activate Repo
+            deactivate Repo
+            A->>OFA: fulfil(eventX)
+            activate OFA
+            OFA->>Groups: joinConfirmed(…) {receipt after lock 3}
+            activate Groups
+            Groups-->>OFA: ParticipationResult {team SUCCEEDED}
+            deactivate Groups
+            OFA-->>A: Outcome(dealId, orderX, null)
+            deactivate OFA
+            A->>Repo: recordOutcome(paymentX, dealId, orderX, "FULFILLED")
+            activate Repo
+            deactivate Repo
+            Note over A,OFA: COMMIT releases every lock
+        end
+        A-->>App: void
+        deactivate A
+    and buyer Y's webhook
+        App->>B: handleWebhook(rawY, sigY)
+        activate B
+        critical txB: settlement, REQUIRED, READ COMMITTED, 10 s
+            B->>Repo: claimEvent(eventY, type)
+            activate Repo
+            deactivate Repo
+            Note over B,OFA: lock 1 (team row) waits until txA commits
+            B->>OFA: lockForSettlement(quoteY) {locks 1, 2}
+            activate OFA
+            OFA-->>B: void
+            deactivate OFA
+            B->>Repo: lock(paymentY) {lock 3}
+            activate Repo
+            deactivate Repo
+            B->>OFA: fulfil(eventY)
+            activate OFA
+            OFA->>Groups: joinConfirmed(…) {receipt after lock 3}
+            activate Groups
+            Groups-->>OFA: ParticipationResult
+            deactivate Groups
+            OFA-->>B: Outcome(dealId, null, "GROUP_REJECTED")
+            deactivate OFA
+            B->>Repo: requireRefund(paymentY, "GROUP_REJECTED", eventY)
+            activate Repo
+            deactivate Repo
+            B->>Repo: recordOutcome(paymentY, dealId, null, "REFUND_REQUIRED")
+            activate Repo
+            deactivate Repo
+            Note over B,OFA: COMMIT releases every lock
+        end
+        B-->>App: void
+        deactivate B
+    end
+    deactivate App

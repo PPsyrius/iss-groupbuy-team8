@@ -1,0 +1,50 @@
+{
+  "at": "2026-11-11T12:27:28.458735+00:00",
+  "manifestFilesVerified": 33,
+  "consoleCounters": {
+    "warm_requests": 1799,
+    "warm_errors": 0,
+    "warm_vus_used": 1000,
+    "high_requests": 25984,
+    "high_errors": 2961,
+    "high_timeouts": 2934,
+    "high_eof": 27,
+    "high_vus_used": 1000,
+    "high_requests_from_warm_vus": 25984
+  },
+  "earlyTcpSamplesIndependentlyChecked": 9,
+  "earlyWarmInodesRetained": 1000,
+  "earlyAdditionalOpens": 0,
+  "earlySynRetransmits": 0,
+  "earlyNativeFailures": {
+    "wifi-gateway": {
+      "samples": 10,
+      "failures": 2,
+      "firstSecondsAfterJump": 7.737356
+    },
+    "external-dns": {
+      "samples": 10,
+      "failures": 7,
+      "firstSecondsAfterJump": 1.670925
+    },
+    "regional-aws-control": {
+      "samples": 5,
+      "failures": 2,
+      "firstSecondsAfterJump": 0.602786
+    },
+    "non-aws-control": {
+      "samples": 5,
+      "failures": 2,
+      "firstSecondsAfterJump": 0.62283
+    }
+  },
+  "limitedInferenceVerified": "Initial connection creation/SYN burst is not necessary for this reproduction; component remains unisolated",
+  "limitations": [
+    "JSON summary export failed; exact trend/byte precision unavailable.",
+    "No executing CPU/cgroup samples exist for this case; no resource-headroom conclusion.",
+    "Other offline Docker work overlaps later in the high phase.",
+    "This is one static-only diagnostic, not a validated fix or V3 acceptance."
+  ],
+  "r4LaunchAuthorized": false,
+  "originalEvidenceChanged": false
+}
