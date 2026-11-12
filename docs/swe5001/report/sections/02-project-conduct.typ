@@ -97,7 +97,7 @@ Most delivery milestones were met on time or early. Three slipped: the monolith 
     columns: (2fr, 1.2fr, 1.2fr, 2fr),
     table.header([Milestone], [Planned], [Achieved], [Evidence]),
     [Architecture options study and proof of concept (phase 0)], [Before the proposal], [25 Sep – 1 Oct], [#src("docs/swe5001/architecture-options-study/README.md")[Study]\; #src("docs/swe5001/architecture-options-study/poc.md")[proof of concept]],
-    [Proposal written], [28 Sep – 4 Oct], [30 Sep (merged); last edit 3 Oct], [#pr(259), #pr(372)],
+    [Proposal written and submitted], [28 Sep – 4 Oct], [30 Sep (merged); last edit 3 Oct; submitted on Canvas 4 Oct], [#pr(259), #pr(372)],
     [`foundation`, `edge` and `runtime` stacks in Terraform], [28 Sep – 4 Oct], [4 Oct], [#pr(377)–#pr(380)],
     [Monolith on ECS, first green promotion (phase A)], [28 Sep – 4 Oct], [6 Oct], [#run("37470479078")[Run 37470479078], #pr(418)],
     [Platform module, outbox and `notification-svc`], [5–11 Oct], [12–16 Oct], [#pr(471), #pr(473), #pr(485), #pr(513)],
