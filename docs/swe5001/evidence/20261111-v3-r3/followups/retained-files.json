@@ -1,0 +1,81 @@
+{
+  "at": "2026-11-11T12:40:03.5927788+00:00",
+  "scope": "Selected projected followup reviews and targeted cleanup receipts; separate from sealed r3 and original 15-review manifest",
+  "credentialPatternScan": "pass",
+  "r4LaunchAuthorized": false,
+  "unpublished": true,
+  "files": [
+    {
+      "sha256": "20487bf0cf16ac4c92754deacf64b66f9015fc9694035452e743fecfaadf44de",
+      "bytes": 12800,
+      "byteVerified": true,
+      "path": "rate-concurrency-review/warm-establishment/README.md"
+    },
+    {
+      "sha256": "f7eff551aa71b8e93c03d5a0490e0dd247ecf93f8976a1df39468e83d1882fc9",
+      "bytes": 12532,
+      "byteVerified": true,
+      "path": "windows-review/r3-connection-lifecycle/REVIEW.md"
+    },
+    {
+      "sha256": "594c6ca83fa4cd31f29ab2f5697f2d0fff08f7d5f6674c4ed21f5ce9998bf2b3",
+      "bytes": 1514,
+      "byteVerified": true,
+      "path": "main-warm-check/receipt.json"
+    },
+    {
+      "sha256": "19e5686affcdff5a71e3ce7cb81ec1ab66bf6dc946d7ad9e35f83931b5852097",
+      "bytes": 189,
+      "byteVerified": true,
+      "path": "main-prototype-check/receipt.json"
+    },
+    {
+      "sha256": "c1ed26b536e60bc64e7ec66b698b061ebef84c5a41e28395cb55aecac59d95f7",
+      "bytes": 7728,
+      "byteVerified": true,
+      "path": "evidence-review/acceptance-boundary-prototype/README.md"
+    },
+    {
+      "sha256": "b973a1f14374a5d19ce33e19671ec89f4b55194e1a0fc322fd942d51008facaf",
+      "bytes": 18251,
+      "byteVerified": true,
+      "path": "application-review/FINDINGS.md"
+    },
+    {
+      "sha256": "ce87a05c6a204ed7bc3b0c7ef01bdcecf2506ea4818962e2a3995326b96854f5",
+      "bytes": 13172,
+      "byteVerified": true,
+      "path": "tcp-nat-review/README.md"
+    },
+    {
+      "sha256": "9917ffd02910eabec9cbe3d669d7f4d358e277519b5f384019ba15408ffcb860",
+      "bytes": 18714,
+      "byteVerified": true,
+      "path": "runtime-compatibility-review/REVIEW.md"
+    },
+    {
+      "sha256": "d9d67bacaa351dc89d9c6ca3be07f401db72d9815cd448ed3aa1325f8f0ba056",
+      "bytes": 722,
+      "byteVerified": true,
+      "path": "image-cleanup-20261111-123616/verification.json"
+    },
+    {
+      "sha256": "b323f29cf68670fe440191d5255c656f937276d8ef153a02bd6872ee2e5aed10",
+      "bytes": 298,
+      "byteVerified": true,
+      "path": "image-cleanup-20261111-123616/disk-before.txt"
+    },
+    {
+      "sha256": "5116613f344366c8a23e620fa44e9d9449165bcab0ba7a2f1cdeaf5d2d4b1bdf",
+      "bytes": 298,
+      "byteVerified": true,
+      "path": "image-cleanup-20261111-123616/disk-after.txt"
+    },
+    {
+      "sha256": "cd08199de70ef3560d26cae21f7259b12353072c8644177c2e4a3b8c978589c2",
+      "bytes": 2151,
+      "byteVerified": true,
+      "path": "image-cleanup-20261111-123616/removal-results.json"
+    }
+  ]
+}

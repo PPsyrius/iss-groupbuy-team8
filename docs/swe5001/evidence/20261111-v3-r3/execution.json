@@ -1,0 +1,23 @@
+{
+  "runLabel": "20261111-v3-distributed-r3",
+  "commerceSlowStartSeconds": 120,
+  "generatorContainer": "blocbuy-20261111-v3-distributed-r3",
+  "candidateRps": 200,
+  "cpuGuardThreshold": 50,
+  "startedAtUtc": "2026-11-11T10:39:29.2652806+00:00",
+  "toolingSha": "b911ea63795c5ddb7db1f7918f7f7af03a2745ff",
+  "noTeardown": true,
+  "preallocatedVUs": 1000,
+  "sourceLockSha256": "6ba778e3b5a4e7eb14aa07e0a30603e98f57883d0933569a007f75fea7c54cde",
+  "expectedImageDigest": "sha256:f2e65b444395c2e5c26ae8675d4a4c203fbf97f0b3a98ae8e2eb187a6a51d92e",
+  "cpuLimit": 8,
+  "workloadSeconds": 1800,
+  "policyTarget": 6000,
+  "sourceState": "Base commit plus explicitly hashed uncommitted policy-binding source; unrelated report drafts preserved",
+  "releasedSourceSha": "3a893036d70d028b29ae13ebf820283571c1ae00",
+  "memoryLimitBytes": 8589934592,
+  "maximumOfferedRps": 600,
+  "noRetry": true,
+  "orchestrationSha256": "7098b289836a1153b18c2ebad702a2aa1ec335a2de49774f236f08e0043f122a",
+  "maxVUs": 1000
+}

@@ -1,0 +1,19 @@
+{
+  "runLabel": "20261110-v3-194543",
+  "collectedAt": "2026-11-10T04:29:19.830823+00:00",
+  "historicalWindow": {
+    "start": "2026-11-09T19:44:00Z",
+    "end": "2026-11-09T20:17:00Z"
+  },
+  "problems": [
+    {
+      "file": "classified-connection-events.json",
+      "error": "AWS logs filter-log-events failed; inspect privately; do not rerun blindly"
+    },
+    {
+      "file": "current-target-health.json",
+      "error": "AWS elbv2 describe-target-health failed; inspect privately; do not rerun blindly"
+    }
+  ],
+  "limits": "Read-only follow-up, no replacement load or missing ECS samples; sparse/missing metrics are not zero. Current configuration is not proof of its historical value."
+}

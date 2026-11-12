@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-11T10:39:13.166134+00:00",
+  "ready": true,
+  "noTeardown": true,
+  "approvedRuns": 1,
+  "noAutomaticRetry": true,
+  "policyTargetPerMinute": 6000,
+  "commerceSlowStartSeconds": 120,
+  "candidateRps": 200,
+  "peakRps": 600,
+  "workloadSeconds": 1800,
+  "gates": "Source/plan/apply/no-op drift/live settings/private log delivery/budgets/quotas/subnets/generator/prior evidence/tests/warm one-task/CPU capture/observer passed",
+  "limits": "No guaranteed zero drops; alarm/startup/slow-start margin remains conservative, not experimentally proved. Self-review, not independent human review. Base commit plus hashed uncommitted source; not merged tooling. Acceptance and 80%-linearity remain post-run judgments."
+}

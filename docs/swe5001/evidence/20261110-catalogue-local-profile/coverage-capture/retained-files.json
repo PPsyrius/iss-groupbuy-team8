@@ -1,0 +1,56 @@
+{
+  "kind": "local-coverage-capture-repair",
+  "limits": "Host-log exits zero lost coverage; TCP did not fix it. Linux capture recovered probes; first full run failed on a missing fixture, not accepted.",
+  "files": [
+    {
+      "path": "ExecProbeReview.java",
+      "bytes": 1153,
+      "sha256": "6cb86bb1166481eeddbaffbeba38ea1797620c8a3a7887ae623e3c8a818f62b2"
+    },
+    {
+      "path": "README.md",
+      "bytes": 926,
+      "sha256": "327a33319fd0383908382cf69d51ef7906d63e88467b6fdd93f132896d35a8e8"
+    },
+    {
+      "path": "cache-coverage-agent-probe.json",
+      "bytes": 74,
+      "sha256": "88177154980de8f89d9ddb16b4551e557bc87b57f8add8554f26e8068de8d436"
+    },
+    {
+      "path": "cache-coverage-capture-review.json",
+      "bytes": 7389,
+      "sha256": "348e7a91b15b2febdbad285d6c212b3b040bab5d5562ace9c73ac159ad608782"
+    },
+    {
+      "path": "cache-linux-verification-summary.json",
+      "bytes": 60567,
+      "sha256": "b6558f723cb77c976148b6e94e84f24f4ca2ec21d3fede99eb9a6df993abf946"
+    },
+    {
+      "path": "review-coverage-capture.py",
+      "bytes": 3681,
+      "sha256": "d64b882dee4edb485f05a910f07faaa6129b409aaceb67914e62260010ba0aba"
+    },
+    {
+      "path": "run-coverage-agent-probe.sh",
+      "bytes": 1653,
+      "sha256": "451da349b1c6eeae8fde06ea202c98e212606e91078d3a8c4db222cd64a56ec9"
+    },
+    {
+      "path": "run-coverage-channel-experiment.sh",
+      "bytes": 1326,
+      "sha256": "4f63a38e29609e968bc9f69df441ead13070066df6e1c0368925dac0579e23bf"
+    },
+    {
+      "path": "run-coverage-parent-stacks.sh",
+      "bytes": 895,
+      "sha256": "a95cea04d615738d595327da19ba16d6500efff66d60357e3b3aaa79683a3b25"
+    },
+    {
+      "path": "run-linux-log-verification-v1.sh",
+      "bytes": 2867,
+      "sha256": "dad5b805a148a6e3cc959f83ccc5ef40fef665178d2eda4cab332f6b22b99728"
+    }
+  ]
+}

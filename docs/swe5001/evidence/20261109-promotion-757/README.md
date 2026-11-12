@@ -75,3 +75,7 @@ Why it failed:
 - **Edge state after the failure not read.** Whether the distribution's `/api/*` origin changed before the error is not visible in the log.
 - **Cost.** The session is not in the Cost Explorer read of 8 November ([cost record](../20261108-cost-explorer/README.md)).
 - **Permission fix.** On 9 November no pull request grants `cloudfront:UpdateResponseHeadersPolicy` or applies the #700 change to `edge` by an operator; the next promotion would fail the same way until one of the two happened. Update: the next promotion, the same evening, passed the `edge` step without a change to the apply role ([record](../20261109-promotion-770/README.md)).
+
+## 10 November reconciliation (#775)
+
+The original run's failure and unverified placement remain unchanged. The later [subnet/session record](../20261110-subnet-verification/README.md) supplies the separate AWS placement/connectivity observations that closed #589. The recovered [operator edge-repair account](../20261109-edge-policy-recovery/README.md) records a direct CloudFront policy update and API readback, not an operator Terraform apply or new grant to the GitHub apply role. It qualifies the earlier “permission fix” uncertainty without attributing the repair to this failed run.

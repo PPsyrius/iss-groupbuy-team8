@@ -1,0 +1,36 @@
+{
+  "source": "Operator-provided AWS CloudShell outputs; no load started",
+  "recorded_at_utc": "2026-11-09T19:00:29Z",
+  "account": "402178232802",
+  "region": "ap-southeast-1",
+  "session_run": "https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/42665267510",
+  "source_sha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1",
+  "report_task": "arn:aws:ecs:ap-southeast-1:402178232802:task/blocbuy-swe5001/4707b3b071784b0ead158caf28672ea0",
+  "database": {
+    "class": "db.t4g.micro",
+    "engine": "18.3",
+    "status": "available",
+    "parameter_group": "blocbuy-swe5001-pg18",
+    "parameter_status": "in-sync",
+    "max_connections": 79,
+    "reserved_connections": 5,
+    "unreserved_connections": 74
+  },
+  "services": [
+    { "name": "identity-svc", "max_tasks": 1, "pool_size": 10 },
+    { "name": "commerce-svc", "min_tasks": 2, "max_tasks": 6, "pool_size": 10 },
+    { "name": "notification-svc", "min_tasks": 1, "max_tasks": 4, "pool_size": 10 }
+  ],
+  "pool_basis": "Shared packaged application.yml maximum-pool-size=10; no direct maximum-pool environment override in any service; sole alternative configuration is JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75",
+  "all_scaling_suspension_flags": false,
+  "commerce_target_requests_per_minute": 12000,
+  "commerce_scale_out_cooldown_seconds": 60,
+  "commerce_scale_in_cooldown_seconds": 180,
+  "commerce_disable_scale_in": false,
+  "maximum_pooled_connections": 110,
+  "budget": "fails before owner/operator/headroom allowances",
+  "alarm_confirmation_followup": { "confirmed": 1, "pending": 2 },
+  "load_started": false,
+  "configuration_changed": false,
+  "teardown_performed": false
+}

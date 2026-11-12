@@ -1,0 +1,28 @@
+{
+  "highRequestsCompleted": 17206,
+  "synRetransmits": 0,
+  "nominalPhaseSeconds": 30,
+  "tcpRetransmits": 0,
+  "limitations": [
+    "Not sustained 600 RPS; closed-loop skipped slots are not constant-arrival dropped iterations.",
+    "Native ping losses remain per original controls; clean HTTP is not a wholly clean path.",
+    "Exact phase k6 bytes and one start bin unavailable.",
+    "No component isolation, mitigation validation or V3 acceptance."
+  ],
+  "highRawTcpSamplesVerified": 29,
+  "initialCheckerCorrections": [
+    "First host-only checker expected a rate passes field; diagnostic_failed is a counter with count.",
+    "A subsequent checker lost timezone/precision through implicit DateTime conversion; explicit DateKind String preserves original timestamps. No experiment/evidence modified."
+  ],
+  "idleOriginalSocketLowerBound": 900,
+  "highRequestsOffered": 17206,
+  "originalSocketInodesRetained": 1000,
+  "r4LaunchAuthorized": false,
+  "skippedPacingSlots": 794,
+  "at": "2026-11-11T12:56:18.4912380+00:00",
+  "manifestFilesVerified": 35,
+  "additionalOpens": 0,
+  "originalEvidenceChanged": false,
+  "taggedHighRequestsPerSecond": 573.5333333333333,
+  "highHttpErrors": 0
+}

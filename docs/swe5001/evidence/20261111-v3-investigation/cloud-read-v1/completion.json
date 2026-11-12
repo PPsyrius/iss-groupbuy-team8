@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-11T09:39:59.572649+00:00",
+  "result": "historical reads completed",
+  "runtimeMutationPerformed": false,
+  "metricSeries": 16,
+  "performanceRecords": 375,
+  "warningMatches": 10
+}

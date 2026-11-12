@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "scope": "Branch-local copies of existing derived projections, not raw observations/metric responses or a canonical collection repair",
+  "files": [
+    {
+      "file": "service-observations.jsonl",
+      "privateProjectionLabel": "analysis-scaling/combined-observation-projection.jsonl",
+      "bytes": 134079,
+      "sha256": "b4c9c9392c4207eb84f2c0675f146ef7f55d4fd49da33e71fde6adc2de9c4fae",
+      "copiedProjectionBytesUnchanged": true
+    },
+    {
+      "file": "cloudwatch-points.jsonl",
+      "privateProjectionLabel": "analysis-scaling/cloudwatch-minute-projection.jsonl",
+      "bytes": 569471,
+      "sha256": "64d18a2dcd1646724a162401446035bf40db055c5df3c286745d0c38d529d1e0",
+      "copiedProjectionBytesUnchanged": true
+    },
+    {
+      "file": "cloudwatch-series.json",
+      "privateProjectionLabel": "analysis-scaling/cloudwatch-source-metadata.json",
+      "bytes": 29893,
+      "sha256": "be2554bd9b9cf505df1ac42c6157c3753c13146601d5a71afdc8f7ff97a49c7d",
+      "copiedProjectionBytesUnchanged": true
+    }
+  ],
+  "configuredPrivatePatternFindings": 0,
+  "inputProjectionBytesUnchanged": true,
+  "privateOriginalsIncluded": false,
+  "ownerAcceptanceDecision": "Not recorded; selecting R4 for the report is not an automated acceptance verdict"
+}

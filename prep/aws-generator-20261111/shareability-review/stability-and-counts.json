@@ -1,0 +1,12 @@
+{
+  "utc": "2026-11-11T13:38:10.9395238Z",
+  "prospectiveCount": 89,
+  "readyCandidateCount": 65,
+  "blockedCount": 2,
+  "operatorReviewCount": 22,
+  "sharelistSha256": "8de83106646d4bb5c7cc9352bdb80e5e76ba8941b7e7f672eef55e0f38ffa75f",
+  "changedPaths": [],
+  "newPaths": [],
+  "stable": true,
+  "warning": "Candidates require the report DRAFT warning and explicit owner selection; no publication approval or whole-index approval."
+}

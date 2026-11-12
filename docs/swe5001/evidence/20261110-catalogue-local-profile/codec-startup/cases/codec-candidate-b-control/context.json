@@ -1,0 +1,19 @@
+{
+  "label": "codec-candidate-b-control",
+  "app": "blocbuy-matrix2-codec-candidate-b",
+  "rate": 200,
+  "seconds": 60,
+  "port": 8589,
+  "startedAt": "2026-11-10T10:45:10.888Z",
+  "actions": [],
+  "actualLimits": {
+    "nanoCpus": 500000000,
+    "memoryBytes": 1073741824
+  },
+  "hostMemory": {
+    "MemTotal": 16510500864,
+    "MemAvailable": 5688168448,
+    "SwapTotal": 4294967296,
+    "SwapFree": 4104863744
+  }
+}

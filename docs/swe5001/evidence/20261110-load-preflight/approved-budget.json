@@ -1,0 +1,13 @@
+{
+  "maxConnections": 79,
+  "reservedConnections": 5,
+  "ownerConnections": 3,
+  "operatorConnections": 1,
+  "headroomConnections": 15,
+  "services": [
+    { "name": "identity-svc", "maxTasks": 1, "poolSize": 5 },
+    { "name": "commerce-svc", "maxTasks": 6, "poolSize": 5 },
+    { "name": "notification-svc", "maxTasks": 4, "poolSize": 5 }
+  ],
+  "basis": "Database limits from the retained read-only SQL report; service pool overrides and healthy released digests confirmed by operator rollout output. Owner/operator/headroom are planning allowances, not measured usage. No concurrent deployment or migration during measurement."
+}

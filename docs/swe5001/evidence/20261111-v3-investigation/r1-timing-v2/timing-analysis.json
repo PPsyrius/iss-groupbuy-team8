@@ -1,0 +1,3460 @@
+{
+  "generatedAtUtc": "2026-11-11T09:46:40.278275+00:00",
+  "runLabel": "20261111-v3-distributed-r1",
+  "rawSha256Verified": "8b82eb7e3472505b2c8fccf5c1050ac6c05dab3b5961914aae50ceb1493047c6",
+  "pairedHttpRequests": 687084,
+  "setupRequests": 1,
+  "browseRequests": 687083,
+  "reusedTimestampAndTagKeys": 7,
+  "pairingMethod": "Strictly ordered eight-point exported HTTP metric batches; timestamps/tags may repeat across complete batches. All samples retained, with full count/mean/p95 cross-checks against original summary; ambiguous within-batch reordering refused.",
+  "browseErrors": 11841,
+  "statusCounts": {
+    "200": 675242,
+    "0": 11622,
+    "503": 211,
+    "500": 8
+  },
+  "rawTimingMetricsMatchSummary": true,
+  "allHttpTimingMsIncludingSetup": {
+    "http_req_duration": {
+      "count": 687084,
+      "meanMs": 672.7400436865828,
+      "p50Ms": 14.8578055,
+      "p95Ms": 3956.575718499999,
+      "p99Ms": 10000.04668591,
+      "maxMs": 10011.244483,
+      "over800ms": 107332,
+      "over5000ms": 27143,
+      "negativeValues": 0
+    },
+    "http_req_blocked": {
+      "count": 687084,
+      "meanMs": 0.03315074894336063,
+      "p50Ms": 0.000221,
+      "p95Ms": 0.000305,
+      "p99Ms": 0.000382,
+      "maxMs": 3038.836694,
+      "over800ms": 2,
+      "over5000ms": 0,
+      "negativeValues": 0
+    },
+    "http_req_connecting": {
+      "count": 687084,
+      "meanMs": 0.015719443616792124,
+      "p50Ms": 0.0,
+      "p95Ms": 0.0,
+      "p99Ms": 0.0,
+      "maxMs": 3013.273163,
+      "over800ms": 1,
+      "over5000ms": 0,
+      "negativeValues": 0
+    },
+    "http_req_tls_handshaking": {
+      "count": 687084,
+      "meanMs": 0.016854002459670142,
+      "p50Ms": 0.0,
+      "p95Ms": 0.0,
+      "p99Ms": 0.0,
+      "maxMs": 2529.720881,
+      "over800ms": 1,
+      "over5000ms": 0,
+      "negativeValues": 0
+    },
+    "http_req_sending": {
+      "count": 687084,
+      "meanMs": 0.0468690216145333,
+      "p50Ms": 0.041174,
+      "p95Ms": 0.077248,
+      "p99Ms": 0.12202819000000029,
+      "maxMs": 15.05777,
+      "over800ms": 0,
+      "over5000ms": 0,
+      "negativeValues": 0
+    },
+    "http_req_waiting": {
+      "count": 687084,
+      "meanMs": 670.8605084790579,
+      "p50Ms": 14.704403,
+      "p95Ms": 3949.01035545,
+      "p99Ms": 9999.99989036,
+      "maxMs": 10011.215675,
+      "over800ms": 107198,
+      "over5000ms": 27034,
+      "negativeValues": 0
+    },
+    "http_req_receiving": {
+      "count": 687084,
+      "meanMs": 1.8326661859103108,
+      "p50Ms": 0.044511,
+      "p95Ms": 0.34643474999999924,
+      "p99Ms": 1.2883902000000067,
+      "maxMs": 9907.976364,
+      "over800ms": 319,
+      "over5000ms": 82,
+      "negativeValues": 1
+    }
+  },
+  "browseWallClockLatencyMs": {
+    "count": 687083,
+    "meanMs": 672.9113702420232,
+    "p50Ms": 15.0,
+    "p95Ms": 3957.0,
+    "p99Ms": 10000.0,
+    "maxMs": 10012.0,
+    "over800ms": 107326,
+    "over5000ms": 27142,
+    "negativeValues": 0
+  },
+  "slowHttpRequests": {
+    "over800ms": 107333,
+    "waitingAtLeast80Percent": 106930,
+    "blockedAtLeast80Percent": 2,
+    "durationOver5000ms": 27143
+  },
+  "firstEventsUtc": {
+    "slow800msStart": "2026-11-11T06:25:41.790570+00:00",
+    "slow5000msStart": "2026-11-11T06:25:42.336801+00:00",
+    "noHttpResponseCompletion": "2026-11-11T06:25:53.406861+00:00",
+    "noHttpResponseStart": "2026-11-11T06:25:43.408127+00:00",
+    "http503Completion": "2026-11-11T06:27:01.339192+00:00",
+    "drop": "2026-11-11T06:27:11.403592+00:00"
+  },
+  "inferredActiveHttp": {
+    "peak": 1001,
+    "peakAtUtc": "2026-11-11T06:36:48.167037+00:00",
+    "reportedVuPeak": 1000,
+    "method": "Sweep [request-end minus (blocked+duration), request-end) intervals; TLS/connect are subsets of blocked, not added again. Not complete iteration/VU occupancy; parsing/body validation and small gaps are omitted."
+  },
+  "clientWarningMetadata": {
+    "categories": {
+      "request-timeout": 11617,
+      "other-unclassified": 5
+    },
+    "firstUtc": "2026-11-11T06:25:53+00:00",
+    "lastUtc": "2026-11-11T06:37:19+00:00"
+  },
+  "byRoute": {
+    "product list": {
+      "http_req_duration": {
+        "count": 480959,
+        "meanMs": 683.2603031298988,
+        "p50Ms": 15.348232,
+        "p95Ms": 3993.4698356999997,
+        "p99Ms": 10000.0602649,
+        "maxMs": 10011.244483,
+        "over800ms": 75655,
+        "over5000ms": 19381,
+        "negativeValues": 0
+      },
+      "http_req_blocked": {
+        "count": 480959,
+        "meanMs": 0.030569177738643004,
+        "p50Ms": 0.000221,
+        "p95Ms": 0.000305,
+        "p99Ms": 0.000383,
+        "maxMs": 2629.62178,
+        "over800ms": 1,
+        "over5000ms": 0,
+        "negativeValues": 0
+      },
+      "http_req_connecting": {
+        "count": 480959,
+        "meanMs": 0.011059557752324003,
+        "p50Ms": 0.0,
+        "p95Ms": 0.0,
+        "p99Ms": 0.0,
+        "maxMs": 259.401366,
+        "over800ms": 0,
+        "over5000ms": 0,
+        "negativeValues": 0
+      },
+      "http_req_tls_handshaking": {
+        "count": 480959,
+        "meanMs": 0.018954082903116485,
+        "p50Ms": 0.0,
+        "p95Ms": 0.0,
+        "p99Ms": 0.0,
+        "maxMs": 2529.720881,
+        "over800ms": 1,
+        "over5000ms": 0,
+        "negativeValues": 0
+      },
+      "http_req_sending": {
+        "count": 480959,
+        "meanMs": 0.047079040448354224,
+        "p50Ms": 0.041261,
+        "p95Ms": 0.07778,
+        "p99Ms": 0.12281567999999994,
+        "maxMs": 15.05777,
+        "over800ms": 0,
+        "over5000ms": 0,
+        "negativeValues": 0
+      },
+      "http_req_waiting": {
+        "count": 480959,
+        "meanMs": 680.6838858584371,
+        "p50Ms": 15.185258,
+        "p95Ms": 3981.3315539999976,
+        "p99Ms": 10000.014023400001,
+        "maxMs": 10011.215675,
+        "over800ms": 75527,
+        "over5000ms": 19274,
+        "negativeValues": 0
+      },
+      "http_req_receiving": {
+        "count": 480959,
+        "meanMs": 2.5293382310134547,
+        "p50Ms": 0.049721,
+        "p95Ms": 0.38128139999999966,
+        "p99Ms": 1.4807717999999968,
+        "maxMs": 9907.976364,
+        "over800ms": 312,
+        "over5000ms": 80,
+        "negativeValues": 0
+      }
+    },
+    "product detail": {
+      "http_req_duration": {
+        "count": 206124,
+        "meanMs": 648.1905586599911,
+        "p50Ms": 13.405151499999999,
+        "p95Ms": 3891.9151202499993,
+        "p99Ms": 9999.786909479999,
+        "maxMs": 10009.085205,
+        "over800ms": 31676,
+        "over5000ms": 7762,
+        "negativeValues": 0
+      },
+      "http_req_blocked": {
+        "count": 206124,
+        "meanMs": 0.03885399513399701,
+        "p50Ms": 0.000221,
+        "p95Ms": 0.000305,
+        "p99Ms": 0.00038076999999998954,
+        "maxMs": 3038.836694,
+        "over800ms": 1,
+        "over5000ms": 0,
+        "negativeValues": 0
+      },
+      "http_req_connecting": {
+        "count": 206124,
+        "meanMs": 0.026564880717432224,
+        "p50Ms": 0.0,
+        "p95Ms": 0.0,
+        "p99Ms": 0.0,
+        "maxMs": 3013.273163,
+        "over800ms": 1,
+        "over5000ms": 0,
+        "negativeValues": 0
+      },
+      "http_req_tls_handshaking": {
+        "count": 206124,
+        "meanMs": 0.011902968785779433,
+        "p50Ms": 0.0,
+        "p95Ms": 0.0,
+        "p99Ms": 0.0,
+        "maxMs": 25.479259,
+        "over800ms": 0,
+        "over5000ms": 0,
+        "negativeValues": 0
+      },
+      "http_req_sending": {
+        "count": 206124,
+        "meanMs": 0.04637859723758514,
+        "p50Ms": 0.0409725,
+        "p95Ms": 0.07607584999999999,
+        "p99Ms": 0.12007616999999977,
+        "maxMs": 5.920441,
+        "over800ms": 0,
+        "over5000ms": 0,
+        "negativeValues": 0
+      },
+      "http_req_waiting": {
+        "count": 206124,
+        "meanMs": 647.9370838279773,
+        "p50Ms": 13.2953645,
+        "p95Ms": 3891.612137699998,
+        "p99Ms": 9999.70776824,
+        "maxMs": 10009.048894,
+        "over800ms": 31670,
+        "over5000ms": 7760,
+        "negativeValues": 0
+      },
+      "http_req_receiving": {
+        "count": 206124,
+        "meanMs": 0.20709623477615416,
+        "p50Ms": 0.034035,
+        "p95Ms": 0.19079059999999823,
+        "p99Ms": 0.6843707899999987,
+        "maxMs": 9557.545402,
+        "over800ms": 7,
+        "over5000ms": 2,
+        "negativeValues": 1
+      }
+    }
+  },
+  "calendarMinuteTimeline": [
+    {
+      "minuteUtc": "2026-11-11T06:18:00+00:00",
+      "counts": {
+        "httpCompletions": 3296
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 3296,
+          "meanMs": 25.394601988470875,
+          "p50Ms": 17.5280355,
+          "p95Ms": 67.52566525,
+          "p99Ms": 96.79484660000013,
+          "maxMs": 337.086382,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 3296,
+          "meanMs": 5.0978278953276694,
+          "p50Ms": 0.000266,
+          "p95Ms": 16.589273249999998,
+          "p99Ms": 30.45949445000037,
+          "maxMs": 299.111515,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 3296,
+          "meanMs": 2.3474341899271844,
+          "p50Ms": 0.0,
+          "p95Ms": 6.78179225,
+          "p99Ms": 17.65814700000006,
+          "maxMs": 259.401366,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 3296,
+          "meanMs": 2.718561725728155,
+          "p50Ms": 0.0,
+          "p95Ms": 9.78084975,
+          "p99Ms": 15.862812450000042,
+          "maxMs": 293.435503,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 3296,
+          "meanMs": 0.06834453276699029,
+          "p50Ms": 0.0640135,
+          "p95Ms": 0.104631,
+          "p99Ms": 0.15495820000000043,
+          "maxMs": 4.299728,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 3296,
+          "meanMs": 25.227245566140777,
+          "p50Ms": 17.381828,
+          "p95Ms": 67.42324099999999,
+          "p99Ms": 96.62609425000014,
+          "maxMs": 336.840601,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 3296,
+          "meanMs": 0.09901188956310679,
+          "p50Ms": 0.057698,
+          "p95Ms": 0.31521775,
+          "p99Ms": 0.46487205000000076,
+          "maxMs": 8.603478,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 29.977659036715824,
+        "commerce_memory": 35.009765625,
+        "database_cpu": 7.7719344960724275,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 3289.0,
+        "alb_target_p95": 0.05619433706264286
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:19:00+00:00",
+      "counts": {
+        "httpCompletions": 5255
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 5255,
+          "meanMs": 18.76635599391056,
+          "p50Ms": 15.417704,
+          "p95Ms": 39.0363504,
+          "p99Ms": 68.78405594,
+          "maxMs": 322.566822,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 5255,
+          "meanMs": 0.0002585876308277831,
+          "p50Ms": 0.000237,
+          "p95Ms": 0.000357,
+          "p99Ms": 0.000443,
+          "maxMs": 0.02196,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 5255,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 5255,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 5255,
+          "meanMs": 0.05837474519505233,
+          "p50Ms": 0.055469,
+          "p95Ms": 0.08654500000000001,
+          "p99Ms": 0.10570294000000002,
+          "maxMs": 0.292921,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 5255,
+          "meanMs": 18.62774645918173,
+          "p50Ms": 15.276532,
+          "p95Ms": 38.836489700000016,
+          "p99Ms": 68.67888966000001,
+          "maxMs": 322.460793,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 5255,
+          "meanMs": 0.08023478953377736,
+          "p50Ms": 0.047892,
+          "p95Ms": 0.2873727000000001,
+          "p99Ms": 0.39339932,
+          "maxMs": 2.566781,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 29.040298024813335,
+        "commerce_memory": 20.947265625,
+        "database_cpu": 8.491949731657721,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 5248.0,
+        "alb_target_p95": 0.027490166121270747
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:20:00+00:00",
+      "counts": {
+        "httpCompletions": 7164
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 7164,
+          "meanMs": 21.69934875446678,
+          "p50Ms": 15.0609715,
+          "p95Ms": 62.40928494999996,
+          "p99Ms": 139.49986961,
+          "maxMs": 267.262753,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 7164,
+          "meanMs": 0.00025467797319933,
+          "p50Ms": 0.000228,
+          "p95Ms": 0.000347,
+          "p99Ms": 0.000428,
+          "maxMs": 0.021103,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 7164,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 7164,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 7164,
+          "meanMs": 0.05463467755443886,
+          "p50Ms": 0.0493655,
+          "p95Ms": 0.09160539999999998,
+          "p99Ms": 0.11994308999999997,
+          "maxMs": 0.317729,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 7164,
+          "meanMs": 21.55849240898939,
+          "p50Ms": 14.9153205,
+          "p95Ms": 62.1905035999999,
+          "p99Ms": 139.37058986,
+          "maxMs": 266.833239,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 7164,
+          "meanMs": 0.08622166792294808,
+          "p50Ms": 0.0504135,
+          "p95Ms": 0.3054662499999998,
+          "p99Ms": 0.4593456899999999,
+          "maxMs": 4.523237,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 40.348626136779785,
+        "commerce_memory": 37.890625,
+        "database_cpu": 10.658688622954099,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 7168.0,
+        "alb_target_p95": 0.01908620908974239
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:21:00+00:00",
+      "counts": {
+        "httpCompletions": 9105
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 9105,
+          "meanMs": 18.22808032586491,
+          "p50Ms": 15.207679,
+          "p95Ms": 39.0587284,
+          "p99Ms": 68.83413375999999,
+          "maxMs": 276.817337,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 9105,
+          "meanMs": 0.0002354838001098298,
+          "p50Ms": 0.000224,
+          "p95Ms": 0.000306,
+          "p99Ms": 0.00039191999999999824,
+          "maxMs": 0.000917,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 9105,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 9105,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 9105,
+          "meanMs": 0.05131296101043383,
+          "p50Ms": 0.043895,
+          "p95Ms": 0.0958456,
+          "p99Ms": 0.12170399999999985,
+          "maxMs": 0.399111,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 9105,
+          "meanMs": 18.077680272487644,
+          "p50Ms": 15.051642,
+          "p95Ms": 38.88746739999992,
+          "p99Ms": 68.60240747999997,
+          "maxMs": 276.755843,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 9105,
+          "meanMs": 0.09908709236683141,
+          "p50Ms": 0.050406,
+          "p95Ms": 0.3644595999999999,
+          "p99Ms": 0.48768627999999936,
+          "maxMs": 58.599809,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 51.28510665893555,
+        "commerce_memory": 38.0859375,
+        "database_cpu": 11.158147364210597,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 9090.0,
+        "alb_target_p95": 0.012756749085862594
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:22:00+00:00",
+      "counts": {
+        "httpCompletions": 10997
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 10997,
+          "meanMs": 16.665211065563337,
+          "p50Ms": 15.050479,
+          "p95Ms": 23.892782599999993,
+          "p99Ms": 50.9667514799997,
+          "maxMs": 269.239261,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 10997,
+          "meanMs": 0.00024576766390833866,
+          "p50Ms": 0.000227,
+          "p95Ms": 0.000316,
+          "p99Ms": 0.0004,
+          "maxMs": 0.032885,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 10997,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 10997,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 10997,
+          "meanMs": 0.05042390861143948,
+          "p50Ms": 0.04441,
+          "p95Ms": 0.08933119999999993,
+          "p99Ms": 0.12167343999999987,
+          "maxMs": 0.249391,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 10997,
+          "meanMs": 16.523814379739928,
+          "p50Ms": 14.902969,
+          "p95Ms": 23.679035399999997,
+          "p99Ms": 50.86862595999969,
+          "maxMs": 269.128368,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 10997,
+          "meanMs": 0.09097277721196691,
+          "p50Ms": 0.048339,
+          "p95Ms": 0.3379451999999995,
+          "p99Ms": 0.45358467999999863,
+          "maxMs": 16.295656,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 50.77031167348226,
+        "commerce_memory": 38.0859375,
+        "database_cpu": 12.64061328222648,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 11009.0,
+        "alb_target_p95": 0.00903148686391802
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:23:00+00:00",
+      "counts": {
+        "httpCompletions": 13185
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 13185,
+          "meanMs": 17.182380764050055,
+          "p50Ms": 14.919937,
+          "p95Ms": 25.30662839999999,
+          "p99Ms": 67.77630467999991,
+          "maxMs": 265.41016,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 13185,
+          "meanMs": 0.0002448605991657186,
+          "p50Ms": 0.000226,
+          "p95Ms": 0.000302,
+          "p99Ms": 0.00036715999999999984,
+          "maxMs": 0.037673,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 13185,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 13185,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 13185,
+          "meanMs": 0.04228450231323474,
+          "p50Ms": 0.038627,
+          "p95Ms": 0.06687899999999994,
+          "p99Ms": 0.09140352,
+          "maxMs": 0.699222,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 13185,
+          "meanMs": 17.047436206901782,
+          "p50Ms": 14.782494,
+          "p95Ms": 25.172555599999978,
+          "p99Ms": 67.5515768399999,
+          "maxMs": 265.318631,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 13185,
+          "meanMs": 0.09266005483503982,
+          "p50Ms": 0.045183,
+          "p95Ms": 0.34329899999999985,
+          "p99Ms": 0.46257564,
+          "maxMs": 11.504599,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 55.525535901387535,
+        "commerce_memory": 38.167317708333336,
+        "database_cpu": 14.379237783493103,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 13161.0,
+        "alb_target_p95": 0.009249714338193925
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:24:00+00:00",
+      "counts": {
+        "httpCompletions": 15550
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 15550,
+          "meanMs": 17.299355281286175,
+          "p50Ms": 15.155666499999999,
+          "p95Ms": 25.893528549999996,
+          "p99Ms": 54.41716107000005,
+          "maxMs": 588.975709,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 15550,
+          "meanMs": 0.00023441954983922827,
+          "p50Ms": 0.000226,
+          "p95Ms": 0.000295,
+          "p99Ms": 0.000336,
+          "maxMs": 0.011164,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 15550,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 15550,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 15550,
+          "meanMs": 0.03978429421221865,
+          "p50Ms": 0.0372225,
+          "p95Ms": 0.05873714999999999,
+          "p99Ms": 0.08132179,
+          "maxMs": 0.192936,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 15550,
+          "meanMs": 17.168896500964628,
+          "p50Ms": 15.0156565,
+          "p95Ms": 25.77331184999999,
+          "p99Ms": 54.289971940000044,
+          "maxMs": 588.882782,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 15550,
+          "meanMs": 0.09067448610932476,
+          "p50Ms": 0.0438475,
+          "p95Ms": 0.34847729999999993,
+          "p99Ms": 0.4650600400000001,
+          "maxMs": 3.967349,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 66.87087186177571,
+        "commerce_memory": 39.013671875,
+        "database_cpu": 14.717150852878467,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 15562.0,
+        "alb_target_p95": 0.00897252391222203
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:25:00+00:00",
+      "counts": {
+        "httpCompletions": 17980,
+        "non200": 1
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 17980,
+          "meanMs": 58.489069356618465,
+          "p50Ms": 15.933762,
+          "p95Ms": 256.24817249999995,
+          "p99Ms": 757.511106839997,
+          "maxMs": 9998.733668,
+          "over800ms": 166,
+          "over5000ms": 5,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 17980,
+          "meanMs": 0.00024182758620689657,
+          "p50Ms": 0.000227,
+          "p95Ms": 0.000304,
+          "p99Ms": 0.000346,
+          "maxMs": 0.035567,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 17980,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 17980,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 17980,
+          "meanMs": 0.04139286429365962,
+          "p50Ms": 0.0384705,
+          "p95Ms": 0.06173179999999999,
+          "p99Ms": 0.08466115999999992,
+          "maxMs": 2.034271,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 17980,
+          "meanMs": 57.98226588826474,
+          "p50Ms": 15.801793499999999,
+          "p95Ms": 253.2770408499998,
+          "p99Ms": 739.7977134099839,
+          "maxMs": 9998.686501,
+          "over800ms": 166,
+          "over5000ms": 5,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 17980,
+          "meanMs": 0.46541060406006673,
+          "p50Ms": 0.047490500000000005,
+          "p95Ms": 0.4040987,
+          "p99Ms": 1.0259143199999996,
+          "maxMs": 1078.43458,
+          "over800ms": 1,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 166,
+        "totalWaitingMs": 289108.6501750001,
+        "totalBlockedMs": 0.03988800000000001,
+        "totalHttpMs": 290208.15475200006
+      },
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 72.24630482991536,
+        "commerce_memory": 39.192708333333336,
+        "database_cpu": 16.141942369263607,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 17962.0,
+        "alb_target_p95": 0.03466192997177408
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:26:00+00:00",
+      "counts": {
+        "httpCompletions": 20160
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 20160,
+          "meanMs": 36.212959545982145,
+          "p50Ms": 15.9634665,
+          "p95Ms": 87.19639719999994,
+          "p99Ms": 573.5404644099999,
+          "maxMs": 1043.032171,
+          "over800ms": 52,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 20160,
+          "meanMs": 0.00023981800595238094,
+          "p50Ms": 0.000226,
+          "p95Ms": 0.000298,
+          "p99Ms": 0.000335,
+          "maxMs": 0.077843,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 20160,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 20160,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 20160,
+          "meanMs": 0.04042884742063492,
+          "p50Ms": 0.03817,
+          "p95Ms": 0.05724944999999999,
+          "p99Ms": 0.07907404999999999,
+          "maxMs": 0.391911,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 20160,
+          "meanMs": 36.058466018898805,
+          "p50Ms": 15.8407795,
+          "p95Ms": 86.72167079999984,
+          "p99Ms": 572.92047542,
+          "maxMs": 1042.714518,
+          "over800ms": 51,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 20160,
+          "meanMs": 0.1140646796626984,
+          "p50Ms": 0.03991,
+          "p95Ms": 0.3107729999999998,
+          "p99Ms": 0.5206698,
+          "maxMs": 277.277797,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 176,
+        "totalWaitingMs": 233362.99796699997,
+        "totalBlockedMs": 0.04278199999999999,
+        "totalHttpMs": 233682.01492900006
+      },
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 87.42204348246257,
+        "commerce_memory": 39.501953125,
+        "database_cpu": 16.050389402915528,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 20124.0,
+        "alb_target_p95": 0.05469848423844807
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:27:00+00:00",
+      "counts": {
+        "httpCompletions": 20536,
+        "non200": 2548,
+        "drops": 1458
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 20536,
+          "meanMs": 2447.551211885323,
+          "p50Ms": 1385.802679,
+          "p95Ms": 10000.237898250001,
+          "p99Ms": 10000.9386742,
+          "maxMs": 10010.135075,
+          "over800ms": 13323,
+          "over5000ms": 3177,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 20536,
+          "meanMs": 0.27815625189910403,
+          "p50Ms": 0.000229,
+          "p95Ms": 0.000308,
+          "p99Ms": 0.000365,
+          "maxMs": 3038.836694,
+          "over800ms": 2,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 20536,
+          "meanMs": 0.14830640192832098,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 3013.273163,
+          "over800ms": 1,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 20536,
+          "meanMs": 0.1258109771133619,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 2529.720881,
+          "over800ms": 1,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 20536,
+          "meanMs": 0.043303880551227115,
+          "p50Ms": 0.040265,
+          "p95Ms": 0.06676625,
+          "p99Ms": 0.09226330000000003,
+          "maxMs": 0.389226,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 20536,
+          "meanMs": 2415.0031623592226,
+          "p50Ms": 1379.399471,
+          "p95Ms": 10000.17001225,
+          "p99Ms": 10000.88780355,
+          "maxMs": 10010.079458,
+          "over800ms": 13283,
+          "over5000ms": 3109,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 20536,
+          "meanMs": 32.50474564554928,
+          "p50Ms": 0.041161500000000004,
+          "p95Ms": 0.34089474999999997,
+          "p99Ms": 261.38841610000327,
+          "maxMs": 9907.976364,
+          "over800ms": 165,
+          "over5000ms": 51,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 14187,
+        "totalWaitingMs": 53466755.90247492,
+        "totalBlockedMs": 5671.881263999992,
+        "totalHttpMs": 54168975.88254321
+      },
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        1
+      ],
+      "server": {
+        "commerce_cpu": 97.0399595896403,
+        "commerce_memory": 48.225911458333336,
+        "database_cpu": 16.991949865831096,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 21069.0,
+        "alb_target_p95": 1.7723366026964855
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:28:00+00:00",
+      "counts": {
+        "httpCompletions": 20554,
+        "non200": 1309,
+        "drops": 4634
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 20554,
+          "meanMs": 2960.392750773134,
+          "p50Ms": 2704.8871845,
+          "p95Ms": 9999.94960765,
+          "p99Ms": 10000.90894066,
+          "maxMs": 10011.244483,
+          "over800ms": 19177,
+          "over5000ms": 1612,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 20554,
+          "meanMs": 0.0020967732801401187,
+          "p50Ms": 0.000227,
+          "p95Ms": 0.000331,
+          "p99Ms": 0.00042647000000000117,
+          "maxMs": 37.838059,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 20554,
+          "meanMs": 0.000588204242483215,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 12.08995,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 20554,
+          "meanMs": 0.001245043446531089,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 25.590623,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 20554,
+          "meanMs": 0.05635489583536051,
+          "p50Ms": 0.043696,
+          "p95Ms": 0.1014827,
+          "p99Ms": 0.1861266100000003,
+          "maxMs": 6.027942,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 20554,
+          "meanMs": 2956.130179208816,
+          "p50Ms": 2703.898212,
+          "p95Ms": 9999.53531945,
+          "p99Ms": 10000.86620011,
+          "maxMs": 10011.215675,
+          "over800ms": 19176,
+          "over5000ms": 1603,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 20554,
+          "meanMs": 4.2062166684830204,
+          "p50Ms": 0.0457785,
+          "p95Ms": 0.31542469999999984,
+          "p99Ms": 3.7263313600000054,
+          "maxMs": 9557.545402,
+          "over800ms": 22,
+          "over5000ms": 6,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 19153,
+        "totalWaitingMs": 56999747.00317659,
+        "totalBlockedMs": 42.74781700000063,
+        "totalHttpMs": 57055757.01967605
+      },
+      "observedRunningRange": [
+        1,
+        1
+      ],
+      "observedDesiredRange": [
+        1,
+        2
+      ],
+      "server": {
+        "commerce_cpu": 100.07503954569499,
+        "commerce_memory": 51.350911458333336,
+        "database_cpu": 18.534892644433693,
+        "database_connections": 15.0,
+        "alb_requests_per_target": 20063.0,
+        "alb_target_p95": 3.4212037481825237
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:29:00+00:00",
+      "counts": {
+        "httpCompletions": 20004,
+        "non200": 56,
+        "drops": 7554
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 20004,
+          "meanMs": 2903.2526598579784,
+          "p50Ms": 3172.5920459999998,
+          "p95Ms": 3729.2658997499993,
+          "p99Ms": 5545.860541400009,
+          "maxMs": 10008.263493,
+          "over800ms": 18018,
+          "over5000ms": 315,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 20004,
+          "meanMs": 0.00024314287142571486,
+          "p50Ms": 0.000225,
+          "p95Ms": 0.000319,
+          "p99Ms": 0.000377,
+          "maxMs": 0.038613,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 20004,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 20004,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 20004,
+          "meanMs": 0.04577559943011398,
+          "p50Ms": 0.039132,
+          "p95Ms": 0.07186014999999994,
+          "p99Ms": 0.12907194,
+          "maxMs": 5.920441,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 20004,
+          "meanMs": 2903.0848754405615,
+          "p50Ms": 3172.310168,
+          "p95Ms": 3729.140200199999,
+          "p99Ms": 5545.788578630009,
+          "maxMs": 10008.204625,
+          "over800ms": 18018,
+          "over5000ms": 315,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 20004,
+          "meanMs": 0.12200881798640272,
+          "p50Ms": 0.041178,
+          "p95Ms": 0.2529831499999999,
+          "p99Ms": 1.0917231500000004,
+          "maxMs": 71.751013,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 18037,
+        "totalWaitingMs": 60574312.38593203,
+        "totalBlockedMs": 4.380351,
+        "totalHttpMs": 60577273.78200995
+      },
+      "observedRunningRange": [
+        1,
+        2
+      ],
+      "observedDesiredRange": [
+        2,
+        2
+      ],
+      "server": {
+        "commerce_cpu": 82.55564993619919,
+        "commerce_memory": 32.92100694444444,
+        "database_cpu": 16.43548199090803,
+        "database_connections": 20.0,
+        "alb_requests_per_target": 18424.0,
+        "alb_target_p95": 3.7347813741998372
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:30:00+00:00",
+      "counts": {
+        "httpCompletions": 27405,
+        "drops": 2787,
+        "non200": 18
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 27405,
+          "meanMs": 2102.3216112230616,
+          "p50Ms": 794.261962,
+          "p95Ms": 6279.6107966,
+          "p99Ms": 7005.88410844,
+          "maxMs": 10000.802871,
+          "over800ms": 13664,
+          "over5000ms": 3462,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 27405,
+          "meanMs": 0.0002362968801313629,
+          "p50Ms": 0.000222,
+          "p95Ms": 0.000303,
+          "p99Ms": 0.00037,
+          "maxMs": 0.030582,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 27405,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 27405,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 27405,
+          "meanMs": 0.04555075902207627,
+          "p50Ms": 0.040784,
+          "p95Ms": 0.0751284,
+          "p99Ms": 0.11707911999999983,
+          "maxMs": 9.726469,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 27405,
+          "meanMs": 2101.5503460027735,
+          "p50Ms": 793.073302,
+          "p95Ms": 6279.1007549999995,
+          "p99Ms": 7005.62425432,
+          "maxMs": 10000.750535,
+          "over800ms": 13658,
+          "over5000ms": 3459,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 27405,
+          "meanMs": 0.7257144612661923,
+          "p50Ms": 0.046717,
+          "p95Ms": 0.47033359999999985,
+          "p99Ms": 1.3049959999999936,
+          "maxMs": 3527.313296,
+          "over800ms": 6,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 13405,
+        "totalWaitingMs": 52286551.60574414,
+        "totalBlockedMs": 3.1906699999999932,
+        "totalHttpMs": 52304790.460652016
+      },
+      "observedRunningRange": [
+        2,
+        2
+      ],
+      "observedDesiredRange": [
+        2,
+        2
+      ],
+      "server": {
+        "commerce_cpu": 93.61208136876424,
+        "commerce_memory": 52.360026041666664,
+        "database_cpu": 20.417006950115834,
+        "database_connections": 20.0,
+        "alb_requests_per_target": 13691.5,
+        "alb_target_p95": 6.212297937616095
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:31:00+00:00",
+      "counts": {
+        "httpCompletions": 32954,
+        "non200": 201
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 32954,
+          "meanMs": 554.0134292326576,
+          "p50Ms": 63.557214,
+          "p95Ms": 2642.8641335,
+          "p99Ms": 4847.784571600002,
+          "maxMs": 10002.044559,
+          "over800ms": 6360,
+          "over5000ms": 314,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 32954,
+          "meanMs": 0.00023801687200339868,
+          "p50Ms": 0.00022,
+          "p95Ms": 0.00030434999999999853,
+          "p99Ms": 0.000362,
+          "maxMs": 0.20249,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 32954,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 32954,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 32954,
+          "meanMs": 0.0478052311403775,
+          "p50Ms": 0.0432675,
+          "p95Ms": 0.07669414999999996,
+          "p99Ms": 0.11422873000000018,
+          "maxMs": 1.029431,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 32954,
+          "meanMs": 548.7698106218669,
+          "p50Ms": 63.1944705,
+          "p95Ms": 2637.5522849999998,
+          "p99Ms": 4834.473736260004,
+          "maxMs": 10001.998985,
+          "over800ms": 6340,
+          "over5000ms": 303,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 32954,
+          "meanMs": 5.195813379650422,
+          "p50Ms": 0.0511435,
+          "p95Ms": 0.4011420999999997,
+          "p99Ms": 3.998912350000001,
+          "maxMs": 9181.043579,
+          "over800ms": 48,
+          "over5000ms": 10,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 5687,
+        "totalWaitingMs": 13130204.599423025,
+        "totalBlockedMs": 1.3304180000000037,
+        "totalHttpMs": 13293096.999730073
+      },
+      "observedRunningRange": [
+        2,
+        2
+      ],
+      "observedDesiredRange": [
+        2,
+        4
+      ],
+      "server": {
+        "commerce_cpu": 98.92288398742676,
+        "commerce_memory": 52.84830729166667,
+        "database_cpu": 22.481474063689163,
+        "database_connections": 20.0,
+        "alb_requests_per_target": 16528.0,
+        "alb_target_p95": 2.3166748941844215
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:32:00+00:00",
+      "counts": {
+        "httpCompletions": 34696,
+        "non200": 248
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 34696,
+          "meanMs": 307.7766315445296,
+          "p50Ms": 27.767649,
+          "p95Ms": 1190.83803725,
+          "p99Ms": 5347.690369250265,
+          "maxMs": 10002.819839,
+          "over800ms": 2837,
+          "over5000ms": 353,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 34696,
+          "meanMs": 0.0002505017581277381,
+          "p50Ms": 0.00022,
+          "p95Ms": 0.000328,
+          "p99Ms": 0.000443,
+          "maxMs": 0.16631,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 34696,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 34696,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 34696,
+          "meanMs": 0.05777197308047037,
+          "p50Ms": 0.045069,
+          "p95Ms": 0.109062,
+          "p99Ms": 0.19682605000000017,
+          "maxMs": 6.861957,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 34696,
+          "meanMs": 301.29836158312196,
+          "p50Ms": 27.548988,
+          "p95Ms": 1189.2956840000002,
+          "p99Ms": 4866.451542700005,
+          "maxMs": 10002.765363,
+          "over800ms": 2776,
+          "over5000ms": 338,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 34696,
+          "meanMs": 6.420497988327185,
+          "p50Ms": 0.0521495,
+          "p95Ms": 0.46065425,
+          "p99Ms": 6.8218944000001205,
+          "maxMs": 8064.561592,
+          "over800ms": 72,
+          "over5000ms": 12,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 2940,
+        "totalWaitingMs": 7645962.373750005,
+        "totalBlockedMs": 0.8470520000000019,
+        "totalHttpMs": 7877468.573380011
+      },
+      "observedRunningRange": [
+        2,
+        4
+      ],
+      "observedDesiredRange": [
+        4,
+        4
+      ],
+      "server": {
+        "commerce_cpu": 73.91440688570341,
+        "commerce_memory": 31.830512152777775,
+        "database_cpu": 22.333333333333336,
+        "database_connections": 25.0,
+        "alb_requests_per_target": 17361.0,
+        "alb_target_p95": 0.05906422714183564
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:33:00+00:00",
+      "counts": {
+        "httpCompletions": 30588,
+        "non200": 758,
+        "drops": 4678
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 30588,
+          "meanMs": 1352.303370190467,
+          "p50Ms": 17.5995865,
+          "p95Ms": 7398.9257569499905,
+          "p99Ms": 9998.88065614,
+          "maxMs": 10009.085205,
+          "over800ms": 7918,
+          "over5000ms": 4087,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 30588,
+          "meanMs": 0.00024411380279848306,
+          "p50Ms": 0.00022,
+          "p95Ms": 0.000309,
+          "p99Ms": 0.00039113000000000103,
+          "maxMs": 0.088499,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 30588,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 30588,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 30588,
+          "meanMs": 0.046429395351118084,
+          "p50Ms": 0.040336,
+          "p95Ms": 0.07602449999999998,
+          "p99Ms": 0.12776511000000015,
+          "maxMs": 3.907441,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 30588,
+          "meanMs": 1351.2563995636524,
+          "p50Ms": 17.4247205,
+          "p95Ms": 7393.935668149989,
+          "p99Ms": 9998.83777099,
+          "maxMs": 10009.048894,
+          "over800ms": 7913,
+          "over5000ms": 4084,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 30588,
+          "meanMs": 1.0005412314633189,
+          "p50Ms": 0.0460075,
+          "p95Ms": 0.3398162499999997,
+          "p99Ms": 1.2166523600000005,
+          "maxMs": 9127.710822,
+          "over800ms": 5,
+          "over5000ms": 3,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 8744,
+        "totalWaitingMs": 49591693.33362284,
+        "totalBlockedMs": 2.1365440000000064,
+        "totalHttpMs": 49594139.32850107
+      },
+      "observedRunningRange": [
+        4,
+        4
+      ],
+      "observedDesiredRange": [
+        4,
+        4
+      ],
+      "server": {
+        "commerce_cpu": 60.530530989170074,
+        "commerce_memory": 45.70312499999999,
+        "database_cpu": 25.034099604111912,
+        "database_connections": 30.0,
+        "alb_requests_per_target": 9621.416665,
+        "alb_target_p95": 6.583849164721765
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:34:00+00:00",
+      "counts": {
+        "drops": 6922,
+        "httpCompletions": 30013,
+        "non200": 4266
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 30013,
+          "meanMs": 1420.245541960284,
+          "p50Ms": 12.561815,
+          "p95Ms": 10000.4427844,
+          "p99Ms": 10000.92614464,
+          "maxMs": 10006.557949,
+          "over800ms": 4227,
+          "over5000ms": 4226,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 30013,
+          "meanMs": 0.000234907673341552,
+          "p50Ms": 0.000221,
+          "p95Ms": 0.000303,
+          "p99Ms": 0.000366880000000001,
+          "maxMs": 0.024912,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 30013,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 30013,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 30013,
+          "meanMs": 0.04404776410222237,
+          "p50Ms": 0.039936,
+          "p95Ms": 0.0702598,
+          "p99Ms": 0.10825068000000004,
+          "maxMs": 0.685709,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 30013,
+          "meanMs": 1420.1203161165827,
+          "p50Ms": 12.425222,
+          "p95Ms": 10000.3993662,
+          "p99Ms": 10000.880481479999,
+          "maxMs": 10006.522074,
+          "over800ms": 4227,
+          "over5000ms": 4226,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 30013,
+          "meanMs": 0.0811780795988405,
+          "p50Ms": 0.038325,
+          "p95Ms": 0.27339299999999994,
+          "p99Ms": 1.0662221600000086,
+          "maxMs": 16.485874,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 3249,
+        "totalWaitingMs": 32489345.443134062,
+        "totalBlockedMs": 0.7735790000000005,
+        "totalHttpMs": 32489490.89518698
+      },
+      "observedRunningRange": [
+        4,
+        4
+      ],
+      "observedDesiredRange": [
+        4,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 42.86933139165242,
+        "commerce_memory": 42.67903645833333,
+        "database_cpu": 19.383979465982197,
+        "database_connections": 30.0,
+        "alb_requests_per_target": 8906.5,
+        "alb_target_p95": 0.00936647761278136
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:35:00+00:00",
+      "counts": {
+        "httpCompletions": 34324,
+        "non200": 2,
+        "drops": 800
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 34324,
+          "meanMs": 475.3369508652546,
+          "p50Ms": 12.279985499999999,
+          "p95Ms": 4519.183459249997,
+          "p99Ms": 6039.673694319999,
+          "maxMs": 7965.261669,
+          "over800ms": 4293,
+          "over5000ms": 1367,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 34324,
+          "meanMs": 0.00023440009905605405,
+          "p50Ms": 0.00022,
+          "p95Ms": 0.000296,
+          "p99Ms": 0.000348,
+          "maxMs": 0.029632,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 34324,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 34324,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 34324,
+          "meanMs": 0.04424531228877753,
+          "p50Ms": 0.0405965,
+          "p95Ms": 0.0680557,
+          "p99Ms": 0.10320318999999889,
+          "maxMs": 0.514653,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 34324,
+          "meanMs": 475.20981608256614,
+          "p50Ms": 12.1604225,
+          "p95Ms": 4518.350618149998,
+          "p99Ms": 6039.604592799999,
+          "maxMs": 7965.143522,
+          "over800ms": 4293,
+          "over5000ms": 1367,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 34324,
+          "meanMs": 0.08288947039972032,
+          "p50Ms": 0.0387155,
+          "p95Ms": 0.22918584999999997,
+          "p99Ms": 1.2792641799999964,
+          "maxMs": 12.116797,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 5221,
+        "totalWaitingMs": 21362415.542945046,
+        "totalBlockedMs": 1.2166850000000051,
+        "totalHttpMs": 21363147.28239707
+      },
+      "observedRunningRange": [
+        4,
+        7
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 58.37426781938189,
+        "commerce_memory": 36.99931795634921,
+        "database_cpu": 26.477257569694544,
+        "database_connections": 38.0,
+        "alb_requests_per_target": 9724.05,
+        "alb_target_p95": 4.454375861581803
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:36:00+00:00",
+      "counts": {
+        "httpCompletions": 28340,
+        "non200": 2064,
+        "drops": 7604
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 28340,
+          "meanMs": 1946.6515056133733,
+          "p50Ms": 19.5485855,
+          "p95Ms": 9998.78233785,
+          "p99Ms": 10000.59212151,
+          "maxMs": 10004.069477,
+          "over800ms": 8059,
+          "over5000ms": 5175,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 28340,
+          "meanMs": 0.0002340725476358504,
+          "p50Ms": 0.000221,
+          "p95Ms": 0.000301,
+          "p99Ms": 0.000366,
+          "maxMs": 0.040461,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 28340,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 28340,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 28340,
+          "meanMs": 0.044656515278757934,
+          "p50Ms": 0.040188,
+          "p95Ms": 0.07049419999999999,
+          "p99Ms": 0.10804083,
+          "maxMs": 15.05777,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 28340,
+          "meanMs": 1946.5066297119267,
+          "p50Ms": 19.360701499999998,
+          "p95Ms": 9998.733953949999,
+          "p99Ms": 10000.55186826,
+          "maxMs": 10004.013956,
+          "over800ms": 8059,
+          "over5000ms": 5175,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 28340,
+          "meanMs": 0.10021938616796049,
+          "p50Ms": 0.040784,
+          "p95Ms": 0.3228599999999999,
+          "p99Ms": 1.2104117000000014,
+          "maxMs": 29.956745,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 8112,
+        "totalWaitingMs": 57238037.61004804,
+        "totalBlockedMs": 1.9019270000000152,
+        "totalHttpMs": 57239162.12624194
+      },
+      "observedRunningRange": [
+        6,
+        7
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 56.65448133150737,
+        "commerce_memory": 49.06063988095237,
+        "database_cpu": 25.80376478427453,
+        "database_connections": 45.0,
+        "alb_requests_per_target": 5206.185715,
+        "alb_target_p95": 8.4695000388576
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:37:00+00:00",
+      "counts": {
+        "drops": 2479,
+        "httpCompletions": 34494,
+        "non200": 370
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 34494,
+          "meanMs": 1120.9556172956457,
+          "p50Ms": 13.683780500000001,
+          "p95Ms": 7683.53396315,
+          "p99Ms": 10000.031585140001,
+          "maxMs": 10001.254691,
+          "over800ms": 7248,
+          "over5000ms": 3049,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 34494,
+          "meanMs": 0.0002354765466457935,
+          "p50Ms": 0.00022,
+          "p95Ms": 0.000295,
+          "p99Ms": 0.000355,
+          "maxMs": 0.052606,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 34494,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 34494,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 34494,
+          "meanMs": 0.044400996347190816,
+          "p50Ms": 0.040002,
+          "p95Ms": 0.0704157,
+          "p99Ms": 0.10892007000000001,
+          "maxMs": 4.32112,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 34494,
+          "meanMs": 1120.8058213919812,
+          "p50Ms": 13.5207585,
+          "p95Ms": 7683.46242965,
+          "p99Ms": 9999.975124429999,
+          "maxMs": 10001.207484,
+          "over800ms": 7248,
+          "over5000ms": 3049,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 34494,
+          "meanMs": 0.10539490731721458,
+          "p50Ms": 0.044349,
+          "p95Ms": 0.33098069999999996,
+          "p99Ms": 1.2460779499999999,
+          "maxMs": 8.440905,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 6267,
+        "totalWaitingMs": 29717884.83013896,
+        "totalBlockedMs": 1.4506480000000046,
+        "totalHttpMs": 29718793.003234975
+      },
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 40.09166872501373,
+        "commerce_memory": 46.84651692708333,
+        "database_cpu": 26.348294913952827,
+        "database_connections": 40.0,
+        "alb_requests_per_target": 6283.766667,
+        "alb_target_p95": 7.081510597197788
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:38:00+00:00",
+      "counts": {
+        "httpCompletions": 35767
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 35767,
+          "meanMs": 29.3851036262197,
+          "p50Ms": 13.185207,
+          "p95Ms": 63.94702289999997,
+          "p99Ms": 88.60916153999976,
+          "maxMs": 2929.034966,
+          "over800ms": 128,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 35767,
+          "meanMs": 0.0002345230799340174,
+          "p50Ms": 0.000219,
+          "p95Ms": 0.00029,
+          "p99Ms": 0.00034433999999999653,
+          "maxMs": 0.055642,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 35767,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 35767,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 35767,
+          "meanMs": 0.04451054326613918,
+          "p50Ms": 0.040266,
+          "p95Ms": 0.07001439999999999,
+          "p99Ms": 0.10633291999999969,
+          "maxMs": 0.495134,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 35767,
+          "meanMs": 29.230003977605055,
+          "p50Ms": 13.028319,
+          "p95Ms": 63.8011579,
+          "p99Ms": 88.49253543999977,
+          "maxMs": 2928.808399,
+          "over800ms": 128,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 35767,
+          "meanMs": 0.1105891053485056,
+          "p50Ms": 0.045118,
+          "p95Ms": 0.34665769999999985,
+          "p99Ms": 1.2404156999999956,
+          "maxMs": 10.965542,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 355,
+        "totalWaitingMs": 1025351.8054219997,
+        "totalBlockedMs": 0.07878299999999988,
+        "totalHttpMs": 1025406.3212999993
+      },
+      "observedRunningRange": [
+        6,
+        7
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 48.639773185675345,
+        "commerce_memory": 42.59745279947917,
+        "database_cpu": 26.472010538778367,
+        "database_connections": 45.0,
+        "alb_requests_per_target": 5900.214286,
+        "alb_target_p95": 0.05489949536391454
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:39:00+00:00",
+      "counts": {
+        "httpCompletions": 36208
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 36208,
+          "meanMs": 146.30591894434932,
+          "p50Ms": 13.2112305,
+          "p95Ms": 1028.9967615000019,
+          "p99Ms": 3044.33102711,
+          "maxMs": 5015.430054,
+          "over800ms": 1861,
+          "over5000ms": 1,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 36208,
+          "meanMs": 0.00023496440013256737,
+          "p50Ms": 0.000219,
+          "p95Ms": 0.000292,
+          "p99Ms": 0.000349,
+          "maxMs": 0.140655,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 36208,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 36208,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 36208,
+          "meanMs": 0.045143141515687144,
+          "p50Ms": 0.040645,
+          "p95Ms": 0.07200880000000001,
+          "p99Ms": 0.11072497000000002,
+          "maxMs": 1.300133,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 36208,
+          "meanMs": 146.15039800389417,
+          "p50Ms": 13.052335500000002,
+          "p95Ms": 1028.9041916000017,
+          "p99Ms": 3044.2553835999997,
+          "maxMs": 5015.207567,
+          "over800ms": 1861,
+          "over5000ms": 1,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 36208,
+          "meanMs": 0.11037779893946088,
+          "p50Ms": 0.0458275,
+          "p95Ms": 0.35049355000000015,
+          "p99Ms": 1.1680877800000002,
+          "maxMs": 10.898239,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {
+        "slowStarts": 1634,
+        "totalWaitingMs": 3881398.010592004,
+        "totalBlockedMs": 0.3693880000000002,
+        "totalHttpMs": 3881648.680831001
+      },
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 38.08973509357089,
+        "commerce_memory": 51.132347470238095,
+        "database_cpu": 26.28733949837003,
+        "database_connections": 45.0,
+        "alb_requests_per_target": 5937.547619,
+        "alb_target_p95": 1.0520383960873152
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:40:00+00:00",
+      "counts": {
+        "httpCompletions": 36009
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 36009,
+          "meanMs": 15.118757230858954,
+          "p50Ms": 12.277308,
+          "p95Ms": 24.410672799999983,
+          "p99Ms": 89.68923603999886,
+          "maxMs": 449.814756,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 36009,
+          "meanMs": 0.0002416549196034325,
+          "p50Ms": 0.000219,
+          "p95Ms": 0.000291,
+          "p99Ms": 0.00035,
+          "maxMs": 0.04878,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 36009,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 36009,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 36009,
+          "meanMs": 0.04540845352550751,
+          "p50Ms": 0.040695,
+          "p95Ms": 0.0735536,
+          "p99Ms": 0.11144063999999988,
+          "maxMs": 0.759022,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 36009,
+          "meanMs": 14.962547719875587,
+          "p50Ms": 12.133365,
+          "p95Ms": 24.211258400000002,
+          "p99Ms": 88.96573175999933,
+          "maxMs": 442.038385,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 36009,
+          "meanMs": 0.11080105745785776,
+          "p50Ms": 0.044431,
+          "p95Ms": 0.35057859999999996,
+          "p99Ms": 1.2631238799999922,
+          "maxMs": 21.153971,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 26.560609791960037,
+        "commerce_memory": 48.87695312499999,
+        "database_cpu": 27.197875609593158,
+        "database_connections": 40.0,
+        "alb_requests_per_target": 6000.499999,
+        "alb_target_p95": 0.01046483895603923
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:41:00+00:00",
+      "counts": {
+        "httpCompletions": 35977
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 35977,
+          "meanMs": 18.352527437029213,
+          "p50Ms": 12.466477,
+          "p95Ms": 51.669800399999886,
+          "p99Ms": 131.71662887999977,
+          "maxMs": 307.233653,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 35977,
+          "meanMs": 0.00023353083914723292,
+          "p50Ms": 0.000219,
+          "p95Ms": 0.000289,
+          "p99Ms": 0.000342,
+          "maxMs": 0.045768,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 35977,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 35977,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 35977,
+          "meanMs": 0.044234669094143475,
+          "p50Ms": 0.040192,
+          "p95Ms": 0.06901679999999996,
+          "p99Ms": 0.10680639999999993,
+          "maxMs": 0.451856,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 35977,
+          "meanMs": 18.183860147177363,
+          "p50Ms": 12.30921,
+          "p95Ms": 51.473024399999964,
+          "p99Ms": 131.42298819999993,
+          "maxMs": 306.201727,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 35977,
+          "meanMs": 0.12443262075770632,
+          "p50Ms": 0.044391,
+          "p95Ms": 0.38317499999999965,
+          "p99Ms": 1.3243834399999987,
+          "maxMs": 123.812072,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 1
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 24.416029055913288,
+        "commerce_memory": 52.294921875,
+        "database_cpu": 24.685197198795684,
+        "database_connections": 40.0,
+        "alb_requests_per_target": 6001.0,
+        "alb_target_p95": 0.010014529704266669
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:42:00+00:00",
+      "counts": {
+        "httpCompletions": 36016
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 36016,
+          "meanMs": 15.152837980980674,
+          "p50Ms": 12.3726325,
+          "p95Ms": 22.469658,
+          "p99Ms": 80.76776369999897,
+          "maxMs": 465.604577,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 36016,
+          "meanMs": 0.00023367928143047534,
+          "p50Ms": 0.000218,
+          "p95Ms": 0.000287,
+          "p99Ms": 0.000342,
+          "maxMs": 0.064908,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 36016,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 36016,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 36016,
+          "meanMs": 0.044160291898045316,
+          "p50Ms": 0.039981,
+          "p95Ms": 0.0691575,
+          "p99Ms": 0.10755524999999996,
+          "maxMs": 0.533639,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 36016,
+          "meanMs": 14.997712324272547,
+          "p50Ms": 12.2244975,
+          "p95Ms": 22.279983,
+          "p99Ms": 80.59564674999888,
+          "maxMs": 465.200056,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 36016,
+          "meanMs": 0.1109653648100844,
+          "p50Ms": 0.0442415,
+          "p95Ms": 0.35095875,
+          "p99Ms": 1.1738782999999957,
+          "maxMs": 14.571421,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 24.074141396416564,
+        "commerce_memory": 52.34646267361111,
+        "database_cpu": 25.080042689434368,
+        "database_connections": 40.0,
+        "alb_requests_per_target": 6000.500001,
+        "alb_target_p95": 0.007635124642796685
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:43:00+00:00",
+      "counts": {
+        "httpCompletions": 32526
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 32526,
+          "meanMs": 14.796313499508086,
+          "p50Ms": 12.402666499999999,
+          "p95Ms": 31.216056000000002,
+          "p99Ms": 56.625693999999996,
+          "maxMs": 232.589034,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 32526,
+          "meanMs": 0.0002393319498247556,
+          "p50Ms": 0.000219,
+          "p95Ms": 0.00029,
+          "p99Ms": 0.000341,
+          "maxMs": 0.114159,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 32526,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 32526,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 32526,
+          "meanMs": 0.04479708980507901,
+          "p50Ms": 0.0405915,
+          "p95Ms": 0.069404,
+          "p99Ms": 0.1068185,
+          "maxMs": 4.098177,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 32526,
+          "meanMs": 14.639083829428763,
+          "p50Ms": 12.2496935,
+          "p95Ms": 30.9557145,
+          "p99Ms": 56.4552555,
+          "maxMs": 232.506411,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 32526,
+          "meanMs": 0.11243258027424215,
+          "p50Ms": 0.043397,
+          "p95Ms": 0.348074,
+          "p99Ms": 1.2386965,
+          "maxMs": 55.472112,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 21.686413155661686,
+        "commerce_memory": 52.370876736111114,
+        "database_cpu": 24.830436449080942,
+        "database_connections": 40.0,
+        "alb_requests_per_target": 5418.000001,
+        "alb_target_p95": 0.0073034301710698775
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:44:00+00:00",
+      "counts": {
+        "httpCompletions": 25270
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 25270,
+          "meanMs": 13.11725921483973,
+          "p50Ms": 12.02384,
+          "p95Ms": 18.689147849999998,
+          "p99Ms": 31.5639941400001,
+          "maxMs": 288.060642,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 25270,
+          "meanMs": 0.0002400043529877325,
+          "p50Ms": 0.000219,
+          "p95Ms": 0.000293,
+          "p99Ms": 0.00035,
+          "maxMs": 0.090865,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 25270,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 25270,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 25270,
+          "meanMs": 0.04596224910961614,
+          "p50Ms": 0.042175,
+          "p95Ms": 0.07078910000000001,
+          "p99Ms": 0.10774457000000007,
+          "maxMs": 0.366364,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 25270,
+          "meanMs": 12.963192564463792,
+          "p50Ms": 11.8743895,
+          "p95Ms": 18.521088849999998,
+          "p99Ms": 31.29776441000026,
+          "maxMs": 287.957448,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 25270,
+          "meanMs": 0.10810440126632372,
+          "p50Ms": 0.0422845,
+          "p95Ms": 0.34022479999999994,
+          "p99Ms": 1.2534716400000159,
+          "maxMs": 11.650912,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 17.626104474067688,
+        "commerce_memory": 52.392578125,
+        "database_cpu": 21.642027367122783,
+        "database_connections": 40.0,
+        "alb_requests_per_target": 4218.166666,
+        "alb_target_p95": 0.006801446233679952
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:45:00+00:00",
+      "counts": {
+        "httpCompletions": 18119
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 18119,
+          "meanMs": 15.40253891699321,
+          "p50Ms": 12.409154,
+          "p95Ms": 22.294013999999983,
+          "p99Ms": 102.65341373999992,
+          "maxMs": 566.213082,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 18119,
+          "meanMs": 0.00023954644296042825,
+          "p50Ms": 0.000222,
+          "p95Ms": 0.000314,
+          "p99Ms": 0.00039981999999999973,
+          "maxMs": 0.042752,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 18119,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 18119,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 18119,
+          "meanMs": 0.056186258347590924,
+          "p50Ms": 0.048223,
+          "p95Ms": 0.09769029999999977,
+          "p99Ms": 0.16589231999999993,
+          "maxMs": 3.699539,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 18119,
+          "meanMs": 15.25259216866273,
+          "p50Ms": 12.271274,
+          "p95Ms": 22.1368869,
+          "p99Ms": 102.42948581999998,
+          "maxMs": 566.035735,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 18119,
+          "meanMs": 0.0937604899828909,
+          "p50Ms": 0.043621,
+          "p95Ms": 0.27057889999999996,
+          "p99Ms": 1.2824309199999995,
+          "maxMs": 10.068677,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 14.207553691334196,
+        "commerce_memory": 52.408854166666664,
+        "database_cpu": 19.742982865524368,
+        "database_connections": 40.0,
+        "alb_requests_per_target": 3017.9999989999997,
+        "alb_target_p95": 0.0076760608689511334
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:46:00+00:00",
+      "counts": {
+        "httpCompletions": 10900
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 10900,
+          "meanMs": 13.382276151651375,
+          "p50Ms": 12.3711485,
+          "p95Ms": 19.71520229999999,
+          "p99Ms": 32.61394010000003,
+          "maxMs": 268.560803,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 10900,
+          "meanMs": 0.00024619009174311926,
+          "p50Ms": 0.000223,
+          "p95Ms": 0.000327,
+          "p99Ms": 0.0004420100000000002,
+          "maxMs": 0.030192,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 10900,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 10900,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 10900,
+          "meanMs": 0.0659478352293578,
+          "p50Ms": 0.0545085,
+          "p95Ms": 0.11507869999999996,
+          "p99Ms": 0.19571877000000043,
+          "maxMs": 4.229157,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 10900,
+          "meanMs": 13.211526041926605,
+          "p50Ms": 12.2094555,
+          "p95Ms": 19.508483199999997,
+          "p99Ms": 32.32665476000004,
+          "maxMs": 268.418173,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 10900,
+          "meanMs": 0.10480227449541285,
+          "p50Ms": 0.047403,
+          "p95Ms": 0.27262449999999977,
+          "p99Ms": 1.3975201200000005,
+          "maxMs": 15.524915,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 9.420070833630033,
+        "commerce_memory": 52.425130208333336,
+        "database_cpu": 14.634837076031184,
+        "database_connections": 40.0,
+        "alb_requests_per_target": 1818.0,
+        "alb_target_p95": 0.007016582385318319
+      }
+    },
+    {
+      "minuteUtc": "2026-11-11T06:47:00+00:00",
+      "counts": {
+        "httpCompletions": 3691
+      },
+      "timing": {
+        "http_req_duration": {
+          "count": 3691,
+          "meanMs": 13.524126306691953,
+          "p50Ms": 12.815083,
+          "p95Ms": 19.3022895,
+          "p99Ms": 30.141769199999953,
+          "maxMs": 256.238209,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_blocked": {
+          "count": 3691,
+          "meanMs": 0.00025428583039826603,
+          "p50Ms": 0.000226,
+          "p95Ms": 0.000343,
+          "p99Ms": 0.0004931999999999997,
+          "maxMs": 0.015836,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_connecting": {
+          "count": 3691,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_tls_handshaking": {
+          "count": 3691,
+          "meanMs": 0.0,
+          "p50Ms": 0.0,
+          "p95Ms": 0.0,
+          "p99Ms": 0.0,
+          "maxMs": 0.0,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_sending": {
+          "count": 3691,
+          "meanMs": 0.07418184855052831,
+          "p50Ms": 0.06511,
+          "p95Ms": 0.13627499999999998,
+          "p99Ms": 0.18188619999999991,
+          "maxMs": 0.278284,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_waiting": {
+          "count": 3691,
+          "meanMs": 13.360070510430779,
+          "p50Ms": 12.642931,
+          "p95Ms": 19.102149,
+          "p99Ms": 30.018286699999962,
+          "maxMs": 256.060584,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        },
+        "http_req_receiving": {
+          "count": 3691,
+          "meanMs": 0.08987394771064752,
+          "p50Ms": 0.055006,
+          "p95Ms": 0.178921,
+          "p99Ms": 0.8707723999999978,
+          "maxMs": 5.464887,
+          "over800ms": 0,
+          "over5000ms": 0,
+          "negativeValues": 0
+        }
+      },
+      "slowRequestsInferredToStartThisMinute": {},
+      "observedRunningRange": [
+        6,
+        6
+      ],
+      "observedDesiredRange": [
+        6,
+        6
+      ],
+      "server": {
+        "commerce_cpu": 5.169487423366971,
+        "commerce_memory": 52.438693576388886,
+        "database_cpu": 11.129665191617265,
+        "database_connections": 40.0,
+        "alb_requests_per_target": 617.8333319999999,
+        "alb_target_p95": 0.007777360318359367
+      }
+    }
+  ],
+  "limitations": [
+    "Diagnostic only; original drop/collector/normalization failures remain unchanged. No event-relative acceptance override.",
+    "Client waiting includes origin/edge/transit and cannot alone identify the slow server component.",
+    "CloudWatch minute aggregates and task samples are not per-request traces; running is not proof of target readiness.",
+    "Reconstructed request starts use k6 timings and wall-clock export timestamps, not a captured scheduler-arrival timestamp."
+  ]
+}

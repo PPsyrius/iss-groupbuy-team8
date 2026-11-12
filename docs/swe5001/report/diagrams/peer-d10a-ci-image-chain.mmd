@@ -1,0 +1,81 @@
+%% frame: CI: applicable checks, scan failures and review gate
+activityDiagram
+    lane "GitHub: dev" {
+        start S
+        fork F
+        join J
+        decision Approval
+        action Merge["Squash merge"]
+        action Blocked["Job fails or approval absent:\nmerge blocked"]
+        end Failed
+        end E
+    }
+    lane "ci-backend.yml" {
+        action BQ["Verify, contract, Sonar"]
+        action Dock["Monolith build + smoke\nTrivy image scan"]
+        decision Mono
+    }
+    lane "security.yml" {
+        action Sec["Secret, dependency\nand config checks"]
+    }
+    lane "swe5001-service-images.yml" {
+        decision ImagePaths
+        action Img["ARM64 image build\nTrivy image scan"]
+        decision ImageScan
+        merge ImageResult
+    }
+    lane "infra-swe5001.yml" {
+        decision InfraPaths
+        action Infra["Offline stack checks\nAWS foundation plan"]
+        merge InfraResult
+    }
+    S --> F
+    F --> BQ
+    F --> Sec
+    F --> ImagePaths
+    F --> InfraPaths
+    BQ --> Dock
+    Dock --> Mono
+    Mono --> J : [scan passes]
+    Mono --> Blocked : [scan fails]
+    Sec --> J
+    ImagePaths --> Img : [triggered]
+    ImagePaths --> ImageResult : [not triggered]
+    Img --> ImageScan
+    ImageScan --> ImageResult : [scan passes]
+    ImageScan --> Blocked : [scan fails]
+    ImageResult --> J
+    InfraPaths --> Infra : [triggered]
+    InfraPaths --> InfraResult : [not triggered]
+    Infra --> InfraResult
+    InfraResult --> J
+    J --> Approval
+    Approval --> Merge : [checks green and approved]
+    Approval --> Blocked : [otherwise]
+    Blocked --> Failed
+    Merge --> E
+%% Other failed checks also block merge; only the image-scan failure routes are expanded.
+%% at S 0,0
+%% at F 0,1
+%% at J 0,6
+%% at Approval 0,7
+%% at Merge 0,8
+%% at E 0,9
+%% at Blocked 0,3
+%% at Failed 0,4
+%% at BQ 1,2
+%% at Dock 1,3
+%% at Mono 1,4
+%% at Sec 2,2
+%% at ImagePaths 3,2
+%% at Img 3,3
+%% at ImageScan 3,4
+%% at ImageResult 3,5
+%% at InfraPaths 4,2
+%% at Infra 4,3
+%% at InfraResult 4,5
+%% route ImagePaths ImageResult hvh
+%% route InfraPaths InfraResult hvh
+%% route Approval Blocked hvh
+%% route Mono Blocked hvh
+%% route ImageScan Blocked vhv

@@ -1,0 +1,284 @@
+[
+  {
+    "path": "matrix-v2/tls-warmup/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 6932055,
+    "sha256": "9148890819e3a03b68c4f86915675a3c01ed4c8b65f7b1f446804bad9c5147ab"
+  },
+  {
+    "path": "matrix-v2/tls-control/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36907270,
+    "sha256": "03e7f5c1326dd0fae6626ef6259692b147efc4ff1e84360616e2106cc8136ac9"
+  },
+  {
+    "path": "matrix-v2/pg-delay-2ms/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36906752,
+    "sha256": "e874ae1447ef1fb300ff0bf0be5462773c0410f005197eaa1f2b74eb87cda1be"
+  },
+  {
+    "path": "matrix-v2/pg-delay-5ms/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36947873,
+    "sha256": "b6eb372bf1c30e2c12ec97da9fc681d6f1bd0938ba288383e6a3dae6306c85f0"
+  },
+  {
+    "path": "matrix-v2/redis-delay-50ms/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36950255,
+    "sha256": "7f4f818e519dd834d6e17fb4e709b77679431aa357224efa96ba4ac29fd28dcc"
+  },
+  {
+    "path": "matrix-v2/proxy-warmup/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 6935339,
+    "sha256": "c2df273b40885b27fec8f49ab59184c496908c5187ac5c03a77e1cef619249ab"
+  },
+  {
+    "path": "matrix-v2/shared-budget-direct/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36910853,
+    "sha256": "dadef03f5e9e167564ca44c99d48e46d3559a9abfd9c96d1a5d704743abe236c"
+  },
+  {
+    "path": "matrix-v2/shared-budget-proxied/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36900535,
+    "sha256": "c3e83d7e7d7feb81dc255319a7f8b1856f473c18dbbccf799e081ac5f0845687"
+  },
+  {
+    "path": "matrix-v2/shared-budget-400/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 73779945,
+    "sha256": "8936c4537b07cbe5807c9e329c265416bdabc3ce378c59ec82b50c507d2df6e7"
+  },
+  {
+    "path": "matrix-v2/cold-first-traffic/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 20170473,
+    "sha256": "cab0a6bf44c489c3b0385f5e2a297b1916d384e5bd2118384fc939b1de4cba89"
+  },
+  {
+    "path": "matrix-v2/cold-warmed-traffic/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36916652,
+    "sha256": "38df820bfea3bab5e19b3f96db5cf69d99bca5ef0d5e55c91df8b517d2dbfadd"
+  },
+  {
+    "path": "matrix-v2/jobs-idle/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 28512877,
+    "sha256": "b28eabbc242a5369eef74820feb088d317bc173fed689d6e6d7b90a1d5f5a167"
+  },
+  {
+    "path": "matrix-v2/jobs-with-expiry/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 92261738,
+    "sha256": "8c9c77b2eb6cf8d33fbd7b97f3cccc7ce6496f9aad63caee7b7ea448d0a8e335"
+  },
+  {
+    "path": "matrix-v2/failure-control/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 22257275,
+    "sha256": "633bc8e3a43573c7dbcf0b22a5ddbdcfd1060666278ce855d95fc74ab26ed53a"
+  },
+  {
+    "path": "matrix-v2/cache-expiry/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 35996187,
+    "sha256": "75337a1b2d061be33844a01f22186952dd1c772418e4611ac27b2ac4293d68a6"
+  },
+  {
+    "path": "matrix-v2/redis-slow-timeout/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36181073,
+    "sha256": "696bae0e03ef2d65143c5af655486f12c382dc5b2d5e836b88c67d917d8904f8"
+  },
+  {
+    "path": "matrix-v2/redis-unavailable/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 33179459,
+    "sha256": "71e06990ef7ca08d27ab23a71b0c569bc2eec9891b0c35848bc75d65957a91dd"
+  },
+  {
+    "path": "matrix-v2/failure-recovery/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36900034,
+    "sha256": "6f2173040edb0a18ccdcf1257558eea9a72de97fa057084e47c87acd0ef87a10"
+  },
+  {
+    "path": "matrix-v2/warm-fault-warmup/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 4631771,
+    "sha256": "9108abd5f02404852e4928e773df14e51a3f1a3756b9fd5bda0882a475b8c203"
+  },
+  {
+    "path": "matrix-v2/warm-fault-control/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36906157,
+    "sha256": "b0ddde63082d92b32b3a9cbe9dc2611a73e7225e6a229ab79f55006819a3a276"
+  },
+  {
+    "path": "matrix-v2/warm-cache-expiry/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36906622,
+    "sha256": "de4974a229d53fc6141c1417cba93c2769d1fd327f9e560226b265b5aa0f5fe5"
+  },
+  {
+    "path": "matrix-v2/warm-redis-slow/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 37020062,
+    "sha256": "f77d254445ba3009a5d038715f81a3011c25fa9e9854db623a1ebda9ac67a4ff"
+  },
+  {
+    "path": "matrix-v2/warm-redis-down/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 33691422,
+    "sha256": "f9f95e8970f1fd9e62da890d300a4cd688f545655ca1461caa55908793942820"
+  },
+  {
+    "path": "matrix-v2/warm-fault-recovery/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36905024,
+    "sha256": "578ebb863d991662792c5bb5f2ddd7f013d01be0e80d19770b22eca63cb22e24"
+  },
+  {
+    "path": "matrix-v2/warm-proxy-400/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 70757829,
+    "sha256": "7088f874fa30d26fda07214c679420dbbf7e57ddaa9429315f9f5985762e2eb0"
+  },
+  {
+    "path": "matrix-v2/resource05m1-cold/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 27214358,
+    "sha256": "7c3abc6ae7f7813d5f6b422eb482af4b0978cf870863109392710dbbeca4b7e4"
+  },
+  {
+    "path": "matrix-v2/resource1m1-cold/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36936298,
+    "sha256": "e48874f9a347e2deed105299dd5aa3603bafb9f8e639d9ed06528966f727e018"
+  },
+  {
+    "path": "matrix-v2/resource05m2-cold/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 31343481,
+    "sha256": "e6a005dc509dc15bc30ae335c7e7bdce78bdbc4139ac58a8b1d5aebbdf6e4088"
+  },
+  {
+    "path": "matrix-v2/resource1m2-cold/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36940966,
+    "sha256": "7b9daa750a9fb43af0be555849d3647f28200d6683f78fb6b86856f2fe3af18d"
+  },
+  {
+    "path": "matrix-v2/paired-base-warmup/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 46532924,
+    "sha256": "c9aed8a57007dd25af55636f39c03f5d7a80861b52b0d727963a6ed450bdeb4b"
+  },
+  {
+    "path": "matrix-v2/paired-base-control/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36919188,
+    "sha256": "3b4e252c62ca6d56a3195fcd333f8459767e4916a4108cd290754e11102f50cc"
+  },
+  {
+    "path": "matrix-v2/paired-base-flush/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36907080,
+    "sha256": "eede50a93e72bf860453d38af1e68cbd4f91e94583ab47541155eb2e50e75670"
+  },
+  {
+    "path": "matrix-v2/paired-base-slow/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 37006030,
+    "sha256": "49c08269421917fc73fca74c6b077a21ae0aa828dcbdea9f33b2caf8cd0d0bcb"
+  },
+  {
+    "path": "matrix-v2/paired-base-down/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 33677100,
+    "sha256": "fbf07315b006066694a3db9169e14340389e5b26e8fe1a0d4706bbd5cbd7eef2"
+  },
+  {
+    "path": "matrix-v2/paired-base-recovery/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36905987,
+    "sha256": "85efac0a9ea600644ee02cc86ee10ed9756a19f141c6d3a5c3d630a2c9bd4ec3"
+  },
+  {
+    "path": "matrix-v2/paired-bulkhead-warmup/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 39602283,
+    "sha256": "2148ef2a343e33d2bd71ce87bc8ea04011af9c0865858764290f0711a3dbafc0"
+  },
+  {
+    "path": "matrix-v2/paired-bulkhead-control/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36991212,
+    "sha256": "29ff7ef983f66619b8845a1ab957dbb37cf50aea784f5393716ff02dd87e3cce"
+  },
+  {
+    "path": "matrix-v2/paired-bulkhead-flush/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36906804,
+    "sha256": "3523275cf29031c3f669a7aa8379f60af22abd29767f89e68c8e20849cbd8f4b"
+  },
+  {
+    "path": "matrix-v2/paired-bulkhead-slow/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 43058952,
+    "sha256": "69276ac7852ab4684d325a630c57c7dde4e3324b56661bd492a4f45051b8dd4d"
+  },
+  {
+    "path": "matrix-v2/paired-bulkhead-down/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 43064935,
+    "sha256": "059292fa43c63eceeac00b45fd7ffa835e6c36aedda0fac87b2bcfa86d49122c"
+  },
+  {
+    "path": "matrix-v2/paired-bulkhead-recovery/samples.jsonl",
+    "retention": "private local Temp only",
+    "bytes": 36905599,
+    "sha256": "62fe9965e133a66887638477bf6e5e42e9a65be2dbe5341a523f61b876bdd13b"
+  },
+  {
+    "path": "matrix-v2/failure.jfr",
+    "retention": "private local Temp only; process metadata excluded from Git",
+    "bytes": 44791304,
+    "sha256": "e790bebe715990e7ada378dc34d016787944cf33231da9d4b6be92d9485e98f4"
+  },
+  {
+    "path": "matrix-v2/warmed-faults.jfr",
+    "retention": "private local Temp only; process metadata excluded from Git",
+    "bytes": 24628909,
+    "sha256": "52b4af158fcc4a44bf64543ec7524e41176737603b0d9d3be631d4c37f0dfb83"
+  },
+  {
+    "path": "matrix-v2/paired-base.jfr",
+    "retention": "private local Temp only; process metadata excluded from Git",
+    "bytes": 36758196,
+    "sha256": "50929e5543b30156ddaac65c03ab95cb6f8d1b3174f0011c36ff7e8902a31ac6"
+  },
+  {
+    "path": "matrix-v2/paired-bulkhead.jfr",
+    "retention": "private local Temp only; process metadata excluded from Git",
+    "bytes": 36854127,
+    "sha256": "dc84ae51284b81951cfdff755c41fd3e3cc48aa14fbe2d1812c321b30b6d1675"
+  },
+  {
+    "path": "commerce-baseline.jar",
+    "retention": "private local Temp only",
+    "bytes": 90950898,
+    "sha256": "37c7c7332b5d40e5c940241e75a180d9cfb2b6df020663b233008e61ec7e2960"
+  },
+  {
+    "path": "commerce-bulkhead.jar",
+    "retention": "private local Temp only",
+    "bytes": 90951198,
+    "sha256": "d572a6b3459a7f5297139d4926f6ac86cc74e0401c514883df039a6b0bc0813d"
+  }
+]

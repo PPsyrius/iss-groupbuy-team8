@@ -1,0 +1,40 @@
+{
+  "retention": "Private local Temp only; no bodies copied to Git",
+  "files": [
+    {
+      "path": "matrix-v2/startup-base-a-warmup/samples.jsonl",
+      "bytes": 45522985,
+      "sha256": "b3141dd27b231cdec5b45ed79c29fbe6e2e8496de3497cb74f7de5a93a4ed6e1"
+    },
+    {
+      "path": "matrix-v2/startup-base-a-control/samples.jsonl",
+      "bytes": 36920506,
+      "sha256": "6e4836503a2c312f661e07b97d4b63284734e0b39cc30b1be1702041a41788ea"
+    },
+    {
+      "path": "matrix-v2/startup-scope-a-warmup/samples.jsonl",
+      "bytes": 39724014,
+      "sha256": "1383dcb58e4a6aeb2a332a355ee1de126d7dc6eabb0b44dccd59656ef7241132"
+    },
+    {
+      "path": "matrix-v2/startup-scope-a-control/samples.jsonl",
+      "bytes": 6486,
+      "sha256": "40001909413e75ecd25a92a3614569fa2fb356dd33a583127f5e35cb756d63f8"
+    },
+    {
+      "path": "matrix-v2/startup-base-a.jfr",
+      "bytes": 22574515,
+      "sha256": "0c02bc78c6741a889f6f2ec7280dda5efac16f4735e135eb49c3dc7ebb1b4f89"
+    },
+    {
+      "path": "matrix-v2/startup-scope-a.jfr",
+      "bytes": 17760326,
+      "sha256": "934fe35c4ef7fe9962bb2b6d7546f06ed0f9c9dcc9cee5a4ef530a7a5735c885"
+    },
+    {
+      "path": "commerce-bulkhead-scope-v2.jar",
+      "bytes": 90951229,
+      "sha256": "f4c7372bef03a6627331a469113e3a341f5531485f36da90213ff9861d621dc1"
+    }
+  ]
+}

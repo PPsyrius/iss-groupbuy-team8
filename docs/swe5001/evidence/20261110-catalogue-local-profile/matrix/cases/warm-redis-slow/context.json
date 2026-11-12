@@ -1,0 +1,46 @@
+{
+  "label": "warm-redis-slow",
+  "app": "blocbuy-matrix2-failure",
+  "rate": 200,
+  "seconds": 70,
+  "port": 8589,
+  "startedAt": "2026-11-10T06:23:26.443Z",
+  "actions": [
+    {
+      "afterSeconds": 15,
+      "description": "Inject 3500 ms downstream Redis latency"
+    },
+    {
+      "afterSeconds": 40,
+      "description": "Remove Redis latency; observe recovery"
+    }
+  ],
+  "actualLimits": {
+    "nanoCpus": 500000000,
+    "memoryBytes": 1073741824
+  },
+  "hostMemory": {
+    "MemTotal": 16510500864,
+    "MemAvailable": 9771814912,
+    "SwapTotal": 4294967296,
+    "SwapFree": 4294959104
+  },
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-tls:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

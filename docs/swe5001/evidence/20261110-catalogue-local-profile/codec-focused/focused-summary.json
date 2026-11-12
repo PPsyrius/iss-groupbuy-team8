@@ -1,0 +1,71 @@
+{
+  "kind": "local-codec-startup-focused-not-runtime-or-full-verification",
+  "initialRejectedRedFixture": {
+    "exitCode": 1,
+    "tests": 1,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 0,
+    "privateLog": {
+      "path": "cache-codec-red.log",
+      "bytes": 18291,
+      "sha256": "a4d546f521b249c97fae8b78dd071448a239b775e45811a97c2fff4aa3bb79e7"
+    },
+    "reason": "Exact-key mock stub returned an empty batch after the old implementation reread the changed profile; this was a response-shape error, not the intended assertion. Harness refused continuation.",
+    "privateInput": {
+      "path": "cache-codec-first-red-input.java",
+      "bytes": 35266,
+      "sha256": "839915fa986157ef0e830d145c6f92698099143d1b5936c72c88ea099078d88b"
+    }
+  },
+  "intendedRed": {
+    "exitCode": 1,
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "privateLog": {
+      "path": "cache-codec2-red.log",
+      "bytes": 18250,
+      "sha256": "e411cce0d759cb80fa3050f24a4b8b1e14ccbfa143d2bd316db61781901150f2"
+    }
+  },
+  "green": {
+    "exitCode": 0,
+    "tests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "privateLog": {
+      "path": "cache-codec2-green.log",
+      "bytes": 29088,
+      "sha256": "33dc68eb63cfec52a7e7cc9276755664bcbaf31bbf15c550926fa0aa461f7cbd"
+    }
+  },
+  "regression": "startupProfileAndEntryReaderAreResolvedOnceForRepeatedOperations",
+  "fixtureCorrection": "Respond with a well-formed batch for any requested key list, while retaining explicit exact-key counts, namespace, payload and operation assertions.",
+  "candidate": "Resolve raw profile/default once per bean; reuse typed ObjectReader for Entry; leave mapper serialization and all store/data policies unchanged.",
+  "artifact": {
+    "path": "commerce-cache-codec.jar",
+    "bytes": 90952984,
+    "sha256": "0cdf2416f7784331542f21d977d80d9c9208863965d4948716ab2b9814090bff"
+  },
+  "sources": [
+    {
+      "path": "formatted-cache-codec-main.java",
+      "bytes": 9629,
+      "sha256": "6539f53a8014a493a66f101bbacca857de3977a37fdb164bf665195f5f53d556"
+    },
+    {
+      "path": "formatted-cache-codec-test.java",
+      "bytes": 35263,
+      "sha256": "2dfc3e1e1122313d62bc3d89d3f6a8f0692acd43f69a6f4a302854bd2d14f381"
+    },
+    {
+      "path": "formatted-cache-codec-it.java",
+      "bytes": 13108,
+      "sha256": "94ea103b25dc410411efeef9ae285c354cbde79c0e55f9137559acfca51732ab"
+    }
+  ],
+  "limits": "Prefetch is not representative decoding or proof of removing first-use contention. Fresh runtime/full verification required; no workload or gate change."
+}

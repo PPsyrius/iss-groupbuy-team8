@@ -1,0 +1,36 @@
+{
+  "kind": "local-v2-full-verification-with-complete-coverage",
+  "limits": "V2 only, not current v3; rejected v2 startup is unchanged. No hosted Sonar or runtime acceptance.",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 779,
+      "sha256": "6f75c41f17c3f00cce01c28ffb1fb82c02438da264871a437dcfa26f6a93d989"
+    },
+    {
+      "path": "check-scope-contract.py",
+      "bytes": 1673,
+      "sha256": "da578b13dadefae62699c917721f67a89157ce675c9a92412c3ae41c4d2de96e"
+    },
+    {
+      "path": "contract-summary.json",
+      "bytes": 741,
+      "sha256": "b690bee0f33a877a68b86c1a1977afe6368d7d80fc1785bcbdf5e5ad6f5b295f"
+    },
+    {
+      "path": "full-verification-summary.json",
+      "bytes": 79232,
+      "sha256": "16cc776ec5094e0bd9f592f2a53e44918ba87b3535bff10e45f474ad76f534e7"
+    },
+    {
+      "path": "inspect-cache-verification.py",
+      "bytes": 5675,
+      "sha256": "ad57a18f674513259bb93edb12d80f3352015b9db0c00bc6770ad27a5976f261"
+    },
+    {
+      "path": "run-linux-log-verification.sh",
+      "bytes": 3094,
+      "sha256": "86379eb9eb42ec0673849cbfd83e2bd8834f8f805a8ddd1b6cab44393b93d3dd"
+    }
+  ]
+}

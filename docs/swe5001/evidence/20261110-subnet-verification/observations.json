@@ -1,0 +1,82 @@
+{
+  "started_at_utc": "2026-11-09T18:18:07Z",
+  "account": "402178232802",
+  "region": "ap-southeast-1",
+  "source_sha": "93984f615df79666f4c3ba62f4d6ae90fbf1f4e1",
+  "session_run": "https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/42665267510",
+  "archive_sha256": "7d691d78e9f00ffd53e26d15588af3541231d12ae8959ae75e62d40f5b74ce71",
+  "vpc": "vpc-0f755f547708b3281",
+  "application_subnets": [
+    { "id": "subnet-05a3f8de27d4d9d08", "cidr": "10.50.10.0/24", "az": "ap-southeast-1a" },
+    { "id": "subnet-06e42e05078022207", "cidr": "10.50.11.0/24", "az": "ap-southeast-1b" }
+  ],
+  "data_subnets": [
+    { "id": "subnet-0d421a783ddd23b68", "cidr": "10.50.20.0/24", "az": "ap-southeast-1a" },
+    { "id": "subnet-0717a1b6f062c9fb0", "cidr": "10.50.21.0/24", "az": "ap-southeast-1b" }
+  ],
+  "tasks": [
+    {
+      "service": "commerce-svc",
+      "definition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:31",
+      "eni": "eni-073b090332a1f1e5d",
+      "subnet": "subnet-05a3f8de27d4d9d08",
+      "az": "ap-southeast-1a",
+      "digest": "sha256:c8ba2a7a09115a0d459f648d3ea57faf13709975a0c1e960d7f385372cd351d9"
+    },
+    {
+      "service": "commerce-svc",
+      "definition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:31",
+      "eni": "eni-066eb1cbdcc7e108b",
+      "subnet": "subnet-06e42e05078022207",
+      "az": "ap-southeast-1b",
+      "digest": "sha256:c8ba2a7a09115a0d459f648d3ea57faf13709975a0c1e960d7f385372cd351d9"
+    },
+    {
+      "service": "identity-svc",
+      "definition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-identity-svc:17",
+      "eni": "eni-031e28a824536c88a",
+      "subnet": "subnet-05a3f8de27d4d9d08",
+      "az": "ap-southeast-1a",
+      "digest": "sha256:91894f6b4f1fe9c537f48dcec1c993084beb5c392fa7f90ea744fec8a4c78cef"
+    },
+    {
+      "service": "notification-svc",
+      "definition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-notification-svc:29",
+      "eni": "eni-0c3498e556a74a036",
+      "subnet": "subnet-05a3f8de27d4d9d08",
+      "az": "ap-southeast-1a",
+      "digest": "sha256:24bbc3ff1b42f0f1f6c9e891ba92010bba197aab184ef907172f4ba1585737c7"
+    }
+  ],
+  "data_enis": {
+    "rds": { "eni": "eni-0280119c0d399f798", "subnet": "subnet-0717a1b6f062c9fb0", "az": "ap-southeast-1b", "group": "sg-04b4180b956fb08fd" },
+    "cache": { "eni": "eni-0b7976b2e75b0980d", "subnet": "subnet-0d421a783ddd23b68", "az": "ap-southeast-1a", "group": "sg-006d07691848451c8" }
+  },
+  "data_route_table": "rtb-0b56ece42a4791472",
+  "data_routes": [{ "destination": "10.50.0.0/16", "gateway": "local", "state": "active" }],
+  "s3_endpoint_route_tables": ["rtb-0071e09c96637dfde", "rtb-0617f4ee209300b18"],
+  "data_security_groups": {
+    "rds": { "port": 5432, "sources": ["sg-00af8389d809e1c26", "sg-0b9c6a01fbdf2caf0"], "egress": [] },
+    "cache": { "port": 6379, "sources": ["sg-00af8389d809e1c26"], "egress": [] }
+  },
+  "network_review": "pass",
+  "public_health": "UP",
+  "public_catalogue": "successful non-empty response",
+  "authenticated_connectivity_source": "Operator-provided console results from the normal browser, signed in to this session",
+  "authenticated_results_recorded_at_utc": "2026-11-09T18:30:57Z",
+  "signed_in_identity": {
+    "path": "/api/v1/auth/me",
+    "status": 200,
+    "code": "COMMON_200_000",
+    "trace": "c25475c5-6921-42b9-8005-803323688d18"
+  },
+  "signed_in_notification": {
+    "path": "/api/v1/notifications?page=1&size=1",
+    "status": 200,
+    "code": "COMMON_200_000",
+    "itemsArray": true,
+    "trace": "f61bc3be-12f8-4d4d-8d5e-3058e984402e"
+  },
+  "alarm_confirmation": { "total": 3, "pending": 3 },
+  "teardown": "Not performed; operator explicitly prohibits teardown"
+}

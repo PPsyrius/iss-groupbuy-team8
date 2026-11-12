@@ -1,0 +1,25 @@
+{
+  "kind": "codec-startup-attribution-only-retention-addendum",
+  "reason": "Record main-session rejection, exact reviewed-v3 source restoration and separate verification attribution without overwriting original receipts or rerunning analysis.",
+  "originalManifest": {
+    "path": "retained-files.json",
+    "bytes": 13001,
+    "sha256": "a3af366d5fbd6d64043daed0408e92534e7f8ace745d57edeb0f1b72c8ac6247",
+    "unchanged": true
+  },
+  "originalReadmeEntryPreservedAt": {
+    "originalPath": "README.md",
+    "path": "README-as-initially-retained.md",
+    "bytes": 2727,
+    "sha256": "8026e702552abd90f57483a4cf9f020c08e1a64d75e4e6c87c4f455ab518afb4",
+    "matchesOriginalManifestEntry": true
+  },
+  "amendedReadme": {
+    "path": "README.md",
+    "bytes": 4101,
+    "sha256": "737b8691a544d71ca9468de168f4555b1bc839ecaa9242d8f0aaf3f94ca07677"
+  },
+  "measurementAndAnalysisReceiptsChanged": false,
+  "duplicateWaitOrAnalysisStarted": false,
+  "limits": "This addendum supersedes only the original manifest's README path mapping. All other original retained-file entries remain applicable. Restoration and separate verification facts were supplied by the main session, not rerun by the evidence-only task. Excludes this addendum's own hash."
+}

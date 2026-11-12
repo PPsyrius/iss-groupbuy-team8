@@ -3,14 +3,164 @@
 = Quality Attributes
 
 == Performance
-#owner([Panpakorn Siripanich (Pan)], closes: "F1, briefing Q4")
-#prompt[The purpose of this section is to describe the solution handles the performance requirement of the system. You can describe the use of caching, load balancing, any optimization that you plan/have done in the design of the system.]
-#todo(
-  [Metric definitions table: workload model, client and server metrics, pass thresholds.],
-  [Results per run (16 Oct V2, 19 Oct V3) with what each run does and does not prove.],
-  [Caching, load balancing, scaling policy (12,000 requests per target per minute).],
-  [Capacity: measured, projected, next limit; linear scaling not proven (AISS-12).],
-)
+<sec-performance>
+
+On AWS on 11 November 2026, V3 R4 completed the full 30-minute browse workload through a 600-requests/s peak with zero errors or dropped iterations, 12 ms client p95 and automatic commerce growth from one to six tasks. The retained raw stream independently reproduces these measurements. R4 is this report's sole V3 results campaign; its measured HTTP success is distinct from the canonical analyzer's incomplete-observation exit and from unproven maximum capacity or controlled linear scaling (AISS-12).
+
+Each run is judged on completed versus offered requests/s, client p95 latency, browse error rate (below 1%) and dropped iterations (zero). ALB response time/target 5XX, ECS task count and CPU are server-side diagnostics; V3 also checks observed scale-out separately from controlled linearity (@tbl-performance-metrics). These metrics answer assessor remark F1.
+
+#let perf-root = "https://github.com/PPsyrius/iss-groupbuy-team8/blob/b80debcd8b8cdeb1272219758789e1a9927b9d7d/"
+#let perf-source(path, body) = link(perf-root + path, body)
+#let v2-source(file, body) = link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-load-reruns/v2/" + file, body)
+#let r4-source(file, body) = link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-v3-r4/" + file, body)
+#let released-source(path, body) = link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/3a893036d70d028b29ae13ebf820283571c1ae00/" + path, body)
+
+// Readability changes are confined to Pan's sections; shared report styles are unchanged.
+#[
+#show raw: set text(size: 8.5pt)
+#show table.cell: set block(breakable: false)
+
+=== Workload and measurement boundary
+
+The dated AWS sessions targeted the SWE5001 CloudFront endpoint in Singapore (`ap-southeast-1`), not the shared SWE5006 development deployment. The driver schedules arrivals independently of response time: requests per second (RPS) is the offered rate, not a count of concurrent users. Each workload iteration performs one read: 70% product-list GETs (`page=1&size=20`) and 30% product-detail GETs. Setup reads the existing demo catalogue and selects detail IDs from that page. This is a small, repeated read working set, not a large-catalogue or checkout benchmark; payment settlement, writes, browser rendering and completed purchases are outside the workload. The #r4-source("README.md", [R4 source/provenance record]) identifies the exact hashed driver and policy-binding variant rather than attributing all tooling bytes to the released application.
+
+The workload exercises the catalogue-read portion of UC1, whose design is traced in Appendix A.3 and A.14. It does not verify the full NFR-15 scenario: that requirement uses 100 concurrent users, includes JOIN and My Orders, and bounds expiry lag. R4's arrival-rate browse result is assessed under NFR-64; those business-operation checks remain outstanding.
+
+*Evidence snapshots.* The selected V2 baseline is the 11 November released-monolith run; 16 October remains historical corroboration. V2 and R4 evidence is published at immutable commit `0405b1f0`, not yet merged into `dev`; the tested application remains released source `3a893036`. Earlier V3 campaigns remain history, not additional selected results. The owner confirmed for \#789 that 10 November and r1/r2/r3 all used the same personal laptop through Docker Desktop; r4 moved to AWS. That confirms the machine/runner, not identical network conditions or a common cause of every earlier failure. #pending[Editor: the later \#789 factual follow-up still needs publication and final citation review; do not confuse an evidence commit with the tested application or `dev` integration.]
+
+#figure(
+  table(
+    columns: (0.8fr, 2.1fr, 2.1fr),
+    table.header([AWS run (2026)], [Topology and provenance], [Offered load and generator]),
+    [11 November: V2], [One stable monolith task, revision 7. Released source `3a893036`; tooling `b911ea63`. Route/digest snapshots and 47 bracketing task observations retained.], [Ten 60 s plateaus: 10, 20, 40, 60, 80, 100, 125, 150, 175, 200 RPS. Windows/Docker generator, 1,000 preallocated / maximum virtual users (VUs).],
+    [11 November: V3 R4], [Released source `3a893036`; commerce 1 vCPU / 2 GiB, RDS `db.t4g.small`, pools five. Starts at one commerce task, maximum six. Tooling base `b911ea63` plus disclosed hashed policy-binding/orchestration changes.], [40 → 200 RPS over 5 min; → 600 over 10 min; hold 10 min; → zero over 5 min. Dedicated AWS T3a Unlimited generator; k6 container eight vCPUs / 8 GiB, 1,000 preallocated / maximum VUs.],
+  ),
+  kind: table,
+  caption: [Workload and provenance for the selected 11 November #v2-source("V2-REVIEW.md", [V2 baseline]) and #r4-source("README.md", [V3 R4 campaign]). The released application source is the same, but topology, sizing and generator location differ; these are not a controlled capacity comparison.],
+) <tbl-performance-workloads>
+
+=== Metrics and acceptance
+
+The #perf-source("docs/swe5001/impl-verification-observability.md", [verification plan]) defines scenario acceptance; the #perf-source("perf/k6/SCALING.md", [analysis guide]) distinguishes event-relative acceptance from the runner's all-run diagnostic. A low HTTP failure rate cannot compensate for undelivered load.
+
+*Gate provenance (\#789).* Both thresholds appear in the verification plan dated 29 September, first committed by Liu Jin (`l0sgAi`) in #link("https://github.com/PPsyrius/iss-groupbuy-team8/pull/259")[\#259], merged 30 September at `fe4e9803`; Pan implemented the later tooling in \#506/\#519. The plan uses 500 ms for V2 calibration and 800 ms for V3 outside scale-out grace. These stricter browse-test budgets do not replace NFR-15's broader two-second scenario. No retained decision records an individual's reason for the exact numbers, so authorship is not presented as a personal motivation or an additional NFR.
+
+#figure(
+  table(
+    columns: (1.05fr, 2.1fr, 1.85fr),
+    table.header([Metric / source], [Definition and unit], [Acceptance / interpretation]),
+    [Offered and achieved load / k6], [Scheduled arrivals in requests/s versus `browse_requests` completed per interval. One setup GET is counted by `http_reqs` but excluded from workload counts.], [V2 requires every plateau's full request budget. V3 must deliver its schedule; observed ALB RPS is reported separately.],
+    [Client latency / k6 `browse_latency`], [Wall-clock ms around HTTP plus response validation. p50 is the median; p95 and p99 bound 95% and 99% of samples. Includes failed responses, excludes setup.], [V2: each plateau p95 < 500 ms. V3: p95 < 800 ms outside the 3 min after each scale-out. p50/p99 are diagnostics, not additional gates.],
+    [Browse failures / k6 `browse_errors`], [Failed workload responses / completed workload requests (%). Requires HTTP 200 and a valid successful `Result` with expected catalogue data; detail ID must match.], [< 1%. Counts HTTP and payload failures, not completed orders or successful payment operations.],
+    [Dropped iterations / k6], [Scheduled iterations the generator could not start (count); absent from completed-request latency/error denominators.], [Zero required. Missing or nonzero counts invalidate capacity evidence; never treat drops as successful requests.],
+    [Server response and throughput / CloudWatch ALB], [`TargetResponseTime` p50/p95, reported in ms; `RequestCount` per minute / 60 gives RPS.], [Correlate with client data. ALB target timing excludes the full client/edge path and cannot substitute for the client p95 gate.],
+    [Target 5XX / CloudWatch ALB], [`HTTPCode_Target_5XX_Count`, Sum per minute (count).], [Server-side diagnostic, not a separate k6 gate. R4 retained no data points: absence is unknown, not a measured zero or a substitute for client errors.],
+    [Scale-out observed / V3 analyzer], [`scaleOutObserved`: at least one activity window has a sampled running-task count reaching its target (Boolean).], [Required by `latencyAndScaleOutGatesPassed` alongside errors < 1% and outside-grace p95 < 800 ms. Coverage must pass first; R4's original analyzer emitted no verdict. Not one-to-four linearity.],
+    [Resources and scale-out / ECS, CloudWatch, scaling activities], [Running task count, CPU/memory (%), activity start/fulfilment timestamps and database connections (count).], [Explain saturation and scaling delay. V3 also requires one-to-four achieved throughput ≥ 80% of ideal linear scaling; inventory connection limits separately.],
+  ),
+  kind: table,
+  caption: [Load-test metric definitions and original scenario thresholds retained for R4. Native k6 thresholds, event-relative analysis and controlled linearity are distinct checks. Queue depth/age, drain time and dead-letter counts belong to V4.],
+) <tbl-performance-metrics>
+
+=== Selected V2 baseline: 11 November 2026
+
+Verified on AWS at released source `3a893036`: the selected V2 run completed all 57,600 browse requests through 200 RPS, with zero errors/drops and all-run client p95 30 ms. All ten plateaus passed p95 < 500 ms and error rate < 1%; the 200-RPS plateau p95 was 18 ms. This is the latest released-monolith baseline, not a selection for uniformly lower latency. #v2-source("V2-REVIEW.md", [Run review]) · #v2-source("summary.json", [Summary]).
+
+#figure(
+  table(
+    columns: (1fr, 1.4fr, 1.25fr, 1.25fr),
+    table.header([Offered RPS], [Completed requests], [p95 (ms)], [Error rate (%)]),
+    [10], [600], [112.05], [0],
+    [20], [1,200], [36.05], [0],
+    [40], [2,400], [27.05], [0],
+    [60], [3,600], [52], [0],
+    [80], [4,800], [18], [0],
+    [100], [6,000], [17], [0],
+    [125], [7,500], [17], [0],
+    [150], [9,000], [19], [0],
+    [175], [10,500], [47], [0],
+    [200], [12,000], [18], [0],
+  ),
+  kind: table,
+  caption: [Selected V2 AWS results, 11 November 2026. Each row is a 60 s plateau; all passed. p95 is rounded to two decimal places where needed. Source: #v2-source("calibration.json", [Retained calibration]).],
+) <tbl-performance-v2>
+
+Forty-seven hash-verified observations bracket execution with one stable monolith task and a maximum 17-second gap. The observer later exited 255 after a container-role metadata HTTP 500: the workload window is covered, but the planned full collection did not complete and AWS server-metric corroboration is missing. The analyzer's `kneeRps=200` is the highest tested passing rate, not observed saturation or capacity per distributed task. #v2-source("observer-resolution.json", [Coverage disposition]).
+
+=== Historical V2 corroboration: 16 October 2026
+
+Verified on AWS: both October runs completed 57,600 workload requests with zero errors/drops and passed every plateau through 200 RPS. The repeat's overall p95 was 25 ms and its 200-RPS plateau p95 was 23 ms, versus November's 30 ms and 18 ms. October provides repeatability and generator-resource evidence; neither campaign reached saturation. Different application revisions and generator configurations prevent attributing these latency differences to a performance improvement or regression. The complete historical table, summaries and partial-host-coverage limits remain in the #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md", [October evidence record]).
+
+*Historical diagnostic, not selected R4 results.* On 19 October AWS observations, one 0.5-vCPU commerce task served 272–286 requests/s with ALB p50 about 1.1 s and CPU 90–100%; three tasks later served 425–461 requests/s with ALB p50 5–7 ms. That campaign failed the latency/drop gates, including 155,554 dropped iterations; it is evidence of historical saturation symptoms and scale-out, not accepted per-task capacity, controlled linearity or a capacity limit for R4's different sizing. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261019-v3-autoscaling/README.md")[19 October record].
+
+=== Distributed results: V3 R4, 11 November 2026
+
+Verified on AWS, then independently checked offline: R4 ran from *22:22:40.555 to 22:52:41.886 Singapore time* (SGT, UTC+8). The complete compressed raw stream passed decompression/CRC validation; recounting 2,483,971,025 uncompressed bytes reproduced the original summary's request counts, checks and latency statistics. All metrics, context and finish time also match a separately retained EC2 readback. Hashes and source identities are in the #r4-source("verification.json", [verification projection]); raw payloads and private operator inputs are excluded from public evidence.
+
+#figure(
+  table(
+    columns: (1.1fr, 1.4fr, 2fr),
+    table.header([Measurement], [R4 result], [Interpretation]),
+    [HTTP / browse requests], [726,000 / 725,999], [One setup GET; browse comprises 508,200 list and 217,799 detail requests. All HTTP responses were 200.],
+    [Errors / checks / drops], [Zero / 725,999 passed / zero], [The original body predicate passed for every browse response; no HTTP or browse failures. Explicit k6 drop counter is zero.],
+    [Client latency, all run], [Average 9.43 ms; p50 8 ms; p95 12 ms; p99 33 ms; maximum 728 ms], [Includes response validation. All measured samples, even the maximum, were below 800 ms; this is not an emitted event-relative analyzer result.],
+    [Ten central completion bins], [360,000 browse completions; about 600/s], [Ten 60 s bins relative to container start; each minute p95 ≤ 13 ms. Completion bins are not exact offered arrivals.],
+    [Native process exits], [k6 / monitor / raw stream: 0 / 0 / 0], [Original all-run k6 error, drop and p95 thresholds passed. The outer SSM command and canonical analyzer have separate outcomes below.],
+  ),
+  kind: table,
+  caption: [Selected V3 R4 measurements on AWS, 11 November 2026. Sources: #r4-source("README.md", [campaign record]), #r4-source("verification.json", [raw recount and source hashes]) and #r4-source("browse-minutes.csv", [completion-minute data]).],
+) <tbl-performance-v3>
+
+Calculated from the unchanged arrival schedule, the expected browse budget is 726,000; the measured total is one lower, within the original analyzer's one-arrival tolerance. Preallocation, maximum VUs and `vus_max` confirm 1,000, but the active `vus` gauge peaked at 100: this is not a demonstration of 1,000 simultaneous active users. The AWS generator bypassed the unresolved laptop/network path; R4 is not evidence that a backend-code change fixed that path.
+
+*Sampled generator headroom.* All 880 running samples confirm the eight-vCPU/eight-GiB cgroup limits; 883 total records bracket the full 1,801.331 s container lifecycle with maximum gap 2.065 s. CPU averaged 6.11% of eight vCPUs, peaking at 12.72% over sampled intervals. Memory peaked at 795.7 MiB (9.71% of the limit); recorded throttle/memory-event counters were zero and Docker reported no OOM. Retransmission counters, CPU pressure and whole-run credit/billing data are unavailable. These observations support sampled generator headroom, not per-task backend pool-wait guarantees. #r4-source("verification.json", [Resource calculations]).
+
+=== Automatic scale-out and service observations
+
+Verified on AWS: four Successful request-target-tracking activities grew desired commerce tasks *1 → 2 → 3 → 4 → 6*; no count of five was observed. The #r4-source("scaling-activities.csv", [activity projection]) and #r4-source("service-observations.jsonl", [source-preserving service samples]) distinguish activity timestamps from first observed RUNNING counts.
+
+#figure(
+  table(
+    columns: (0.75fr, 1.2fr, 1.2fr, 1.45fr),
+    table.header([Transition], [Activity start (SGT)], [Activity end (SGT)], [First RUNNING sample (SGT)]),
+    [1 → 2], [22:30:48.335], [22:31:57.766], [22:31:39.128],
+    [2 → 3], [22:32:48.316], [22:33:50.732], [22:33:39.065],
+    [3 → 4], [22:34:48.340], [22:35:53.737], [22:35:47.218],
+    [4 → 6], [22:37:48.315], [22:38:53.739], [22:38:54.173],
+  ),
+  kind: table,
+  caption: [Automatic request-policy scale-out in R4, 11 November 2026. Activity completion and aggregate RUNNING observations are different signals; neither proves target-health or completion of the configured 120 s slow start. Source: #r4-source("verification.json", [normalized activities and sample provenance]).],
+) <tbl-performance-r4-scaling>
+
+The first sampled six-task state was 973.6 s after container start; this includes the arrival-rate ramp, metric publication, alarm evaluation and task startup, not isolated autoscaler reaction time. All 200 in-run service samples show ACTIVE/COMPLETED, with at most two pending tasks. Commerce minute-average CPU peaked at 54.72% at 22:31, above the configured 50% guard; all retained executed actions cite request tracking, not a proved CPU-policy action. RDS minute-average CPU peaked near 23.95%, and minute-maximum connections reached 40. Service averages do not establish every task's peak or pool wait. #r4-source("server-minutes.csv", [UTC-minute comparison]).
+
+#import "../diagrams/performance-v3-timeline.typ": v3-timeline
+#block(breakable: false)[
+#figure(
+  block(breakable: false, v3-timeline),
+  caption: [V3 R4 only, 11 November 2026. Client bins use elapsed minutes from container start; server CPU uses complete UTC minutes plotted at their true elapsed positions. The offered curve is a configured schedule reference, not reconstructed arrivals. Dots are actual task-count samples, not interpolated transition times. Shading identifies the tail after the canonical observer ended; supplemental rows cover it but do not repair the original analyzer. Sources: #r4-source("browse-minutes.csv", [browse bins]), #r4-source("service-observations.jsonl", [task samples]) and #r4-source("server-minutes.csv", [server minutes]).],
+) <fig-performance-v3-timeline>
+]
+
+*Evidence completeness and tool outcomes.* The original canonical observer has 169 samples, maximum gap 15.461 s, but its last sample at 22:49:32.150 precedes workload completion. The unchanged normalizer exited 0 with no blockers; the unchanged four-input analyzer exited 1 with “Observations must bracket execution with strictly ordered gaps <=45s” and emitted no result JSON. The original `collectionComplete=true` refers to its own timer, not full-run coverage. A separately derived canonical-plus-supplemental union retains 264 rows, 200 in-run, brackets the full run and has a maximum run-covering gap of 15.257 s. It preserves source-line/hash provenance; it was not substituted into that invocation and is not a canonical pass. #r4-source("verification.json", [Exact tool outcomes and derived coverage]).
+
+CloudWatch's partial final 22:52 minute is missing from most series; target-5XX has no points, not a verified zero. The two captures disagree on some 22:48 ALB values despite Complete statuses; both versions remain in the #r4-source("cloudwatch-points.jsonl", [source-specific projection]). The comparison prefers later supplemental values without summing overlap or zero-filling unknowns. Minute server percentiles are not whole-run client percentiles.
+
+=== Configured optimisations and capacity limits
+
+*Load balancing and scaling.* CloudFront forwards the API to the ALB, which distributes requests to healthy ECS targets. R4 retained a request target of 6,000 requests per target per minute, 120 s commerce slow start, a positive-only 50% CPU guard, and a maximum of six commerce tasks. Commerce remained 1 vCPU/2 GiB, RDS `db.t4g.small`, with five-connection pools and unchanged released images/timeouts. Calculated connection allowances are 75/181 steady-state and 130/181 for replacement overlap; these are budgets, not pool-wait instrumentation. At 22:40–22:46 the retained request totals are approximately 36,000/minute and requests/target approximately 6,000/minute with six tasks: policy-target convergence under offered load, not saturation capacity. #r4-source("README.md", [Retained configuration and budgets]).
+
+*Caching on the exercised read path.* CloudFront caches the static single-page application (SPA), but `/api/*` has caching disabled. In released source `3a893036`, catalogue list/detail reads use `GroupDealQueryServiceImpl.findBestOpenDealsByProductIds` and `RedisOpenDealOfferCache`: one MGET for the requested keys, a bounded PostgreSQL batch for misses, and batched Lua population. Positive entries live 15–25 s and cached absences 5–10 s, with jitter; expired/filled offers are rejected and after-commit events evict affected keys. Failure-triggered backoff limits repeated failed cache calls. This is a display optimisation, not purchase authority; settlement still checks the team under its lock. No cache-hit ratio or controlled before/after AWS speedup was measured. #released-source("backend/blocbuy-application/src/main/java/com/blocbuy/groupbuy/service/GroupDealQueryServiceImpl.java", [Released query service]) · #released-source("backend/blocbuy-infrastructure/src/main/java/com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCache.java", [Released cache]) · Appendix A.3.
+
+*Measured versus unproven.* R4 establishes successful browse delivery through the tested 600-RPS peak under dynamic one-to-six scaling, not the maximum capacity of one, four or six tasks. The V2 monolith and R4 differ in topology, sizing and generator location. Controlled scaling efficiency requires comparable accepted throughputs $T_1$ and $T_4$ under fixed conditions: $T_4 / (4 T_1) >= 0.8$. R4 provides no such pair, and no higher saturation point is inferred from a policy target. Full NFR-15 business traffic, V4 queue backlog/drain/dead-letter acceptance and repeatable recovery remain unverified (AISS-12, NFR-64). The owner's final acceptance decision is not recorded; this does not diminish the verified request/latency measurements.
+
+*Operational boundary.* The remaining-observer-window guard refused execution; it was not merely a warning. The owner then directed a separate wrapper to invoke the unchanged k6 workload without the original runner's main/guard validation—not a clean launcher pass or a demonstrated bypass flag. Native processes succeeded; the outer upload and canonical analyser outcomes remain separate. Floor 2–6 was restored with actual desired/running 6/6; at the initial close-out the generator was stopped at 22:54:15 SGT, not terminated. Its later retirement is recorded in §5.3. #r4-source("README.md", [Control and close-out provenance]).
+
+*Later observations, not part of the load window.* In #link("https://github.com/PPsyrius/iss-groupbuy-team8/issues/789")[\#789], Lim reports AWS ECS service events read on 12 November: one Spot interruption at 22:53:48 SGT, after r4 ended, and commerce scale-in six → two at 23:09–23:21 SGT on 11 November. This is an attributed readback, not a newly retained event export or controlled recovery drill; it does not repair canonical coverage or prove repeatability/linearity. The nightly down attempt later failed; §5.3 records the separately authorized 12 November operator cleanup, not a destruction time inferred from the configured 23:00 schedule.
+
+#pending[Liu Jin / Eric: review §4.1 against the dated AWS records and F1 before submission.]
+
+]
 
 == Availability
 
@@ -35,12 +185,113 @@ BlocBuy can keep the catalogue available while a payment dependency recovers. It
 #block(breakable: false)[*Rebuilding the environment.* The 17 October 2026 three-service promotion created 115 runtime resources in its initial apply (520 s), passed its smoke suite (5 s) and destroyed the runtime (709 s). The entire up job took 31 min 37 s, above the 30-minute target. A second clean three-service session that day took 32 min 17 s for the up job. These are rebuild timings for a disposable environment; they establish neither a database restore time nor uninterrupted service during a zone loss. #link("https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39008208244")[Promotion run] · #link("https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39014054529")[Second clean session] · #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/dev/docs/swe5001/impl-verification-observability.md#v8-rebuild-from-zero")[V8 timing records].]
 
 == Security
-#owner[Panpakorn Siripanich (Pan)]
-#prompt[The purpose of this section is to describe the security that will be incorporated into the solution which includes any security services: IAM, encryption, hashing, IDS, IPS, etc.]
-#todo(
-  [Layered controls: Organization SCPs, Identity Center, OIDC, network isolation incl. data subnets (AD-15), encryption, secrets, pipeline scans.],
-  [Known gaps by AISS number (AISS-04, -08, -09, -15).],
+<sec-security>
+
+BlocBuy layers organisation guardrails, federated access, restricted network paths, service-level authorisation and CI security gates. The 10 November 2026 SGT record verifies dedicated data-subnet placement and required connectivity for that session. These controls do not establish end-to-end encryption or complete least privilege: the origin path uses HTTP and some secrets enter Terraform state.
+
+#let security-source(path, body) = link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/b80debcd8b8cdeb1272219758789e1a9927b9d7d/" + path, body)
+
+#[
+#show raw: set text(size: 8.5pt)
+#show table.cell: set block(breakable: false)
+
+=== Assets, threats and assessment scope
+
+The assessed deployment is an academic demonstration, not a trading service: there is no real inventory offered for sale and no real payment acceptance. The seeded catalogue supplies test data; Stripe test-mode flows demonstrate payment integration rather than commercial settlement. That reduces direct financial exposure, but cloud credentials, developer accounts, session data and deployment authority still require protection. It is not a blanket acceptance of the residual risks below.
+
+#figure(
+  table(
+    columns: (1fr, 1.8fr, 1.7fr),
+    table.header([Asset / threat], [Implemented or configured response], [Evidence and remaining exposure]),
+    [Deployment authority / unauthorised release], [Reviewed promotion, branch checks and environment-scoped OIDC roles restrict the path from source to cloud changes.], [§5 records GitHub readback and dated jobs. Broad apply privileges and unconfirmed developer-account controls remain.],
+    [Payment and resource integrity / forged callback or another buyer's data], [Signature-verified webhooks, server-fixed purchase terms and application ownership checks complement login.], [Appendix A.6, A.10 and A.12 trace the design; §4.2 distinguishes local failure tests from AWS acceptance.],
+    [Sessions and internal services / compromised account or peer], [Shared role snapshots and network refusals bound access.], [Local authorisation regressions are retained; an internal peer still lacks authenticated service identity (AISS-04).],
+    [Secrets and personal data / interception or privileged read], [TLS on viewer/data connections, encrypted stores and restricted state access protect different boundaries.], [@tbl-security-boundaries identifies the HTTP gap; authorised state readers still see some secrets (AISS-08/09).],
+    [Auditability / inability to reconstruct misuse], [Dated operational receipts retain selected actions and results.], [They are not continuous security-event retention; the newer governance handoff below still needs its retained basis.],
+  ),
+  kind: table,
+  caption: [Threat-to-control argument for the demonstration scope. Configuration and design are not penetration-test evidence; detailed mechanisms and dated checks follow.],
+) <tbl-security-threats>
+
+=== Organisation guardrails and human access
+
+Verified historically on AWS, not rechecked in this drafting session: the 16–17 October 2026 #security-source("docs/deploy/aws-account-governance/README.md", [account-governance audit]) records the project as a member account under a separately administered AWS Organization. IAM Identity Center gives team members single sign-on (SSO) and one-hour sessions through administrator or power-user permission sets. Organisation administration remains with the management-account owner. This separates workload administration from the authority to relax organisation-wide controls (AD-14).
+
+Identity Center sign-in has multi-factor authentication (MFA) enabled, owner-confirmed by Pan on 9 November 2026. The #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261109-source-control-delivery/README.md#owner-confirmation-identity-center-mfa")[confirmation record] is owner testimony, not an independent AWS audit. MFA addresses account sign-in; it does not reduce the permissions available after sign-in.
+
+The October access description is not a November least-privilege finding. Lim's #link("https://github.com/PPsyrius/iss-groupbuy-team8/pull/756")[8 November owner handoff] reports an empty developers group, administrator access for members of the admins group, and no configured CloudTrail trail, GuardDuty, Config or Access Analyzer in either account. These are attributable owner-reported observations, not independently reverified here. No configured trail is not the same as no CloudTrail event history. #pending[Lim / Liu Jin: supply or reconcile the retained basis for the 8 November privilege and audit-service findings, including account/region scope, before treating them as the current governance baseline.]
+
+The recorded service control policies (SCPs) are permission ceilings, not grants. `Org-Baseline` blocks member-account exit/closure, creation of a separate Identity Center instance and protected SSO-role changes. `Region-Pin` restricts regional work to Singapore with specified global/scoped exceptions. `Sandbox-Guardrails` restricts costly services and instance classes; it does not impose a spending cap. SCPs also constrain member-account administrator sessions, but not the management account or service-linked roles. On 16 October, project-account probes allowed Singapore EC2 inspection and CloudFront metric reads in `us-east-1`, denied corresponding regional calls in `eu-west-1`, and denied tagging the caller's protected SSO role. Account-exit and Identity Center creation were checked in policy content, not attempted destructively. #security-source("docs/swe5001/evidence/20261016-scp-consolidation/README.md", [Dated SCP probes]).
+
+Two qualifications prevent an overbroad claim. First, the governance audit records two project-account IAM users, including one active access key; federated team/CI access does not mean the entire account has no long-lived credentials. Second, an SCP deny cannot be overridden by a member-account IAM allow. The October CloudFront metric denial was corrected and probed in the #security-source("docs/swe5001/evidence/20261016-scp-consolidation/README.md", [dated SCP consolidation]); the unavailable `us-east-1` CloudTrail read in the November report investigation is a separate audit-access limit. Neither proves unrestricted global-service access. #security-source("docs/deploy/aws-account-governance/README.md", [IAM-user exceptions]).
+
+=== Machine identities, permissions and secrets
+
+Configured in the source inspected on 9 November 2026: GitHub Actions uses OpenID Connect (OIDC) to obtain temporary AWS role credentials instead of stored AWS access keys. Trust checks both audience `sts.amazonaws.com` and the exact environment subject built from immutable repository/owner IDs. The `swe5001-plan` environment reaches the foundation-plan role; `swe5001-demo` reaches separate apply/deploy roles and admits only `prod`. The branch restriction is a GitHub environment control, not a branch name embedded in that environment-scoped OIDC subject. GitHub readback on 9 November confirmed the demo environment has a selected `prod` branch policy and no required environment reviewer; the promotion PR is the review gate, not a second environment approval. #security-source("infra/swe5001/foundation/github-oidc.tf", [Role trust and policies]) · #security-source("infra/swe5001/foundation/main.tf", [Immutable subject construction]) · #security-source("docs/swe5001/impl-github-configuration.md", [Approval model]).
+
+The configured plan role can read foundation state but explicitly denies other state-object reads, including secret-bearing runtime and edge state. Apply-created workload roles must remain under `/swe5001/` with the operator-managed permissions boundary. That boundary caps access; each execution/task role still needs its own grant. A shared ECS execution role reads the configured Parameter Store scopes for startup injection, while service task roles carry runtime permissions such as event publication or queue consumption. These are scoped controls, not proof that every permission is least-privilege: the apply role retains broad managed policies, including `CloudWatchFullAccessV2` (AISS-15). Dedicated live secret-denial and cross-stack isolation checks remain outstanding under NFR-51. #security-source("infra/swe5001/foundation/boundary.tf", [Workload boundary]) · #security-source("infra/swe5001/modules/ecs-cluster/main.tf", [Shared execution role]) · #security-source("docs/swe5001/HANDOFF.md", [Recorded isolation limits]).
+
+Application credentials are configured as AWS Systems Manager (SSM) Parameter Store `SecureString` values and injected into ECS through parameter references, not copied into committed task configuration. Database passwords use ephemeral generation and Terraform write-only arguments. In contrast, the Valkey AUTH token is retained in runtime state and the origin secret is retained in edge/runtime state. Encrypted storage and restricted state access do not make those values invisible to authorised state readers (AISS-09). The origin secret is operator-seeded; rebuilding runtime is not evidence that it rotated. Raw plans/state and full environment dumps must therefore remain private. #security-source("infra/swe5001/modules/rds-postgres/main.tf", [Write-only database passwords]) · #security-source("infra/swe5001/modules/cache/main.tf", [Valkey token]) · #security-source("infra/swe5001/edge/main.tf", [Persistent origin-secret reference]) · #security-source("infra/swe5001/runtime/ecs.tf", [Task secret injection]).
+
+=== Network and database isolation
+
+Configured, not freshly probed on AWS: the public ALB accepts HTTP from CloudFront's origin-facing managed prefix list; service forwarding additionally requires the matching `X-Origin-Secret` header, with a default refusal. ECS tasks have no public IP and accept their service port from the ALB or peer-service security group. An explicit ALB rule blocks `/internal/*` and `/api/internal/*`; CloudFront sends only `/api/*` to the API origin. These restrictions reduce direct external access, but neither the prefix list nor the shared header authenticates an individual internal caller. A compromised peer remains inside the trusted network (AISS-04). #security-source("infra/swe5001/runtime/security-groups.tf", [Network rules]) · #security-source("infra/swe5001/runtime/alb.tf", [Listener refusals]) · #security-source("infra/swe5001/modules/ecs-service/main.tf", [Task placement and forwarding]).
+
+*Network separation was verified on AWS on 10 November 2026 SGT.* The #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261110-subnet-verification/README.md")[dated record] binds AD-15 to released source `93984f61`: all four running application-task ENIs used the application subnets; RDS and Valkey managed ENIs used the separate data subnets (`10.50.20.0/24`, `10.50.21.0/24`). Effective data routes were local-only. PostgreSQL ingress was TCP 5432 from the service/database-init groups; Valkey ingress was TCP 6379 from the service group only. Public health/catalogue and operator-observed signed-in identity/notification requests succeeded. This resolves AISS-07's recorded placement/connectivity gap (NFR-70), not negative packet-isolation or failover acceptance. The runtime was later destroyed by scheduled cleanup; these are historical observations, not current cloud placement. See §3.2 and @fig-d6-network.
+
+Source inspection also confirms a database and app/owner roles per service on one RDS server. The full Flyway migration stream runs in every database; the grants callback restricts each app role to its service-owned tables. This is an access-control boundary, not a claim that foreign tables are absent or that services have separate database servers. The 12 October local record reports foreign-table permission denials; that is not a fresh restricted-role HTTP test on ECS. Flyway owner credentials are also injected into the service process for migration, so the app-role restriction alone is not a complete process-compromise boundary. #security-source("backend/blocbuy-platform/src/main/resources/db/swe5001/afterMigrate__service_grants.sql", [Grant/revoke callback]) · #security-source("docs/agile/sprint-04/log/2026-10-12.md", [Local grant tests]) · §3.2.3.
+
+*Fresh metadata check, 11 November 2026.* Before V3 r2, the read-only collector and local reviewer again matched application/store ENIs to disjoint subnet sets, local-only data routes and restricted ingress. That did not retest signed-in connectivity or negative packet isolation. The existing Identity Center `AdministratorAccess` assignment remained privileged: an observer command allowlist is not IAM least privilege. Sizing belongs in §4.1, not a repeated security claim. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-load-reruns/v3-r2/prechecks/subnet-review.json")[Fresh subnet review] · #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-load-reruns/README.md")[Session provenance].
+
+=== Encryption boundaries
+
+The following are source/configuration observations as of 9 November 2026, not new transport probes. Transport Layer Security (TLS), encryption at rest and source restrictions address different threats; one does not establish the others.
+
+One narrow control was observed directly: on 10 November SGT, three anonymous static HTTPS responses at Singapore edge `SIN3-P4` each matched all nine expected security-header values. The sampled root, login fallback and JavaScript asset establish those response values, not API coverage, browser CSP compatibility or global propagation. The HTML/asset metadata did not establish a new November frontend build. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261110-spa-security-headers/README.md")[Retained header observations].
+
+#figure(
+  table(
+    columns: (1.1fr, 2.2fr, 1.7fr),
+    table.header([Boundary], [Configured protection], [Limit]),
+    [Browser → CloudFront], [HTTP redirects to HTTPS. The edge applies shared content-security, framing, content-type, referrer and transport-security headers.], [Viewer minimum remains TLSv1, not TLS 1.2-only. No web application firewall (WAF) is configured.],
+    [CloudFront → ALB → task], [CloudFront origin is `http-only`; the ALB listener and target group use HTTP. Origin prefix-list/header restrictions apply.], [No encryption of these HTTP hops. The header restricts forwarding but supplies no confidentiality (AISS-08).],
+    [Task → PostgreSQL], [RDS sets `rds.force_ssl=1`; task JDBC URL uses `sslmode=require`. Database storage encryption is enabled.], [This establishes the declared encryption requirement, not a claim of JDBC certificate/hostname verification or a fresh live TLS check.],
+    [Task → Valkey], [Transit and at-rest encryption enabled, AUTH token required, Spring Redis SSL enabled.], [Token persists in Terraform state; authentication does not remove state-reader exposure.],
+    [Domain events and static storage], [Domain SNS topic uses `alias/aws/sns`; SQS consumer/dead-letter queues use managed server-side encryption. Consumer queue policy denies insecure transport. SPA bucket uses AES256 server-side encryption with public access blocked and distribution-scoped origin access control.], [Alarm-metadata SNS topic has no encryption key. Managed encryption does not prove consumer authorisation.],
+  ),
+  kind: table,
+  caption: [Configured encryption and access boundaries. Sources: #security-source("infra/swe5001/edge/cloudfront.tf", [edge policy]), #security-source("infra/swe5001/modules/ecs-service/main.tf", [HTTP target]), #security-source("infra/swe5001/modules/rds-postgres/main.tf", [RDS]), #security-source("infra/swe5001/runtime/ecs.tf", [client SSL settings]), #security-source("infra/swe5001/modules/cache/main.tf", [Valkey]), #security-source("infra/swe5001/modules/messaging/main.tf", [messaging]) and #security-source("infra/swe5001/edge/s3.tf", [SPA bucket]).],
+) <tbl-security-boundaries>
+
+=== Application and delivery controls
+
+Implemented in the inspected source: Sa-Token checks login on protected `/api/v1/**` routes, while catalogue/invite GETs, OAuth entry/callbacks and signature-authenticated provider webhooks have defined public paths. Business services still own resource-ownership checks; login alone is not authorisation. Outside identity, `SessionStpInterface` reads one validated role/permission snapshot per request; a missing or malformed snapshot supplies no permissions. The 12 October record reports local Redis-backed authorisation regressions, not current authenticated ECS acceptance (NFR-58). Internal identity endpoints remain distributed-only and hidden from the public contract, but hiding documentation is not caller authentication. #security-source("backend/blocbuy-infrastructure/src/main/java/com/blocbuy/common/config/SaTokenConfig.java", [Login/public-path policy]) · #security-source("backend/blocbuy-infrastructure/src/main/java/com/blocbuy/common/config/SessionStpInterface.java", [Permission snapshots]) · #security-source("backend/blocbuy-adapter/src/main/java/com/blocbuy/identity/web/internal/InternalUserController.java", [Internal endpoints]) · #security-source("docs/agile/sprint-04/log/2026-10-12.md", [Dated local verification]).
+
+Configured task hardening includes a read-only container root filesystem and a writable `/tmp` volume. The image-security control and its dated executions are explained once in §5.2 and @fig-d10-cicd-pipeline: the exact built image is scanned before SWE5001 export/publication, and fixable HIGH/CRITICAL findings fail that job. Dependency, secret and static-analysis gates are separate controls. Unfixed/lower-severity exclusions, the dev fast path without a fresh image scan, disabled CodeQL and event-selected rather than complete-history secret scanning remain qualified there. A passing scan or promotion does not establish penetration-test coverage or prove the dedicated IAM denial paths. #security-source("infra/swe5001/modules/ecs-service/main.tf", [Container hardening]) · NFR-02, NFR-03 and NFR-51.
+
+=== Residual risks and verification still required
+
+The owning decisions and proposed roadmap remain in §3.4; this table states the security consequence rather than treating a report draft as a remediation.
+
+The most consequential gaps are privileged control-plane access, secret-bearing state and the unencrypted origin path: they can affect deployment authority or disclose credentials/data. Missing authenticated peer identity increases the impact of a compromised task. Audit-service coverage affects detection and investigation and remains subject to the owner reconciliation above. Unencrypted alarm metadata is a narrower confidentiality concern and does not carry the same consequence as a credential-bearing path. This ordering prioritises the technical exposures; the team has not yet confirmed which risks it accepts for the course or which must block real-user operation.
+
+#figure(
+  table(
+    columns: (0.7fr, 2.1fr, 2.2fr),
+    table.header([AISS], [Current limit], [Required follow-up, not implemented by this report]),
+    [04], [Internal calls rely on network trust, without a service token or mutual TLS.], [Add authenticated service identity; test denial from an untrusted peer as well as an external source.],
+    [07 (resolved)], [Placement/connectivity verified in the 10 November SGT session, not a failover or negative packet test.], [Retain the dated evidence and recheck effective placement for a future deployment; do not reuse destroyed subnet IDs as current state.],
+    [08], [Origin and ALB-to-task HTTP hops are unencrypted.], [Design and deploy verified TLS for the relevant hops; do not treat a prefix list or secret header as encryption.],
+    [09], [Origin secret and Valkey token are exposed to authorised state readers.], [Restrict state/plan access, rotate through an approved procedure and adopt a write-only/alternative secret path where supported.],
+    [15], [Apply-role CloudWatch privileges are not fully fenced. The November CloudTrail read limit is separate from the corrected October metric SCP denial.], [Narrow permissions and test intended cross-stack denials; preserve audit-access limits rather than expanding grants to recover history.],
+  ),
+  kind: table,
+  caption: [Dated security limitations; IDs and owners follow the report's AISS register. Proposed follow-up is not implemented remediation.],
 )
+
+#pending[Liu Jin: review §4.3 against the governance record, infrastructure configuration and §3.4 before submission.]
+
+]
 
 == Extensibility and Maintainability
 

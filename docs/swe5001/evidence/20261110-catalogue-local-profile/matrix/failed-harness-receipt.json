@@ -1,0 +1,97 @@
+{
+  "kind": "tooling-failure-not-application-measurement",
+  "attempts": [
+    {
+      "label": "tls-warmup",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "tls-control",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "pg-delay-2ms",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "pg-delay-5ms",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "redis-delay-50ms",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "proxy-warmup",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "shared-budget-direct",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "shared-budget-proxied",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "shared-budget-400",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "cold-first-traffic",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "cold-warmed-traffic",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "jobs-idle",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "jobs-with-expiry",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "failure-control",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "cache-expiry",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "redis-slow-timeout",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "redis-unavailable",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    },
+    {
+      "label": "failure-recovery",
+      "exitCode": 255,
+      "problem": "No summary; do not treat as zero errors or successful measurement"
+    }
+  ],
+  "cause": "k6 UID could not write controller-created directories; no summaries were produced.",
+  "correction": "Fresh Matrix2 fixture/case names, non-root app write probe, root diagnostic generator and halt on startup/output failures. Original receipts preserved outside Git."
+}

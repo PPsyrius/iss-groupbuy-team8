@@ -1,0 +1,95 @@
+{
+  "kind": "offline-signal-review-not-counterfactual-AWS-scaling",
+  "threshold": 70,
+  "candidates": [
+    {
+      "bucketStart": "2026-11-09T19:47:00Z",
+      "bucketEnd": "2026-11-09T19:48:00.000Z",
+      "cpuAveragePercent": 75.19038613637288,
+      "errorsCompletedInBucket": 0,
+      "droppedInBucket": 0
+    },
+    {
+      "bucketStart": "2026-11-09T19:50:00Z",
+      "bucketEnd": "2026-11-09T19:51:00.000Z",
+      "cpuAveragePercent": 79.55076471964519,
+      "errorsCompletedInBucket": 0,
+      "droppedInBucket": 0
+    },
+    {
+      "bucketStart": "2026-11-09T19:51:00Z",
+      "bucketEnd": "2026-11-09T19:52:00.000Z",
+      "cpuAveragePercent": 91.78188641866048,
+      "errorsCompletedInBucket": 0,
+      "droppedInBucket": 0
+    },
+    {
+      "bucketStart": "2026-11-09T19:52:00Z",
+      "bucketEnd": "2026-11-09T19:53:00.000Z",
+      "cpuAveragePercent": 99.79310353597005,
+      "errorsCompletedInBucket": 0,
+      "droppedInBucket": 0
+    },
+    {
+      "bucketStart": "2026-11-09T19:53:00Z",
+      "bucketEnd": "2026-11-09T19:54:00.000Z",
+      "cpuAveragePercent": 99.94813028971355,
+      "errorsCompletedInBucket": 132,
+      "droppedInBucket": 782
+    },
+    {
+      "bucketStart": "2026-11-09T19:54:00Z",
+      "bucketEnd": "2026-11-09T19:55:00.000Z",
+      "cpuAveragePercent": 99.91547266642253,
+      "errorsCompletedInBucket": 0,
+      "droppedInBucket": 3075
+    },
+    {
+      "bucketStart": "2026-11-09T19:55:00Z",
+      "bucketEnd": "2026-11-09T19:56:00.000Z",
+      "cpuAveragePercent": 100.10759099324544,
+      "errorsCompletedInBucket": 0,
+      "droppedInBucket": 6355
+    },
+    {
+      "bucketStart": "2026-11-09T19:56:00Z",
+      "bucketEnd": "2026-11-09T19:57:00.000Z",
+      "cpuAveragePercent": 99.8597920735677,
+      "errorsCompletedInBucket": 2,
+      "droppedInBucket": 9572
+    }
+  ],
+  "firstFailure": "2026-11-09T19:53:08.50751373Z",
+  "firstDrop": "2026-11-09T19:53:25.907240114Z",
+  "actualFirstScaleOut": {
+    "id": "4e9b09ac-8e5f-4653-8f8f-44960178d9d0",
+    "description": "Setting desired count to 2.",
+    "start": "2026-11-09T19:56:39.087000+00:00",
+    "end": "2026-11-09T19:57:40.531000+00:00",
+    "status": "Successful"
+  },
+  "taskGrowthFirstSample": {
+    "at": "2026-11-09T19:57:43.841393Z",
+    "desired": 2,
+    "running": 2,
+    "pending": 0,
+    "taskDefinition": "arn:aws:ecs:ap-southeast-1:402178232802:task-definition/blocbuy-swe5001-commerce-svc:32"
+  },
+  "budget": {
+    "maximumRuntimePools": 55,
+    "ownerReservation": 3,
+    "operatorReservation": 1,
+    "safetyReservation": 15,
+    "postgresReserved": 5,
+    "maximumConnections": 79
+  },
+  "findings": [
+    "CPU already exceeds 70% in the 19:47 minute with no errors/drops, then falls below threshold: cold/JIT sensitivity and unnecessary scale-out cost must be measured.",
+    "CPU again exceeds threshold in 19:50 and 19:51 before 19:53 failures; a different signal can potentially buy headroom, not guarantee it.",
+    "Bucket end is only the earliest theoretical decision boundary, not observed CloudWatch ingestion/evaluation, task launch or JVM readiness.",
+    "One-point CPU guard is scale-out-only, but the existing target-tracking policy can still scale in; coexistence/cooldown behavior needs AWS validation.",
+    "Default off, commerce only, maximum six unchanged; shared pools/backend defaults and error/drop/latency gates unchanged.",
+    "A complete one-to-four 80%-linearity experiment is not supplied by this replay or the original 600-RPS V3 ramp."
+  ],
+  "authorization": "No deployment, session startup or AWS query performed for this offline review."
+}

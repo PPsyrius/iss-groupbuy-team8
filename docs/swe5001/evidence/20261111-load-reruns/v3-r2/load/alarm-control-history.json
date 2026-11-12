@@ -1,0 +1,104 @@
+{
+  "at": "2026-11-11T08:48:57.638941+00:00",
+  "workloadStartUtc": "2026-11-11T08:16:02.752527+00:00",
+  "workloadEndUtc": "2026-11-11T08:46:03.344000+00:00",
+  "alarms": [
+    {
+      "alarmName": "blocbuy-swe5001-commerce-cpu-headroom",
+      "items": [
+        {
+          "AlarmName": "blocbuy-swe5001-commerce-cpu-headroom",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:35:11.039000+00:00",
+          "HistoryItemType": "StateUpdate",
+          "HistorySummary": "Alarm updated from ALARM to OK",
+          "HistoryData": "{\"version\":\"1.0\",\"oldState\":{\"stateValue\":\"ALARM\",\"stateReason\":\"Threshold Crossed: 1 out of the last 1 datapoints [54.250391940275826 (11/11/26 08:30:00)] was greater than or equal to the threshold (50.0) (minimum 1 datapoint for OK -> ALARM transition).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:33:11.037+0000\",\"startDate\":\"2026-11-11T08:30:00.000+0000\",\"statistic\":\"Average\",\"period\":60,\"recentDatapoints\":[54.250391940275826],\"threshold\":50.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:30:00.000+0000\",\"sampleCount\":4.0,\"value\":54.250391940275826}]}},\"newState\":{\"stateValue\":\"OK\",\"stateReason\":\"Threshold Crossed: 1 out of the last 1 datapoints [30.908481407165528 (11/11/26 08:32:00)] was not greater than or equal to the threshold (50.0) (minimum 1 datapoint for ALARM -> OK transition).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:35:11.037+0000\",\"startDate\":\"2026-11-11T08:32:00.000+0000\",\"statistic\":\"Average\",\"period\":60,\"recentDatapoints\":[30.908481407165528],\"threshold\":50.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:32:00.000+0000\",\"sampleCount\":5.0,\"value\":30.908481407165528}]}}}"
+        },
+        {
+          "AlarmName": "blocbuy-swe5001-commerce-cpu-headroom",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:33:11.215000+00:00",
+          "HistoryItemType": "Action",
+          "HistorySummary": "Successfully executed action arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:de50d0be-5953-4dd4-aa84-ea0bccc173cf:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-cpu-headroom",
+          "HistoryData": "{\"actionState\":\"Succeeded\",\"stateUpdateTimestamp\":1794385991038,\"notificationResource\":\"arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:de50d0be-5953-4dd4-aa84-ea0bccc173cf:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-cpu-headroom\",\"publishedMessage\":null,\"error\":null,\"muteWindowEndTimestamp\":null}"
+        },
+        {
+          "AlarmName": "blocbuy-swe5001-commerce-cpu-headroom",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:33:11.038000+00:00",
+          "HistoryItemType": "StateUpdate",
+          "HistorySummary": "Alarm updated from OK to ALARM",
+          "HistoryData": "{\"version\":\"1.0\",\"oldState\":{\"stateValue\":\"OK\",\"stateReason\":\"Threshold Crossed: 1 out of the last 1 datapoints [44.09043502807617 (11/11/26 08:29:00)] was not greater than or equal to the threshold (50.0) (minimum 1 datapoint for ALARM -> OK transition).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:32:11.046+0000\",\"startDate\":\"2026-11-11T08:29:00.000+0000\",\"statistic\":\"Average\",\"period\":60,\"recentDatapoints\":[44.09043502807617],\"threshold\":50.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:29:00.000+0000\",\"sampleCount\":3.0,\"value\":44.09043502807617}]}},\"newState\":{\"stateValue\":\"ALARM\",\"stateReason\":\"Threshold Crossed: 1 out of the last 1 datapoints [54.250391940275826 (11/11/26 08:30:00)] was greater than or equal to the threshold (50.0) (minimum 1 datapoint for OK -> ALARM transition).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:33:11.037+0000\",\"startDate\":\"2026-11-11T08:30:00.000+0000\",\"statistic\":\"Average\",\"period\":60,\"recentDatapoints\":[54.250391940275826],\"threshold\":50.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:30:00.000+0000\",\"sampleCount\":4.0,\"value\":54.250391940275826}]}}}"
+        },
+        {
+          "AlarmName": "blocbuy-swe5001-commerce-cpu-headroom",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:32:11.048000+00:00",
+          "HistoryItemType": "StateUpdate",
+          "HistorySummary": "Alarm updated from ALARM to OK",
+          "HistoryData": "{\"version\":\"1.0\",\"oldState\":{\"stateValue\":\"ALARM\",\"stateReason\":\"Threshold Crossed: 1 out of the last 1 datapoints [52.26897430419922 (11/11/26 08:26:00)] was greater than or equal to the threshold (50.0) (minimum 1 datapoint for OK -> ALARM transition).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:29:11.037+0000\",\"startDate\":\"2026-11-11T08:26:00.000+0000\",\"statistic\":\"Average\",\"period\":60,\"recentDatapoints\":[52.26897430419922],\"threshold\":50.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:26:00.000+0000\",\"sampleCount\":1.0,\"value\":52.26897430419922}]}},\"newState\":{\"stateValue\":\"OK\",\"stateReason\":\"Threshold Crossed: 1 out of the last 1 datapoints [44.09043502807617 (11/11/26 08:29:00)] was not greater than or equal to the threshold (50.0) (minimum 1 datapoint for ALARM -> OK transition).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:32:11.046+0000\",\"startDate\":\"2026-11-11T08:29:00.000+0000\",\"statistic\":\"Average\",\"period\":60,\"recentDatapoints\":[44.09043502807617],\"threshold\":50.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:29:00.000+0000\",\"sampleCount\":3.0,\"value\":44.09043502807617}]}}}"
+        },
+        {
+          "AlarmName": "blocbuy-swe5001-commerce-cpu-headroom",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:29:11.193000+00:00",
+          "HistoryItemType": "Action",
+          "HistorySummary": "Successfully executed action arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:de50d0be-5953-4dd4-aa84-ea0bccc173cf:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-cpu-headroom",
+          "HistoryData": "{\"actionState\":\"Succeeded\",\"stateUpdateTimestamp\":1794385751038,\"notificationResource\":\"arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:de50d0be-5953-4dd4-aa84-ea0bccc173cf:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-cpu-headroom\",\"publishedMessage\":null,\"error\":null,\"muteWindowEndTimestamp\":null}"
+        },
+        {
+          "AlarmName": "blocbuy-swe5001-commerce-cpu-headroom",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:29:11.038000+00:00",
+          "HistoryItemType": "StateUpdate",
+          "HistorySummary": "Alarm updated from OK to ALARM",
+          "HistoryData": "{\"version\":\"1.0\",\"oldState\":{\"stateValue\":\"OK\",\"stateReason\":\"Threshold Crossed: no datapoints were received for 1 period and 1 missing datapoint was treated as [NonBreaching].\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:06:59.568+0000\",\"statistic\":\"Average\",\"period\":60,\"recentDatapoints\":[],\"threshold\":50.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:03:00.000+0000\"}]}},\"newState\":{\"stateValue\":\"ALARM\",\"stateReason\":\"Threshold Crossed: 1 out of the last 1 datapoints [52.26897430419922 (11/11/26 08:26:00)] was greater than or equal to the threshold (50.0) (minimum 1 datapoint for OK -> ALARM transition).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:29:11.037+0000\",\"startDate\":\"2026-11-11T08:26:00.000+0000\",\"statistic\":\"Average\",\"period\":60,\"recentDatapoints\":[52.26897430419922],\"threshold\":50.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:26:00.000+0000\",\"sampleCount\":1.0,\"value\":52.26897430419922}]}}}"
+        }
+      ]
+    },
+    {
+      "alarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-9e1983e7-80c1-47e0-9405-c58848e50ebb",
+      "items": [
+        {
+          "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-9e1983e7-80c1-47e0-9405-c58848e50ebb",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:34:44.791000+00:00",
+          "HistoryItemType": "StateUpdate",
+          "HistorySummary": "Alarm updated from ALARM to OK",
+          "HistoryData": "{\"version\":\"1.0\",\"oldState\":{\"stateValue\":\"ALARM\",\"stateReason\":\"Threshold Crossed: 3 datapoints [17876.0 (11/11/26 08:23:00), 15475.0 (11/11/26 08:22:00), 13076.0 (11/11/26 08:21:00)] were greater than the threshold (12000.0).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:26:44.790+0000\",\"startDate\":\"2026-11-11T08:21:00.000+0000\",\"unit\":\"None\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[13076.0,15475.0,17876.0],\"threshold\":12000.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:23:00.000+0000\",\"sampleCount\":17876.0,\"value\":17876.0},{\"timestamp\":\"2026-11-11T08:22:00.000+0000\",\"sampleCount\":15476.0,\"value\":15475.0},{\"timestamp\":\"2026-11-11T08:21:00.000+0000\",\"sampleCount\":13076.0,\"value\":13076.0}]}},\"newState\":{\"stateValue\":\"OK\",\"stateReason\":\"Threshold Crossed: 1 datapoint [8330.499999 (11/11/26 08:31:00)] was not greater than the threshold (12000.0).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:34:44.790+0000\",\"startDate\":\"2026-11-11T08:29:00.000+0000\",\"unit\":\"None\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[16519.5,12714.166667000001,8330.499999],\"threshold\":12000.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:31:00.000+0000\",\"sampleCount\":35906.0,\"value\":8330.499999}]}}}"
+        },
+        {
+          "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-9e1983e7-80c1-47e0-9405-c58848e50ebb",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:26:44.950000+00:00",
+          "HistoryItemType": "Action",
+          "HistorySummary": "Successfully executed action arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:de50d0be-5953-4dd4-aa84-ea0bccc173cf:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-requests-per-target:createdBy/1b77d31e-39f7-4758-8eaf-eb35024dee5a",
+          "HistoryData": "{\"actionState\":\"Succeeded\",\"stateUpdateTimestamp\":1794385604793,\"notificationResource\":\"arn:aws:autoscaling:ap-southeast-1:402178232802:scalingPolicy:de50d0be-5953-4dd4-aa84-ea0bccc173cf:resource/ecs/service/blocbuy-swe5001/commerce-svc:policyName/blocbuy-swe5001-commerce-requests-per-target:createdBy/1b77d31e-39f7-4758-8eaf-eb35024dee5a\",\"publishedMessage\":null,\"error\":null,\"muteWindowEndTimestamp\":null}"
+        },
+        {
+          "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmHigh-9e1983e7-80c1-47e0-9405-c58848e50ebb",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:26:44.793000+00:00",
+          "HistoryItemType": "StateUpdate",
+          "HistorySummary": "Alarm updated from OK to ALARM",
+          "HistoryData": "{\"version\":\"1.0\",\"oldState\":{\"stateValue\":\"OK\",\"stateReason\":\"Threshold Crossed: 1 datapoint [0.0 (11/11/26 08:06:00)] was not greater than the threshold (12000.0).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:09:44.792+0000\",\"startDate\":\"2026-11-11T08:06:00.000+0000\",\"unit\":\"None\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[0.0],\"threshold\":12000.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:06:00.000+0000\",\"sampleCount\":2.0,\"value\":0.0}]}},\"newState\":{\"stateValue\":\"ALARM\",\"stateReason\":\"Threshold Crossed: 3 datapoints [17876.0 (11/11/26 08:23:00), 15475.0 (11/11/26 08:22:00), 13076.0 (11/11/26 08:21:00)] were greater than the threshold (12000.0).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:26:44.790+0000\",\"startDate\":\"2026-11-11T08:21:00.000+0000\",\"unit\":\"None\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[13076.0,15475.0,17876.0],\"threshold\":12000.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:23:00.000+0000\",\"sampleCount\":17876.0,\"value\":17876.0},{\"timestamp\":\"2026-11-11T08:22:00.000+0000\",\"sampleCount\":15476.0,\"value\":15475.0},{\"timestamp\":\"2026-11-11T08:21:00.000+0000\",\"sampleCount\":13076.0,\"value\":13076.0}]}}}"
+        }
+      ]
+    },
+    {
+      "alarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmLow-fd6e8d9a-4d13-4a1c-a673-968678769e0c",
+      "items": [
+        {
+          "AlarmName": "TargetTracking-service/blocbuy-swe5001/commerce-svc-AlarmLow-fd6e8d9a-4d13-4a1c-a673-968678769e0c",
+          "AlarmType": "MetricAlarm",
+          "Timestamp": "2026-11-11T08:23:32.443000+00:00",
+          "HistoryItemType": "StateUpdate",
+          "HistorySummary": "Alarm updated from ALARM to OK",
+          "HistoryData": "{\"version\":\"1.0\",\"oldState\":{\"stateValue\":\"ALARM\",\"stateReason\":\"Threshold Crossed: 15 datapoints were less than the threshold (10800.0). The most recent datapoints which crossed the threshold: [617.8333319999999 (11/11/26 06:47:00), 1818.0 (11/11/26 06:46:00), 3017.9999989999997 (11/11/26 06:45:00), 4218.166666 (11/11/26 06:44:00), 5418.000001 (11/11/26 06:43:00)].\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T06:50:32.441+0000\",\"startDate\":\"2026-11-11T06:33:00.000+0000\",\"unit\":\"None\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[9621.416665,8906.5,9724.05,5206.185715,6283.766667,5900.214286,5937.547619,6000.499999,6001.0,6000.500001,5418.000001,4218.166666,3017.9999989999997,1818.0,617.8333319999999],\"threshold\":10800.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T06:47:00.000+0000\",\"sampleCount\":3707.0,\"value\":617.8333319999999},{\"timestamp\":\"2026-11-11T06:46:00.000+0000\",\"sampleCount\":10908.0,\"value\":1818.0},{\"timestamp\":\"2026-11-11T06:45:00.000+0000\",\"sampleCount\":18110.0,\"value\":3017.9999989999997},{\"timestamp\":\"2026-11-11T06:44:00.000+0000\",\"sampleCount\":25309.0,\"value\":4218.166666},{\"timestamp\":\"2026-11-11T06:43:00.000+0000\",\"sampleCount\":32510.0,\"value\":5418.000001},{\"timestamp\":\"2026-11-11T06:42:00.000+0000\",\"sampleCount\":36003.0,\"value\":6000.500001},{\"timestamp\":\"2026-11-11T06:41:00.000+0000\",\"sampleCount\":36006.0,\"value\":6001.0},{\"timestamp\":\"2026-11-11T06:40:00.000+0000\",\"sampleCount\":36007.0,\"value\":6000.499999},{\"timestamp\":\"2026-11-11T06:39:00.000+0000\",\"sampleCount\":36232.0,\"value\":5937.547619},{\"timestamp\":\"2026-11-11T06:38:00.000+0000\",\"sampleCount\":35781.0,\"value\":5900.214286},{\"timestamp\":\"2026-11-11T06:37:00.000+0000\",\"sampleCount\":34481.0,\"value\":6283.766667},{\"timestamp\":\"2026-11-11T06:36:00.000+0000\",\"sampleCount\":28364.0,\"value\":5206.185715},{\"timestamp\":\"2026-11-11T06:35:00.000+0000\",\"sampleCount\":34274.0,\"value\":9724.05},{\"timestamp\":\"2026-11-11T06:34:00.000+0000\",\"sampleCount\":30022.0,\"value\":8906.5},{\"timestamp\":\"2026-11-11T06:33:00.000+0000\",\"sampleCount\":30483.0,\"value\":9621.416665}]}},\"newState\":{\"stateValue\":\"OK\",\"stateReason\":\"Threshold Crossed: 1 datapoint [10940.0 (11/11/26 08:20:00)] was not less than the threshold (10800.0).\",\"stateReasonData\":{\"version\":\"1.0\",\"queryDate\":\"2026-11-11T08:23:32.442+0000\",\"startDate\":\"2026-11-11T08:06:00.000+0000\",\"unit\":\"None\",\"statistic\":\"Sum\",\"period\":60,\"recentDatapoints\":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3136.0,5179.0,7100.0,9020.0,10940.0],\"threshold\":10800.0,\"evaluatedDatapoints\":[{\"timestamp\":\"2026-11-11T08:20:00.000+0000\",\"sampleCount\":10941.0,\"value\":10940.0}]}}}"
+        }
+      ]
+    }
+  ],
+  "runtimeMutationPerformed": false,
+  "limits": "Control-plane history and one-minute aggregates show observed timing, not a uniquely established latency root cause."
+}

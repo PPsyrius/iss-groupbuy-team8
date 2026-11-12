@@ -1,0 +1,11 @@
+{
+  "planExit": 2,
+  "planSha256": "5260e4a7080f00af974d8d1a96c40d22dabe0663e044218f63e9883f6ae6fedd",
+  "changes": {
+    "module.postgres.aws_db_instance.this": [
+      "update"
+    ]
+  },
+  "targetingReason": "Explicit DB-first staging after reviewing the entire combined plan; not concealment of unrelated changes. No simultaneous application rollout or alarm activation.",
+  "applied": false
+}

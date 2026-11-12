@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-11T10:30:54.762590+00:00",
+  "maxConnections": 181,
+  "reservedConnections": 5,
+  "pooledConnections": 55,
+  "ownerConnections": 3,
+  "operatorConnections": 2,
+  "headroomConnections": 10,
+  "required": 75,
+  "remaining": 106,
+  "fits": true
+}

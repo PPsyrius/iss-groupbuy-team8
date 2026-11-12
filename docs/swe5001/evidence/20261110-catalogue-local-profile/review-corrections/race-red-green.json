@@ -1,0 +1,57 @@
+{
+  "kind": "local-focused-concurrency-review-correction-not-runtime-acceptance",
+  "runs": [
+    {
+      "phase": "red",
+      "exitCode": 1,
+      "tests": 31,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "privateLog": {
+        "path": "cache-backoff-race-red.log",
+        "bytes": 23546,
+        "sha256": "c13cda30b962d6be8d0ccecc03696f0f35ba54ff9165b65e99be393a07214916"
+      }
+    },
+    {
+      "phase": "green",
+      "exitCode": 0,
+      "tests": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "privateLog": {
+        "path": "cache-backoff-race-green.log",
+        "bytes": 29078,
+        "sha256": "550bae2592fb07856f4552125d94d24f5304559d4541133301626a01002d2b9d"
+      }
+    }
+  ],
+  "regression": "olderFailureCannotReplaceANewerCooldownOrProbe(false/true)",
+  "change": "Sample failure deadline once; pure atomic getAndUpdate preserves equal/newer deadlines and active probes across monotonic wraparound.",
+  "integrationChange": "Outage method marks Spring context dirty after completion; no production reset API, sleeps or test assertion removal.",
+  "reviewedPackage": {
+    "path": "commerce-backoff-v3-reviewed.jar",
+    "bytes": 90952962,
+    "sha256": "07f46aa3998d0e20f46dfb019f3c71dfef52d7aa5d1f9c206e7cf8dc64fdcb92"
+  },
+  "sources": [
+    {
+      "path": "formatted-cache-backoff3-main.java",
+      "bytes": 9644,
+      "sha256": "3013d99375a64765d24ea3c220a82acb01c7d97b08582cdc20c7d0588321a392"
+    },
+    {
+      "path": "formatted-cache-backoff3-test.java",
+      "bytes": 32142,
+      "sha256": "4557fedabdaaa5ae3013ab94b9f16bfec52237593d7525d2c4170bbaea4403ae"
+    },
+    {
+      "path": "formatted-cache-backoff3-it.java",
+      "bytes": 13108,
+      "sha256": "94ea103b25dc410411efeef9ae285c354cbde79c0e55f9137559acfca51732ab"
+    }
+  ],
+  "limits": "Earlier ABBA runtime measured the pre-review v3 artifact; these functional changes require separately attributed verification and do not establish cold/fault-latency acceptance."
+}

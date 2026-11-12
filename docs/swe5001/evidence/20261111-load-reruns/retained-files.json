@@ -1,0 +1,373 @@
+{
+  "retainedAtUtc": "2026-11-11T09:00:23.047779+00:00",
+  "files": [
+    {
+      "path": "v2/V2-REVIEW.md",
+      "bytes": 1366,
+      "sha256": "f9acdaf6a9faa109fd0bcf94a9e2611c8d1406be3747de973064cb299b6f1a36"
+    },
+    {
+      "path": "v2/analysis-manifest.json",
+      "bytes": 4960,
+      "sha256": "cbb003e13b546fa2c272bec4af3430ed913dd1b0c08b41df911659b6eeaf73ad"
+    },
+    {
+      "path": "v2/calibration.json",
+      "bytes": 2134,
+      "sha256": "ab3f3143879709603c014626e72da1123b6dda356adcf9b5ead8975fd7e57983"
+    },
+    {
+      "path": "v2/completion.json",
+      "bytes": 355,
+      "sha256": "442288c8503bc914155febe685c260421e8aca71f795ebea585803a6d23b73bb"
+    },
+    {
+      "path": "v2/execution.json",
+      "bytes": 740,
+      "sha256": "de8c41f036a74d0d9573f96243dc894b19dd2f22359f72b50a31f483d874be08"
+    },
+    {
+      "path": "v2/generator-final-state.json",
+      "bytes": 225,
+      "sha256": "e367b52b4dae0edbe3cef558e8fadff79dc1156c74764951cd9744ac51d38dc0"
+    },
+    {
+      "path": "v2/k6-exit-code.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "v2/observation-audit.json",
+      "bytes": 621,
+      "sha256": "0e32d2a213cf7f460d68adf5d498293040f645518c1955578426debb6219934c"
+    },
+    {
+      "path": "v2/observer-failure.json",
+      "bytes": 997,
+      "sha256": "314bcb8ccacf983263e149efd873c642582dcd2eff87ef5cc987aef5cdce3ef5"
+    },
+    {
+      "path": "v2/observer-resolution.json",
+      "bytes": 1222,
+      "sha256": "5643563818bc7dfbc5a427c78077e1c2f9de71bcb187ed4fef8ed79477a14056"
+    },
+    {
+      "path": "v2/raw-audit.json",
+      "bytes": 980,
+      "sha256": "2e4684ad0ebf9b5684b5c0aae64e0fb550a2a134f39a438a100c23585590c091"
+    },
+    {
+      "path": "v2/summary.json",
+      "bytes": 22801,
+      "sha256": "7f43d6be7a52afaa7b1efaabecd3aa6716e35673823bb472ab47241343a3cf6c"
+    },
+    {
+      "path": "v3-r1/V3-REVIEW.md",
+      "bytes": 3122,
+      "sha256": "73c18db60cd8b6e6e98986e0e4dfa6d59aa6fdc677811a4cbbfab2035390c7ec"
+    },
+    {
+      "path": "v3-r1/analysis-exit-code.txt",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "v3-r1/analysis.stderr",
+      "bytes": 39,
+      "sha256": "0bef11cd521fcc383b042a38afcade09e58631214a0c0b999640b615cff64969"
+    },
+    {
+      "path": "v3-r1/evidence-manifest.json",
+      "bytes": 15692,
+      "sha256": "9b2828d2fabb3bd060f136d59a313423c83da6579b82397da3bdd437a876bb35"
+    },
+    {
+      "path": "v3-r1/load/coverage-review.json",
+      "bytes": 7618,
+      "sha256": "eb8c97ef4a9a52f39049da4c416e6e7d1522b8c244f1701438e55680268bd91b"
+    },
+    {
+      "path": "v3-r1/load/k6-exit-code.txt",
+      "bytes": 4,
+      "sha256": "2dd9964aa7c59c01362061846da85dcf727bb9f7f25e6b1c67ff342e6ef8c69c"
+    },
+    {
+      "path": "v3-r1/load/observer-result.json",
+      "bytes": 464,
+      "sha256": "95d380b3dbf4212dfb58b93088ccabd36085438eb16e768d6a73e66a9c02cda0"
+    },
+    {
+      "path": "v3-r1/load/raw-audit.json",
+      "bytes": 1322,
+      "sha256": "20ff997845a1849c0bbd5f490468a20802824ba1abedf057e4c9dbbbf172e299"
+    },
+    {
+      "path": "v3-r1/load/scale-outs.json",
+      "bytes": 1155,
+      "sha256": "15885ba4223ff6ed48de2e2d75defa6bb8cdf56f4bfd5418eb5caf3ee23c3000"
+    },
+    {
+      "path": "v3-r1/load/server-diagnostic-review.json",
+      "bytes": 10492,
+      "sha256": "706f12aa6375512c296dd16c2c5c5fd926bf6f243621a63f56208e07df88e34d"
+    },
+    {
+      "path": "v3-r1/load/summary.json",
+      "bytes": 18704,
+      "sha256": "e022267b46bb276377f322006b754a0749ae2c41708ad94bc40f5d4de9c16aba"
+    },
+    {
+      "path": "v3-r1/original-archive-verification.json",
+      "bytes": 5450,
+      "sha256": "db43412e65d92f4cb5d547566dbc121ec37270e1f439960a0ff6e3e517b5a64f"
+    },
+    {
+      "path": "v3-r2/V3-REVIEW.md",
+      "bytes": 6872,
+      "sha256": "fb88b9a2c9448ec0dd625a0637bd2d009e0490d55cbd7fc51f7039140c7e4e26"
+    },
+    {
+      "path": "v3-r2/client-diagnostic-python39-failure.json",
+      "bytes": 437,
+      "sha256": "e0f35c934d84c29770cc7de64d85a3db1b5acb91e24fe6943588c2f0bf0100fb"
+    },
+    {
+      "path": "v3-r2/deployment/OPERATIONAL-RECEIPT.md",
+      "bytes": 4087,
+      "sha256": "20e6e2c284898bcfd24e1369f7d30550d9ec792429f731b2587bca20b11db9c6"
+    },
+    {
+      "path": "v3-r2/deployment/combined-plan-review-v2.json",
+      "bytes": 1766,
+      "sha256": "6c9c71e59de56ff54df2226dc2c23b1acf0218bc4520dc55306cadc2de366b69"
+    },
+    {
+      "path": "v3-r2/deployment/db-first-apply-exit.json",
+      "bytes": 157,
+      "sha256": "3e0e34f87a674cb97a490c0f6eff8735d29b03ecf83d6b5dd0449e9c9aec32cf"
+    },
+    {
+      "path": "v3-r2/deployment/db-first-completed.json",
+      "bytes": 766,
+      "sha256": "bd6716beea9a5c6eac0cc3c12e4ca8ff56091e3c234ceee3275e8b4365eb85f8"
+    },
+    {
+      "path": "v3-r2/deployment/db-first-intent.json",
+      "bytes": 404,
+      "sha256": "8d8bf985b082a4657cc69fc94e0da603c5576e24c1304e98f0febfc436e2c6d3"
+    },
+    {
+      "path": "v3-r2/deployment/db-first-plan-review-v2.json",
+      "bytes": 397,
+      "sha256": "bac8b75dec208e25dc388b48e8c76b028122312c486a23a642cb83cff6ed9884"
+    },
+    {
+      "path": "v3-r2/deployment/execution-authority.json",
+      "bytes": 1931,
+      "sha256": "44b89058f996f2ac68e828393eb7d2341802778ac8453c157e949c21df0fca9d"
+    },
+    {
+      "path": "v3-r2/deployment/guard-activation-completed.json",
+      "bytes": 279,
+      "sha256": "e2ddfc6d8127d718a62a3011ff08833d122a7a488d65cb73918282849ea4cdcc"
+    },
+    {
+      "path": "v3-r2/deployment/guard-activation-intent.json",
+      "bytes": 138,
+      "sha256": "f3b2733c3958fff86afab386d17661515b3ebb7caf99da0fccbd039c4c5adcff"
+    },
+    {
+      "path": "v3-r2/deployment/guard-activation-plan-review.json",
+      "bytes": 307,
+      "sha256": "1ce03de6b06b5e55af4a44e6713337b52c97a5a6532d7434d94c4d4859b18c77"
+    },
+    {
+      "path": "v3-r2/deployment/idle-cpu-readiness.jsonl",
+      "bytes": 284,
+      "sha256": "eb84d943bf2781f1f431e1a25d8cca9c9e44028c220215429b266d8613528617"
+    },
+    {
+      "path": "v3-r2/deployment/local-overlay-recipe-active.json",
+      "bytes": 3166,
+      "sha256": "8c5e2ac61a671cc4bc4c7ec7c27844aadf5f59c72e7f812d2e4581b1bc45d349"
+    },
+    {
+      "path": "v3-r2/deployment/local-overlay-recipe-v2.json",
+      "bytes": 3159,
+      "sha256": "db4db1b05fefc005365df9a372dc76abe98e58f939723d9ecd9f7298d69d74b3"
+    },
+    {
+      "path": "v3-r2/deployment/phase-b-completed.json",
+      "bytes": 921,
+      "sha256": "9f71a5718fe718f2d701b3a996c3c18187617f8801e849622cbfec278b4f45ae"
+    },
+    {
+      "path": "v3-r2/deployment/phase-b-intent.json",
+      "bytes": 209,
+      "sha256": "41302b2db0bab68d1b036cd2fe8dfad8122668fbff03a8538a65b20b1dd03259"
+    },
+    {
+      "path": "v3-r2/deployment/phase-b-plan-review.json",
+      "bytes": 1096,
+      "sha256": "f9f98df61262c0f58f5e8854ee07eec48a7e0dd05c1f25e0bb7bc7e879a7ff82"
+    },
+    {
+      "path": "v3-r2/evidence-manifest.json",
+      "bytes": 20298,
+      "sha256": "1e3357a769de64ec7c9225fd7e7ceaba34072a6443b70119be34a2388a297f71"
+    },
+    {
+      "path": "v3-r2/load/alarm-control-history.json",
+      "bytes": 16233,
+      "sha256": "c9c29a9c2a67c4265764283d81aee714acf0d1e53ebc884810041bbb94645c22"
+    },
+    {
+      "path": "v3-r2/load/analysis-exit-code.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    {
+      "path": "v3-r2/load/analysis-invocation.json",
+      "bytes": 499,
+      "sha256": "ef50ca7329eba79d0665d62d157b2f940248e93c7277de65288679773964ab57"
+    },
+    {
+      "path": "v3-r2/load/analysis.stderr.txt",
+      "bytes": 40,
+      "sha256": "b3b38d8d8e062f4e1b7ff7ba8cdfd72b11f2e5183b3128875ff405f7a7602ce9"
+    },
+    {
+      "path": "v3-r2/load/client-diagnostics.json",
+      "bytes": 8696,
+      "sha256": "8b33dbf2de5c83e62413ad1644841f54405574420d3173a81be182e965beaa38"
+    },
+    {
+      "path": "v3-r2/load/commerce-svc-connection-errors.json",
+      "bytes": 124,
+      "sha256": "ccf377fe295933a5e7aa6e45da2d220e68efa0531ff23d32de465f87a0d71824"
+    },
+    {
+      "path": "v3-r2/load/coverage-review-exit.json",
+      "bytes": 214,
+      "sha256": "1dfbdeb2a4c161341971d81ac5a68909efd403e1133aaf6e78fd2cb88fdceba6"
+    },
+    {
+      "path": "v3-r2/load/coverage-review.json",
+      "bytes": 7344,
+      "sha256": "90d00eec52c7f77bb0f22616a7ac8c5f191e5ec5e4aeea3e80187d1b8ea68c22"
+    },
+    {
+      "path": "v3-r2/load/identity-svc-connection-errors.json",
+      "bytes": 124,
+      "sha256": "ccf377fe295933a5e7aa6e45da2d220e68efa0531ff23d32de465f87a0d71824"
+    },
+    {
+      "path": "v3-r2/load/k6-exit-code.txt",
+      "bytes": 4,
+      "sha256": "2dd9964aa7c59c01362061846da85dcf727bb9f7f25e6b1c67ff342e6ef8c69c"
+    },
+    {
+      "path": "v3-r2/load/metrics.json",
+      "bytes": 36308,
+      "sha256": "54018f378fd245af3a240d0342856e9fcc5695b147139c5f30933a6186b6e732"
+    },
+    {
+      "path": "v3-r2/load/notification-svc-connection-errors.json",
+      "bytes": 124,
+      "sha256": "ccf377fe295933a5e7aa6e45da2d220e68efa0531ff23d32de465f87a0d71824"
+    },
+    {
+      "path": "v3-r2/load/observer-result.json",
+      "bytes": 464,
+      "sha256": "914f6fa646af7815dbba8473382eb8cb91c33277c4f0cb31459cfe8df9f7926a"
+    },
+    {
+      "path": "v3-r2/load/raw-audit.json",
+      "bytes": 1313,
+      "sha256": "801b13b56d7024f1dab85ca4c0947bfa714dbef1546c86f9469f26a8a2874c50"
+    },
+    {
+      "path": "v3-r2/load/restoration-20261111T085603076726Z.json",
+      "bytes": 2722,
+      "sha256": "625f55f50c775c58b36aceae4ea26fc1e54d3574f59983c90c392471bde0fe09"
+    },
+    {
+      "path": "v3-r2/load/scale-outs.json",
+      "bytes": 1866,
+      "sha256": "2f562c0aad477b9e87d13b2c06ee9805af01e1abeb8248d233ead14aa9ab17b1"
+    },
+    {
+      "path": "v3-r2/load/scaling-activities.json",
+      "bytes": 26075,
+      "sha256": "d0aa25cab68f823eb55cceba9260b32db7ae203fb82b09b85d765c0c47cc7165"
+    },
+    {
+      "path": "v3-r2/load/server-diagnostic-review.json",
+      "bytes": 11325,
+      "sha256": "b779058debf06f6cb63db0888c6ab71f87a202eda59db9e81e527e4692f5a038"
+    },
+    {
+      "path": "v3-r2/load/summary.json",
+      "bytes": 20863,
+      "sha256": "20df51af63d979aa0f866cd9c7d9b9f17d27e0e9f2809ecbc992b36312ce7925"
+    },
+    {
+      "path": "v3-r2/original-archive-verification.json",
+      "bytes": 5650,
+      "sha256": "9815ecf6dffd6bdada18cb334bd627e0734f1724cd65f00931fa9c44a89fa859"
+    },
+    {
+      "path": "v3-r2/pool-health-review/pool-health-review.json",
+      "bytes": 1274,
+      "sha256": "f84225d566d9c1379b15f75becde4a826879550a38cea0ed4df18232747ec6f2"
+    },
+    {
+      "path": "v3-r2/prechecks/approval.json",
+      "bytes": 1446,
+      "sha256": "0146871959f4db4aeed18905e092bdc2b39b11e738572aa17d3cb5761d39dda2"
+    },
+    {
+      "path": "v3-r2/prechecks/connection-budget.json",
+      "bytes": 523,
+      "sha256": "9b8058932c49be96cfc75184c27a864fbb81a7468e8c706762c77c785c7aa995"
+    },
+    {
+      "path": "v3-r2/prechecks/generator-readiness.json",
+      "bytes": 920,
+      "sha256": "b741657a0ff4f7512a0696ed69b6c3de8d7c14355ab5ed0bf0442b7784f1db73"
+    },
+    {
+      "path": "v3-r2/prechecks/prior-campaign-integrity.json",
+      "bytes": 224,
+      "sha256": "7ed969c3d4f8634e0aa259062e14bc944e75d41ca287b5bae1ba77d948334890"
+    },
+    {
+      "path": "v3-r2/prechecks/regional-quota-review.json",
+      "bytes": 2104,
+      "sha256": "2035719bdbc77d0f0f38fc35a494319a2917343aceebad7481632f8e94b4f393"
+    },
+    {
+      "path": "v3-r2/prechecks/replacement-budget.json",
+      "bytes": 388,
+      "sha256": "8cb1bfbd1f5509709139ac2857c473d651099747a27bd564ea54621f233f9fbe"
+    },
+    {
+      "path": "v3-r2/prechecks/runtime-settings.json",
+      "bytes": 6187,
+      "sha256": "5d3af7936dbabd6ab57e605534c12699eb2da12e0514852816dda1ffeca0d7ab"
+    },
+    {
+      "path": "v3-r2/prechecks/subnet-review.json",
+      "bytes": 687,
+      "sha256": "49333f4149fce4c5158d1b72702ba825ffaad1668fbecdaa3393e09c0cfc852d"
+    },
+    {
+      "path": "v3-r2/provenance-frozen.json",
+      "bytes": 5340,
+      "sha256": "fd9b369a539df274d2755b67791c7432232054355b4aa8b65e11f5e553aed083"
+    }
+  ],
+  "scope": "Selected receipts copied byte-for-byte. Campaign manifests are original full-campaign inventories, not claims that every referenced raw/archive/source file is published here.",
+  "retainedOutsideGit": "Original raw JSONL streams, complete observation/resource streams, archives and private operator workspace remain outside Git; original campaign manifests retain their hashes. No auth or private Terraform plan/state/inputs/logs copied.",
+  "publication": "Local draft only; no commit, push or PR publication performed."
+}

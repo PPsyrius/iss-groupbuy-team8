@@ -1,0 +1,310 @@
+[
+  {
+    "Id": "m0",
+    "Label": "AWS/ApplicationELB/HTTPCode_ELB_5XX_Count/Sum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "HTTPCode_ELB_5XX_Count",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "app/blocbuy-swe5001/1035f33091ca9c6a"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Sum"
+    }
+  },
+  {
+    "Id": "m1",
+    "Label": "AWS/ApplicationELB/HTTPCode_ELB_503_Count/Sum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "HTTPCode_ELB_503_Count",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "app/blocbuy-swe5001/1035f33091ca9c6a"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Sum"
+    }
+  },
+  {
+    "Id": "m2",
+    "Label": "AWS/ApplicationELB/HTTPCode_ELB_504_Count/Sum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "HTTPCode_ELB_504_Count",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "app/blocbuy-swe5001/1035f33091ca9c6a"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Sum"
+    }
+  },
+  {
+    "Id": "m3",
+    "Label": "AWS/ApplicationELB/RejectedConnectionCount/Sum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "RejectedConnectionCount",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "app/blocbuy-swe5001/1035f33091ca9c6a"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Sum"
+    }
+  },
+  {
+    "Id": "m4",
+    "Label": "AWS/ApplicationELB/ActiveConnectionCount/Sum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "ActiveConnectionCount",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "app/blocbuy-swe5001/1035f33091ca9c6a"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Sum"
+    }
+  },
+  {
+    "Id": "m5",
+    "Label": "AWS/ApplicationELB/HealthyHostCount/Minimum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "HealthyHostCount",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "app/blocbuy-swe5001/1035f33091ca9c6a"
+          },
+          {
+            "Name": "TargetGroup",
+            "Value": "targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Minimum"
+    }
+  },
+  {
+    "Id": "m6",
+    "Label": "AWS/ApplicationELB/HealthyHostCount/Maximum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "HealthyHostCount",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "app/blocbuy-swe5001/1035f33091ca9c6a"
+          },
+          {
+            "Name": "TargetGroup",
+            "Value": "targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Maximum"
+    }
+  },
+  {
+    "Id": "m7",
+    "Label": "AWS/ApplicationELB/UnHealthyHostCount/Maximum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "UnHealthyHostCount",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "app/blocbuy-swe5001/1035f33091ca9c6a"
+          },
+          {
+            "Name": "TargetGroup",
+            "Value": "targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Maximum"
+    }
+  },
+  {
+    "Id": "m8",
+    "Label": "AWS/ApplicationELB/TargetConnectionErrorCount/Sum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "TargetConnectionErrorCount",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": "app/blocbuy-swe5001/1035f33091ca9c6a"
+          },
+          {
+            "Name": "TargetGroup",
+            "Value": "targetgroup/blocbuy-swe5001-commerce-svc/0de2332e9ae4adb3"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Sum"
+    }
+  },
+  {
+    "Id": "m9",
+    "Label": "AWS/RDS/CPUCreditBalance/Minimum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/RDS",
+        "MetricName": "CPUCreditBalance",
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": "blocbuy-swe5001"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Minimum"
+    }
+  },
+  {
+    "Id": "m10",
+    "Label": "AWS/RDS/CPUSurplusCreditBalance/Maximum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/RDS",
+        "MetricName": "CPUSurplusCreditBalance",
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": "blocbuy-swe5001"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Maximum"
+    }
+  },
+  {
+    "Id": "m11",
+    "Label": "AWS/RDS/SwapUsage/Maximum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/RDS",
+        "MetricName": "SwapUsage",
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": "blocbuy-swe5001"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Maximum"
+    }
+  },
+  {
+    "Id": "m12",
+    "Label": "AWS/RDS/ReadLatency/Average",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/RDS",
+        "MetricName": "ReadLatency",
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": "blocbuy-swe5001"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Average"
+    }
+  },
+  {
+    "Id": "m13",
+    "Label": "AWS/RDS/WriteLatency/Average",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/RDS",
+        "MetricName": "WriteLatency",
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": "blocbuy-swe5001"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Average"
+    }
+  },
+  {
+    "Id": "m14",
+    "Label": "AWS/RDS/DiskQueueDepth/Maximum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/RDS",
+        "MetricName": "DiskQueueDepth",
+        "Dimensions": [
+          {
+            "Name": "DBInstanceIdentifier",
+            "Value": "blocbuy-swe5001"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Maximum"
+    }
+  },
+  {
+    "Id": "m15",
+    "Label": "ECS/ContainerInsights/RunningTaskCount/Average",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "ECS/ContainerInsights",
+        "MetricName": "RunningTaskCount",
+        "Dimensions": [
+          {
+            "Name": "ClusterName",
+            "Value": "blocbuy-swe5001"
+          },
+          {
+            "Name": "ServiceName",
+            "Value": "commerce-svc"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Average"
+    }
+  }
+]

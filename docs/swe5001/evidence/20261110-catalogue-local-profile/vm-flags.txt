@@ -1,0 +1,2 @@
+1:
+-XX:CICompilerCount=2 -XX:+FlightRecorder -XX:InitialHeapSize=16777216 -XX:MaxHeapSize=805306368 -XX:MaxNewSize=268435456 -XX:MaxRAM=1073741824 -XX:MaxRAMPercentage=75.000000 -XX:MinHeapDeltaBytes=196608 -XX:MinHeapSize=8388608 -XX:NewSize=5570560 -XX:NonNMethodCodeHeapSize=5826188 -XX:NonProfiledCodeHeapSize=122916026 -XX:OldSize=11206656 -XX:+PerfDisableSharedMem -XX:ProfiledCodeHeapSize=122916026 -XX:ReservedCodeCacheSize=251658240 -XX:+SegmentedCodeCache -XX:SoftMaxHeapSize=805306368 -XX:-THPStackMitigation -XX:+UseCompressedOops -XX:+UseSerialGC 

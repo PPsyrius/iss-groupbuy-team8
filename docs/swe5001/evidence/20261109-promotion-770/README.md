@@ -43,3 +43,7 @@ The first apply created the data subnets again (`module.network.aws_subnet.data[
 - **Placement not read back.** As in the morning run, nothing read which subnets RDS and Valkey were placed in, the route tables or the security group rules. AISS-07 (report §3.4) and #589 stay open.
 - **Buyer journey.** Only the smoke suite ran; no sign-in, payment or notification was exercised.
 - **Cost.** Not in the Cost Explorer read of 8 November.
+
+## 10 November reconciliation (#775)
+
+The [retained operator account](../20261109-edge-policy-recovery/README.md) now records how the preceding response-headers policy drift was repaired: a direct CloudFront API update with matching readback, not an IAM grant or a successful Terraform recovery apply. The later [session record](../20261110-subnet-verification/README.md) supplies actual placement/connectivity observations; those were not performed by this promotion. The original run results and limitations above remain dated to their own execution.

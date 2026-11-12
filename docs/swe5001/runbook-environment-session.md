@@ -207,6 +207,12 @@ Record the outputs (redacted) and the Logs Insights result in the day log before
 
 After `down`, `/api/*` returns 502 again (section 1).
 
+### 12 November 2026: experimental log-bucket recovery
+
+The normal script has no archival step and does not manage the separate load generator. It destroys runtime data, queues and log groups, retries once after 60 seconds, then calls the absence check. The R3/session-added ALB-log bucket was in runtime state but not the released `runtime/alb.tf`; its saved `force_destroy=false` meant a nonempty bucket would block deletion, potentially after other resources were destroyed. The late nightly job first failed on the GitHub apply role's missing bucket-read permissions. Do not infer absence from the cron or widen the role blindly; see the [dated failure and operator recovery](evidence/20261112-issue-789/README.md).
+
+The owner separately authorized operator recovery: review runtime-only saved plans with the existing authenticated assignment; remove writers/compute while retaining the bucket/security controls; privately archive and SHA-256 readback-verify all objects with the ALB writer absent; delete only verified originals; then destroy the empty bucket and independently verify absence. That recovery removed 127 Terraform-managed resources, left empty managed runtime state and passed normal `env-status.sh` plus 51 direct checks. The separate stopped generator was retired only after an encrypted disk snapshot completed; its original disk and temporary support resources are absent. The private evidence/log S3 bucket and one encrypted disk snapshot remain chargeable archives. Foundation/edge and SWE5006 were not targeted. This historical operator exception does not change the normal script, repair the nightly role, authorize another session or approve archive disposal; [safe projection](evidence/20261112-issue-789/cleanup.json).
+
 ## 8. When something goes wrong
 
 | Symptom | Meaning | Do |

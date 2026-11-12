@@ -1,0 +1,38 @@
+{
+  "label": "pg-delay-2ms",
+  "app": "blocbuy-matrix2-tls",
+  "rate": 200,
+  "seconds": 60,
+  "port": 8589,
+  "startedAt": "2026-11-10T05:53:24.324Z",
+  "actions": [],
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-tls:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": [
+        {
+          "attributes": {
+            "latency": 2,
+            "jitter": 0
+          },
+          "name": "controlled-latency",
+          "type": "latency",
+          "stream": "downstream",
+          "toxicity": 1
+        }
+      ]
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

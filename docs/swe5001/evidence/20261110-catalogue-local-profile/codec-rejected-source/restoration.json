@@ -1,0 +1,68 @@
+{
+  "kind": "rejected-codec-experiment-and-verified-source-restoration",
+  "decision": "Reject eager-reader/immutable-profile candidate; retain reviewed v3 backoff, ordered failure publication and outage-IT isolation.",
+  "reason": "Candidate A/B cold runs and both subsequent healthy controls fail; no startup fix or healthy non-regression established.",
+  "candidateWarmupErrors": [
+    12022,
+    11477
+  ],
+  "candidateWarmupDrops": [
+    11679,
+    11595
+  ],
+  "candidateControlErrors": [
+    110,
+    69
+  ],
+  "candidateControlP95Ms": [
+    3713,
+    2717
+  ],
+  "currentSourceExactlyMatchesReviewedFullVerification": true,
+  "reviewedFullTests": 2073,
+  "sources": [
+    {
+      "path": "blocbuy-infrastructure/src/main/java/com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCache.java",
+      "restoredNormalizedSha256": "3013d99375a64765d24ea3c220a82acb01c7d97b08582cdc20c7d0588321a392",
+      "verifiedSnapshot": {
+        "path": "formatted-cache-backoff3-main.java",
+        "bytes": 9644,
+        "sha256": "3013d99375a64765d24ea3c220a82acb01c7d97b08582cdc20c7d0588321a392"
+      },
+      "rejectedInput": {
+        "path": "RedisOpenDealOfferCache.java.txt",
+        "bytes": 9629,
+        "sha256": "6539f53a8014a493a66f101bbacca857de3977a37fdb164bf665195f5f53d556"
+      }
+    },
+    {
+      "path": "blocbuy-infrastructure/src/test/java/com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCacheTest.java",
+      "restoredNormalizedSha256": "4557fedabdaaa5ae3013ab94b9f16bfec52237593d7525d2c4170bbaea4403ae",
+      "verifiedSnapshot": {
+        "path": "formatted-cache-backoff3-test.java",
+        "bytes": 32142,
+        "sha256": "4557fedabdaaa5ae3013ab94b9f16bfec52237593d7525d2c4170bbaea4403ae"
+      },
+      "rejectedInput": {
+        "path": "RedisOpenDealOfferCacheTest.java.txt",
+        "bytes": 35263,
+        "sha256": "2dfc3e1e1122313d62bc3d89d3f6a8f0692acd43f69a6f4a302854bd2d14f381"
+      }
+    },
+    {
+      "path": "blocbuy-bootstrap/src/test/java/com/blocbuy/bootstrap/BestOpenDealCacheIT.java",
+      "restoredNormalizedSha256": "94ea103b25dc410411efeef9ae285c354cbde79c0e55f9137559acfca51732ab",
+      "verifiedSnapshot": {
+        "path": "formatted-cache-backoff3-it.java",
+        "bytes": 13108,
+        "sha256": "94ea103b25dc410411efeef9ae285c354cbde79c0e55f9137559acfca51732ab"
+      },
+      "rejectedInput": {
+        "path": "BestOpenDealCacheIT.java.txt",
+        "bytes": 13108,
+        "sha256": "94ea103b25dc410411efeef9ae285c354cbde79c0e55f9137559acfca51732ab"
+      }
+    }
+  ],
+  "limits": "Rejected optimization and its policy-specific test remain as source evidence. All original/reviewed 31 tests are restored exactly; no test/gate was removed to pass the rejected candidate. Candidate full verification remains separately attributed and does not supersede its failed runtime controls."
+}

@@ -1,0 +1,4 @@
+{
+  "at": "2026-11-11T09:42:06.834488+00:00",
+  "scope": "Read-only selected edge/ALB settings and original-window CloudFront metrics. No custom headers/secrets, application requests, new monitoring subscriptions or runtime changes."
+}

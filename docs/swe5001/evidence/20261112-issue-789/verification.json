@@ -1,0 +1,752 @@
+{
+  "scope": "Local #789 closure handoff: original nine items and ten-point review; corrected styled-peer integration plus current combined chapters; not external publication or whole-report acceptance",
+  "verifiedAtUtc": "2026-11-12T05:14:08.3992098+00:00",
+  "baseEvidenceCommit": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+  "pages": 83,
+  "pdfSha256": "54d8f0342d229a0ae5e09cd99cc9fffced545491dfbcf07a1f0642b95561ebc4",
+  "combinedChapters": {
+    "scope": "Current branch combined chapters 1-6, not the styled peer build or Appendix A",
+    "pages": 83,
+    "sha256": "54d8f0342d229a0ae5e09cd99cc9fffced545491dfbcf07a1f0642b95561ebc4",
+    "hits": {
+      "metrics": [
+        56
+      ],
+      "scaleOut": [
+        56
+      ],
+      "historicalDiagnostic": [
+        57
+      ],
+      "imageAssurance": [
+        73
+      ],
+      "cleanup": [
+        77
+      ]
+    },
+    "relativeUris": 0,
+    "pageBoundaryTextOverflows": 0,
+    "historicalV2BaselineUnchanged": true,
+    "availabilityUnchangedApartFromEvidencePins": true,
+    "securityMetadataParagraphIntentionallyShortened": true
+  },
+  "peerIntegration": {
+    "peerBase": "02c7b822354656a4b6b7d269c876bc0e76635295",
+    "pages": 141,
+    "sha256": "af2abc6a82b778ee3d40ea16f53e884e0a4b85bfa048118a1720e13c8efdfb48",
+    "hits": {
+      "r4Figure": [
+        109
+      ],
+      "metrics": [
+        106
+      ],
+      "scaleOut": [
+        106
+      ],
+      "imageAssurance": [
+        124
+      ],
+      "cleanup": [
+        132
+      ],
+      "history": [
+        107
+      ],
+      "ciDiagram": [
+        126
+      ],
+      "deliveryDiagram": [
+        127
+      ],
+      "effort": [
+        22
+      ]
+    },
+    "uniqueUris": 205,
+    "relativeUris": 0,
+    "pageBoundaryTextOverflows": 0,
+    "diagramPageFontSizes": {
+      "126": [
+        8.464,
+        9.0
+      ],
+      "127": [
+        8.5,
+        9.0,
+        12.0
+      ]
+    },
+    "beforePdfUntouched": true,
+    "scope": "Fresh corrected styled peer chapters 1-6, not Appendix A or remote integration"
+  },
+  "compile": {
+    "peer": {
+      "exitCode": 0,
+      "network": "none",
+      "peerBase": "02c7b822354656a4b6b7d269c876bc0e76635295",
+      "scope": "Corrected styled peer chapters 1-6 with PR evidence/chart overlays; not Appendix A",
+      "cpu": 2,
+      "memory": "8g"
+    },
+    "combinedWarnings": [
+      "Existing unavailable Menlo font fallback"
+    ],
+    "combined": {
+      "exitCode": 0,
+      "network": "none",
+      "cpu": 2,
+      "memory": "8g",
+      "scope": "Current combined branch chapters 1-6, not Appendix A"
+    },
+    "peerWarnings": 0
+  },
+  "sourceAndAppliedPatchChecks": {
+    "scope": "Read-only source/data/patch regression checks for #789; PDF/URI/font verification is recorded separately",
+    "checks": {
+      "original-1-cleanup-separate-from-failed-nightly": true,
+      "original-2-postload-observations-attributed": true,
+      "original-3-hard-refusal-and-separate-wrapper": true,
+      "original-4-same-client-not-same-network": true,
+      "original-5-gate-provenance-and-rationale-boundary": true,
+      "original-6-tag-and-specific-scan-failure": true,
+      "original-7-reconstruction-not-timesheet": true,
+      "original-8-owner-confirmations-not-remediation": true,
+      "original-9-exact-supplied-style-pdf-reviewed": true,
+      "review-1-r4-chart-source-and-caption": true,
+      "review-2-dated-publication-correction": true,
+      "review-3-metrics-answer-first": true,
+      "review-4-two-missing-metric-rows": true,
+      "review-5-target-provenance": true,
+      "review-6-bounded-historical-diagnostic": true,
+      "review-7-image-assurance-limitations": true,
+      "review-8-ci-decisions-conditionals-and-finals": true,
+      "review-8-early-failures-reach-cleanup": true,
+      "review-9-cross-references-own-detail": true,
+      "review-10-no-unnecessary-account-scp-literals": true,
+      "retained-r4-acceptance-boundary": true,
+      "retained-chargeable-archives-and-exclusions": true,
+      "nine-original-r4-core-files-unchanged": true,
+      "frozen-original-metadata:README.md": true,
+      "frozen-original-metadata:SHA256SUMS": true,
+      "peer-patch-sha256-matches-manifest": true,
+      "peer-patch-refreshed-to-current-base": true,
+      "peer-patch-excludes-shared-swe5006-changes": true,
+      "closure-publication-and-integration-not-falsely-done": true,
+      "peer-after-hash:docs/swe5001/report/AGENTS.md": true,
+      "peer-after-hash:docs/swe5001/report/diagrams/appendix-a/gen/d10a-ci-image-chain.typ": true,
+      "peer-after-hash:docs/swe5001/report/diagrams/appendix-a/gen/d10b-delivery.typ": true,
+      "peer-after-hash:docs/swe5001/report/diagrams/appendix-a/src/d10a-ci-image-chain.mmd": true,
+      "peer-after-hash:docs/swe5001/report/diagrams/appendix-a/src/d10b-delivery.mmd": true,
+      "peer-after-hash:docs/swe5001/report/diagrams/performance-v3-timeline.py": true,
+      "peer-after-hash:docs/swe5001/report/diagrams/performance-v3-timeline.svg": true,
+      "peer-after-hash:docs/swe5001/report/registers.md": true,
+      "peer-after-hash:docs/swe5001/report/sections/01-introduction.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/02-project-conduct.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/03-1-logical.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/03-2-physical.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/03-3-other-decisions.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/03-4-limitations.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/04-1-performance.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/04-2-availability.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/04-3-security.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/05-devops.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/06-1-remarks.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/06-3-cost.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/06-4-real-cloud.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/06-5-analytics.typ": true,
+      "peer-after-hash:docs/swe5001/report/sections/06-6-system-working.typ": true,
+      "peer-no-stale-capacity-or-scale-in-claims": true,
+      "peer-metric-rows-and-provenance": true,
+      "peer-no-unnecessary-identifiers": true,
+      "peer-current-cleanup-and-image-limitations": true
+    },
+    "passed": 56,
+    "failed": [],
+    "peerFixtureChecked": true,
+    "cloudOrPublicationMutation": false
+  },
+  "peerPatchManifest": {
+    "base": "02c7b822354656a4b6b7d269c876bc0e76635295",
+    "priorBase": "521a896b2248562bd08f07ab979d2392bc1e8785",
+    "patchSha256": "531fe53b2fd6e25c22071a482868c42d2bfcebbf605b6971af324f769339599e",
+    "files": {
+      "docs/swe5001/report/AGENTS.md": {
+        "beforeSha256": "5dd14218890e32f4fcee96a118f9f49d3c0b6cf29eba92648f4555b81d5c61e4",
+        "afterSha256": "2b91d65f1b8fcef8cfe4ee752776ad5a2bd457ee02594247a43daeba954b9c03"
+      },
+      "docs/swe5001/report/diagrams/appendix-a/gen/d10a-ci-image-chain.typ": {
+        "beforeSha256": "49e3ca4dc99fae278b990db3869b32055b00949187eea3d2f404b54aa344f636",
+        "afterSha256": "ce639f12c47fbd50709e73068b4f16bf405c341247435832e01735595b07a735"
+      },
+      "docs/swe5001/report/diagrams/appendix-a/gen/d10b-delivery.typ": {
+        "beforeSha256": "6a90bfa47bb9015932e4fc31d592870a7f5f4b3a2c5df1543e1c063572a74b10",
+        "afterSha256": "dc6c38a3bbae65469f8f5c2a8d8c47364093e93195f337c2f230011b0b778ef3"
+      },
+      "docs/swe5001/report/diagrams/appendix-a/src/d10a-ci-image-chain.mmd": {
+        "beforeSha256": "fb12de3bc7db41714ea052b5807ff390d3033d05a14a0501292243667d774aa8",
+        "afterSha256": "0d078df6e8b0e7e13dbcc9e7a2b332f381f073733e20cd1b3843a603fe117609"
+      },
+      "docs/swe5001/report/diagrams/appendix-a/src/d10b-delivery.mmd": {
+        "beforeSha256": "8b3147d52a749c128234f911bc5b82242d33306b1df16946b745b365a5212e79",
+        "afterSha256": "b45f34faf5ae0fe64d5309c9e33dbb7d08e02485368f3694d16a83fd75ed8e99"
+      },
+      "docs/swe5001/report/diagrams/performance-v3-timeline.py": {
+        "beforeSha256": "4a1daea321ae881c3a28b385dc40a3f57bd024703798f27eb319a6f35cc0840a",
+        "afterSha256": "e5160d83e90da0756241dbe80628b553c466e4407febb3d223700914e1553ef7"
+      },
+      "docs/swe5001/report/diagrams/performance-v3-timeline.svg": {
+        "beforeSha256": "09a85ad8728d4234c906769de69346d8124e5b2b9ae13b752e19814268d67391",
+        "afterSha256": "2993ca87e2c2eea317b59f4589d50f9cefe62fc28cfa4452736246ffa536c01e"
+      },
+      "docs/swe5001/report/registers.md": {
+        "beforeSha256": "6510420b08b67b4ad5567fb7282a793b775d778650d5639e974908d218b528f5",
+        "afterSha256": "41e5a54bb2ab77b2767aa70c7815f862dea6e37ef95bf4869046d5b86bc324a4"
+      },
+      "docs/swe5001/report/sections/01-introduction.typ": {
+        "beforeSha256": "014c0a74a8dcaa1c54db5b551183ed371a12f14d1f897927033119c39b79d440",
+        "afterSha256": "576b7395530455ab3587de3761a072bead2f366bf7ba51e8ba1717ded39572fe"
+      },
+      "docs/swe5001/report/sections/02-project-conduct.typ": {
+        "beforeSha256": "b2805886afe198c2e5b2502732cfe5337d08af30cddec623df2a9b363a837e27",
+        "afterSha256": "5729fae068b72200126f0257d6d678b522722734b963e29d234fe67fa2661fa6"
+      },
+      "docs/swe5001/report/sections/03-1-logical.typ": {
+        "beforeSha256": "6016196b6adf8cecb1aa89dc8e949863e5ff09fe9c787c84dff169f3bdb04cc4",
+        "afterSha256": "2315894d73ae597fd2eac7ebec1c9ea2a7ce76dbf58bbffba399137e413462d3"
+      },
+      "docs/swe5001/report/sections/03-2-physical.typ": {
+        "beforeSha256": "9da47c462f55d30887cab0dff3ffb9706bce0f09d7ca0014792348d0bd6ff819",
+        "afterSha256": "465c774c6c0283368ad74472bcbf6ec10c4299a195283e7450021966687ce359"
+      },
+      "docs/swe5001/report/sections/03-3-other-decisions.typ": {
+        "beforeSha256": "45df633240f5375855ed8bb901120835fcaa12a81df0d6275bcca73defa4d50b",
+        "afterSha256": "b29ede4f776a34e0f2c8d32fb8138f73178d223f8adc6eacb2e97ce898319a00"
+      },
+      "docs/swe5001/report/sections/03-4-limitations.typ": {
+        "beforeSha256": "20438a2d1ab39b9dac554e8766893625a39748c9245e33b9ae37d4bb013c915f",
+        "afterSha256": "f77fcd2cb04f761a98f155a614e482601213879808fcb11a6a443a692924afca"
+      },
+      "docs/swe5001/report/sections/04-1-performance.typ": {
+        "beforeSha256": "798208410dc7d37dc6f6d1cdc5f93e7ea5c741f7188469914fca2eed7eda2e9c",
+        "afterSha256": "bd0168b9450da051a91f248618c54e8dc3b1a6d04f49ed700e257e0ff80c493e"
+      },
+      "docs/swe5001/report/sections/04-2-availability.typ": {
+        "beforeSha256": "4ed279d998fb9dcf4e2ee7f4177beb27244ed976a932c4fce98e7287a66c9abc",
+        "afterSha256": "144c49634666d75c9c4cab3ccea1eaa40fe42a37ca9061aa4c261f994b59fcfa"
+      },
+      "docs/swe5001/report/sections/04-3-security.typ": {
+        "beforeSha256": "56d1cf63b1b444707a6702e602f5954d0e77bf8cce355367756b2259b5c00921",
+        "afterSha256": "c33f6d0568a4ef274d48767f10e0fed03a2b81fdccd10cc0ece7b9282accf842"
+      },
+      "docs/swe5001/report/sections/05-devops.typ": {
+        "beforeSha256": "d3b5f7b9ac3b1934a0ed7ef629793103a844080ea70b09456b07f99f08118869",
+        "afterSha256": "255854054aab515eb4926a633b352e10c3d8d11c263fe1a653719f831ba18e4d"
+      },
+      "docs/swe5001/report/sections/06-1-remarks.typ": {
+        "beforeSha256": "f074fd0bcf6c1c484d314cc815e46af3952e9ede2d2c36f5f872f189b19acf9e",
+        "afterSha256": "38c690ba6eadf9c6e603543ce91f250f207e3615cf5bc6d95477e4895f7ca9e5"
+      },
+      "docs/swe5001/report/sections/06-3-cost.typ": {
+        "beforeSha256": "22d158a9e50a3fdd9abe5ff0ee9f82d8795c64cd17808acae894127f1ad16534",
+        "afterSha256": "7a0f9f187873eeb151b145dba17d283126ed70f7d0a535077b68a18d501ff390"
+      },
+      "docs/swe5001/report/sections/06-4-real-cloud.typ": {
+        "beforeSha256": "3de58a3a885aa802939251051b64397acd9a60d9588ea3ce0b93b8aee30011e9",
+        "afterSha256": "2dfb7bdc30bb9db17506a7762376f374d42a6160ca8342e8cefc7ea17b047a5c"
+      },
+      "docs/swe5001/report/sections/06-5-analytics.typ": {
+        "beforeSha256": "1b453da3fb2b014be6dcb508840c8e0404c350f9cecefc3a34ca5ac7cda2be5e",
+        "afterSha256": "1c4d8676320497083278779028bccb736d1b3f8f0bac4633c8662e9d93500962"
+      },
+      "docs/swe5001/report/sections/06-6-system-working.typ": {
+        "beforeSha256": "9b51e870b28aee208c58f00f12112cfc8b4f328ad1771091f733345076fa829e",
+        "afterSha256": "04db8d10e825c68a1b627f760bc93d0810e846c73ed321c1ca4bcb1229e4391b"
+      }
+    },
+    "chartTextTargetLineEndings": "LF for the peer fixture/patch; host source bytes and chart algorithm/data are not rewritten",
+    "procedure": "Apply to the exact pinned peer base before rebase, or resolve the corresponding changes during integration. Do not assume an unconditional apply after a rebase. Overlay the PR evidence during the verification build, preserve the peer style/shared kit, and revalidate a changed base.",
+    "overlay": {
+      "peerBase": "02c7b822354656a4b6b7d269c876bc0e76635295",
+      "existingFactualPatchApplied": true,
+      "remainingReviewCorrectionsApplied": true,
+      "additionalPublishedEvidencePins": 27,
+      "sharedSwe5006SourcesUnchanged": true,
+      "buildOverlay": "Pinned latest peer source + corrected report paths + local PR evidence/R4 chart; no source restructuring"
+    },
+    "remoteBranchesChanged": false
+  },
+  "evidenceDestinationChecks": {
+    "chapters": {
+      "distinctEvidenceTargets": 29,
+      "unresolvedTargets": 0,
+      "pendingThisPrPublication": [
+        "docs/swe5001/evidence/20261112-issue-789/cleanup.json"
+      ],
+      "targets": [
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261019-v3-autoscaling/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261108-cost-explorer/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261109-promotion-757/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261109-promotion-770/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261109-source-control-delivery/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261110-spa-security-headers/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-load-reruns/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-load-reruns/v2/observer-resolution.json",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r2/prechecks/subnet-review.json",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/browse-minutes.csv",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/cloudwatch-points.jsonl",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/scaling-activities.csv",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/server-minutes.csv",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/service-observations.jsonl",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/verification.json",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "174af508e7bd238b50faea7a9482e84e4d3a8cac",
+          "path": "docs/swe5001/evidence/20261015-local-failure-rehearsal/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "174af508e7bd238b50faea7a9482e84e4d3a8cac",
+          "path": "docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137",
+          "path": "docs/swe5001/evidence/20261109-edge-policy-recovery/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137",
+          "path": "docs/swe5001/evidence/20261110-load-preflight/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137",
+          "path": "docs/swe5001/evidence/20261110-subnet-verification/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137",
+          "path": "docs/swe5001/evidence/20261110-subnet-verification/observations.json",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "b80debcd8b8cdeb1272219758789e1a9927b9d7d",
+          "path": "docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "b80debcd8b8cdeb1272219758789e1a9927b9d7d",
+          "path": "docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-calibration.json",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "b80debcd8b8cdeb1272219758789e1a9927b9d7d",
+          "path": "docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "b80debcd8b8cdeb1272219758789e1a9927b9d7d",
+          "path": "docs/swe5001/evidence/20261016-scp-consolidation/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "b80debcd8b8cdeb1272219758789e1a9927b9d7d",
+          "path": "docs/swe5001/evidence/20261019-ecs-demo-images/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "dev",
+          "path": "docs/swe5001/evidence/20261108-cost-explorer/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "dev",
+          "path": "docs/swe5001/evidence/20261112-issue-789/cleanup.json",
+          "currentlyPublished": false
+        }
+      ],
+      "method": "Exact local git trees for known published revisions plus exact downloaded peer tree; pending dev links explicitly checked against PR files. Not an all-external-URL browser/HTTP audit."
+    },
+    "peer": {
+      "distinctEvidenceTargets": 31,
+      "unresolvedTargets": 0,
+      "pendingThisPrPublication": [
+        "docs/swe5001/evidence/20261112-issue-789/cleanup.json"
+      ],
+      "targets": [
+        {
+          "ref": "02c7b822354656a4b6b7d269c876bc0e76635295",
+          "path": "docs/swe5001/evidence/20261111-cost-explorer/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261015-local-failure-rehearsal/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261016-scp-consolidation/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261019-ecs-demo-images/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261019-v3-autoscaling/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261019-v3-autoscaling/v3-alb-per-minute.tsv",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261108-cost-explorer/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261109-edge-policy-recovery/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261109-promotion-757/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261109-promotion-770/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261109-source-control-delivery/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261109-source-control-delivery/repository-controls.json",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261110-catalogue-local-profile/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261110-load-preflight/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261110-spa-security-headers/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261110-subnet-verification/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261110-v3-autoscaling/INVESTIGATION.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261110-v3-autoscaling/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261110-v3-autoscaling/minute-correlation.csv",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-load-reruns/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r2/prechecks/subnet-review.json",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-investigation/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r3/DIAGNOSIS.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r3/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/README.md",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/browse-minutes.csv",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/scaling-activities.csv",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/server-minutes.csv",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "0405b1f0cbfd5442cb3dfef084c69f785b272d82",
+          "path": "docs/swe5001/evidence/20261111-v3-r4/verification.json",
+          "currentlyPublished": true
+        },
+        {
+          "ref": "dev",
+          "path": "docs/swe5001/evidence/20261112-issue-789/cleanup.json",
+          "currentlyPublished": false
+        }
+      ],
+      "method": "Exact local git trees for known published revisions plus exact downloaded peer tree; pending dev links explicitly checked against PR files. Not an all-external-URL browser/HTTP audit."
+    }
+  },
+  "preservation": {
+    "originalR4FileCount": 14,
+    "originalR4BytesPreservedAtCurrentOrFrozenPath": 14,
+    "originalCoreAndScanReviewFilesUnchanged": 12,
+    "metadataOnlyAmendment": [
+      "README publication addendum",
+      "Explicit new SHA256SUMS for current package plus two verbatim frozen metadata copies"
+    ],
+    "originalCanonicalAnalyzerExitPreserved": 1,
+    "originalStandaloneVerifier": {
+      "mode": "check",
+      "csvFiles": 3,
+      "browseMinuteBins": 30,
+      "scalingActions": 4,
+      "serviceObservations": 264,
+      "cloudwatchPoints": 793,
+      "serverMinutes": 31,
+      "canonicalAnalyzerExitPreserved": 1
+    },
+    "originalAuditReceiptsUnchanged": true,
+    "sharedSwe5006WorkingTreeUnchanged": true,
+    "peerSharedSwe5006FilesUnchanged": 104
+  },
+  "generatorAndRuntimeCleanup": "Prior independently verified cleanup.json unchanged; no new AWS mutation during report closure work",
+  "chartAndUmlChecks": {
+    "minimumRenderedUmlLabelPt": 8.464,
+    "currentR4ChartCheck": "pass",
+    "peerMermaidGeneratedFreshness": "pass",
+    "exactPatchApply": "pass with core.autocrlf=false/core.eol=lf and --whitespace=error-all",
+    "peerR4ChartCheck": "pass"
+  },
+  "visualReview": "Inspected fresh peer R4 chart, new metric rows, CI/delivery routes and legibility; reviewed effort, assurance, cleanup and historical-boundary pages. The 140-page before PDF remains untouched. Separate combined source/PDF regressions retained.",
+  "checkerCorrections": [
+    "Preserved initial undersized diagram renders; compacted/rerouted drawings until rendered labels meet 8pt",
+    "Removed a zero-length explicit route instead of changing the shared renderer",
+    "Peer patch targets LF text and passes whitespace-strict application; original host chart-source bytes unchanged",
+    "Pinned the variable-bound subnet-record URI after PDF annotation auditing found the macro was missed",
+    "Linux read-only preservation comparison uses the workstation core.autocrlf=true convention, not a false CRLF-only diff"
+  ],
+  "secretScan": {
+    "image": "ghcr.io/gitleaks/gitleaks:v8.30.1",
+    "parsedReport": true,
+    "sourceHashes": {
+      ".gitattributes": "8f053239aa51509bf7e3a0356d20696aee43d7e2f467d6ca186c711bc89f262b",
+      "docs/agile/sprint-04/log/2026-11-12.md": "7771e6db3e083ebb9d588af1a4e17227c2e39bb86dc013d8b875893bb09734dd",
+      "docs/quality/nfr-register.md": "3745036bc1f35166aa87da12a566f44a5676aba647be108c60177c338a2940d2",
+      "docs/swe5001/evidence/20261111-v3-r4/browse-minutes.csv": "a21830da1d02691c6df6231793ea7c56d10ad831da9e83d0b2bc2e52f745075c",
+      "docs/swe5001/evidence/20261111-v3-r4/cloudwatch-points.jsonl": "64d18a2dcd1646724a162401446035bf40db055c5df3c286745d0c38d529d1e0",
+      "docs/swe5001/evidence/20261111-v3-r4/cloudwatch-series.json": "be2554bd9b9cf505df1ac42c6157c3753c13146601d5a71afdc8f7ff97a49c7d",
+      "docs/swe5001/evidence/20261111-v3-r4/README.md": "0f936b9dcb0afea492f2c90661590938680657ac1748b3234539ac5b45207515",
+      "docs/swe5001/evidence/20261111-v3-r4/README.original-20261111.md": "c4b6738db31762353c47ed689e3268484aabc84f7a5cddf4cf8a33bc5321cf08",
+      "docs/swe5001/evidence/20261111-v3-r4/REPORT-INTEGRATION.md": "0adda4d7bf795efec520c581dbb3381f5a5e9ac5cf90fdc14c133654f23cc3a0",
+      "docs/swe5001/evidence/20261111-v3-r4/report-review.json": "329eef38442adfdb536346f2441463e27f9209aa25977aaebe28d05464d6fdfb",
+      "docs/swe5001/evidence/20261111-v3-r4/results.py": "bd0e091afdf4dc3582b268a9bf6c8f9623462814ea896052d8b5f9a2d2303455",
+      "docs/swe5001/evidence/20261111-v3-r4/scaling-activities.csv": "907e700113dce07991aaa718862a1f19c097c64cb9fb53c3c2cadf474b730b44",
+      "docs/swe5001/evidence/20261111-v3-r4/secret-scan.json": "49783b55131d1d66d20b3818f749600005f01fc8515db22caa0f172b5c8752dd",
+      "docs/swe5001/evidence/20261111-v3-r4/server-minutes.csv": "5704304f9271f45168396fe6fe43c24864506ec6b009519bf4dbf5ccd56b91b8",
+      "docs/swe5001/evidence/20261111-v3-r4/service-observations.jsonl": "b4c9c9392c4207eb84f2c0675f146ef7f55d4fd49da33e71fde6adc2de9c4fae",
+      "docs/swe5001/evidence/20261111-v3-r4/SHA256SUMS": "3fdbb0e5c53c93f81904df2cca08c1f21c884439751076a8d8702a5096753cd8",
+      "docs/swe5001/evidence/20261111-v3-r4/SHA256SUMS.original-20261111": "64a1406b5a6764c1eae9dcdb472bf6e64ecf257d01868f31df50e2cabf76b0a2",
+      "docs/swe5001/evidence/20261111-v3-r4/source-projections.json": "de8076d9e50dc2d7bc152a29ca03aa190d27337e9b9fac507f88314af36381e6",
+      "docs/swe5001/evidence/20261111-v3-r4/verification.json": "9928bd38ea35781c0bf9cb72008c190841c4c6ea2a895730e9fa990c67a10f2d",
+      "docs/swe5001/evidence/20261112-issue-789/check_closure.py": "68dc71c2f4e161128e711761c3605a8bc6638ee678a54149205b5fa3dc6e4218",
+      "docs/swe5001/evidence/20261112-issue-789/cleanup.json": "55454aea63614a8c06d70f662301abf424c803324a11139a45fa921d73f79db0",
+      "docs/swe5001/evidence/20261112-issue-789/closure-checklist.md": "34ffae45f8e7860b4fc7b35b8072f54b2fd885da4077f2f046757297d1e89938",
+      "docs/swe5001/evidence/20261112-issue-789/effort-estimate.md": "c42c3a7d0c1ca6e52ae5982e74eb0f5e8771121dfdbfdd8679c8be6add52fdd9",
+      "docs/swe5001/evidence/20261112-issue-789/facts.json": "72c0211242ab61003c045c75285a7f1a4cc7c8a098f44bc67bb5687b0834f91d",
+      "docs/swe5001/evidence/20261112-issue-789/peer-base.json": "0f318a01f8a4715d8c7763af5d80fefa74e673046e5993af33f2857e73afadbb",
+      "docs/swe5001/evidence/20261112-issue-789/peer-report.patch": "531fe53b2fd6e25c22071a482868c42d2bfcebbf605b6971af324f769339599e",
+      "docs/swe5001/evidence/20261112-issue-789/pr-draft.md": "ab45d7dca1d6b819a8cb8db4eec6aa675a990759e6e7f75be899393fefad3020",
+      "docs/swe5001/evidence/20261112-issue-789/README.md": "8a487e32fef4aa0e2fe2fba219bb60aaec330fe83c324272901bf4c8582fdadb",
+      "docs/swe5001/evidence/20261112-issue-789/reply-draft.md": "ab7bf0fa854d32479cc3af0aee42e1f66abb6691f7e30d9916349776461d6af3",
+      "docs/swe5001/evidence/20261112-peer-style-pdf-review/README.md": "a156ed55ce18e717bfdd890c04581522635bca263918820e8a720c23db224768",
+      "docs/swe5001/evidence/20261112-peer-style-pdf-review/verification.json": "74d3e8fd37037b93776fb786b6c0b244719663745c1377573db444fe49b6ea9e",
+      "docs/swe5001/report/AGENTS.md": "ceb72bb84380ae934422560f0864b78777ac9deaca65b1e03702546e5023071c",
+      "docs/swe5001/report/diagrams/d10-cicd-pipeline.typ": "d17cac4b6c9bd2aa6af4db8fa8db8b5bebdeeae6731fafefcd2bc7da29357177",
+      "docs/swe5001/report/diagrams/d11-paid-participation-classes.puml": "5dbea9f3d5f0660b05a205a989ac4d72fa3f337b43e964940b087a8873595aa3",
+      "docs/swe5001/report/diagrams/d11-paid-participation-classes.svg": "b1696f5f60d779e47eb6da3e1a1a614fdbc3e8c39613d27de49b2a004e034aa6",
+      "docs/swe5001/report/diagrams/d12-two-buyers-sequence.puml": "f578da6f1dfa55ddcb294707e81124548db96d3cac85688a0db511949616d58c",
+      "docs/swe5001/report/diagrams/d12-two-buyers-sequence.svg": "5f6c6fb8b5b5f0c675816829ebe5a4f105900618d93d1fd4a34c383fcc5749ff",
+      "docs/swe5001/report/diagrams/d13-expiry-classes.puml": "8a54248522c035c906d9040f2e0cb385e659a8042d839cd9464ada9abe6d1c7c",
+      "docs/swe5001/report/diagrams/d13-expiry-classes.svg": "0d9e58ab6fbaf66d59a78f01ff5b77cd9974372c70b2ba9d734fb9aee9c52f18",
+      "docs/swe5001/report/diagrams/d14-expiry-refund-sequence.puml": "dab2b95c685d33a3b8e16ba4a4dc369e679b411e8fdbbb62e79874faa0d8f31a",
+      "docs/swe5001/report/diagrams/d14-expiry-refund-sequence.svg": "c63280a1a3fe4d60b30399430b62a7cd3119b1ebb71b5f0cdef37bf173fda873",
+      "docs/swe5001/report/diagrams/d3-logical-view.puml": "80a688d6ea1a23ba7d7330c1209acdf41e539d437e3be929c0b9efa635d1a669",
+      "docs/swe5001/report/diagrams/d3-logical-view.svg": "b458ba876148be493d0bbe90c3cfc3058149d12041d8911b7d1e294efeb95be4",
+      "docs/swe5001/report/diagrams/d4-context-map.puml": "c3f8c64779b710cff40aa8395a9fcb84fbc079cfe4db5229230fec66e8884090",
+      "docs/swe5001/report/diagrams/d4-context-map.svg": "d4b3b60bb1c706ef6b24e47640696682d64ab9afdf4e29420f7c5f6f03af05d6",
+      "docs/swe5001/report/diagrams/d4a-eventstorming-timeline.mmd": "0fa3e8ee4da43d1058e481dc7b99a2ceb2b244b2eeaba271a18b4729237da558",
+      "docs/swe5001/report/diagrams/d4a-eventstorming-timeline.svg": "21f0765960076ceee0676317368fff4486bd375fb7f1b8f8ab1c6c416110f987",
+      "docs/swe5001/report/diagrams/d5-physical-deployment.typ": "d8a94e234cefef0e2d49610a99e90812c553883e8e6f913a0d1bb59b701e7c84",
+      "docs/swe5001/report/diagrams/d5-topology-comparison.typ": "72ed27e24296d9f7284b6a703f43ef98af4c871772623a0486b62b32797cd4aa",
+      "docs/swe5001/report/diagrams/d6-network.typ": "aa8546316a15351a11e63cc0cf418c089b469e5fad7344f0f1a0817f451cce31",
+      "docs/swe5001/report/diagrams/d7-aggregates.puml": "8a83ed5df33f7edf1ff9c219ef1040c380eca40e3676f0c376d626799236fb75",
+      "docs/swe5001/report/diagrams/d7-aggregates.svg": "a5ab6b55c3fe0876d776c6d6ccd2a374f80b04b3242f222002980c21853c4399",
+      "docs/swe5001/report/diagrams/d8-domain-events.puml": "f918027c26b5b68c1d12a7683034d5ab3ab58cd22fa1c75f40b97bd2f0328188",
+      "docs/swe5001/report/diagrams/d8-domain-events.svg": "39cfec5c120ee839ee2bbae200b66bd9af281d9c68f2105d439364ca7c4ee1e9",
+      "docs/swe5001/report/diagrams/d9-data-models.typ": "5a1b66d6ebef29bda005abe9db496573de2f44e262dc239d52740db2d2a66d23",
+      "docs/swe5001/report/diagrams/d9-schema-dictionary.typ": "cf46bb0ab0de7f07f71ff3ee88aa863147467a8d7d74afa8d19aa75dd4ddd234",
+      "docs/swe5001/report/diagrams/peer-d10-README.md": "92e5b7fb6f9b9f0232f51884e604ac5b5639a6f89a5c599dcb3a52358e8497b4",
+      "docs/swe5001/report/diagrams/peer-d10a-ci-image-chain.mmd": "0d078df6e8b0e7e13dbcc9e7a2b332f381f073733e20cd1b3843a603fe117609",
+      "docs/swe5001/report/diagrams/peer-d10a-ci-image-chain.typ": "ce639f12c47fbd50709e73068b4f16bf405c341247435832e01735595b07a735",
+      "docs/swe5001/report/diagrams/peer-d10b-delivery.mmd": "b45f34faf5ae0fe64d5309c9e33dbb7d08e02485368f3694d16a83fd75ed8e99",
+      "docs/swe5001/report/diagrams/peer-d10b-delivery.typ": "dc6c38a3bbae65469f8f5c2a8d8c47364093e93195f337c2f230011b0b778ef3",
+      "docs/swe5001/report/diagrams/performance-v3-timeline.py": "3742d4fabf05893bf5fdaa0a05c8f078acc1a441b5a4ed2b7fd50826a346d373",
+      "docs/swe5001/report/diagrams/performance-v3-timeline.svg": "2993ca87e2c2eea317b59f4589d50f9cefe62fc28cfa4452736246ffa536c01e",
+      "docs/swe5001/report/diagrams/performance-v3-timeline.typ": "d99101aedb70836385c2536dc690dd4e935273284ebdbddd22e1fc54b75c92bc",
+      "docs/swe5001/report/diagrams/style.typ": "d2ce7ee1e482f0332ec9a13f286a2bbb7c2a9858c3a9b1761c02df796226b374",
+      "docs/swe5001/report/lib.typ": "b2aedf0f453406e9c14c14aab17eadca866ff0b24c57eb249af54bee5eda80cc",
+      "docs/swe5001/report/README.md": "4d32dbf28c9a1806c95e64bef061227d2efda200aad0cdf7d9951443362e7613",
+      "docs/swe5001/report/registers.md": "d4acf1b5d122ccc5d90d1f3016d55a57050ef939b98b44ab34c388f246ee2c65",
+      "docs/swe5001/report/sections/01-introduction.typ": "79c7633021af5c7e67e068591200547066a32f78ce49557977ffe09e632127af",
+      "docs/swe5001/report/sections/02-project-conduct.typ": "3ac5d4b97820683b2af6e3cafa66a2d37dbb8646c67d52583399d096f1bc8d6b",
+      "docs/swe5001/report/sections/03-solution-overview.typ": "8dad5a8b72606d9bb745fed99749e9aa199cd11e3a3ad028fd69a6c9858fd50c",
+      "docs/swe5001/report/sections/04-quality-attributes.typ": "95b6b868c232526509008e0dc93e12fac4863a9562ecebd18e58297755e13017",
+      "docs/swe5001/report/sections/05-devops.typ": "d35e172667e7aa1600f94dc7a14f231ab5ac5894fba92c89a6be41cda3f2faac",
+      "docs/swe5001/report/sections/06-highlights.typ": "fb4e2a7609c740d34833a27cf22fe712bd12e18b32cf3c712a5b40576758a3c9",
+      "docs/swe5001/runbook-environment-session.md": "83f2a1849288c8829e8e39b93f64058a6237b5ffe304c75882ad395f5324fdd9"
+    },
+    "peerPdfTextSha256": "02c28a442c4c34b3cd1983fb86790a5db6360b1f5dae37872dfded043c70e851",
+    "findings": 0,
+    "exitCode": 0,
+    "repositoryFiles": 75,
+    "combinedPdfTextSha256": "a614a3f3345601252ded88f17af8f05e52b2db7e301de249d5dcb710d16dd6d0",
+    "network": "none",
+    "scope": "Exact listed branch/current metadata/frozen copies/handoff/patch/code/generated bytes plus both PDF text exports; not binary PDF/history/private AWS artifacts; this receipt excluded",
+    "pdfExtractedTextFiles": 2
+  },
+  "localLinkCheck": {
+    "markdownAnchorsAndAllExternalHttpLinksNotChecked": true,
+    "missing": 0,
+    "links": 324,
+    "markdownFiles": 16
+  },
+  "publication": {
+    "stagedFiles": 0,
+    "committedOrPushed": false,
+    "newCleanupDevUrlStillPendingThisPr": true,
+    "commentOrPrPosted": false,
+    "issueClosed": false,
+    "closureAfterReviewedPublicationAndPeerIntegration": true,
+    "peerRemoteChanged": false
+  },
+  "limits": [
+    "Source/data/PDF checks are not new load/performance acceptance or security remediation",
+    "Fresh styled-peer chapters 1-6, not Appendix A or all F1-F12 acceptance",
+    "Base pinned to 02c7b822; revalidate an advanced peer base and the actual reviewed merge result",
+    "Publish/pin the new cleanup evidence before submission; do not infer that an unapplied patch artifact updates a different branch",
+    "Original receipts retain their original scopes; current README/manifest metadata amendment is explicitly versioned"
+  ]
+}

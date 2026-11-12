@@ -1,0 +1,36 @@
+{
+  "kind": "verified-reviewed-cache-closeout-not-performance-acceptance",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1408,
+      "sha256": "b6e7a3bd4906eb2e5512730ff74aa8d88861678a98272dfafa5e1f55945d9625"
+    },
+    {
+      "path": "audit-retained-cache-evidence.py",
+      "bytes": 4783,
+      "sha256": "b73747cc5ff737341fd8db61ca45d3158b19c7d4e101b574c1911209b9b216ed"
+    },
+    {
+      "path": "cache-final-checks.py",
+      "bytes": 2983,
+      "sha256": "97e166619d99165c56738a2f263481393c1d25c2f95fd174073c02193e3235ce"
+    },
+    {
+      "path": "final-checks.json",
+      "bytes": 1016,
+      "sha256": "e0099467db2b524f3fd2926a56273de7ab2a17891dd8618168bb9da6285bd6b7"
+    },
+    {
+      "path": "pre-closeout-audit.json",
+      "bytes": 439,
+      "sha256": "67766ee9972370b5375cf8dd0be5af4a630a5627eac7790fb97c32020fa2df01"
+    },
+    {
+      "path": "secret-scan-receipt.json",
+      "bytes": 947,
+      "sha256": "49b1b57a665f9231234dca33b15e6c6252c9095f99f2a25e06148b79d8bf302a"
+    }
+  ],
+  "limits": "Pre-closeout audit is an earlier captured scope; final audit is rerun after this bundle. No cyclic/self hash or overall performance pass is asserted."
+}

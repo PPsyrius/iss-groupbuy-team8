@@ -1,0 +1,27 @@
+{
+  "label": "shared-budget-400",
+  "app": "blocbuy-matrix2-proxy",
+  "rate": 400,
+  "seconds": 60,
+  "port": 8588,
+  "startedAt": "2026-11-10T05:59:45.552Z",
+  "actions": [],
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-tls:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

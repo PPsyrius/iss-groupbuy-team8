@@ -1,0 +1,45 @@
+{
+  "scope": "Selected completed report-verification receipts; separate from the 73 original copied campaign receipts.",
+  "files": [
+    {
+      "sha256": "f29fc2f6acfba2485fa780d64ba34aeb46532cf3af2de0e8fb8f3ca0e878965f",
+      "bytes": 786,
+      "path": "chapters-pdf-review.json"
+    },
+    {
+      "sha256": "032c4d9f77ae88a8d54c81b49dc74fcb8914acaac4812d93056c8325fd149068",
+      "bytes": 254,
+      "path": "check-docs.json"
+    },
+    {
+      "sha256": "407bf5a0918a7f4eb0671c0301170421f4d8fcc54d675e02267ff2fb3749ec38",
+      "bytes": 737,
+      "path": "full-build-failure.json"
+    },
+    {
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3,
+      "path": "gitleaks-report.json"
+    },
+    {
+      "sha256": "bcc9dcf8651ee88aec9337c59f714e5d5e9327482f5baeb18d818505134d058f",
+      "bytes": 584,
+      "path": "owner-boundaries-first-attempt.json"
+    },
+    {
+      "sha256": "43a1a5b674249e8d331f4bc639a03f1b2dc3b80d9f492d40c7f118d505b9f09d",
+      "bytes": 508,
+      "path": "owner-boundaries.json"
+    },
+    {
+      "sha256": "a6d9ad3a65041d064ae82a6d9c5a22285e3e60929daa17a07291d64e861ccaac",
+      "bytes": 553,
+      "path": "pdf-review-first-attempt.json"
+    },
+    {
+      "sha256": "07e92503a4b56c9bc9aa76c02c912722df53f31ba8cb3a5af1d7eafdcb1079f8",
+      "bytes": 249,
+      "path": "rerun-report-check.json"
+    }
+  ]
+}

@@ -3,8 +3,8 @@
 // Links in Lim's chapters are pinned to dev at b80debcd (8 November 2026).
 #let repo = "https://github.com/PPsyrius/iss-groupbuy-team8"
 #let src(path, body) = link(repo + "/blob/b80debcd8b8cdeb1272219758789e1a9927b9d7d/" + path, body)
-// Files added by this change are linked through dev until it merges.
-#let dev-src(path, body) = link(repo + "/blob/dev/" + path, body)
+// Legacy helper name; these evidence paths are published at the branch snapshot, not dev.
+#let dev-src(path, body) = link(repo + "/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/" + path, body)
 #let iss(n) = link(repo + "/issues/" + str(n))[\##n]
 #let pr(n) = link(repo + "/pull/" + str(n))[\##n]
 #let run(id, body) = link(repo + "/actions/runs/" + id, body)
@@ -27,7 +27,7 @@ The briefing asks the report to incorporate the remarks gathered at the presenta
     [F4], [How are the aggregates arrived at?], [§3.1.4.4], [Command → invariant → consistency boundary → aggregate, one row per aggregate (@tbl-aggregates)],
     [—], [How did EventStorming help us arrive at the proposed solution?], [§3.1.4.1], [Event timeline for UC3–UC6 and the trace from each finding to a decision (@fig-d4a-timeline, @tbl-es-traceability)],
     [F5], [Resultant detailed object design], [§3.2.4], [Class diagrams with real class names for the two critical use cases (@d11-paid, @d13-expiry)],
-    [F6], [The database should be in its own subnet], [§3.2], [Data subnets with no route out of the VPC (AD-15, @tbl-subnets); tested offline and created on AWS three times on 9 November; a readback of their placement was reported but not recorded (§2.2), so the remark is answered in design only (AISS-07)],
+    [F6], [The database should be in its own subnet], [§3.2, §4.3], [AD-15's disjoint application/data subnets, local-only data routes, security groups and required connectivity were verified in the #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November SGT AWS record]. This answers placement/connectivity for that session (AISS-07), not failover or negative packet isolation; §5.3 records the associated experiment and close-out],
     [F7], [Show the group-buy user flow for two users], [§3.2.4], [Two-buyer sequence with the refusal branch when the last seat is already taken (@d12-paid)],
     [F8], [More perspectives from Architecting Software Solutions, for example deployment], [§3.1, §3.2], [Logical view (@fig-d3-logical-view), deployment view (@fig-d5-deployment), network view (@fig-d6-network), plus the context (@fig-d1-context) and use case (@fig-d2-use-cases) views],
     [F9], [Detailed DDD diagrams (Platform Engineering)], [§3.1.4], [Context map, aggregate diagrams with invariants and life cycles (@fig-d7-aggregates), domain event catalogue (@fig-d8-domain-events)],
@@ -39,7 +39,7 @@ The briefing asks the report to incorporate the remarks gathered at the presenta
   caption: [Presentation remarks and their answers. Wording condensed from #iss(596) and the #src("docs/swe5001/report/README.md")[report framework].],
 ) <tbl-remarks>
 
-#pending[Status on 8 November: F1 (§4.1) and F2 (§5.2) are still scaffolds; check this table against the final text of every section at the reconcile.]
+#pending[F1 (§4.1) and F2 (§5.2) now contain results and pipeline evidence; owners must still review this feedback map against the final text and frozen citations.]
 
 == How the Briefing's Success Criteria Are Met
 
@@ -51,7 +51,7 @@ The briefing gives five success criteria for the platform. @tbl-success shows ho
     table.header([Success criterion (briefing)], [How BlocBuy meets it], [Evidence]),
     [Identify the seed, producers and consumers of the platform], [Seed: curated team-priced offers; producers: the platform administrator, who publishes listings on sellers' behalf, team leaders and sharers (sellers do not use BlocBuy directly; seller self-service is out of scope, §1.4.2); consumers: joining buyers (§1.3, @tbl-platform-roles, @fig-d1-context)], [Designed and built],
     [Identify the use cases that can expand the ecosystem], [Starting a team (UC3) and sharing an invitation (UC7) that credits the sharer for each referred join (UC12) turn a consumer into a producer who brings in the next buyers], [Built in SWE5006; unchanged in the services],
-    [Show how the platform scales the number of customers and producers], [Browsing and paying scale out on `commerce-svc` without touching identity or notification. On 19 October on AWS, commerce scaled from one to three tasks under load (§4.1); the run is invalid as acceptance evidence because the load generator dropped iterations (AISS-12)], [Scale-out verified on AWS],
+    [Show how the platform scales the number of customers and producers], [Commerce scales independently of identity and notification. The selected 11 November V3 R4 browse workload demonstrated automatic one-to-six scale-out with native workload thresholds met (§4.1). It did not exercise payment traffic or prove maximum capacity/controlled linearity; the canonical observation limitation remains (AISS-12)], [Browse workload and scale-out verified on AWS],
     [Support more seeds in future], [A new vertical is a new service from the golden-path map entry, reusing sign-in, notification and settlement, and a new consumer is one queue entry (§4.4)], [Built; not yet exercised with a second seed],
     [Identify and perform analytics that improve the platform], [Operational analytics are in use and set the scaling target; business analytics are designed on data already stored (§6.5)], [Operational: dashboard verified on AWS (16 October), alarms configured but never exercised; business: designed],
   ),
@@ -79,6 +79,8 @@ Calculated: the SWE5001 runtime cost about US\$10 from its first session to 8 No
 
 The runtime billed on only nine days: 6–7 October and 15–21 October. For comparison, keeping the same runtime on all the time was estimated at about US\$125 a month (AD-12, §3.2.1).
 
+*Later close-out, not an extension of that bill.* On 12 November SGT the operator removed the later runtime by 12:13:20 and completed generator retirement by 12:06:02 (§5.3). The generator's original disk was removed after a completed encrypted disk snapshot; that snapshot and the private evidence/log bucket remain chargeable archives. Foundation/edge remain. No post-cleanup bill was measured here, and no zero-account-cost or all-stacks-destroyed claim follows.
+
 Three things did not go to plan, and each is a lesson for a production rollout:
 
 - *The bill was about twice the estimate.* The plan expected under US\$5 for about 14 runtime hours. On 19 October the team decided to keep the environment up until the presentation (#src("docs/agile/sprint-04/log/2026-10-19.md")[sprint log]), and 19–21 October carry 85% of the cost. The decision was reasonable for a live demonstration, but nothing showed its price at the time.
@@ -103,7 +105,7 @@ Mocks, local runs and Terraform plans passed before each of these problems appea
     [New SNS subscription filters take up to 15 minutes to apply], [Events published earlier are silently dropped], [The deployment waits 900 seconds (AISS-06)],
     [An organisation SCP blocked CloudFront metrics (16 October)], [CloudFront metrics are served only from `us-east-1`, which the region guardrail denied], [SCPs consolidated with a narrow exception. #src("docs/swe5001/evidence/20261016-scp-consolidation/README.md")[SCP record]],
     [An interrupted start-up left auto-scaling suspended], [The start-up reported success, but the scaling targets stayed paused], [Repaired by hand; no fix yet (AISS-14)],
-    [The apply role could not update the edge's response headers policy (9 November)], [#pr(700) (27 October) added a header to the `edge` stack's response headers policy. The required plan check passed, because for `edge` it runs offline with a mocked provider and the live plan covers only `foundation`; the apply role may read the policy but not update it. With no promotion for 13 days, the gap surfaced at the next release, which was denied `cloudfront:UpdateResponseHeadersPolicy` and destroyed its runtime (#dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record])], [The next promotion, the same evening, passed the `edge` step without a change to the apply role (#run("42653347818")[run 42653347818])\; how the policy was brought up to date is not recorded. Lesson: a plan cannot detect a gap in the apply role's permissions],
+    [The apply role could not update the edge's response headers policy (9 November)], [#pr(700) (27 October) added a header to the `edge` stack's response headers policy. The required plan check passed, because for `edge` it runs offline with a mocked provider and the live plan covers only `foundation`; the apply role may read the policy but not update it. With no promotion for 13 days, the gap surfaced at the next release, which was denied `cloudfront:UpdateResponseHeadersPolicy` and destroyed its runtime (#dev-src("docs/swe5001/evidence/20261109-promotion-757/README.md")[9 November record])], [The retained #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137/docs/swe5001/evidence/20261109-edge-policy-recovery/README.md")[operator recovery account] records a direct CloudFront policy update and API readback, not a Terraform apply or IAM grant. The later #run("42653347818")[promotion] passed. Lesson: offline plans do not exercise the apply role's permissions; operator-owned changes need their own evidence],
     [The edge points at a deleted load balancer after teardown (read 8 November)], [`/api/*` on the SWE5001 distribution names the last runtime's load balancer, which no longer exists], [Harmless while the runtime is down: the next start-up passes the new load balancer to the distribution (#src("docs/swe5001/HANDOFF.md")[handoff record])],
   ),
   kind: table,
@@ -114,7 +116,7 @@ Mocks, local runs and Terraform plans passed before each of these problems appea
 
 The platform measures how it runs today, and stores the data to measure how the business runs; only the first is built.
 
-*Operational analytics, in use.* On 16 October on AWS, the CloudWatch dashboard showed the edge, the services and the messaging in three rows of charts; its CloudFront chart was first denied by an organisation SCP and fixed the same day (@tbl-findings). The load results of that day set the auto-scaling target (§4.1). Two CloudWatch alarms are configured, on the notification dead-letter queue and on the age of the oldest notification message; both notify an SNS topic with three e-mail subscriptions. They have never been exercised. No session record shows an alarm firing or a notification arriving, and the readiness check of every promotion that reached it found an unconfirmed recipient: two of three in #run("39008208244")[run 39008208244] (17 October), one in #run("39259845179")[run 39259845179] (19 October) and #run("39435280952")[run 39435280952] (20 October), and all three in #run("42587537517")[run 42587537517] and #run("42653347818")[run 42653347818] (9 November). Each run continued only because the opt-out `SWE5001_ALLOW_UNCONFIRMED_ALERTS` defaults to `true` in the deployment workflow (@tbl-findings). An unconfirmed recipient receives no alarm. #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October record].
+*Operational analytics, in use.* On 16 October on AWS, the CloudWatch dashboard showed the edge, the services and the messaging in three rows of charts; its CloudFront chart was first denied by an organisation SCP and fixed the same day (@tbl-findings). That baseline informed the initial scaling target; §4.1 gives the selected R4 session's actual target and observations. Two messaging alarms are configured, on the notification dead-letter queue and on the age of the oldest notification message; both notify an SNS topic with three e-mail subscriptions. They have never been exercised. No session record shows either messaging alarm firing or a notification arriving, and the readiness check of every promotion that reached it found an unconfirmed recipient: two of three in #run("39008208244")[run 39008208244] (17 October), one in #run("39259845179")[run 39259845179] (19 October) and #run("39435280952")[run 39435280952] (20 October), and all three in #run("42587537517")[run 42587537517] and #run("42653347818")[run 42653347818] (9 November). Each run continued only because the opt-out `SWE5001_ALLOW_UNCONFIRMED_ALERTS` defaults to `true` in the deployment workflow (@tbl-findings). An unconfirmed recipient receives no alarm. #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October record].
 
 *Business analytics, designed.* The data needed for four business measures is already stored, but nothing reports on it yet:
 
@@ -135,7 +137,7 @@ The platform measures how it runs today, and stores the data to measure how the 
 
 == Where to See the System Working
 
-The runtime is destroyed between sessions (AD-12), so the system is shown through recorded runs and can be rebuilt by one promotion (§4.2), as on the evening of 9 November. @tbl-demo lists where each part can be seen.
+Runtime is disposable between sessions (AD-12), although the failed nightly cleanup required separately authorized operator recovery on 12 November (§5.3). Runtime and generator were then removed, with their archives retained; foundation/edge remain, so a future authorized promotion can rebuild runtime (§4.2), as on the evening of 9 November. @tbl-demo lists where each part can be seen.
 
 #figure(
   table(
@@ -145,7 +147,7 @@ The runtime is destroyed between sessions (AD-12), so the system is shown throug
     [Storefront served by the three services through CloudFront, in a browser], [#src("docs/swe5001/evidence/20261019-ecs-demo-images/README.md")[19 October record] of the session created by #run("39198123242")[run 39198123242]: the storefront loaded signed out, but all ten product images were broken by the demo seed (#iss(557))], [Verified on AWS (screenshot, signed out, no purchase)],
     [Live session for the 21 October presentation], [Runtime created by #run("39525458726")[run 39525458726] (21 October, 01:07 UTC, succeeded) and destroyed by the nightly `down` #run("39658040903")[run 39658040903] (21 October, 19:01 UTC)], [Session runs verified on AWS\; what was shown live is not recorded],
     [Three services created, smoke-tested through CloudFront, released and destroyed], [#run("39008208244")[Promotion run 39008208244] (17 October) and #run("42653347818")[run 42653347818] (9 November, #dev-src("docs/swe5001/evidence/20261109-promotion-770/README.md")[record]) built the runtime from zero (115 and 120 resources). The promotions of 19 and 20 October (#run("39259845179")[run 39259845179], #run("39435280952")[run 39435280952]) smoke-tested, released and destroyed a runtime that a session had created earlier the same day (#run("39198123242")[run 39198123242], #run("39357098022")[run 39357098022]). What the smoke suite checks is in §2.2], [Verified on AWS],
-    [Auto-scaling from one to three tasks under load], [#src("docs/swe5001/evidence/20261019-v3-autoscaling/README.md")[19 October record] (§4.1)], [Scale-out verified on AWS; invalid as acceptance evidence],
+    [Browse load and automatic one-to-six scale-out], [#link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-v3-r4/README.md")[11 November V3 R4 record] (§4.1)], [Workload and scale-out verified on AWS; canonical collection limitation retained, not maximum-capacity/linearity proof],
     [Pull-request checks: build, architecture rules, contract check, image scan, Terraform plan], [Every pull request into `dev`\; each job runs only when its files changed and otherwise reports success (§5.2)], [Running in CI],
     [Release gate: source is `dev`, service images, infrastructure plan], [Every promotion pull request into `prod` (AD-19)], [Running in CI],
     [Source code and infrastructure], [#link(repo)[github.com/PPsyrius/iss-groupbuy-team8]], [—],
@@ -154,5 +156,5 @@ The runtime is destroyed between sessions (AD-12), so the system is shown throug
   caption: [Where the system can be seen working.],
 ) <tbl-demo>
 
-After the final `terraform destroy` of 16 November (@tbl-milestones) removes every stack, the GitHub Actions runs, the evidence records under `docs/swe5001/evidence/` and the source remain, and a rebuild needs an operator to re-apply `foundation` (the GitHub OIDC roles the pipeline assumes and the ECR repositories) and `edge` before any promotion can run (#src("docs/swe5001/impl-aws-infrastructure.md")[infrastructure design], sections 4 and 5).
+The 16 November all-stack close-out in @tbl-milestones is a plan, not an executed or newly authorized operation. If a separately authorized final destroy removes `foundation` and `edge`, GitHub Actions runs, retained evidence and source remain, and a later rebuild needs an operator to re-apply those stacks before any promotion can run (#src("docs/swe5001/impl-aws-infrastructure.md")[infrastructure design], sections 4 and 5). The 12 November runtime/generator retirement did not remove them or authorize archive disposal.
 

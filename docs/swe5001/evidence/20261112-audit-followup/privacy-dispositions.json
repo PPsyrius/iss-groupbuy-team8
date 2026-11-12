@@ -1,0 +1,702 @@
+{
+  "schema": 1,
+  "scope": "Location-only follow-up to audit 3; values intentionally omitted; originals unchanged",
+  "credentialFindingsInOriginalAudit": 0,
+  "r4MetadataFindingInOriginalAudit": false,
+  "currentTreeMetadataExposureResolved": false,
+  "historyDisclosureCleared": false,
+  "accountIdentifiersAreCredentials": false,
+  "fixtureAndArchitectureCidrRedactionRequired": false,
+  "safeExcerptCount": 17,
+  "locations": [
+    {
+      "path": "docs/swe5001/evidence/20261109-promotion-757/README.md",
+      "originalSha256": "c755af5f69698cc876b4948dc0f49ec154d8a03f2ac49151d6643bce0a8a6071",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          48,
+          49
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261109-source-control-delivery/README.md",
+      "originalSha256": "133c62acaefb90c378eb4bbe4c19c8714f0c15abd7910fef78b354daf0fb42da",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          50
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-catalogue-local-profile/README.md",
+      "originalSha256": "1b1ee99ab4171869126117145454c7fa92d64cbf97ec9f86cfc77f1f3e254cad",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          15
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-catalogue-local-profile/codec-startup/scripts/post-codec-startup.ps1",
+      "originalSha256": "b98d3a9ab7781ab9455a1bfe1ec41aac15de5f66af6f686818471447bc410573",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          2,
+          4
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-catalogue-local-profile/matrix/paired-base-health.jsonl",
+      "originalSha256": "6d25b71b0276b7766d2c5d112aef2ce6225260d73865ede3ae455f2437373fda",
+      "categories": {
+        "local-lab-private-address": [
+          1,
+          2
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-catalogue-local-profile/matrix/paired-bulkhead-health.jsonl",
+      "originalSha256": "32840a879ad7e6304de7472d7edfe36f2f170ca54cb91c080f408ef0ae775403",
+      "categories": {
+        "local-lab-private-address": [
+          1,
+          2
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-catalogue-local-profile/matrix/scaling-review.json",
+      "originalSha256": "6135ac5e77184b53b51fde0a019f272b8d0701d8ba09748ec57d159274b230e0",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          76
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-catalogue-local-profile/retained-files.json",
+      "originalSha256": "15394324f3b65bb52e9118ed942ce356b4731abdb5a63475224011e6aabee6cc",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          3
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-load-preflight/README.md",
+      "originalSha256": "9abdac7789b976370dcb717059e4172386141988d20786ec51b8c17644165fb0",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          27,
+          33
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-load-preflight/observations.json",
+      "originalSha256": "1140fd10875a82cac9204addc0405fb75785a2b3fd6b6bc3b9710f6a36ea4f42",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          4,
+          8
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-load-preflight/pool-rollout.json",
+      "originalSha256": "b29d526afa853c55b17164696dfbd1d7fa64aaebc944e34ff26dddb85641de49",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          4
+        ],
+        "operator-home-path/identity-metadata": [
+          7
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-subnet-verification/observations.json",
+      "originalSha256": "62843b7d5a95e591c664f43ac4fe7fbccc2432289dc56aec8748c31da8f38c35",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          3,
+          20,
+          28,
+          36,
+          44
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/README.md",
+      "originalSha256": "9daa0a2cdc882ddafe61479da2bda6624226e4a2e78386502e75418e566d8ac7",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          31
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/aws-correlation.json",
+      "originalSha256": "5a7ec4f5a61fa6103adf4d0dd564e16d0b6e15eca6662db71b5490365492f89f",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          19,
+          26,
+          33,
+          40,
+          47,
+          54,
+          61,
+          68,
+          75,
+          82,
+          89,
+          283,
+          290,
+          302,
+          322
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/aws-followup/archive-manifest.json",
+      "originalSha256": "54fb600d07cbd8a5e80aadee4d8d5efae159f646a7ba2231e42fb73a245fe0c4",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          2
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/aws-followup/current-commerce.json",
+      "originalSha256": "748bcf1798933fb0df7dcab3ace199c8130d03ac1733f46e278e16763fb41668",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          9
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/aws-recovery-files.json",
+      "originalSha256": "f1052d0ae149d67c6b5c2a4d484eedd920c9a64f2c81a63acfe3031f3af268e9",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          2
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/aws/observations.jsonl",
+      "originalSha256": "fa29a30dd19ebf378a40e6db470641f9ccdd15f906f78ec8efeb2a905553766d",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/aws/recovery.json",
+      "originalSha256": "82f76b042e095b353b561622fdef864b3121b123273d1a31974e131951a48501",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          11,
+          18,
+          30,
+          50
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/ecs-event-timeline.json",
+      "originalSha256": "a5b2541c3d9e25e79c6a20a7f5f53276569aae01895cc582e8182b7dc0642fac",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          7,
+          32,
+          52,
+          72,
+          82,
+          92,
+          107,
+          122
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/retained-files.json",
+      "originalSha256": "b6b1c8c641139c6ec8c06952cbe4dad570a1cd0ed6ef3efb8b7caf104dac2cce",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          4
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261110-v3-autoscaling/summary.json",
+      "originalSha256": "f332d2a87dcd0a633203a2c39bb8bc4a58c689289efea2b8a8a02641038645cd",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          22,
+          37,
+          45,
+          57,
+          58,
+          84,
+          91,
+          98,
+          117,
+          121,
+          164,
+          166,
+          174,
+          182,
+          183,
+          188,
+          217,
+          220,
+          244,
+          247,
+          270,
+          273
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v2/completion.json",
+      "originalSha256": "442288c8503bc914155febe685c260421e8aca71f795ebea585803a6d23b73bb",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          7
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v2/observer-failure.json",
+      "originalSha256": "314bcb8ccacf983263e149efd873c642582dcd2eff87ef5cc987aef5cdce3ef5",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          12
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v2/summary.json",
+      "originalSha256": "7f43d6be7a52afaa7b1efaabecd3aa6716e35673823bb472ab47241343a3cf6c",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          23,
+          38,
+          46,
+          58,
+          59,
+          120,
+          122,
+          130,
+          138,
+          139,
+          144,
+          173,
+          176
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r1/load/summary.json",
+      "originalSha256": "e022267b46bb276377f322006b754a0749ae2c41708ad94bc40f5d4de9c16aba",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          23,
+          38,
+          46,
+          58,
+          59,
+          85,
+          92,
+          99,
+          118,
+          122,
+          165,
+          167,
+          175,
+          183,
+          184,
+          189,
+          218,
+          221,
+          245,
+          248,
+          271,
+          274
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r2/deployment/phase-b-completed.json",
+      "originalSha256": "9f71a5718fe718f2d701b3a996c3c18187617f8801e849622cbfec278b4f45ae",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          6,
+          14,
+          22
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r2/load/alarm-control-history.json",
+      "originalSha256": "c9c29a9c2a67c4265764283d81aee714acf0d1e53ebc884810041bbb94645c22",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          22,
+          23,
+          46,
+          47,
+          75,
+          76
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r2/load/restoration-20261111T085603076726Z.json",
+      "originalSha256": "625f55f50c775c58b36aceae4ea26fc1e54d3574f59983c90c392471bde0fe09",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          11,
+          18,
+          30,
+          50
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r2/load/summary.json",
+      "originalSha256": "20df51af63d979aa0f866cd9c7d9b9f17d27e0e9f2809ecbc992b36312ce7925",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          25,
+          40,
+          48,
+          60,
+          61,
+          87,
+          94,
+          101,
+          120,
+          124,
+          130,
+          150,
+          193,
+          195,
+          203,
+          211,
+          212,
+          217,
+          246,
+          249,
+          273,
+          276,
+          299,
+          302,
+          352
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r2/pool-health-review/pool-health-review.json",
+      "originalSha256": "f84225d566d9c1379b15f75becde4a826879550a38cea0ed4df18232747ec6f2",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          13,
+          14
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r2/prechecks/regional-quota-review.json",
+      "originalSha256": "2035719bdbc77d0f0f38fc35a494319a2917343aceebad7481632f8e94b4f393",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          3,
+          21,
+          28,
+          35,
+          42
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-load-reruns/v3-r2/prechecks/runtime-settings.json",
+      "originalSha256": "5d3af7936dbabd6ab57e605534c12699eb2da12e0514852816dda1ffeca0d7ab",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          6,
+          15,
+          24,
+          39,
+          46,
+          54,
+          61,
+          66,
+          85,
+          89,
+          95,
+          115,
+          134
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/minimal-collection-integration/INTEGRATION.md",
+      "originalSha256": "cbad8293f0f20664f847cc274fcb432e8c93a9db1aff5f16c4b35af379862145",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          15
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/checkpoint/minimal-collection-integration/runner-review-receipt.json",
+      "originalSha256": "a98efc97c1416b427336f4b5587716ac38018400f0b1012096a1c9a17f730f94",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          4
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/summary.json",
+      "originalSha256": "d4b848e78f4bb3dc676af2c300bc4df344ee5e387d79be02af5d1a483650091f",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          21,
+          53,
+          86,
+          125,
+          132,
+          139,
+          146,
+          153
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/diagnosis/rate-concurrency-review/analysis.json",
+      "originalSha256": "9a3935dc7c253e44b5f40304904c54cac733a2725146122c10fe2d437c4bb602",
+      "categories": {
+        "operator-home-path/identity-metadata": [
+          3781,
+          3786,
+          3791,
+          3796
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/postrun/load/independent-floor-restoration.json",
+      "originalSha256": "7286be59326e0f7d700a86204adc2c47f19ffc02109998d9aeaecf9c9f183e66",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          11,
+          18,
+          30,
+          45,
+          60
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/applied-readback.json",
+      "originalSha256": "3fc44c2854f82476c91d93200d0115e0e5e463b64b508068a2ef50c4945b2294",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          7,
+          12,
+          17,
+          21
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/budget-recovery.json",
+      "originalSha256": "397a8937c9222177318014260e98225472a6ee0e1cb6b0866c74b80b1d23a53b",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          3
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/one-task-readiness.json",
+      "originalSha256": "173745850fb19cf9eead34c1df2e8edb1dc8bd839ac1630c1f3e5cdb55401a21",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          3
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/regional-quota-review.json",
+      "originalSha256": "52f3fef6d0d1f6425e54284f26d223b80b0fa4d1510560e9a0a124834155568c",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          3,
+          21,
+          28,
+          35,
+          42
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/runtime-settings.json",
+      "originalSha256": "0316b6ff97d6e5128a746221b82f317dd20e94e2719c07a0ca941ca14dcc0dfb",
+      "categories": {
+        "AWS-account-resource-identifier": [
+          6,
+          15,
+          24,
+          39,
+          46,
+          54,
+          61,
+          66,
+          85,
+          89,
+          95,
+          115,
+          134
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    },
+    {
+      "path": "docs/swe5001/evidence/20261111-v3-r3/prelaunch/prechecks/target-readiness-refusal-followup.json",
+      "originalSha256": "659511f78e31a9fbd36396509d428efeb0c2a841b0be2339fff410a0cdaf251f",
+      "categories": {
+        "private-target-address": [
+          6
+        ]
+      },
+      "disposition": "Preserve immutable original; safe excerpt available for private-address/operator-path categories; AWS identifiers require owner review, not credential classification"
+    }
+  ],
+  "approvalDependent": "Changing/removing published originals or rewriting history requires a separate owner decision; excerpts do not erase disclosure"
+}

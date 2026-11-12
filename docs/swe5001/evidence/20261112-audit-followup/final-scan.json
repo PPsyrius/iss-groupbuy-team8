@@ -1,0 +1,72 @@
+{
+  "scope": "Exact final current bytes for cached-dev branch delta plus explicitly scoped untracked review files; not Git history or private originals",
+  "head": "a05c33fd2b3646ed5aa9a383ee5a0b73bd3eb137",
+  "cachedDevComparison": "7c33c25a37ede8c369fbe08b786310c37e9e3922",
+  "currentTreeNotPublishedOrMergedByThisWork": true,
+  "repositoryFilesScanned": 826,
+  "pdfExtractedTextFilesScanned": 1,
+  "secretScan": {
+    "exitCode": 0,
+    "historyScanned": false,
+    "generatedBinaryPdfScanned": false,
+    "rules": "Default built-ins; ignore inline allow comments; redacted=100",
+    "image": "ghcr.io/gitleaks/gitleaks:v8.30.1",
+    "parsedReport": true,
+    "findings": 0,
+    "privateOriginalsScanned": false,
+    "pdfExtractedTextScanned": true,
+    "network": "none"
+  },
+  "inputHashesStable": true,
+  "historicalEvidenceOriginalsUnchanged": 759,
+  "knownMetadataExposureUnresolved": true,
+  "knownMetadataFileCount": 44,
+  "safeViewingExcerptsChecked": 17,
+  "fixtureAndArchitectureMetadataBlanketRedacted": false,
+  "retention": {
+    "conditionalCandidatesPresentAndUnchanged": 485,
+    "historicalManifestsUnchanged": 25,
+    "hashBoundCandidates": 456,
+    "prepOwnerWorkPreserved": 10,
+    "filesRemoved": 0,
+    "archiveCreated": false,
+    "retrievalVerified": false
+  },
+  "functionalK6UnitTests": {
+    "passed": 53,
+    "failed": 0,
+    "network": "none",
+    "loadExperiment": false
+  },
+  "report": {
+    "pages": 82,
+    "pdfSha256": "02c4435706539f2c77eabfc8873ae6be9e3744e4979206cceb6a7d89855f4ed5",
+    "appendixRebuilt": false,
+    "pageBoundaryTextOverflows": 0,
+    "remainingWarning": "Existing unavailable Menlo font fallback"
+  },
+  "dictionary": {
+    "tables": 29,
+    "selectedFieldTypeNullabilityChecks": 132,
+    "schemaInspection": "Static migration comparison, not live database"
+  },
+  "r4": {
+    "coreFilesUnchanged": 9,
+    "timelineCheck": true,
+    "canonicalAnalyzerExitPreserved": 1
+  },
+  "cleanupChecks": {
+    "currentFacingMarkdownFiles": 10,
+    "localLinksChecked": 270,
+    "missingLocalLinks": 0,
+    "whitespaceCheck": "pass",
+    "removedFiles": 0,
+    "scope": "Current-facing local paths, not historical-layout links, anchor validity or remote availability"
+  },
+  "limits": [
+    "Not whole-history disclosure clearance or proof of absence",
+    "Published historical metadata remains; excerpts do not erase it",
+    "No new AWS/remote acceptance or automatic issue closure",
+    "Second-owner and final publication/immutable citation pinning remain pending"
+  ]
+}

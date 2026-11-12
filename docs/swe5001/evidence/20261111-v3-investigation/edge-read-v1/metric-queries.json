@@ -1,0 +1,94 @@
+[
+  {
+    "Id": "requests",
+    "Label": "Requests/Sum",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/CloudFront",
+        "MetricName": "Requests",
+        "Dimensions": [
+          {
+            "Name": "DistributionId",
+            "Value": "E3N39GHVFV6CT3"
+          },
+          {
+            "Name": "Region",
+            "Value": "Global"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Sum"
+    },
+    "ReturnData": true
+  },
+  {
+    "Id": "errors_5xx",
+    "Label": "5xxErrorRate/Average",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/CloudFront",
+        "MetricName": "5xxErrorRate",
+        "Dimensions": [
+          {
+            "Name": "DistributionId",
+            "Value": "E3N39GHVFV6CT3"
+          },
+          {
+            "Name": "Region",
+            "Value": "Global"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Average"
+    },
+    "ReturnData": true
+  },
+  {
+    "Id": "errors_total",
+    "Label": "TotalErrorRate/Average",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/CloudFront",
+        "MetricName": "TotalErrorRate",
+        "Dimensions": [
+          {
+            "Name": "DistributionId",
+            "Value": "E3N39GHVFV6CT3"
+          },
+          {
+            "Name": "Region",
+            "Value": "Global"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "Average"
+    },
+    "ReturnData": true
+  },
+  {
+    "Id": "origin_latency_p95",
+    "Label": "OriginLatency/p95",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "AWS/CloudFront",
+        "MetricName": "OriginLatency",
+        "Dimensions": [
+          {
+            "Name": "DistributionId",
+            "Value": "E3N39GHVFV6CT3"
+          },
+          {
+            "Name": "Region",
+            "Value": "Global"
+          }
+        ]
+      },
+      "Period": 60,
+      "Stat": "p95"
+    },
+    "ReturnData": true
+  }
+]

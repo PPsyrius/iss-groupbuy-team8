@@ -1,0 +1,32 @@
+{
+  "label": "cache-expiry",
+  "app": "blocbuy-matrix2-failure",
+  "rate": 200,
+  "seconds": 60,
+  "port": 8589,
+  "startedAt": "2026-11-10T06:09:13.341Z",
+  "actions": [
+    {
+      "afterSeconds": 15,
+      "description": "Flush matrix-owned Redis cache once"
+    }
+  ],
+  "toxiproxy": {
+    "postgres": {
+      "name": "postgres",
+      "listen": "[::]:15432",
+      "upstream": "postgres-tls:5432",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    },
+    "redis": {
+      "name": "redis",
+      "listen": "[::]:16379",
+      "upstream": "redis-tls:6380",
+      "enabled": true,
+      "Logger": {},
+      "toxics": []
+    }
+  }
+}

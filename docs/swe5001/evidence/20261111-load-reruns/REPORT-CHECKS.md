@@ -1,0 +1,15 @@
+# Report integration checks — 11 November 2026
+
+The rerun results were integrated into Pan's §§4.1, 4.3 and 5 after restoring all 585 frozen report/evidence files and the original staged index. Git's first restoration changed only line endings in five files; that failed verification and the normalized attempt were preserved before the exact archived bytes were restored. The continuation then changed only the five owning report/agile/NFR files, plus this new evidence directory. The [boundary audit](verification/owner-boundaries.json) confirms 580 archived files unchanged and the other owners' availability and maintainability sections byte-identical. No commit, push or PR publication was performed.
+
+| Verification | Observed result | Limit |
+| --- | --- | --- |
+| [Links and retained hashes](verification/check-docs.json) | 510 local links, no missing target; 22 retained manifests, 576 hashed files, no hash mismatch | Seventeen explicitly external-only files were not reverified by this report check. Campaign-specific original archive/raw checks are separate. |
+| [Rerun semantics and source parsing](verification/rerun-report-check.json) | 660 scoped files; 402 JSON files parsed, 23 Python files syntax-checked; all 73 copied receipts byte-verified | Parsing and assertions are not application tests or accepted AWS performance. |
+| [Redacted Gitleaks filesystem scan](verification/gitleaks-report.json) | No findings over the 660-file scope | Not a full-history secret audit or evidence publication. |
+| [Chapters 1–6 PDF](verification/chapters-pdf-review.json) | Docker compile exit 0; 78 pages; new results/provenance present; zero relative PDF URI links; selected new pages visually reviewed | Existing Helvetica/Menlo fallback warnings and one other-owner page-27 diagram overflow remain; reviewer markers and draft URLs are unresolved. |
+| [Full report, including Appendix A](verification/full-build-failure.json) | **Failed** with exit 137 and `OOMKilled=true` at the eight-GiB container limit | No successful full-report build is claimed. The chapters-only build does not repair it; another owner's appendix was not silently edited. |
+
+Two offline checkers initially produced false failures: the owner-boundary checker compared verbatim archived CRLF with universal-newline-decoded current text, and the PDF checker searched across a line wrap without normalizing extracted whitespace. The original failures were retained; read-only diagnosis showed exact protected-section bytes and all expected PDF passages, and only the checkers were corrected. Source text and acceptance criteria were not weakened to satisfy them. The raw supplemental client-diagnostic Python-version failure remains separately recorded in the campaign evidence.
+
+The updated chapters PDF is a review artefact, not a submission-ready full report. Evidence publication/final full-SHA citation pinning, second-owner review, font/layout reconciliation and the full-build failure remain outstanding. No live configuration, load, task count or teardown was changed by these report checks.

@@ -1,0 +1,181 @@
+{
+  "evidenceKind": "local-diagnostic-not-AWS-acceptance",
+  "startedAt": "2026-11-10T08:44:26.466Z",
+  "finishedAt": "2026-11-10T08:54:13.337Z",
+  "completed": true,
+  "conditions": {
+    "rate": 200,
+    "cpu": 0.5,
+    "memoryBytes": 1073741824,
+    "pool": 5,
+    "preAllocatedVUs": 1000,
+    "maxVUs": 1000,
+    "warmupSeconds": 120,
+    "localJvmFlag": "-XX:TieredStopAtLevel=1",
+    "notes": "Fresh baseline and v2 JVM/cache arms use C1-only compilation as a local startup-cost discriminator. Ordinary full structured logging restored. CPU/memory/pool/workload/gates unchanged, no concurrent build. C2 optimization is disabled in this diagnostic and may worsen steady-state CPU/capacity; no production flag, requirement pass or deployment is authorized."
+  },
+  "artifactHashes": {
+    "commerce-baseline.jar": "37c7c7332b5d40e5c940241e75a180d9cfb2b6df020663b233008e61ec7e2960",
+    "commerce-bulkhead-scope-v2.jar": "f4c7372bef03a6627331a469113e3a341f5531485f36da90213ff9861d621dc1"
+  },
+  "refusedFaultCases": "Healthy 200-RPS control did not pass; no clean warmed fault attribution",
+  "problems": [],
+  "cases": [
+    {
+      "label": "jit-base-warmup",
+      "app": "blocbuy-matrix2-jit-base",
+      "startedAt": "2026-11-10T08:44:46.796Z",
+      "finishedAt": "2026-11-10T08:46:48.560Z",
+      "rate": 200,
+      "seconds": 120,
+      "exitCode": 99,
+      "result": {
+        "requests": 23034,
+        "errors": {
+          "passes": 389,
+          "fails": 22645,
+          "rate": 0.01688807849266302
+        },
+        "latency": {
+          "min": 1,
+          "max": 10000,
+          "p(95)": 6811.799999999988,
+          "p(99)": 9784.669999999998,
+          "avg": 1741.279109143006,
+          "med": 387
+        },
+        "drops": 967
+      }
+    },
+    {
+      "label": "jit-base-control",
+      "app": "blocbuy-matrix2-jit-base",
+      "startedAt": "2026-11-10T08:46:48.751Z",
+      "finishedAt": "2026-11-10T08:47:49.232Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 0,
+      "result": {
+        "requests": 12001,
+        "errors": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 12001
+        },
+        "latency": {
+          "avg": 6.117906841096575,
+          "med": 3,
+          "min": 1,
+          "max": 156,
+          "p(95)": 28,
+          "p(99)": 65
+        },
+        "drops": 0
+      }
+    },
+    {
+      "label": "jit-base-warm400",
+      "app": "blocbuy-matrix2-jit-base",
+      "startedAt": "2026-11-10T08:47:49.408Z",
+      "finishedAt": "2026-11-10T08:48:54.439Z",
+      "rate": 400,
+      "seconds": 60,
+      "exitCode": 99,
+      "result": {
+        "requests": 14005,
+        "errors": {
+          "rate": 0.004284184219921457,
+          "passes": 60,
+          "fails": 13945
+        },
+        "latency": {
+          "p(95)": 5588,
+          "p(99)": 6402.8399999999965,
+          "avg": 4255.422063548733,
+          "med": 4485,
+          "min": 1,
+          "max": 8091
+        },
+        "drops": 9996
+      }
+    },
+    {
+      "label": "jit-scope-warmup",
+      "app": "blocbuy-matrix2-jit-scope",
+      "startedAt": "2026-11-10T08:49:17.108Z",
+      "finishedAt": "2026-11-10T08:51:29.817Z",
+      "rate": 200,
+      "seconds": 120,
+      "exitCode": 99,
+      "result": {
+        "requests": 18715,
+        "errors": {
+          "rate": 0.08447769169115682,
+          "passes": 1581,
+          "fails": 17134
+        },
+        "latency": {
+          "p(99)": 10001,
+          "avg": 6444.866791343842,
+          "med": 6157,
+          "min": 20,
+          "max": 10009,
+          "p(95)": 9945
+        },
+        "drops": 5286
+      }
+    },
+    {
+      "label": "jit-scope-control",
+      "app": "blocbuy-matrix2-jit-scope",
+      "startedAt": "2026-11-10T08:51:32.894Z",
+      "finishedAt": "2026-11-10T08:52:45.058Z",
+      "rate": 200,
+      "seconds": 60,
+      "exitCode": 99,
+      "result": {
+        "requests": 9420,
+        "errors": {
+          "rate": 0.079723991507431,
+          "passes": 751,
+          "fails": 8669
+        },
+        "latency": {
+          "min": 6,
+          "max": 10006,
+          "p(95)": 9937.05,
+          "p(99)": 10001,
+          "avg": 6019.033970276008,
+          "med": 6477.5
+        },
+        "drops": 2581
+      }
+    },
+    {
+      "label": "jit-scope-warm400",
+      "app": "blocbuy-matrix2-jit-scope",
+      "startedAt": "2026-11-10T08:52:45.471Z",
+      "finishedAt": "2026-11-10T08:53:59.610Z",
+      "rate": 400,
+      "seconds": 60,
+      "exitCode": 99,
+      "result": {
+        "requests": 11129,
+        "errors": {
+          "rate": 0.09767274687752718,
+          "passes": 1087,
+          "fails": 10042
+        },
+        "latency": {
+          "avg": 5645.866295264624,
+          "med": 5500,
+          "min": 2,
+          "max": 10045,
+          "p(95)": 10001,
+          "p(99)": 10002
+        },
+        "drops": 12871
+      }
+    }
+  ]
+}

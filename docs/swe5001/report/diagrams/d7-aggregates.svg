@@ -32,7 +32,7 @@
 <rect x="15" y="15" width="790" height="750" fill="#FAFAFA" stroke="#6E6A64" stroke-width="1.3" rx="4"/>
 <text x="30" y="38" class="title">a) Tactical Aggregate Boundaries (Aggregates Reference Other Aggregates by ID Only)</text>
 <rect x="28" y="50" width="372" height="285" fill="#FDF6F5" stroke="#C93B2B" stroke-width="1.2" stroke-dasharray="5,3" rx="4"/>
-<text x="38" y="68" class="h2" style="fill:#C93B2B">GroupBuy Context — Team / GroupDeal Aggregate</text>
+<text x="38" y="68" class="h2" style="fill:#C93B2B">GroupBuy Context — GroupDeal and sharing records</text>
 <rect x="38" y="76" width="352" height="122" fill="#FFFFFF" stroke="#C93B2B" stroke-width="1.3" rx="2"/>
 <rect x="38" y="76" width="352" height="36" fill="#FFF5F5" stroke="#C93B2B" stroke-width="1.3" rx="2"/>
 <text x="214.0" y="90" text-anchor="middle" class="stereo">«aggregate root»</text>
@@ -43,24 +43,30 @@
 <line x1="38" y1="163" x2="390" y2="163" stroke="#C93B2B" stroke-width="1"/>
 <text x="46" y="176" class="small" style="fill:#C93B2B">+ joinPaid(payment, userId, now) : PaidAdmission</text>
 <text x="46" y="191" class="small" style="fill:#C93B2B">+ expire(now : Instant) : TeamExpired</text>
-<rect x="38" y="214" width="170" height="110" fill="#FFFFFF" stroke="#57606A" stroke-width="1.3" rx="2"/>
-<rect x="38" y="214" width="170" height="36" fill="#F6F8FA" stroke="#57606A" stroke-width="1.3" rx="2"/>
-<text x="123.0" y="228" text-anchor="middle" class="stereo">«entity»</text>
-<text x="123.0" y="244" text-anchor="middle" class="h2">PaidMember</text>
-<text x="46" y="265" class="small" style="fill:#1F2328">+ userId, paymentId : UUID</text>
-<text x="46" y="280" class="small" style="fill:#1F2328">+ orderId, sharerId : UUID</text>
-<text x="46" y="295" class="small" style="fill:#1F2328">+ role : MemberRole</text>
-<text x="46" y="310" class="small" style="fill:#1F2328">+ status : MemberStatus</text>
-<rect x="216" y="214" width="174" height="110" fill="#FFFFFF" stroke="#8C6D3F" stroke-width="1.3" rx="2"/>
-<rect x="216" y="214" width="174" height="36" fill="#FBF8F1" stroke="#8C6D3F" stroke-width="1.3" rx="2"/>
-<text x="303.0" y="228" text-anchor="middle" class="stereo">«entity / value objects»</text>
-<text x="303.0" y="244" text-anchor="middle" class="h2">Participation &amp; Share</text>
-<text x="224" y="265" class="small" style="fill:#1F2328">+ fingerprint : String</text>
-<text x="224" y="280" class="small" style="fill:#1F2328">«VO» ShareInvite (ref)</text>
-<text x="224" y="295" class="small" style="fill:#1F2328">«root» ShareCredit</text>
-<text x="224" y="310" class="small" style="fill:#1F2328">  (separate aggregate)</text>
+<rect x="38" y="214" width="170" height="52" fill="#FFFFFF" stroke="#57606A" stroke-width="1.3" rx="2"/>
+<rect x="38" y="214" width="170" height="22" fill="#F6F8FA" stroke="#57606A" stroke-width="1.3" rx="2"/>
+<text x="123" y="229" text-anchor="middle" class="h2">«entity» PaidMember</text>
+<text x="46" y="248" class="small" style="fill:#1F2328">+ dealId, userId, orderId : UUID</text>
+<text x="46" y="261" class="small" style="fill:#1F2328">+ status : String</text>
+<rect x="38" y="274" width="170" height="52" fill="#FFFFFF" stroke="#57606A" stroke-width="1.3" rx="2"/>
+<rect x="38" y="274" width="170" height="22" fill="#F6F8FA" stroke="#57606A" stroke-width="1.3" rx="2"/>
+<text x="123" y="289" text-anchor="middle" class="h2">«entity» ParticipationReceipt</text>
+<text x="46" y="309" class="small" style="fill:#1F2328">+ fingerprint : String</text>
+<text x="46" y="322" class="small" style="fill:#1F2328">+ result : ParticipationResult</text>
+<rect x="216" y="214" width="174" height="52" fill="#FFFFFF" stroke="#8C6D3F" stroke-width="1.3" rx="2"/>
+<rect x="216" y="214" width="174" height="22" fill="#FBF8F1" stroke="#8C6D3F" stroke-width="1.3" rx="2"/>
+<text x="303" y="229" text-anchor="middle" class="h2">«record» ShareInvite</text>
+<text x="224" y="248" class="small" style="fill:#1F2328">+ dealId : UUID (ID ref only)</text>
+<text x="224" y="261" class="small" style="fill:#1F2328">Own repository; no deal lock</text>
+<rect x="216" y="274" width="174" height="52" fill="#FFFFFF" stroke="#8C6D3F" stroke-width="1.3" rx="2"/>
+<rect x="216" y="274" width="174" height="22" fill="#FBF8F1" stroke="#8C6D3F" stroke-width="1.3" rx="2"/>
+<text x="303" y="289" text-anchor="middle" class="h2">«record» ShareCredit</text>
+<text x="224" y="309" class="small" style="fill:#1F2328">+ dealId : UUID (ID ref only)</text>
+<text x="224" y="322" class="small" style="fill:#1F2328">Own repo; AFTER_COMMIT*</text>
 <line x1="123" y1="198" x2="123" y2="214" stroke="#1F2328" stroke-width="1.3" marker-start="url(#diamond-black)"/>
-<line x1="303" y1="198" x2="303" y2="214" stroke="#1F2328" stroke-width="1.3" marker-start="url(#diamond-black)"/>
+<polyline points="48,198 30,206 30,298 38,298" fill="none" stroke="#1F2328" stroke-width="1.3" marker-start="url(#diamond-black)"/>
+<line x1="303" y1="214" x2="303" y2="198" stroke="#8C6D3F" stroke-width="1.3" stroke-dasharray="3,2" marker-end="url(#arrow-open)"/>
+<polyline points="390,300 398,300 398,180 390,180" fill="none" stroke="#8C6D3F" stroke-width="1.3" stroke-dasharray="3,2" marker-end="url(#arrow-open)"/>
 <rect x="412" y="50" width="380" height="285" fill="#FDF6F5" stroke="#C93B2B" stroke-width="1.2" stroke-dasharray="5,3" rx="4"/>
 <text x="422" y="68" class="h2" style="fill:#C93B2B">Ordering Context — Intent &amp; Order Aggregates</text>
 <rect x="422" y="76" width="360" height="118" fill="#FFFFFF" stroke="#C93B2B" stroke-width="1.3" rx="2"/>
