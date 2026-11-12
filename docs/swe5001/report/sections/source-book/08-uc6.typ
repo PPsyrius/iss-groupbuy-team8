@@ -111,7 +111,7 @@ The design model has 25 classes and interfaces in three slices: the obligations 
 
 === Design Sequence Diagrams <sec-a-uc06-ds>
 
-Each design sequence retells part of @tbl-a-uc06-flows, linked by the step tags in its notes. A `critical` fragment is one database transaction, labelled with its propagation, isolation and timeout. Locks follow the global order of S8 in part 2, team (1) → purchase intent (2) → payment (3): here the team is lock 1 and the payments lock 3. The orders that UC5 cancels in between are updated with a status guard, not locked.
+Each design sequence retells part of @tbl-a-uc06-flows, linked by the step tags in its notes. A `critical` fragment is one database transaction, labelled with its propagation, isolation and timeout. Locks follow the global order of S8 in part 2, team (1) → purchase intent (2) → payment (3): here the team is lock 1 and the payments lock 3. The orders that UC5 cancels in between are updated with a status guard and no separate `SELECT … FOR UPDATE`; the `UPDATE` itself row-locks them until commit. These implicit locks carry no number and are taken while lock 1 is held.
 
 *Recording the obligations* (@fig-a-uc06-ds-record). Spring calls the subscriber synchronously on the committing thread, so an exception rolls the expiry back (E1). The `TransactionTemplate` joins the expiry transaction (`REQUIRED`). The team lock is re-taken, then the payments are locked in id order and the obligations inserted in one statement; an identical existing row counts as written (`ON CONFLICT (payment_id)`), so a replayed expiry adds nothing.
 
