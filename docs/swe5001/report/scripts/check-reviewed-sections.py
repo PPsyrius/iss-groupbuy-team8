@@ -29,6 +29,8 @@ def text(name):
 
 
 def snapshot(path, section, override):
+    # Sections 4.3 and 5 shadow lib.typ's src with local inspected-source
+    # wrappers. Keep their historical pins; lib.typ alone is not the caller.
     if override:
         return APP if override == 'freeze' else override.strip('"')
     if path.startswith('docs/swe5001/evidence/20261111-cost-explorer/'):
@@ -65,6 +67,12 @@ def check_ci_baseline(ops):
     assert amount and Decimal(amount[1].replace(',', '')) == cost
     assert rate and Decimal(rate[1]) == Decimal(str(receipt['summary']['linux_usd_per_minute']))
     assert not re.search(r'successful (?:backend )?deliver', paragraph, re.I)
+    assert re.search(r'list[- ]price equivalent', paragraph, re.I), 'CI estimate is a list-price equivalent, not a charge'
+    billing = [sentence for sentence in re.split(r'(?<=[.!;])\s+', paragraph)
+               if re.search(r'public', sentence, re.I) and re.search(r'standard', sentence, re.I)]
+    assert any(re.search(r'\bfree\b|\bno (?:runner )?charge\b|\bzero (?:runner )?charge\b', sentence, re.I)
+               and not re.search(r'\bnot free\b|\bnot (?:a )?zero\b|\b(?:incur|incurs|incurred) (?:a )?charge\b', sentence, re.I)
+               for sentence in billing), 'Standard public-repository runners have no charge'
 
 
 def check_account_read_boundary(security):

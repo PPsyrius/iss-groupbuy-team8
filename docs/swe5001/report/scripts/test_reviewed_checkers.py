@@ -23,6 +23,58 @@ closure = load('closure', 'docs/swe5001/evidence/20261112-issue-789/check_closur
 
 
 class ReviewedCheckerTests(unittest.TestCase):
+    def test_snapshot_matches_section_wrapper_contracts(self):
+        # Assert the actual small helpers, rather than parsing arbitrary Typst.
+        # Removing a shadowing wrapper must not leave Python silently routing
+        # to the inspected revision while Typst falls back to the release.
+        security = reviewed.text('sections/04-3-security.typ')
+        ops = reviewed.text('sections/05-devops.typ')
+        self.assertIn('#import "../lib.typ": src as report-src', security)
+        self.assertIn('#import "../lib.typ": src as report-src', ops)
+        self.assertIn('#let src(path, body) = report-src(path, body, rev: if path.starts-with("infra/") or path.starts-with("backend/") { "' + reviewed.INSPECTED + '" } else { none })', security)
+        self.assertIn('#let src(path, body, rev: none) = report-src(path, body, rev: if rev != none { rev } else if path.starts-with("infra/") or path.starts-with(".github/") or path == "CONTRIBUTING.md" or path == "docs/agile/README.md" { "' + reviewed.INSPECTED + '" } else { none })', ops)
+        cases = (
+            ('infra/swe5001/runtime/ecs.tf', '04-3-security.typ', reviewed.INSPECTED),
+            ('backend/blocbuy-platform/pom.xml', '04-3-security.typ', reviewed.INSPECTED),
+            ('.github/CODEOWNERS', '04-3-security.typ', reviewed.APP),
+            ('infra/swe5001/runtime/ecs.tf', '05-devops.typ', reviewed.INSPECTED),
+            ('.github/workflows/ci-backend.yml', '05-devops.typ', reviewed.INSPECTED),
+            ('CONTRIBUTING.md', '05-devops.typ', reviewed.INSPECTED),
+            ('docs/agile/README.md', '05-devops.typ', reviewed.INSPECTED),
+            ('backend/blocbuy-platform/pom.xml', '05-devops.typ', reviewed.APP),
+            ('infra/swe5001/runtime/ecs.tf', '03-2-physical.typ', reviewed.APP),
+            ('docs/agile/README.md#policy', '05-devops.typ', reviewed.APP),
+        )
+        for path, section, expected in cases:
+            with self.subTest(path=path, section=section):
+                self.assertEqual(reviewed.snapshot(path, section, None), expected)
+
+    def test_snapshot_shared_defaults_and_explicit_revision_precedence(self):
+        lib = reviewed.text('lib.typ')
+        for name, revision in (('freeze', reviewed.APP), ('evidence-freeze', reviewed.EVIDENCE), ('report-base', reviewed.BASE)):
+            self.assertIn('#let ' + name + ' = "' + revision + '"', lib)
+        self.assertIn('let snapshot = if rev != none { rev }', lib)
+        paths = (
+            ('docs/swe5001/evidence/20261111-cost-explorer/README.md', reviewed.BASE),
+            ('docs/swe5001/evidence/20261113-ci-check-cost-estimate/development-baseline.json', reviewed.EVIDENCE),
+            ('docs/swe5001/report/README.md', reviewed.BASE),
+            ('frontend/package.json', reviewed.APP),
+        )
+        ops = reviewed.text('sections/05-devops.typ')
+        baseline_call = reviewed.re.search(
+            r'#src\("' + reviewed.re.escape(paths[1][0]) + r'", rev: "([0-9a-f]{40})"\)', ops)
+        self.assertIsNotNone(baseline_call, 'Baseline JSON must retain an explicit immutable revision')
+        baseline_rev = baseline_call[1]
+        self.assertNotIn(baseline_rev, (reviewed.APP, reviewed.EVIDENCE, reviewed.BASE))
+        for section in ('04-3-security.typ', '05-devops.typ', '01-introduction.typ'):
+            for path, expected in paths:
+                with self.subTest(path=path, section=section):
+                    self.assertEqual(reviewed.snapshot(path, section, None), expected)
+                    self.assertEqual(reviewed.snapshot(path, section, 'freeze'), reviewed.APP)
+                    self.assertEqual(reviewed.snapshot(path, section, '"' + baseline_rev + '"'), baseline_rev)
+        # Chapter 5 forwards an explicit freeze even for its inspected paths.
+        self.assertEqual(reviewed.snapshot('.github/CODEOWNERS', '05-devops.typ', 'freeze'), reviewed.APP)
+
     def run_report(self, transform=lambda name, content: content):
         original_text = reviewed.text
 
@@ -62,6 +114,27 @@ class ReviewedCheckerTests(unittest.TestCase):
     def test_changed_report_baseline_numbers_are_rejected(self):
         for old, new in (('147 qualifying', '148 qualifying'), ('1,733', '999,999'), ('10.40', '9999.99'), ('0.006/min', '0.060/min')):
             with self.subTest(value=old), self.assertRaises(AssertionError):
+                self.run_report(lambda name, content: content.replace(old, new)
+                                if name.endswith('05-devops.typ') else content)
+
+    def test_ci_billing_allows_concise_qualification_and_rejects_reversal(self):
+        paragraph = ('Estimated: 147 qualifying backend delivery runs used 1,733 runner-minutes '
+                     '(#src("docs/swe5001/evidence/20261113-ci-check-cost-estimate/development-baseline.json")[receipt]). '
+                     'At US\\$0.006/min, US\\$10.40 is a list-price equivalent, not observed billing. '
+                     'Standard GitHub-hosted runners are free for public repositories.')
+        reviewed.check_ci_baseline(paragraph)
+        for old, new in (('list-price equivalent', 'billed charge'),
+                         ('are free', 'are not free'),
+                         ('are free', 'incur a charge'),
+                         ('public repositories', 'private repositories')):
+            with self.subTest(change=new), self.assertRaises(AssertionError):
+                reviewed.check_ci_baseline(paragraph.replace(old, new))
+
+    def test_report_ci_billing_qualification_cannot_be_removed_or_reversed(self):
+        for old, new in (('list-price equivalent', 'billed charge'),
+                         ('free in this public repository', 'not free in this public repository'),
+                         ('free in this public repository', 'free in this private repository')):
+            with self.subTest(change=new), self.assertRaises(AssertionError):
                 self.run_report(lambda name, content: content.replace(old, new)
                                 if name.endswith('05-devops.typ') else content)
 

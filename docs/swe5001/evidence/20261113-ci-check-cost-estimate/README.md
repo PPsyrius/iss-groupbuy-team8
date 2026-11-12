@@ -2,18 +2,20 @@
 
 Read-only GitHub Actions readback on 13 November 2026 for #802 / #462. The [generated receipt](development-baseline.json) records all available `ci-backend.yml` dev-push runs, their qualifying deliveries and the latest attempt's executed jobs. This establishes an actual development-period backend delivery baseline, separately from the small estimate for repeating image checks. It does not cover all repository workflows or claim an observed invoice reduction.
 
+Billing clarification, 13 November 2026: `gh repo view --json nameWithOwner,visibility,url` confirmed `PPsyrius/iss-groupbuy-team8` is public. GitHub's official [Actions billing policy](https://docs.github.com/en/billing/concepts/product-billing/github-actions), checked that day, makes standard GitHub-hosted runners free in public repositories. This runner usage therefore incurs zero charge; the **$10.40 baseline** and **$0.83 duplicate-check scenario** below are hypothetical list-price equivalents, not spending or cash savings. Private-repository usage can also be covered by included allowances. No account invoice was inspected.
+
 ## Full 147-delivery runner-time baseline
 
 All 147 qualifying runs were inspected, not just the three image-check samples below. Qualification means successful image publication, or successful Docker and EC2 jobs in the earlier workflow; it does not require deployment success in the publication group. Of these runs, 134 EC2 deployments succeeded and 13 failed. Sum each executed job's `completed_at − started_at`, excluding skipped jobs and queue time. Parallel jobs consume separate runners and are added, not replaced with elapsed workflow duration. Retained Sonar coverage/verification, packaging, publication and deployment are included rather than treated as avoided work.
 
-| Period | Qualifying delivery runs | Summed execution minutes | Reconstructed whole-job rounded minutes | Cost equivalent at $0.006/min |
+| Period | Qualifying delivery runs | Summed execution minutes | Reconstructed whole-job rounded minutes | Hypothetical list-price equivalent at $0.006/min |
 | --- | ---: | ---: | ---: | ---: |
 | September | 70 | 518.72 | 691 | $4.15 |
 | October | 69 | 753.85 | 944 | $5.66 |
 | November, through 11 Nov | 8 | 76.22 | 98 | $0.59 |
 | Total | 147 | 1,348.78 | 1,733 | $10.40 |
 
-Mean summed execution time is **9.18 runner-minutes per delivery**; median is **8.95**. The total is `80,927 / 60 = 1,348.78` execution minutes. Summing `ceil(job_seconds / 60)` over executed jobs gives 1,733 rounded minutes, worth `$10.398` at the published Linux rate. These are job-time measurements and a rate-based cost equivalent, not a billing export. Only `ubuntu-latest` was observed. Pull-request, merge-queue, tag, frontend and security workflows, storage, other repositories and older attempts of rerun workflows are outside this baseline, so it must not be equated to the account's whole Actions bill.
+Mean summed execution time is **9.18 runner-minutes per delivery**; median is **8.95**. The total is `80,927 / 60 = 1,348.78` execution minutes. Summing `ceil(job_seconds / 60)` over executed jobs gives 1,733 rounded minutes, equivalent to `$10.398` at the published Linux list price, but free here. These are job-time measurements and a hypothetical cost equivalent, not a billing export. Only `ubuntu-latest` was observed. Pull-request, merge-queue, tag, frontend and security workflows, storage, other repositories and older attempts of rerun workflows are outside this baseline, so it must not be equated to the account's whole Actions bill.
 
 The current pipeline still runs verification inside post-merge Sonar. For example, [PR run 43003764874](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/43003764874) spent 7m14s in `build-quality`, 2m01s in `docker` and 57s in Sonar; [dev run 43008442277](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/43008442277) still spent 8m10s in Sonar, 52s in packaging and 72s in publication. Consequently neither the baseline nor all pre-merge test time can be claimed as avoided duplicate validation. The estimate below covers only the omitted image-check steps.
 
@@ -29,7 +31,7 @@ Three successful `docker` jobs on `ubuntu-latest`, sampled from 10–11 November
 
 Calculated mean: `(60 + 54 + 56) / 3 = 56.67 seconds`, or `0.9444 runner-minutes` per delivery. This is a three-run ballpark, not a controlled before/after experiment.
 
-## Development-period volume and dollar estimate
+## Development-period volume and hypothetical list-price estimate
 
 The full paginated workflow-runs history available on 13 November returned **166** `ci-backend.yml` runs for `event=push`, `branch=dev`, from **5 September to 11 November 2026**. Per-run Jobs API checks identify **128** successful `publish-ecr-dev` jobs and **19** earlier runs with no separate publisher job but successful `docker` and `deploy-existing-ec2` jobs. Count those disjoint groups as **147 qualifying delivery runs**, including 13 whose EC2 deployment subsequently failed. Runs meeting neither qualification are excluded. The oldest retained run is not proof that all project work began on 5 September.
 
@@ -49,7 +51,7 @@ Using GitHub's published [Linux 2-core x64 rate](https://docs.github.com/en/bill
 - October comparison: `69 × (170 / 3) / 60 = 65.17 runner-minutes`; `65.17 × $0.006 = $0.391`, approximately **US$0.40**.
 - At 100 deliveries: approximately `94.44 runner-minutes`, or **US$0.57**.
 
-GitHub rounds each job's duration up to a whole minute, not each step. These dollar figures prorate the avoided execution time; actual marginal billed minutes depend on the containing job's duration and billing account terms. No separate duplicate job, artifact transfer saving, Maven test saving, frontend saving, storage cost or invoice reconciliation is included. Parallel jobs must be counted separately; the sampled steps run sequentially in one job. The calculation supports a small expected saving for this specific seam, not a large reduction in the overall Actions bill.
+GitHub rounds each job's duration up to a whole minute, not each step. These hypothetical dollar figures prorate the avoided execution time; in a billable scenario, marginal billed minutes would depend on the containing job's duration and included allowances. Standard runners are free here, so the US$0.83 scenario is not cash savings. No separate duplicate job, artifact transfer saving, Maven test saving, frontend saving, storage cost or invoice reconciliation is included. Parallel jobs must be counted separately; the sampled steps run sequentially in one job. The calculation supports a small expected runner-time saving for this specific seam, not a reduction in the Actions bill.
 
 ## Reproduce the readback
 
