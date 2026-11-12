@@ -7,8 +7,8 @@ deploymentDiagram
         node Vpc["VPC 10.50.0.0/16"] {
             node AzA["AZ ap-southeast-1a"] {
                 zone "Public 10.50.0.0/24" {
-                    node AlbA["ALB node"] : HTTP 80 listener
-                    node Nat["fck-nat"] : t4g.nano, Elastic IP
+                    node AlbA["ALB node"] <<load balancer>> : HTTP 80 listener
+                    node Nat["fck-nat"] <<NAT instance>> : t4g.nano, Elastic IP
                 }
                 zone "Private 10.50.10.0/24" {
                     environment FgA["ECS Fargate, Arm64"] : 0.5 vCPU, 1 GiB per task {
@@ -18,12 +18,12 @@ deploymentDiagram
                     }
                 }
                 zone "Data 10.50.20.0/24" {
-                    node Cache["ElastiCache Valkey 8.0"] : cache.t4g.micro, 1 node
+                    node Cache["ElastiCache Valkey 8.0"] <<cache node>> : cache.t4g.micro, 1 node; placed here on 10 Nov
                 }
             }
             node AzB["AZ ap-southeast-1b"] {
                 zone "Public 10.50.1.0/24" {
-                    node AlbB["ALB node"] : HTTP 80 listener
+                    node AlbB["ALB node"] <<load balancer>> : HTTP 80 listener
                 }
                 zone "Private 10.50.11.0/24" {
                     environment FgB["ECS Fargate, Arm64"] : 0.5 vCPU, 1 GiB per task {
@@ -33,7 +33,7 @@ deploymentDiagram
                     }
                 }
                 zone "Data 10.50.21.0/24" {
-                    node Rds["RDS PostgreSQL 18"] : db.t4g.micro, single zone, 3 databases
+                    node Rds["RDS PostgreSQL 18"] <<database server>> : db.t4g.micro, single zone; databases identity, commerce, notification; placed here on 10 Nov
                 }
             }
         }
@@ -57,8 +57,8 @@ deploymentDiagram
 %% at Sns 2,2
 %% at QNt 2,3
 %% at QAu 2,4
-%% at Stripe 1,7
-%% at Google 2,7
+%% at Stripe 2,0
+%% at Google 2,5
 %% at Nat 0,2
 %% at NtA 0,5
 %% at NtB 1,5

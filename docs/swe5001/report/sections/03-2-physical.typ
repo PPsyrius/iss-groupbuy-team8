@@ -51,9 +51,9 @@ The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`)
   caption: [Logical elements of @fig-d3-logical-view and @fig-d3b-logical-events-data and the products that implement them. Source: `infra/swe5001` and `backend` at the freeze commit (§1.1).],
 ) <tbl-logical-physical>
 
-#afig("d5-physical-deployment", lbl: <fig-d5-deployment>, [Physical deployment view (UML deployment diagram). Each availability zone holds a public, a private application and a data subnet. Each service's image is deployable in either zone's Fargate environment; the note gives the task count per service over both zones, so `identity-svc`, with one task, is not zone-redundant. RDS and Valkey each run in one data subnet that AWS chooses.])
+#afig("d5-physical-deployment", lbl: <fig-d5-deployment>, [Physical deployment view (UML deployment diagram). Each availability zone holds a public, a private application and a data subnet. Each service's image is deployable in either zone's Fargate environment; the note gives the task count per service over both zones, so `identity-svc`, with one task, is not zone-redundant. RDS and Valkey each run in one data subnet that AWS chooses; the figure draws them where they ran on 10 November, and each subnet group spans both data subnets.])
 
-#afig("d5a-communication-paths", [Communication path view (UML deployment diagram). Each service is an artefact in the Fargate execution environment, as in @fig-d5-deployment. Only CloudFront reaches the load balancer, all three services reach Valkey and PostgreSQL, and every outbound call to Stripe, Google, SNS and SQS leaves through fck-nat on HTTPS 443.])
+#afig("d5a-communication-paths", [Communication path view (UML deployment diagram). Each service is an artefact in the Fargate execution environment, as in @fig-d5-deployment. Only CloudFront reaches the load balancer, all three services reach Valkey and PostgreSQL, and every outbound call leaves through fck-nat on HTTPS 443: to Stripe and Google, to publish to the SNS topic, and to long-poll the notification queue.])
 
 *Deployment view.* Two UML deployment diagrams show the physical layout. @fig-d5-deployment places each artefact in its region, VPC, availability zone and subnet; @fig-d5a-communication-paths shows the paths between the nodes.
 
@@ -61,7 +61,7 @@ The paths in @fig-d5a-communication-paths work as follows:
 
 - *Browser traffic* reaches CloudFront over HTTPS. CloudFront serves the single-page application from S3 and forwards `/api/*` to the ALB. Stripe's webhook enters the same way.
 - *The ALB* picks the service by path. Identity takes `/api/v1/auth/*` and `/api/v1/users/*`, notification takes `/api/v1/notifications*`, and commerce takes the rest of `/api/*`. A high-priority rule (priority 5; the ALB evaluates lower numbers first) returns 404 for `/internal/*` and `/api/internal/*` before any routing rule matches, so internal endpoints are only reachable inside the VPC.
-- *Services* talk to each other only once, commerce → identity through Service Connect (AD-06). Everything else between services goes through events: commerce writes them to its outbox, a relay publishes them to SNS, and SNS delivers copies to two SQS queues (AD-04): `notification-svc` reads the notification queue, and the audit queue has no consumer (it demonstrates fan-out, ADR 0007).
+- *Services* make one synchronous call between them: commerce calls identity through Service Connect (AD-06). Everything else between services goes through events: commerce writes them to its outbox, a relay publishes them to SNS, and SNS delivers copies to two SQS queues (AD-04): `notification-svc` reads the notification queue, and the audit queue has no consumer (it demonstrates fan-out, ADR 0007).
 - *Every task* reads its secrets (database, Valkey, OAuth and Stripe) from SSM Parameter Store when it starts; host, port and URL are plain environment variables. Database passwords never pass through Terraform state (§3.2.2).
 - *All three services* read the shared login session from Valkey over TLS with an AUTH token (AD-05).
 - *Outbound calls* leave through fck-nat: identity exchanges the Google sign-in code, commerce calls the Stripe API and publishes to SNS, and `notification-svc` long-polls SQS. The same path carries the tasks' other calls to AWS APIs; S3 traffic uses the gateway endpoint instead.
@@ -84,7 +84,7 @@ AWS chooses each data store's zone. On 10 November on AWS, RDS ran in `ap-southe
 
 *Network and security groups.* @fig-d6-network draws the network in AWS group notation: every subnet with its CIDR, its route table and the security group of each resource.
 
-#figure(kind: image, block(breakable: false, align(left, d6)), caption: [Network view (AWS architecture icons convention: VPC, availability zone and subnet groups, no service icons). The data subnets' route table holds only the local route, so the data tier has no path out of the VPC.]) <fig-d6-network>
+#figure(kind: image, block(breakable: false, align(left, d6)), caption: [Network view (AWS group notation: VPC, availability zone and subnet groups, without service icons). Only the `svc` and `dbinit` security groups reach the data subnets, on TCP 5432 and 6379, and the data subnets' route table holds only the local route, so the data tier has no path out of the VPC.]) <fig-d6-network>
 
 The VPC (`10.50.0.0/16`) spans two availability zones and has three subnet tiers in each zone (@tbl-subnets):
 
@@ -100,14 +100,14 @@ The VPC (`10.50.0.0/16`) spans two availability zones and has three subnet tiers
   caption: [Subnet tiers and what runs in each; the CIDRs are in @fig-d6-network. Source: `infra/swe5001/modules/network`; the data tier was added on 4 November 2026 (AD-15).],
 ) <tbl-subnets>
 
-*Separate data subnets (the lecturers’ remark F6).* Before the 4 November configuration change, the database, the cache and the services used the same eligible private application subnet set, separated only by security groups. AD-15 gives the data stores their own subnets and route table. The configuration provides two independent barriers:
+*Separate data subnets (the assessors’ remark F6).* Before the 4 November configuration change, the database, the cache and the services used the same eligible private application subnet set, separated only by security groups. AD-15 gives the data stores their own subnets and route table. The configuration provides two independent barriers:
 
 + *Routing.* A data subnet has no route out of the VPC, so a compromised or misconfigured data store cannot reach the internet, even through the NAT instance.
 + *Security groups.* RDS accepts TCP 5432 only from the service group and the `db-init` group. Valkey accepts TCP 6379 only from the service group. Neither group allows outbound traffic. Full rules: @tbl-security-groups.
 
 #d6-sg-table()
 
-Tested locally, not on AWS: module validation rejects reused data CIDRs, and `terraform test` `data_tier_has_its_own_subnets` checks disjoint sets (19 of 19 runtime runs passed, 4 November). On 10 November on AWS, the #src(subnet-record)[dated record] retained the actual application and data ENIs, subnet groups, effective routes and security groups and required connectivity. This resolves AISS-07’s placement and connectivity gap and updates NFR-70, without claiming negative packet tests or failover. Scheduled cleanup later removed that runtime; its subnet IDs are historical, not reusable live-state assertions.
+Tested locally, not on AWS: module validation rejects reused data CIDRs, and `terraform test` `data_tier_has_its_own_subnets` checks disjoint sets (19 of 19 runtime runs passed, 4 November, recorded in #pr(740)). On 10 November on AWS, the #src(subnet-record)[dated record] retained the actual application and data ENIs, subnet groups, effective routes and security groups and required connectivity. This resolves AISS-07’s placement and connectivity gap and updates NFR-70, without claiming negative packet tests or failover. Scheduled cleanup later removed that runtime; its subnet IDs are historical, not reusable live-state assertions.
 
 *Single points in the network.* Each zone has its own private route table, but both point at the single fck-nat instance in zone a. An Auto Scaling group of one replaces a failed instance, but only in zone a, because the static network interface lives there. If zone a fails, the services in zone b lose outbound access (for example to Stripe and Google) until the zone recovers. This is a cost decision (AD-10) and is listed as AISS-01.
 
@@ -199,8 +199,8 @@ The physical decisions buy isolation and a small bill rather than always-on capa
     ]),
     ("AD-15", [
       *Separate data subnets for RDS and Valkey.* \
-      *Driver:* Security (the lecturers’ remark F6). \
-      *Context:* The lecturers’ remark F6 (21 October): the database should be in its own subnet. \
+      *Driver:* Security (the assessors’ remark F6). \
+      *Context:* The assessors’ remark F6 (21 October): the database should be in its own subnet. \
       *Options considered:* (a) keep the shared private subnets and rely on security groups, rejected because it leaves one barrier; (b) add data subnets with their own route table. \
       *Choice:* (b): two data subnets, one per zone, with a route table that holds only the local VPC route. \
       *Trade-off:* No running cost and no code change; two more subnets and a route table to maintain, and a rebuild is needed to adopt it (free here, AD-12). \
@@ -297,7 +297,7 @@ The schema follows our PostgreSQL conventions (`pgsql-ddl` skill):
 
 - *Keys.* Native `uuid` primary keys generated as UUIDv7 (`DEFAULT uuidv7()`, PostgreSQL 18). UUIDv7 is time-ordered, so new rows mostly append to the index and split fewer pages, and the database assigns it at insert, so the outbox row ID serves as the event ID. Two exceptions: `biz_payment_review_case` names its key `case_id`, and `sys_consumed_message` has the composite key (`event_id`, `consumer`).
 - *Prefixes.* `sys_` for platform and technical tables, `biz_` for business entities, `rel_` for many-to-many links, `log_` for append-only records.
-- *Audit and soft delete.* Ordinary business tables carry `create_time`, `create_by`, `update_time`, `update_by` and `deleted`; most mutable aggregates also carry `version` for optimistic locking (exceptions under the figures). Active-row uniqueness rules use partial indexes `WHERE deleted = false`, so a soft-deleted row does not block a new one; rules that must hold for every row ever written (one member, order, refund or review case per payment; one webhook event; one notification per event and recipient) use plain unique indexes.
+- *Audit and soft delete.* Ordinary business tables carry `create_time`, `create_by`, `update_time`, `update_by` and `deleted`; most mutable aggregates also carry `version` for optimistic locking (exceptions under the figures). Most active-row uniqueness rules use partial indexes `WHERE deleted = false`, so a soft-deleted row does not block a new one; `uq_biz_team_price_policy_product_version` (V6) is a plain index, and `uq_biz_refund_provider_id` (V11) is partial on `provider_refund_id IS NOT NULL`; rules that must hold for every row ever written (one member, order, refund or review case per payment; one webhook event; one notification per event and recipient) use plain unique indexes.
 - *No foreign keys or CHECK constraints.* Relationships are logical, kept by the application inside its transactions. This lets a table move to another service's database without unpicking constraints, and keeps validation in one place (the domain model). The cost is that the database does not catch an orphaned row; the unique indexes below catch the errors that matter most.
 
 ==== Logical data models
@@ -324,6 +324,7 @@ Several business rules are enforced by unique indexes, so that a race between tw
     table.header([Index], [Partial on `deleted`], [Rule it protects]),
     [`uq_biz_group_member_deal_user` (`deal_id, user_id`)], [Yes], [A buyer joins a team at most once],
     [`uq_biz_group_member_payment_id`], [No], [One payment admits at most one member],
+    [`uq_biz_group_participation_receipt_payment` (unique constraint)], [No], [One payment yields at most one participation receipt, so a replayed settlement cannot admit twice],
     [`uq_biz_purchase_intent_fulfilled_payment`], [Yes], [One payment fulfils at most one purchase intent, and so produces at most one order (ADR 0001)],
     [`uq_biz_payment_pending_intent` (also `status = 'created'`)], [Yes], [At most one open payment per purchase intent],
     [`uq_biz_payment_request_key` (`user_id, request_key`)], [Yes], [A retried checkout request does not create a second payment],
@@ -396,7 +397,7 @@ Only one relay copy runs, because it holds the scheduler lease; its throughput l
 
 *Session and cache store (Valkey).* Valkey holds only data that can be lost: login sessions, the role snapshot that lets any service authorise a request, one-time sign-in state, two read caches and rate-limit counters. Every key has a time to live (TTL), so nothing grows without bound. Configured, not tested: @tbl-valkey lists the key model from the code and configuration (Sa-Token 1.46.0, `application.yml`, `RedisKeys`); it was not read from a running node.
 
-Sa-Token is configured with the token name `blocbuy-token`, a random UUID token sent as an HTTP-only cookie, a 24-hour timeout (`timeout: 86400`) and several concurrent sessions per user (`is-concurrent: true`, `is-share: false`). The application's own keys follow `blocbuy:{profile}:{domain}:{type}:{id}`, where `{profile}` is the active Spring profile list; on ECS that is `ec2,<service>,aws`, so each service's cache keys are separate from the others'.
+Sa-Token is configured with the token name `blocbuy-token`, a random UUID token sent as an HTTP-only cookie, a 24-hour timeout (`timeout: 86400`) and several concurrent sessions per user (`is-concurrent: true`, `is-share: false`). The application's own keys follow `blocbuy:{profile}:{domain}:{type}:{id}`, where `{profile}` is the active Spring profile list; on ECS that is `ec2,<service>,aws` (commerce adds `demo` when a V4 session sets `v4_demo_enabled`), so each service's cache keys are separate from the others'.
 
 #figure(
   table(
@@ -412,12 +413,12 @@ Sa-Token is configured with the token name `blocbuy-token`, a random UUID token 
     [`blocbuy:{profile}:common:rate-limit:<scope>:<digest>`], [commerce], [One rate-limit window], [`RedisRateLimitGateway`. Request counter per scope and hashed subject. If Valkey is unreachable the limiter fails open and counts the event in a metric],
   ),
   kind: table,
-  caption: [Valkey key model; PostgreSQL remains the system of record, and no business fact lives only in Valkey. Source: code and configuration, read on 5 November 2026.],
+  caption: [Valkey key model; PostgreSQL remains the system of record, and no business fact lives only in Valkey. Source: code and configuration, read on 5 November 2026; the two later changes to these classes (#pr(776), #pr(784)) kept the key patterns and TTLs.],
 ) <tbl-valkey>
 
 The design rule is that Valkey is never the lock of record or the only copy of a business fact: the scheduler lease is in PostgreSQL (`sys_scheduler_lock`), and caches are read-through with short, jittered TTLs so that a lost node costs latency, not correctness. The cost of a lost node is that every user is signed out (AISS-10).
 
-*Event envelope.* Every integration event is published to SNS as JSON with the envelope of @tbl-envelope (`IntegrationEventEnvelope`). The SNS message attributes repeat `eventType`, `version` and `traceId`, so subscriptions can filter without parsing the body.
+*Event envelope and payloads.* Every integration event is published to SNS as JSON with the envelope of @tbl-envelope (`IntegrationEventEnvelope`); its `payload` is one of the three records in @tbl-event-payloads. The SNS message attributes repeat `eventType`, `version` and `traceId`, so subscriptions can filter without parsing the body.
 
 #figure(
   table(
@@ -436,6 +437,18 @@ The design rule is that Valkey is never the lock of record or the only copy of a
   caption: [Integration event envelope fields. Source: `IntegrationEventEnvelope` and `OutboxMessageFactory`.],
 ) <tbl-envelope>
 
+#figure(
+  table(
+    columns: (auto, 1.4fr, 1.6fr),
+    table.header([Payload record (`eventType`)], [Fields and types], [Meaning]),
+    [`TeamSucceededV1` (`TeamSucceeded`)], [`dealId` UUID, `productId` UUID, `size` int (at least 2), `recipientUserIds` list of UUID], [The team filled; the recipients are its active members],
+    [`TeamExpiredV1` (`TeamExpired`)], [`dealId` UUID, `productId` UUID, `expiredAt` timestamp, `recipientUserIds` list of UUID], [The team expired unfilled; the recipients are its active members],
+    [`PaymentSucceededV1` (`PaymentSucceeded`)], [`paymentId` UUID, `intentId` UUID, `recipientUserId` UUID, `operation` string (`START` or `JOIN`), `businessId` UUID, `confirmedAt` timestamp], [A verified payment settled a start or a join; `businessId` is the team's `dealId`],
+  ),
+  kind: table,
+  caption: [Version 1 payloads of the three published events; every field is required, and the payloads carry IDs only, no personal data. Source: the records in `blocbuy-client` (`com.blocbuy.events.contract`).],
+) <tbl-event-payloads>
+
 *Queues.* SNS delivers raw messages to SQS, and each subscription filters on the `eventType` attribute. The notification queue receives `TeamSucceeded`, `TeamExpired` and `PaymentSucceeded`; the audit queue receives every event whose type starts with `Team`. Each queue has a 60 s visibility timeout, 20 s long polling and 4-day retention; after five failed receives a message moves to the queue's DLQ, which keeps it for 14 days.
 
 ==== Data classification
@@ -445,7 +458,7 @@ The design rule is that Valkey is never the lock of record or the only copy of a
     columns: (auto, 1fr, 1fr, 1.2fr, 1fr, 1.1fr),
     table.header([Data group], [Data format], [Storage technology], [Security requirements and controls], [Retention], [Trade-off]),
     [Identity], [Relational rows; Google profile as JSON (`raw_profile`)], [PostgreSQL, `identity` database], [Personal data (email, name). Only identity's app role can read it; storage encrypted; TLS required; other services see only public nicknames and whether the account is active, through an internal endpoint], [Until the runtime is destroyed; no backup (AD-12)], [Synchronous lookup from commerce makes identity a dependency of checkout (AD-06, AISS-03)],
-    [Commerce and payment], [Relational rows; money as `numeric` with currency], [PostgreSQL, `commerce` database], [No card data stored: Stripe holds it and we keep only Stripe IDs. Unique indexes stop double charges and double refunds; webhook events stored for audit], [Until the runtime is destroyed; no backup (AD-12)], [One database for team, order and payment keeps settlement atomic, at the cost of one large service (AISS-02)],
+    [Commerce and payment], [Relational rows; money as `numeric` with currency], [PostgreSQL, `commerce` database], [Personal data: an order's `receiver_name`, `receiver_phone` and `shipping_address` (V12 marks them PII: never logged in full, never shown to other users). No card data stored: Stripe holds it and we keep only Stripe IDs. Unique indexes stop double charges and double refunds; webhook event IDs and outcomes kept for de-duplication, not the payloads], [Until the runtime is destroyed; no backup (AD-12)], [One database for team, order and payment keeps settlement atomic, at the cost of one large service (AISS-02)],
     [Notifications], [Relational rows, immutable], [PostgreSQL, `notification` database], [Readable only by the recipient through the API; only notification's app role can write], [Until the runtime is destroyed (AD-12)], [Eventually consistent, about 2 s behind the action (AISS-11)],
     [Sessions], [Key–value, Sa-Token session objects], [ElastiCache Valkey], [HTTP-only cookie; TLS and an AUTH token on the connection; 24-hour expiry; reachable only from the service group], [24 h TTL], [Fast and shared by all services, but one node: a restart signs everyone out (AISS-10)],
     [Events], [JSON envelope with string message attributes], [`sys_outbox` table, then SNS and SQS], [Encrypted topic and queues; IAM policies limit publish and receive to the producing and consuming task roles; payloads carry IDs, not personal data], [Outbox rows 7 days after publishing (`OutboxRetentionJob`); SQS 4 days; DLQ 14 days], [At-least-once delivery, so consumers must be idempotent (`sys_consumed_message`)],
