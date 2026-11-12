@@ -3,6 +3,7 @@ import contextlib
 import importlib.util
 import io
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -66,10 +67,19 @@ class ReviewedCheckerTests(unittest.TestCase):
         self.assertIsNotNone(baseline_call, 'Baseline JSON must retain an explicit immutable revision')
         baseline_rev = baseline_call[1]
         # The receipt postdates the evidence merge, so the explicit pin must
-        # override that default, and it must be reachable from this branch
-        # (never a pull-request head that no branch contains).
+        # override that default. It must also be reachable from dev or prod:
+        # an ancestor of HEAD is not enough, because on a PR branch HEAD
+        # includes the PR's own commits, which squash merging discards.
         self.assertNotEqual(baseline_rev, reviewed.EVIDENCE)
-        reviewed.git('merge-base', '--is-ancestor', baseline_rev, 'HEAD')
+        protected = [ref for ref in ('origin/dev', 'origin/prod')
+                     if subprocess.run(['git', '-C', str(reviewed.ROOT), 'rev-parse', '--verify', '-q', ref],
+                                       capture_output=True).returncode == 0]
+        if not protected:
+            self.skipTest('origin/dev and origin/prod are not fetched')
+        self.assertTrue(any(
+            subprocess.run(['git', '-C', str(reviewed.ROOT), 'merge-base', '--is-ancestor', baseline_rev, ref],
+                           capture_output=True).returncode == 0 for ref in protected),
+            baseline_rev + ' is not reachable from ' + ' or '.join(protected))
         for section in ('04-3-security.typ', '05-devops.typ', '01-introduction.typ'):
             for path, expected in paths:
                 with self.subTest(path=path, section=section):
