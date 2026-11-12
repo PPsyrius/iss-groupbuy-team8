@@ -97,6 +97,8 @@
   // slash, opening parenthesis or comma, and between the words of a camelCase name, so it wraps
   // inside its column instead of running into the next one or past the page edge. As in the
   // SWE5006 template's `report-table` and the appendix's `lib-a.typ`.
+  // An AWS region or zone name (`ap-southeast-1`, `ap-southeast-1a`) never breaks at its hyphens.
+  show raw.where(block: false): it => if it.text.starts-with("ap-southeast-1") { box(it) } else { it }
   show table: it => {
     show raw.where(block: false): r => {
       show regex("[_./(,]"): m => m.text + sym.zws
