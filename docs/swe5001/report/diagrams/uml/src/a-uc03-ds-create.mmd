@@ -12,7 +12,7 @@ sequenceDiagram
     Note over Cfg,Map: at start-up, once: Spring injects the creator bean paidGroupDealCreator()
     Cfg->>Cr: «create» in paidGroupDealCreator()
     OFA->>Svc: startConfirmed(terms, paid)
-    Note over Svc,Map: lock 5: the payment's participation receipt
+    Note over Svc,Map: the receipt lock: the payment's participation receipt
     Svc->>Repo: reserveAndLock(paymentId, fingerprint, userId)
     Repo->>Map: reserveReceipt(paymentId, fingerprint, actorId)
     Repo->>Map: lockReceipt(paymentId)

@@ -10,7 +10,7 @@ sequenceDiagram
     Note over PCtl,Prices: A5: PUT …/team-price-policy, after checkPermission only (S6)
     PCtl->>Prices: A5: configure(productId, actorId, command)
     critical A5: REQUIRED, READ COMMITTED, 10 s (its own transaction)
-        Prices->>Repo: lockById(productId) in lockProduct: lock 6
+        Prices->>Repo: lockById(productId) in lockProduct: row lock
         Prices->>Users: requireActive(actorId)
         Prices->>PRepo: findLatestPolicy(productId)
         break expectedVersion is not the latest policy version (E8)

@@ -21,7 +21,7 @@ sequenceDiagram
     Note over Buyer,AC: B4: Google redirects the browser back
     Buyer->>AC: googleCallback(code, state, error, stateBinding)
     break error given, or code or state missing (E1)
-        AC-->>Buyer: 302 /login?error=IDENTITY_401_003 (or COMMON_400_001)
+        AC-->>Buyer: 302 /login?error=IDENTITY_401_003 (access_denied), IDENTITY_502_001 (other error) or COMMON_400_001 (code or state missing)
     end
     AC->>App: loginWithGoogle(code, state, stateBinding)
     Note over App,SS: B5
