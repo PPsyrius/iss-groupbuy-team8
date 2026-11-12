@@ -71,7 +71,7 @@ classDiagram
 
 Anything else fails loudly, because the translator itself silently drops lines it does not understand.
 
-- `classDiagram`: `class X { … }` with members one per line (a line with `(` is an operation, otherwise an attribute or enumeration literal), `<<stereo>>` inside the body or as `<<stereo>> X`, `X : member`, `class X~T~` generics, `direction`. Relations `<|--` `..|>` `*--` `o--` `-->` `..>` `--` `..` in either direction, with `"mult"` on either end and `: label`. Every class must be declared with `class X` (a typo would otherwise create a box).
+- `classDiagram`: `class X { … }` with members one per line (a line with `(` is an operation, otherwise an attribute or enumeration literal), `<<stereo>>` inside the body or as `<<stereo>> X`, `X : member`, `class X~T~` generics, `direction`. Relations `<|--` `..|>` `*--` `o--` `-->` `..>` `--` `..` in either direction, with `"mult"` on either end and `: label`. Every class must be declared with `class X` (a typo would otherwise create a box). A `%% objects` line right after `classDiagram` (opt-in) draws an object diagram: instance names `name : Class` are underlined and there is no operations compartment; link an ID slot to the object it names with a dashed `..>`.
 - `sequenceDiagram`: `actor X`, `participant X as Name`, `create participant X as Name` (the next message to it draws «create»), `destroy X`; messages `->>` sync, `-)` async, `-->>` return, each with a `: label`; `activate`/`deactivate` or none (activations are inferred, and the generator passes `continuousActivations`: an activation that an `alt` branch or a `break` ends and the flow after it resumes is one unbroken bar, as in UML); `alt`/`else`, `opt`, `loop`, `par`/`and`, `critical`/`option`, `break`, plain `rect`; `Note over A,B: text`. Every participant must be declared before use.
 - `stateDiagram-v2`: `[*]`, `state "Name" as X`, `state X <<choice>>` (or fork, join), `A --> B : trigger [guard] / effect`, `X : entry / …` (body lines), a self-transition (drawn inside the state), `direction`.
 - `componentDiagram`, `deploymentDiagram`, `usecaseDiagram`, `activityDiagram`: see the next section.
@@ -85,6 +85,7 @@ One grammar serves the four kinds. The translator is `structModel` in `docs/swe5
 %% frame: BlocBuy services by tier
 componentDiagram
     actor Buyer
+    component Web["Web client"]
     package "Application tier" {
         interface IDeals["Group deal API"]
         component Commerce["commerce-svc"] <<subsystem>> {
@@ -95,12 +96,18 @@ componentDiagram
     zone "Third party" {
         component Stripe["Stripe"] <<external system>>
     }
+    Buyer --> Web
     Commerce -() IDeals
     Web -( IDeals : REST
     Deals -- Pay : Partnership
     Pay "D" ..> "U" Stripe : ACL
 %% route ortho
-%% at Deals 1,3
+%% at Buyer 0,0
+%% at Web 1,0
+%% at IDeals 1,1
+%% at Deals 1,2
+%% at Pay 2,2
+%% at Stripe 3,2
 ```
 
 **Statements**, one per line:
@@ -139,8 +146,8 @@ componentDiagram
 
 - `%% at Id col,row` pins an element (whole cells, column first, row down). Groups are never pinned. Pin every element of a component, deployment or use-case diagram; the automatic layout (longest-path layers) is a fallback.
 - An activity diagram with lanes lays itself out: one row per step along the flow, one or more columns per lane, lanes in declaration order. Pin only what a skip edge would otherwise run through.
-- `%% route ortho` (the default in activity diagrams) draws edges between different rows and columns with right-angled bends; `%% route straight` (the default otherwise) draws them straight. `%% route A B straight|hv|vh|vhv|hvh` sets one edge: `hv` runs across then along, `vh` along then across, `vhv` and `hvh` bend twice with the middle run in the free band of the gap next to the source.
-- The generator refuses: an unknown line, an undeclared name, a container or group with nothing inside, two elements in one cell, an element inside the area of a group it is not part of, overlapping groups or lanes, an element outside every lane (once there are lanes), and a straight edge along a row or column that runs through another element. Fix each with a pin or a route.
+- `%% route ortho` (the default in activity diagrams) draws edges between different rows and columns with right-angled bends; `%% route straight` (the default otherwise) draws them straight. `%% route A B straight|hv|vh|vhv|hvh` sets one edge: `hv` runs across then along, `vh` along then across, `vhv` and `hvh` bend twice with the middle run in the free band of the gap next to the source. A and B may be named in either order; `hv` and `vh` read from the first-named end.
+- The generator refuses: an unknown line, an undeclared name, a container or group with nothing inside, two elements in one cell, an element inside the area of a group it is not part of, overlapping groups or lanes, an element outside every lane (once there are lanes), a straight edge along a row or column that runs through another element, a malformed `%% route` line, a route that names no relation, a relation from an element to itself, and `direction BT` or `RL`. Fix a layout fault with a pin or a route.
 - A group that an edge enters from above widens so its title fits beside the line; a group title that an edge or label still crosses moves to the right end of its band.
 
 ## Placing figures and tables (figures.typ)
@@ -176,7 +183,7 @@ componentDiagram
 - Sequence diagrams: up to 8 lifelines read well; at 10 a «boundary» stereotype just overflows its head box. Split a long flow at a natural seam (before and after payment; receipt and transaction) and link the parts with a `@fig-…` note.
 - A return message goes back to its caller, one lifeline at a time; do not jump to the actor.
 - Lifelines are `:Class`. Name the interface the caller holds, unless the diagram shows what happens inside the implementation (then name the class, for example `:GroupDealPurchaseSupportImpl`). Two objects of one class: `txA : StripeCheckoutService`.
-- Mark each transaction with `critical <name>, <isolation>, <timeout>`, row locks as explicit messages (`lockDeal(dealId): lock 1, the team row`), and step tags (`B4`) in a `Note over` at the start of each step group.
+- Mark each transaction with `critical <name>, <isolation>, <timeout>`, row locks as explicit messages with the lock as a UML constraint, not as a return value (`lockDeal(dealId) {lock 1}`), and step tags (`B4`) in a `Note over` at the start of each step group.
 
 ## Gotchas
 

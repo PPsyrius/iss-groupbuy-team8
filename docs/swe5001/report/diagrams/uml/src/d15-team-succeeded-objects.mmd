@@ -1,50 +1,67 @@
 %% frame: Object view: a team of two at the commit of the join that fills it
 classDiagram
+%% objects
     class i1["i1 : PurchaseIntent"] {
+        terms.dealId = d1
+        fulfilledPaymentId = pay1
     }
     class pay1["pay1 : CheckoutPayment"] {
         status = SUCCEEDED
     }
     class o1["o1 : Order"] {
+        placement.dealId = d1
+        placement.paymentId = pay1
         status = CONFIRMED
     }
     class leader["leader : PaidMember"] {
+        dealId = d1
         userId = u1
+        orderId = o1
         status = "paid"
     }
-    class deal["deal : GroupDeal"] {
+    class d1["d1 : GroupDeal"] {
         leaderUserId = u1
         targetSize = 2
         currentSize = 2
         status = SUCCEEDED
     }
     class i2["i2 : PurchaseIntent"] {
+        terms.dealId = d1
         sharerUserId = u1
+        fulfilledPaymentId = pay2
     }
     class pay2["pay2 : CheckoutPayment"] {
         status = SUCCEEDED
     }
     class o2["o2 : Order"] {
+        placement.dealId = d1
+        placement.paymentId = pay2
         status = CONFIRMED
     }
     class member["member : PaidMember"] {
+        dealId = d1
         userId = u2
+        orderId = o2
         status = "paid"
     }
-%% at i1 0,0
+%% at i1 1,0
 %% at pay1 0,1
 %% at o1 0,2
 %% at leader 0,3
-%% at deal 1,2
-%% at i2 2,0
-%% at pay2 2,1
+%% at d1 1,2
+%% at member 2,1
 %% at o2 2,2
-%% at member 2,3
-    i1 -- pay1 : fulfilledPaymentId
-    pay1 -- o1 : placement.paymentId
-    o1 -- leader : orderId
-    i2 -- pay2 : fulfilledPaymentId
-    pay2 -- o2 : placement.paymentId
-    o2 -- member : orderId
-    deal -- leader : dealId
-    deal -- member : dealId
+%% at pay2 2,3
+%% at i2 1,4
+    i1 ..> pay1 : fulfilledPaymentId
+    o1 ..> pay1 : placement.paymentId
+    leader ..> o1 : orderId
+    i2 ..> pay2 : fulfilledPaymentId
+    o2 ..> pay2 : placement.paymentId
+    member ..> o2 : orderId
+    leader ..> d1 : dealId
+    member ..> d1 : dealId
+    i1 ..> d1 : terms.dealId
+    o1 ..> d1
+    i2 ..> d1 : terms.dealId
+    o2 ..> d1

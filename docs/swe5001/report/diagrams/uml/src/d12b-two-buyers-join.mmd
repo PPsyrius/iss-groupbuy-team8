@@ -13,28 +13,30 @@ sequenceDiagram
 
     Member->>Api: intent(csrf, request)
     Member->>Api: checkout(csrf, key, request)
+    Api-->>Member: CheckoutResult
     Stripe->>Wh: handleStripeEvent(payload, signatureHeader)
     Wh->>App: handleStripeWebhook(payload, signatureHeader)
     App->>Svc: handleWebhook(rawBody, signature)
     critical settlement tx: REQUIRED, READ COMMITTED, 10 s
         Svc->>Pay: claimEvent(eventId, type)
-        Svc->>Ofa: lockForSettlement(quote): lock 1 team, lock 2 intent
-        Svc->>Pay: lock(id): lock 3 payment
+        Svc->>Ofa: lockForSettlement(quote) {locks 1, 2}
+        Svc->>Pay: lock(id) {lock 3}
         Svc->>Ofa: fulfil(event)
-        Ofa->>Grp: joinConfirmed(dealId, paid, sharerUserId)
+        Ofa->>Grp: joinConfirmed(dealId, paid, sharer) {receipt after lock 3}
         Grp->>Deal: joinPaid(paid, alreadyMember, now)
         alt a seat is free
-            Deal-->>Grp: PaidAdmission: team completed
-            Note over Grp,Deal: TeamSucceeded: orders confirmed at commit
-            Grp-->>Ofa: applied, team SUCCEEDED
+            Deal-->>Grp: PaidAdmission {teamCompleted}
+            Grp-->>Ofa: ParticipationResult {team SUCCEEDED}
             Ofa-->>Svc: Outcome(dealId, orderId, null)
             Svc->>Pay: recordOutcome(…, "FULFILLED")
         else team already full
             Deal-->>Grp: BizException DEAL_CLOSED
-            Grp-->>Ofa: compensation_required
+            Grp-->>Ofa: ParticipationResult {compensation_required}
             Ofa-->>Svc: Outcome(dealId, null, "GROUP_REJECTED")
             Svc->>Pay: requireRefund(payment, reason, eventId)
             Svc->>Pay: recordOutcome(…, "REFUND_REQUIRED")
         end
     end
+    Svc-->>App: void
+    App-->>Wh: void
     Wh-->>Stripe: HTTP 200

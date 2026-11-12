@@ -47,7 +47,7 @@ LEFT, RIGHT = 48, 458
 PW = RIGHT - LEFT
 parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}pt" height="{H}pt" viewBox="0 0 {W} {H}">',
          '<rect width="100%" height="100%" fill="white"/>',
-         '<g font-family="Arial, sans-serif" font-size="8.5" fill="#1B1A18">']
+         '<g font-family="Arial, sans-serif" font-size="8.6" fill="#1B1A18">']
 
 def text(x, y, value, **attributes):
     attrs = ' '.join(f'{key.replace("_", "-")}="{value}"' for key, value in attributes.items())

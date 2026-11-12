@@ -12,7 +12,8 @@ sequenceDiagram
         Relay->>T: publish(events, leaseValid)
         T->>Topic: PublishBatch(topicArn, entries)
         Topic-->>T: successful ids, failed ids
-        Topic-)Q: deliver(message), filter on eventType
+        Topic-)Q: deliver(message)
+        Note over Topic,Q: subscription filter on eventType
         T-->>Relay: List of OutboxPublishResult
         Relay-->>RJob: int updated
     end

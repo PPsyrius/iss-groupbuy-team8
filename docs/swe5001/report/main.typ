@@ -21,7 +21,7 @@
     let m = s.match(regex("^(.*?)\s*\((.*)\)$"))
     if m != none [#m.captures.at(0) #text(fill: muted)[(#m.captures.at(1))]] else { s }
   }
-  let members = ("Lim Jiechao", "Wang Ziang (Eric)", "Liu Jin", "Yu Qianshuo (Yorik)", "Panpakorn Siripanich (Pan)")
+  let members = ("Lim Jiechao", "Wang Ziang (Eric)", "Liu Jin", "Yu Qianshuo (Yorick)", "Panpakorn Siripanich (Pan)")
   v(1fr)
   block(width: 100%, {
     set par(spacing: 0pt, leading: 0.55em)
@@ -131,7 +131,7 @@
     [IAM], [AWS Identity and Access Management],
     [KV], [Key–value (store)],
     [NAT], [Network address translation],
-    [NFR-nn], [Non-functional requirement nn of the proposal],
+    [NFR-nn], [Quality requirement nn in the #src("docs/quality/nfr-register.md")[NFR register]],
     [OIDC], [OpenID Connect],
     [PCI], [Payment Card Industry (data security standard)],
     [PII], [Personally identifiable information],

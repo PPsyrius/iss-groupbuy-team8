@@ -164,13 +164,15 @@
 #let member-max = 56mm
 
 // One class box: name compartment (role tint), then attribute and operation compartments,
-// drawn even when empty, as Visual Paradigm does.
-#let class-box(name, stereo: none, attrs: (), ops: (), abstract: false, max: member-max) = context {
+// drawn even when empty, as Visual Paradigm does. An object (`object: true`, opt-in) is an
+// instance specification: its `name : Class` is underlined and it has no operations compartment.
+#let class-box(name, stereo: none, attrs: (), ops: (), abstract: false, object: false, max: member-max) = context {
   set text(size: uml-size, fill: ink)
   set par(leading: 0.3em, justify: false)
   let head = align(center, {
     if stereo != none { text("«" + stereo + "»"); linebreak() }
-    text(weight: "bold", style: if abstract { "italic" } else { "normal" }, breakable(name))
+    let shown = text(weight: "bold", style: if abstract { "italic" } else { "normal" }, breakable(name))
+    if object { underline(shown) } else { shown }
   })
   let natural = calc.max(
     measure(text(size: uml-size, weight: "bold", name)).width,
@@ -196,7 +198,7 @@
     inset: (x: 4.5pt, y: 2.5pt),
     stroke: w-box + ink,
     fill: (_, y) => if y == 0 { role-fill(stereo) } else { white },
-    head, comp(attrs), comp(ops),
+    head, comp(attrs), ..(if object { () } else { (comp(ops),) }),
   ))
 }
 
@@ -225,7 +227,7 @@
 // rels: array of (from, to, kind, label, mfrom, mto, bend)
 // A wide or tall diagram first closes up its gaps, then wraps its members at narrower widths.
 #let class-diagram(classes, rels, frame: none, min-gap: (0pt, 0pt), host: none) = {
-  let boxes(max) = classes.map(c => node(c.pos, class-box(c.name, stereo: c.stereo, attrs: c.attrs, ops: c.ops, abstract: c.abstract, max: max), name: label(c.id)))
+  let boxes(max) = classes.map(c => node(c.pos, class-box(c.name, stereo: c.stereo, attrs: c.attrs, ops: c.ops, abstract: c.abstract, object: c.at("object", default: false), max: max), name: label(c.id)))
   let edges = rels.map(r => {
     let style = rel-style.at(r.kind, default: rel-style.assoc)
     let args = (label(r.from), label(r.to))
@@ -974,7 +976,16 @@
   }
   // Lane headers.
   let LT = lanes.map(l => s-text(l.name, max: 60mm))
-  let lane-head = if lanes.len() > 0 { calc.max(..LT.map(t => pt-of(if lr { measure(t).width } else { measure(t).height }))) + 8 } else { 0.0 }
+  // The header is as thick as a title is tall: an LR title turns -90deg, so its height is still the
+  // header's thickness, and its width is a length its lane (rows a0..a1) must reach.
+  let lane-head = if lanes.len() > 0 { calc.max(..LT.map(t => pt-of(measure(t).height))) + 8 } else { 0.0 }
+  if lr {
+    for (i, l) in lanes.enumerate() {
+      let span = range(l.a0, l.a1 + 1).map(r => rowH.at(r)).sum() + (l.a1 - l.a0) * sp.gy
+      let need = pt-of(measure(LT.at(i)).width) + 8
+      if span < need { rowH.at(l.a1) += need - span }
+    }
+  }
   let lane-gap = if lanes.len() > 0 { 2 * s-pad } else { 0.0 }
   // The cell that stands for an end of an edge: an element's own, or, for a group, its cell
   // nearest the other end.
@@ -1102,7 +1113,8 @@
   }
   let is-bar(id) = kind-of(id) in ("fork", "join")
   let ball(id) = kind-of(id) == "interface"
-  let pull(id, k) = if ball(id) and k == "requires" { s-socket } else { 0.0 }
+  // A required interface's edge stops at its socket, s-socket from the ball's centre.
+  let pull(id, k) = if ball(id) and k == "requires" { s-socket - s-ball } else { 0.0 }
   // Polyline of an edge, from the source's outline to the target's.
   let path(ed, r) = {
     let a = A.at(ed.from)
