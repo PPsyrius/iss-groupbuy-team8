@@ -118,7 +118,7 @@ Most delivery milestones were met on time or early. Three slipped: the monolith 
 
 === Effort per member
 
-SWE5001 took about 71.5 person-days in total, about 43% above the briefing's guideline of about 50 (ten for each of the five members; briefing Q8). The overrun is phase D (22 October to 16 November), which took about 21.5 person-days. The plan allowed 2.5 person-days for this report (WBS 7, @tbl-wbs) but nothing for answering the remarks, and those answers needed new AWS sessions, load-test reruns and a rewrite of the report. Up to the presentation we were within the guideline: about 50 person-days to 19 October, which all five members agreed and declared in the presentation (@tbl-effort); Liu Jin (12.5) and Pan (11.5) were above ten.
+Estimated: SWE5001 comes to about 71.5 person-days in total, about 43% above the briefing's guideline of about 50 (ten for each of the five members; briefing Q8). The overrun is phase D (22 October to 16 November): about 21.5 person-days, agreed on 12 November and including the work still planned up to submission. The plan allowed 2.5 person-days for this report (WBS 7, @tbl-wbs) but nothing for answering the remarks, and those answers needed new AWS sessions, load-test reruns and a rewrite of the report. Up to the presentation we were within the guideline: about 50 person-days to 19 October, which all five members agreed and declared in the presentation (@tbl-effort); Liu Jin (12.5) and Pan (11.5) were above ten.
 
 #figure(
   table(

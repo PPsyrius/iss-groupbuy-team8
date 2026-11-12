@@ -51,7 +51,7 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
     [Impacted], [`JoinTeamUI`, `JoinTeamControl` (before payment), `PaymentGateway`, `ReceiptUI`, `ReviewUI`],
     [Static], [`StripeCheckoutController` takes the buyer from the Sa-Token session (`StpUtil.checkLogin`), never from the request, and requires the `X-BlocBuy-Request` header; `PaymentBrowserService` applies `RateLimitGateway` (60 join intents a minute per buyer and team) and returns a receipt only to its own buyer; the webhook carries the `Stripe-Signature` header; `reconcile` has no endpoint],
     [Dynamic], [`intent` and `checkout` check the session and the header before any business read; `handleWebhook(rawBody, signature)` rejects an event with a bad signature or from live mode before any database work (@fig-d12b-two-buyers-join)],
-    [Justification], [Every service authorises from the shared session without a call to identity, and an attacker cannot settle or read another buyer's payment (AD-05, AD-09)],
+    [Justification], [`commerce-svc` and `notification-svc` authorise from the shared session (`SessionStpInterface`) without a call to identity, which checks its own database (`StpInterfaceImpl`), and an attacker cannot settle or read another buyer's payment (AD-05, AD-09)],
     table.cell(rowspan: 4)[S7 Scheduling (Sched)],
     [Impacted], [`SchedulerTrigger`, `ResolveTeamControl`, `RefundMembersControl`],
     [Static], [`TeamExpirySweepJob`, `RefundWorkerJob` and `OutboxRelayJob`, each run by `LeasedJobRunner` with its lease row in `sys_scheduler_lock`],
