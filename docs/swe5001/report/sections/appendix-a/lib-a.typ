@@ -1,4 +1,5 @@
-// Helpers for Appendix A (detailed design specifications). Import in every part file:
+// Helpers for the detailed design source book (folder `appendix-a/`), also used by chapters 1-6
+// (afig). Import in every part file:
 //   #import "lib-a.typ": *
 // Diagrams come from diagrams/appendix-a/gen/<id>.typ, generated from src/<id>.mmd by
 // scripts/appendix-diagrams.mjs (see diagrams/appendix-a/README.md).
@@ -16,24 +17,30 @@
 // 0.4 pt stroke on each side, so the drawing gets the text width less this.
 #let a-frame = 2 * 6pt + 2 * 0.4pt
 
-// Appendix numbering: the level-1 heading reads "Appendix A: …", parts "A.1", "A.1.1", and
-// figures and tables "A.1", "A.2", … from the first figure of the appendix. Level 3 and below
-// stay out of the contents, so the contents lists each part once.
+// Source book numbering (the name `appendix-a` is kept for the folder's sake; nothing prints it).
+// The title (level 1, set with numbering: none in 07-appendix-a.typ) carries no number, so the
+// source book never reads as an appendix of the report. The heading counter's first level is
+// dropped: parts read "1" … "14", subsections "6.1", "6.1.1". Figures and tables count per part:
+// "Figure 6.1", "Table 6.2", restarting at each part, so a part set alone (--input apart=) keeps
+// the numbers it has in the whole book. Level 3 and below stay out of the contents, so the
+// contents lists each part once.
 #let appendix-a(body) = {
-  set heading(numbering: (..n) => {
-    let v = n.pos()
-    if v.len() == 1 { "Appendix " + numbering("A", v.first()) + ":" } else { numbering("A", v.first()) + "." + v.slice(1).map(str).join(".") }
-  })
+  set heading(numbering: (..n) => n.pos().slice(1).map(str).join("."))
+  show heading.where(level: 2): it => {
+    counter(figure.where(kind: image)).update(0)
+    counter(figure.where(kind: table)).update(0)
+    it
+  }
   show heading.where(level: 3): set heading(outlined: false)
   show heading.where(level: 4): set heading(outlined: false)
-  set figure(numbering: n => "A." + str(n))
+  set figure(numbering: n => str(counter(heading).get().at(1, default: 0)) + "." + str(n))
   show figure.caption: set text(9pt)
   show figure.caption: set par(justify: false)
   // A diagram and its caption stay on one page (lib.typ makes figures breakable for long tables);
   // afig sizes every drawing to fit a page under its caption, so this never overflows.
   show figure.where(kind: image): set block(breakable: false)
   // Code in tables: the report sets table text at 8.8 pt and code at 0.88 em, which would print
-  // code at 7.7 pt. The appendix keeps every code name in a table at 8 pt (legibility minimum).
+  // code at 7.7 pt. The source book keeps every code name in a table at 8 pt (legibility minimum).
   show table: it => {
     show raw: set text(size: 8pt)
     it
@@ -48,12 +55,13 @@
 #let cap-height(caption, width) = measure(block(width: width, {
   set text(9pt)
   set par(justify: false)
-  [*Figure A.99:* #caption]
+  [*Figure 9.99:* #caption]
 })).height
 
 // A generated UML diagram as a numbered figure.
 //   #afig("a-uc04-ac", [UC4 analysis class diagram (UML, BCE stereotypes). …])
-//   → Figure A.n, label <fig-a-uc04-ac> (or the label given as `lbl`), referenced @fig-a-uc04-ac.
+//   → a numbered figure (Figure 3.4 in a chapter, Figure 6.4 in the source book), label
+//   <fig-a-uc04-ac> (or the label given as `lbl`), referenced @fig-a-uc04-ac.
 // The drawing scales to the text width and the page height left under its caption. A class or
 // state diagram that would print its labels below 8 pt turns landscape when that helps: the
 // figure then takes a flipped page of its own, caption included. Sequence diagrams never turn;
@@ -65,7 +73,7 @@
 // scripts/preview-part.sh, which prints each figure's label size.
 // float: true lets a portrait figure float to the top or bottom of a page instead of standing in
 // the text flow. Off by default, as in the rest of the report: a float can drift before the
-// appendix heading or past the end of the document.
+// source book title or past the end of the document.
 #let afig(id, caption, lbl: auto, orient: auto, float: false) = {
   import "/docs/swe5001/report/diagrams/appendix-a/gen/" + id + ".typ": drawing, kind
   // The kit draws each class box as a table, so lib.typ's report-table rule (`show table: set
@@ -103,7 +111,7 @@
         #v(1fr)
       ]
     } else {
-      // A float placed on a page that opens with the appendix heading would print above it.
+      // A float placed on a page that opens with a level-1 heading would print above it.
       let opens = query(heading.where(level: 1)).any(h => h.location().page() == here().page())
       let place-at = if not float { none } else if opens { bottom } else { auto }
       // Fill the page instead of leaving it half empty: when the drawing does not fit in the space
@@ -133,7 +141,7 @@
 // A long code name in a cell (`PaymentBrowserService.createIntent(user: UUID, …)`) may break
 // after "_", ".", "/", "(" or "," and between the words of a camelCase name, so it wraps inside
 // its column instead of running into the next one (as report-table in the SWE5006 template).
-// Code in the cells prints at 8 pt (appendix-a above sets it for every table in the appendix).
+// Code in the cells prints at 8 pt (appendix-a above sets it for every table in the source book).
 #let atable(caption, lbl, columns: auto, header: (), align: left + top, ..cells) = [
   #show raw: set text(size: 8pt)
   #show raw.where(block: false): it => {

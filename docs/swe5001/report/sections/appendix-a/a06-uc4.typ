@@ -74,7 +74,7 @@ The transition strategies of @sec-a-strategies turn the analysis model into the 
 - *S5 External interface (backend ADRs 0001, 0004, 0005; NFR-21, NFR-22, NFR-23, NFR-31, NFR-50, NFR-66):* not applied in UC4; Stripe's gateway is Pay upfront's (@sec-a-pay-upfront).
 - *S6 Security (AD-05, AD-09; NFR-01, 46, 47, 58, 68):* impacted `JoinTeamUI`, `JoinTeamControl` → resultant session buyer id, CSRF header, `RateLimitGateway`, team price. @fig-a-uc04-ds-intent.
 - *S7 Scheduling (AD-16; NFR-15, 32, 61):* not applied; no UC4 step is triggered by time.
-- *S8 Concurrency (AD-02, AD-03; NFR-13, 21, 27, 30):* impacted `Team`, `PurchaseIntent`, `Payment` → resultant locks 1 (team), 2 (intent) and 3 (payment) in the order of A.2 S8, then the participation receipt and the guarded stock update inside fulfilment. @fig-a-uc04-ds-race.
+- *S8 Concurrency (AD-02, AD-03; NFR-13, 21, 27, 30):* impacted `Team`, `PurchaseIntent`, `Payment` → resultant locks 1 (team), 2 (intent) and 3 (payment) in the order of S8 in part 2, then the participation receipt and the guarded stock update inside fulfilment. @fig-a-uc04-ds-race.
 - *S9 Domain and integration events (AD-04; NFR-30, 39, 59, 60, 61, 63):* impacted B10 and the A1 credit → resultant three domain events and four subscribers. @fig-a-uc04-ds-events.
 ]
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Appendix A diagrams: Mermaid sources -> Typst drawings in the SWE5006 UML kit (uml.typ).
+// Diagrams of the detailed design source book (folder appendix-a/) and of chapters 1-6: Mermaid
+// sources -> Typst drawings in the SWE5006 UML kit (uml.typ).
 //
 //   node docs/swe5001/report/scripts/appendix-diagrams.mjs            all sources
 //   node docs/swe5001/report/scripts/appendix-diagrams.mjs a-uc04-ac  only these ids
@@ -7,7 +8,7 @@
 //
 // Reads diagrams/appendix-a/src/<id>.mmd and writes diagrams/appendix-a/gen/<id>.typ, which
 // exports `kind` ("class" | "sequence" | "state" | "component" | "deployment" | "usecase" |
-// "activity") and `drawing(host: none)`. The appendix places
+// "activity") and `drawing(host: none)`. The report places
 // a drawing with `afig` from sections/appendix-a/lib-a.typ. The translation is `mermaid()` from
 // the SWE5006 report (docs/swe5006/report/scripts/typst.mjs); this script adds the checks that
 // translator leaves out: it ignores any line it does not understand, so here every line must
@@ -23,7 +24,7 @@ const repo = resolve(reportDir, '../../..');
 const srcDir = join(reportDir, 'diagrams/appendix-a/src');
 const genDir = join(reportDir, 'diagrams/appendix-a/gen');
 const UML = '/docs/swe5006/report/typst/uml.typ';
-// Appendix A diagrams are a-…; main-body figures are dNN-… or dNNx-… (the README diagram list).
+// Source book diagrams are a-…; main-body figures are dNN-… or dNNx-… (the README diagram list).
 const ID = /^(?:a|d[0-9]+[a-z]?)-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 class DiagramError extends Error {}
@@ -239,7 +240,7 @@ function validate(src) {
 // ---- Cross-references -----------------------------------------------------------
 
 // "@fig-a-uc04-ds-terms" (or @tbl-…, @sec-…) in a message, note or edge label becomes a real
-// reference, so the drawing prints "Figure A.43" and follows renumbering. Each Typst string
+// reference, so the drawing prints "Figure 6.4" and follows renumbering. Each Typst string
 // literal holding one is rewritten as content: "see @fig-x." -> [#"see "#ref(label("fig-x"))#"."].
 const REF = /@((?:fig|tbl|sec)-[a-z0-9]+(?:-[a-z0-9]+)*)/g;
 

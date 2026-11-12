@@ -1,13 +1,13 @@
 # UML diagrams: one kit for the whole report
 
-The report draws every UML diagram, in chapters 1–6 and in Appendix A ("Detailed Design Specifications", `sections/07-appendix-a.typ`), from a Mermaid or Mermaid-like source with one kit: the SWE5006 UML kit (`docs/swe5006/report/typst/uml.typ`, Visual Paradigm style). The kit draws seven kinds in one look (palette, role tints, strokes, 8.5 pt labels, frame with pentagon tab, scaling and landscape turn): class, sequence and state diagrams from Mermaid, and component, deployment, use-case and activity diagrams from the Mermaid-like grammar under [Component, deployment, use-case and activity diagrams](#component-deployment-use-case-and-activity-diagrams). The pilot part `sections/appendix-a/a06-uc4.typ` (UC4) shows every class and sequence convention below in use; `diagrams/kit-samples/*.mmd` holds one sample of each of the four newer kinds.
+The report draws every UML diagram, in chapters 1–6 and in the detailed design source book (folder `appendix-a/`, `sections/07-appendix-a.typ`; not part of the submitted report), from a Mermaid or Mermaid-like source with one kit: the SWE5006 UML kit (`docs/swe5006/report/typst/uml.typ`, Visual Paradigm style). The kit draws seven kinds in one look (palette, role tints, strokes, 8.5 pt labels, frame with pentagon tab, scaling and landscape turn): class, sequence and state diagrams from Mermaid, and component, deployment, use-case and activity diagrams from the Mermaid-like grammar under [Component, deployment, use-case and activity diagrams](#component-deployment-use-case-and-activity-diagrams). The pilot part `sections/appendix-a/a06-uc4.typ` (UC4) shows every class and sequence convention below in use; `diagrams/kit-samples/*.mmd` holds one sample of each of the four newer kinds.
 
 ```
 diagrams/appendix-a/
   src/<id>.mmd     editable Mermaid source, one diagram per file (commit)
   gen/<id>.typ     generated Typst drawing (commit with its source; never edit by hand)
 sections/appendix-a/
-  lib-a.typ        afig, atable, step and the appendix numbering
+  lib-a.typ        afig, atable, step and the source book numbering
   aNN-name.typ     one file per part (A.1 to A.14)
 scripts/
   appendix-diagrams.mjs   src -> gen (wraps mermaid() from docs/swe5006/report/scripts/typst.mjs)
@@ -65,7 +65,7 @@ classDiagram
 - A «create» label wraps inside the gap before the created head. If the wrap makes a figure print below 8 pt, shorten the label (`«create» EXPIRED`, not `«create» status EXPIRED`). A one-word name wider than its head box (a created head is one column wide) takes a soft hyphen (U+00AD) at a syllable break: `Member­ship`.
 - A one-branch `alt` whose branch ends the call (a reply such as `return false`, after which nothing else runs) is a `break`: draw it as one, or the bar of the call it ends stops inside the fragment.
 - A message to a «static» operation goes to a lifeline for the class itself (`participant Cls as TeamPricePolicy (entity)`), never to a lifeline that a later «create» brings into being.
-- Cross-references: `@fig-…`, `@tbl-…` or `@sec-…` inside a message, note or edge label becomes a real reference that follows renumbering (`Note over A,B: B7: @fig-a-uc04-ds-admit`). Never type "Figure A.12" by hand. Not allowed in fragment guards or names.
+- Cross-references: `@fig-…`, `@tbl-…` or `@sec-…` inside a message, note or edge label becomes a real reference that follows renumbering (`Note over A,B: B7: @fig-a-uc04-ds-admit`). Never type a figure number such as "Figure 6.12" by hand. Not allowed in fragment guards or names.
 
 ### Supported Mermaid
 
@@ -158,10 +158,10 @@ componentDiagram
 )
 ```
 
-- `afig(id, caption, lbl: auto, orient: auto, float: false)` puts the drawing in a numbered figure (Figure A.n) labelled `<fig-ID>`. It scales the drawing to the text width and the page height left under the caption. A class or state diagram that would print below 8 pt turns landscape on a flipped page of its own, caption included, when that helps. `orient: "landscape"` forces it (the kit only turns when landscape is at least 0.03 larger); `"portrait"` forbids it. Sequence diagrams never turn: split them.
+- `afig(id, caption, lbl: auto, orient: auto, float: false)` puts the drawing in a numbered figure (Figure 3.n in a chapter, Figure 6.n in source book part 6) labelled `<fig-ID>`. It scales the drawing to the text width and the page height left under the caption. A class or state diagram that would print below 8 pt turns landscape on a flipped page of its own, caption included, when that helps. `orient: "landscape"` forces it (the kit only turns when landscape is at least 0.03 larger); `"portrait"` forbids it. Sequence diagrams never turn: split them.
 - Call `afig` at the top level of the part file, never inside a list, block or table: a landscape figure needs a page break.
 - A drawing never splits from its caption. When a sequence diagram does not fit in the space left on the page, `afig` offers it that space if its labels still print at 8 pt or more there (scale 0.945); otherwise it moves to the next page at full size. To avoid half-empty pages, put a section's paragraphs before its run of figures rather than one paragraph before each full-page figure.
-- Code in any appendix table prints at 8 pt (set centrally in `lib-a.typ`); do not add part-local size rules.
+- Code in any source-book table prints at 8 pt (set centrally in `lib-a.typ`); do not add part-local size rules.
 - `atable(caption, lbl, columns:, header:, ..cells)` is the report's table style with a repeating header; long inline code in a cell wraps at `_ . / ( ,` and camelCase boundaries.
 - Caption: notation + viewpoint + what to notice, two sentences at most.
 
@@ -183,5 +183,5 @@ componentDiagram
 - Compile time is about 1 s per diagram (each class diagram is laid out once to decide its orientation and once to draw). The whole report will take minutes once every part is in: use the default preview (part alone) while writing.
 - Typst text: escape `#` as `\#`; `@word` is a reference and `<word>` a label, so put code such as `@Order(10)` or `Optional<UUID>` in backticks; `*` and `_` start strong and emphasis.
 - `typst query` is deprecated in Typst 0.15; the preview uses `typst eval`.
-- Floats are off by default: a floating figure escaped before the appendix heading and was lost at the end of the document in tests. A float never passes the next part or subsection heading: `07-appendix-a.typ` flushes pending floats before every level-2 and level-3 heading, so a figure always prints inside its own subsection.
+- Floats are off by default: a floating figure escaped before the source book title and was lost at the end of the document in tests. A float never passes the next part or subsection heading: `07-appendix-a.typ` flushes pending floats before every level-2 and level-3 heading, so a figure always prints inside its own subsection.
 - `ApplicationEventPublisher` is Spring's interface; it is the one framework type the UC4 diagrams draw, as the Observer's subject. Keep other framework and `java.util` types out of the boxes.

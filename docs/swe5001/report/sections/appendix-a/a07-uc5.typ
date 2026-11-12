@@ -44,7 +44,7 @@ An open team ends in exactly one of two ways. It *succeeds* when a paid join fil
 
 @fig-a-uc05-ac is the analysis model. The time actor Scheduler reaches the system only through the boundary `SchedulerTrigger`, as the Scheduler of SAD 03c's ATM example reaches "Monitor Balance". The success has no boundary of its own: it enters from UC4's `JoinTeamControl` (@fig-a-uc04-ac), drawn here only with the operation UC5 needs. `ResolveTeamControl` realises UC5 and applies the outcome to the orders. `Team` alone owns the transition rule `canMoveTo`, so no control decides by itself whether a team may change state. `TeamStatus` and `OrderStatus` are enumerations whose values the statecharts define (@sec-a-uc05-states).
 
-The entity names are those of A.6: `Team`, `Membership` and `Order` keep their meaning. Two objects are new: the boundary `SchedulerTrigger` and the control `ResolveTeamControl`. Two attributes are new because the flows need them: `Team.successTime` (B2) and `Order.cancelTime` (B8). The refund obligation of B9 belongs to UC6 and is drawn in @sec-a-uc06; UC5 reaches it only through the «extend» relationship, so it is not repeated here.
+The entity names are those of part 6: `Team`, `Membership` and `Order` keep their meaning. Two objects are new: the boundary `SchedulerTrigger` and the control `ResolveTeamControl`. Two attributes are new because the flows need them: `Team.successTime` (B2) and `Order.cancelTime` (B8). The refund obligation of B9 belongs to UC6 and is drawn in @sec-a-uc06; UC5 reaches it only through the «extend» relationship, so it is not repeated here.
 
 #afig("a-uc05-ac", [UC5 analysis class diagram (UML class notation, BCE stereotypes). The Scheduler uses `SchedulerTrigger`; the success enters from UC4's `JoinTeamControl`. `ResolveTeamControl` settles the orders, and `Team` alone decides whether it may move.])
 
@@ -78,12 +78,12 @@ On the success path `ResolveTeamControl` has no class of its own: it dissolves i
   columns: (1.15fr, 0.75fr, 2.6fr, 0.65fr, 0.95fr),
   header: ([Analysis object], [Stereotype], [Design elements (layer, module)], [Strategies], [Figures]),
   [`SchedulerTrigger`], [boundary], [Inbound adapter for time (bootstrap scheduling): `TeamExpirySweepJob.run()`, configured by `SchedulingProperties.ExpirySweep`. Spring's scheduler thread plays the Scheduler.], [S7], [@fig-a-uc05-dc-sweep],
-  [`JoinTeamControl`], [control (UC4)], [Its after-payment phase (A.6): `OrderFulfilmentAdapter` calls `PaidGroupDealService.joinConfirmed`.], [S1, S3], [@fig-a-uc05-dc-resolve],
+  [`JoinTeamControl`], [control (UC4)], [Its after-payment phase (part 6): `OrderFulfilmentAdapter` calls `PaidGroupDealService.joinConfirmed`.], [S1, S3], [@fig-a-uc05-dc-resolve],
   [`ResolveTeamControl` (success)], [control], [Entry point `PaidGroupDealService.joinConfirmed`, which publishes `TeamSucceeded`; the orders are confirmed by `OrderLifecycleSubscriber.onTeamSucceeded`.], [S1, S9], [@fig-a-uc05-dc-resolve, @fig-a-uc05-dc-events],
   [`ResolveTeamControl` (expiry: selection)], [control], [Entry point `TeamExpirySweepJob.run` → `LeasedJobRunner.run` → `GroupDealExpirySweeper.sweep` (no transaction).], [S1, S7], [@fig-a-uc05-dc-sweep],
   [`ResolveTeamControl` (expiry: one team)], [control], [Entry point `GroupDealExpiryService.expireOne` (one transaction); consequences `OrderLifecycleSubscriber.onTeamExpired` and, for UC6, `TeamExpiryRefundSubscriber.onTeamExpired`.], [S1, S8, S9], [@fig-a-uc05-dc-resolve, @fig-a-uc05-dc-events],
   [`Team`], [entity], [Aggregate root `GroupDeal` with `DealStatus`: `admit` → `joinPaid` (returns `PaidAdmission`), `expire` → `GroupDeal.expire`, `canMoveTo` → `DealStatus.canTransitionTo`. Port `PaidGroupDealRepository`, adapter `PaidGroupDealRepositoryImpl`, mapper `PaidGroupDealMapper`, table `biz_group_deal`.], [S1, S4, S8], [@fig-a-uc05-dc-resolve],
-  [`Membership`], [entity], [`biz_group_member` rows of the `GroupDeal` aggregate, whose domain record is `PaidMember` (A.6); read by the outbox writer to address the notices (@sec-a-notifications).], [S4, S9], [—],
+  [`Membership`], [entity], [`biz_group_member` rows of the `GroupDeal` aggregate, whose domain record is `PaidMember` (part 6); read by the outbox writer to address the notices (@sec-a-notifications).], [S4, S9], [—],
   [`Order`], [entity], [Aggregate root `Order` with `OrderStatus` (class not drawn here; @fig-a-uc04-dc-fulfil). `confirm` and `cancel` → the status-guarded bulk updates `OrderRepository.confirmByDealId` and `cancelByDealId`; table `biz_order`.], [S4, S9], [@fig-a-uc05-dc-events],
   [(none)], [—], [Introduced by a strategy, with no analysis counterpart: `LeasedJobRunner`, `LeasedJobRunner.LeaseAwareWork`, `SchedulerLeaseRepository`, `GroupDealExpirySweeper.Result` (S7); `ApplicationEventPublisher`, `TeamSucceeded`, `TeamExpired`, `IntegrationOutboxWriter`, drawn as one subscriber (its payloads `TeamSucceededV1` and `TeamExpiredV1`, mapper and recipient lookup: @fig-a-ntf-dc-produce), `OpenDealOfferCacheSubscriber` (S9). Its port `OpenDealOfferCache` (adapter `RedisOpenDealOfferCache`) is not drawn here; it is UC1's (@sec-a-uc01).], [S7, S9], [@fig-a-uc05-dc-sweep, @fig-a-uc05-dc-events],
 )
@@ -96,13 +96,13 @@ The representative persistence chain is `PaidGroupDealRepository` → `PaidGroup
 
 #afig("a-uc05-dc-sweep", [UC5 design class diagram, slice 1: the expiry sweep (UML, commerce-svc). The job hands its work to `LeasedJobRunner` as a `LeasedJobRunner.LeaseAwareWork` callback; the sweeper has no transaction and calls `expireOne` once per team.])
 
-#afig("a-uc05-dc-resolve", [UC5 design class diagram, slice 2: resolving one team in the group-buy module (UML, commerce-svc). Both entry points reach one aggregate, `GroupDeal`, whose `status` attribute (of type `DealStatus`, as in A.6) decides every move; each service only publishes the outcome as an event.])
+#afig("a-uc05-dc-resolve", [UC5 design class diagram, slice 2: resolving one team in the group-buy module (UML, commerce-svc). Both entry points reach one aggregate, `GroupDeal`, whose `status` attribute (of type `DealStatus`, as in part 6) decides every move; each service only publishes the outcome as an event.])
 
 #afig("a-uc05-dc-events", [UC5 design class diagram, slice 3: the subscribers of a team's resolution (UML, commerce-svc). No arrow leads from the event sources to the order, payment, outbox or cache code; each consequence is one subscriber. The outbox writer's own collaborators are in @fig-a-ntf-dc-produce.])
 
 === Design Sequence Diagrams <sec-a-uc05-ds>
 
-Each design sequence retells part of @tbl-a-uc05-flows; the step tags in the notes link the two. A `critical` fragment is a database transaction. Listener calls follow the convention of A.6: they come from the transaction owner (`:TransactionTemplate` in settlement, the `@Transactional` proxy of `GroupDealExpiryService` in expiry), synchronously on the committing thread, through Spring's transaction synchronisation. The `BEFORE_COMMIT` subscribers run in `@Order` sequence inside the transaction, so an exception in any of them rolls the resolution back; `AFTER_COMMIT` subscribers cannot undo it.
+Each design sequence retells part of @tbl-a-uc05-flows; the step tags in the notes link the two. A `critical` fragment is a database transaction. Listener calls follow the convention of part 6: they come from the transaction owner (`:TransactionTemplate` in settlement, the `@Transactional` proxy of `GroupDealExpiryService` in expiry), synchronously on the committing thread, through Spring's transaction synchronisation. The `BEFORE_COMMIT` subscribers run in `@Order` sequence inside the transaction, so an exception in any of them rolls the resolution back; `AFTER_COMMIT` subscribers cannot undo it.
 
 *Success.* UC5 draws no success sequence of its own, because UC4 already shows it. The filling join is `GroupDeal.joinPaid` returning `teamCompleted: true`, after which `PaidGroupDealService` publishes `TeamSucceeded` (@fig-a-uc04-ds-admit). B3 confirms the orders at `BEFORE_COMMIT` and not at once, because the joiner's own order is saved by UC4 B8 after the admission; B4 writes the outbox row and evicts the cache (@fig-a-uc04-ds-events).
 
@@ -176,7 +176,7 @@ Four patterns are in the UC5 code; @tbl-a-uc05-patterns maps their roles to clas
   columns: (auto, 1fr, 1.6fr, auto),
   header: ([Step], [Analysis message], [Design operations], [Figures]),
   [B1], [`Team.admit`], [`OrderFulfilmentAdapter` → `PaidGroupDealService.joinConfirmed` → `GroupDeal.joinPaid` returns `PaidAdmission` with `teamCompleted`], [@fig-a-uc04-ds-admit],
-  [B2], [`Team.canMoveTo(SUCCEEDED)`], [`GroupDeal.requireJoinWindow` → `DealStatus.canTransitionTo`; new snapshot `SUCCEEDED` with `successTime`; persisted by `insertJoinedMember` (A.6)], [@fig-a-uc04-ds-admit],
+  [B2], [`Team.canMoveTo(SUCCEEDED)`], [`GroupDeal.requireJoinWindow` → `DealStatus.canTransitionTo`; new snapshot `SUCCEEDED` with `successTime`; persisted by `insertJoinedMember` (part 6)], [@fig-a-uc04-ds-admit],
   [B3], [`teamFilled`, `Order.confirm` (loop)], [«create» `TeamSucceeded`; `ApplicationEventPublisher.publishEvent`; at `BEFORE_COMMIT` `OrderLifecycleSubscriber.onTeamSucceeded` → `OrderRepository.confirmByDealId`], [@fig-a-uc04-ds-admit, @fig-a-uc04-ds-events],
   [B4], [— (design only)], [`IntegrationOutboxWriter.onTeamSucceeded` (its rows: @sec-a-notifications); at `AFTER_COMMIT` `OpenDealOfferCacheSubscriber.onTeamSucceeded` (evicts the cached offer)], [@fig-a-uc04-ds-events],
   [B5], [`tick`, `expireDue`], [`TeamExpirySweepJob.run` → `LeasedJobRunner.run` → `SchedulerLeaseRepository.tryAcquire`; `LeasedJobRunner.LeaseAwareWork.run` = `TeamExpirySweepJob.sweepOnce`], [@fig-a-uc05-ds-sweep],
