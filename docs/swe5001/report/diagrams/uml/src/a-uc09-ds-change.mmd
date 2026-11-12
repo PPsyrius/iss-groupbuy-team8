@@ -17,7 +17,7 @@ sequenceDiagram
     end
     critical REQUIRED, READ COMMITTED, 10 s
         App->>App: lockForChange(id, expectedVersion, actorId)
-        App->>Repo: lockById(id): lock 6, product row (empty: E10 PRODUCT_NOT_FOUND)
+        App->>Repo: lockById(id): row lock (empty: E10 PRODUCT_NOT_FOUND)
         Repo-->>App: Optional(Product)
         App->>Users: requireActive(actorId)
         App->>Prod: requireVersion(expectedVersion)

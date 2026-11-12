@@ -20,7 +20,7 @@ sequenceDiagram
     end
     opt the page is not empty
         Ctl->>P: B2: displayFieldsOf(products)
-        P-->>Ctl: title and image of each listing still offered (A3: others absent)
+        P-->>Ctl: title and image of each listing not deleted (A3: deleted ones absent)
     end
     Ctl->>UI: B4: showTeams(rows, total)
     UI-->>Buyer: B4: rows under Active, Completed and Refunded

@@ -16,7 +16,7 @@ sequenceDiagram
         Ctl->>TA: revise(id, detailsA, 3, admin1)
         critical txA: REQUIRED, READ COMMITTED, 10 s
             TA->>Repo: lockById(id)
-            Repo->>Map: selectActiveByIdForUpdate(id): lock 6, product row
+            Repo->>Map: selectActiveByIdForUpdate(id): row lock
             Repo-->>TA: v3, row locked
             TA->>P3: requireVersion(3)
             TA->>P3: revise(detailsA)

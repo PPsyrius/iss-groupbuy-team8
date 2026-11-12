@@ -17,7 +17,7 @@ sequenceDiagram
             Svc->>Repo: finishEvent(eventId, null, "UNKNOWN_PAYMENT")
         end
         Svc->>Port: lockForSettlement(quote): lock 1 team, lock 2 intent
-        Svc->>Repo: lock(id): lock 4, the payment row
+        Svc->>Repo: lock(id): lock 3, the payment row
         Svc->>Svc: matches(payment, session)
         break session differs from the frozen payment (A12)
             Svc->>Repo: review(id, "PROVIDER_MISMATCH", operator)

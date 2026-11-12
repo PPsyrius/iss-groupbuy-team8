@@ -13,7 +13,7 @@ sequenceDiagram
 
     Ctl->>App: B7: configure(productId, command, actorId)
     critical REQUIRED, READ COMMITTED, 10 s
-        App->>Repo: lockById(productId): lock 6
+        App->>Repo: lockById(productId): row lock
         App->>Users: requireActive(actorId)
         App->>Prod: requireVersion(expectedVersion)
         App->>Prod: configureTeamTerms(targetSize, lifetimeSeconds)
@@ -24,7 +24,7 @@ sequenceDiagram
         App->>Repo: updateTeamTerms(revised, expectedVersion, actorId)
         opt team price sent (B7), joining this transaction
             App->>Prices: configure(productId, actorId, price)
-            Prices->>Repo: lockById(productId) in lockProduct: lock 6 (held in B7)
+            Prices->>Repo: lockById(productId) in lockProduct: row held in B7
             Prices->>Users: requireActive(actorId)
             Prices->>PRepo: findLatestPolicy(productId)
             break expectedVersion is not the latest policy version (E8)

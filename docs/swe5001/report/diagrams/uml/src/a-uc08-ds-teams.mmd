@@ -33,7 +33,7 @@ sequenceDiagram
         else B2: one batch read of the page's products, joining the transaction
             App->>Ad: findByProductIds(productIds)
             Ad->>PR: findDisplaysByIds(productIds)
-            PR-->>Ad: List(ProductDisplay), inactive products absent (A3)
+            PR-->>Ad: List(ProductDisplay), deleted products absent (A3)
             loop each ProductDisplay
                 Ad->>Ad: toDisplay(product)
             end

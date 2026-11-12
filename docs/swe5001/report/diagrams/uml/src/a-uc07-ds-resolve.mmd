@@ -19,12 +19,15 @@ sequenceDiagram
     end
     App->>SI: isWellFormedRef(ref)
     SI-->>App: boolean
+    break malformed reference (A5)
+        App-->>IC: INVITE_NOT_FOUND (GROUPBUY_404_002)
+    end
     App->>SIR: findByRef(ref)
     Note over SIR: @fig-a-uc07-ds-lookup
     SIR-->>App: Optional(ShareInvite)
     App->>GDR: findById(dealId)
     GDR-->>App: Optional(GroupDeal)
-    break malformed, unknown or deleted reference, or its team gone (A5)
+    break unknown or deleted reference, or its team gone (A5)
         App-->>IC: INVITE_NOT_FOUND (GROUPBUY_404_002)
     end
     App->>RU: publicNickname(sharerUserId)
