@@ -3,7 +3,7 @@
 
 == Where to See the System Working
 
-The system is shown through recorded runs and can be rebuilt by one promotion (§4.2), as on 10 and 11 November; @tbl-demo lists where each part can be seen. The runtime is normally destroyed between sessions (AD-12); at the status date the 11 November session was still up (§2.2). @tbl-delivery-runs (§5.3) lists the runs from 9 November.
+The system is shown through recorded runs and can be rebuilt by one promotion (§4.2), as on 10 and 11 November; @tbl-demo lists where each part can be seen. The runtime is normally destroyed between sessions (AD-12); the 11 November session was still up at the status date and was destroyed on 12 November (§2.2). @tbl-delivery-runs (§5.3) lists the runs from 9 November.
 
 #figure(
   table(
