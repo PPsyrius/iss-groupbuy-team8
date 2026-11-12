@@ -118,21 +118,21 @@ Most delivery milestones were met on time or early. Three slipped: the monolith 
 
 === Effort per member
 
-We spent about 50 person-days on SWE5001 up to 19 October, which matches the briefing's guideline of about ten person-days for each of the five members in total (briefing Q8); Liu Jin (12.5) and Pan (11.5) are above ten. All five members agreed the split in @tbl-effort on 19 October and declared it in the presentation. The split does not cover phase D (22 October to 16 November: the answers to the remarks and this report), for which no estimate was agreed.
+We spent about 50 person-days on SWE5001 up to 19 October, which matches the briefing's guideline of about ten person-days for each of the five members in total (briefing Q8); Liu Jin (12.5) and Pan (11.5) are above ten. All five members agreed the split to 19 October and declared it in the presentation. Phase D (22 October to 16 November: the answers to the remarks and this report) added about 21.5 person-days, agreed by the team in November, so SWE5001 took about 71.5 person-days in total (@tbl-effort). That is above the guideline: phase D was not in the plan, and answering the remarks needed new AWS sessions, load-test reruns and a report rewrite.
 
 #figure(
   table(
-    columns: (1.3fr, 0.6fr, 3fr),
-    table.header([Member], [Effort (pd)], [Main SWE5001 contributions]),
-    [Liu Jin], [12.5], [AWS stacks and the release pipeline; the service split; physical design (§3.2)],
-    [Panpakorn Siripanich (Pan)], [11.5], [Messaging infrastructure, auto-scaling and the dashboard; shared login session; load tests],
-    [Yu Qianshuo (Yorik)], [9], [Outbox and relay; failure drills; detailed design (§3.2.4)],
-    [Lim Jiechao], [8.5], [Team lead; AWS Organization, SCP guardrails and Identity Center; architecture options study and proof of concept; presentation],
-    [Wang Ziang (Eric)], [8.5], [Notification consumer and dead-letter redrive; demonstration lead; logical design and Domain-Driven Design (DDD) models (§3.1)],
-    [*Total*], [*≈ 50*], [],
+    columns: (1.3fr, 0.55fr, 0.55fr, 0.5fr, 2.6fr),
+    table.header([Member], [To 19 Oct (pd)], [Phase D (pd)], [Total (pd)], [Main SWE5001 contributions]),
+    [Liu Jin], [12.5], [4], [16.5], [AWS stacks and the release pipeline; the service split; physical design (§3.2); report framework],
+    [Panpakorn Siripanich (Pan)], [11.5], [8], [19.5], [Messaging infrastructure, auto-scaling and the dashboard; shared login session; load tests; in phase D the data subnets, the AWS sessions and the V3 reruns],
+    [Yu Qianshuo (Yorik)], [9], [1.5], [10.5], [Outbox and relay; failure drills; detailed design (§3.2.4)],
+    [Lim Jiechao], [8.5], [5], [13.5], [Team lead; AWS Organization, SCP guardrails and Identity Center; architecture options study and proof of concept; presentation; report editor],
+    [Wang Ziang (Eric)], [8.5], [3], [11.5], [Notification consumer and dead-letter redrive; demonstration lead; logical design and Domain-Driven Design (DDD) models (§3.1)],
+    [*Total*], [*≈ 50*], [*≈ 21.5*], [*≈ 71.5*], [],
   ),
   kind: table,
-  caption: [Effort per member in person-days (pd), agreed by all members on 19 October 2026. Source: #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6].],
+  caption: [Effort per member in person-days (pd). The split to 19 October was agreed by all members on 19 October 2026; the phase D figures were agreed in November. Source: #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6].],
 ) <tbl-effort>
 
-*How the figures were obtained.* Nobody logged hours, although the plan asked each pull request to record them. We therefore summed the planned hours of the issues each member delivered and agreed the split from that sum. The figures are an agreed estimate, not a measurement; the range of 8.5–12.5 person-days reflects that Liu Jin carried phase A and Pan most of the messaging and scaling work of phase B.
+*How the figures were obtained.* Nobody logged hours, although the plan asked each pull request to record them. We therefore summed the planned hours of the issues each member delivered and agreed the split from that sum. The figures are an agreed estimate, not a measurement; the range of 8.5–12.5 person-days reflects that Liu Jin carried phase A and Pan most of the messaging and scaling work of phase B. For phase D we counted the days on which each member wrote, reviewed or ran AWS sessions (pull requests, commits, reviews and workflow runs). Writing with AI assistance counts as the time spent directing and checking it, not as full days; deployment and load-test sessions on AWS count in full, because they run for hours. That is why Pan carries the largest share of phase D.
