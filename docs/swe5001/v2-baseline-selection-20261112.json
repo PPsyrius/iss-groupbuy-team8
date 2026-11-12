@@ -1,0 +1,80 @@
+{
+  "verifiedAtUtc": "2026-11-12T06:17:43.903295+00:00",
+  "scope": "Documentation-only selection of 11 November V2 as primary in the current combined report; not newer peer integration",
+  "baseCommit": "b9f52ea846968195b6cb07ed29c3077909c4ec8e",
+  "sourceChecks": {
+    "tenPlateauRowsMatchCalibration": true,
+    "allRunP95Ms": 30,
+    "peakPlateauP95Ms": 18,
+    "sourceAndGeneratorAttributionVerified": true,
+    "observerLimitRetained": true,
+    "octoberRetainedAsHistorical": true,
+    "r4AvailabilitySecurityUnchanged": true,
+    "metricsAndThresholdsUnchanged": true,
+    "fourV2CitationsExistAtPublishedCommit": true,
+    "originalV2EvidenceUnchanged": true,
+    "outlineUsesSelectedV2": true,
+    "nfrRows": 74,
+    "nfr64Words": 75,
+    "dailyLogBullets": 5,
+    "sourceHashes": {
+      "docs/swe5001/report/sections/04-quality-attributes.typ": "3bc11d5a5385698c8df1b5537caa4ac6473b94137e65840eca570c4ad9e9a437",
+      "docs/quality/nfr-register.md": "6ec144b649b78bbfc4598015aa6eece41b05594894df871a86e02d966b6d86ad",
+      "docs/agile/sprint-04/log/2026-11-12.md": "81d695751354691df0dcfdf6453df4339402f520985c3a7747d0fa10204182fa",
+      "docs/swe5001/evidence/20261112-issue-789/pr-draft.md": "d46ceb6cb1ed2d3516931db797e117f48d6eb54e64d35c50c0acd60ce2035926",
+      "docs/swe5001/v2-baseline-selection-20261112.md": "601ef7c3c740353273f5a9125f7d60e3a9aa0a48cca7aecd6ddc056a6e8e7fce",
+      "docs/swe5001/report/README.md": "f405f5d57f7f76936e08ddf2bc5e00c61ed86e9f5561a5ea85714b5ecfac34cd",
+      "docs/swe5001/evidence/20261112-issue-789/README.md": "15a5bda9e80094acd5ed0aea2b9ba29c0c503a2d5f1f99af0ad2b3fae1fac52c"
+    }
+  },
+  "sourceCommand": "python <private-review>/check-source.py: compare all ten table rows with retained calibration, summary and observer disposition; check unchanged metrics and R4/availability/security sections",
+  "closureRegression": {
+    "command": "python docs/swe5001/evidence/20261112-issue-789/check_closure.py --repo . --peer-root <recorded-02c7b822-corrected-fixture>",
+    "passed": 56,
+    "failed": [],
+    "peerBase": "02c7b822; not the advanced live peer head"
+  },
+  "retention": {
+    "mode": "read-only preservation check, NOT archive/removal readiness",
+    "candidatesPresentAndUnchanged": 485,
+    "protectedPathsPresent": 557,
+    "affectedHistoricalManifestsUnchanged": 25,
+    "hashBoundCandidates": 456,
+    "privacyOriginalsUnchanged": 44,
+    "repositoryFilesRemoved": 0,
+    "durableArchiveVerified": false,
+    "metadataExposureResolved": false
+  },
+  "r4Verifier": {
+    "mode": "check",
+    "csvFiles": 3,
+    "browseMinuteBins": 30,
+    "scalingActions": 4,
+    "serviceObservations": 264,
+    "cloudwatchPoints": 793,
+    "serverMinutes": 31,
+    "canonicalAnalyzerExitPreserved": 1
+  },
+  "localMarkdownFileLinksChecked": 198,
+  "dailyLogBullets": 5,
+  "pdfBuild": {
+    "attempted": true,
+    "exitCode": 1,
+    "status": "blocked: Docker Desktop Linux engine unavailable",
+    "newPdfProduced": false,
+    "oldPdfNotReusedAsCurrentVerification": true
+  },
+  "secretScan": {
+    "attempted": true,
+    "status": "blocked: Docker Desktop Linux engine unavailable",
+    "reportProduced": false,
+    "findings": null,
+    "earlierScanNotReusedAsCurrentPass": true
+  },
+  "remaining": "Rebuild/review combined chapters and run fresh scan when Docker is available; carry the V2 selection into the latest peer report during reconciliation.",
+  "noApplicationCodeOrThresholdChanges": true,
+  "noCloudOrLoadActions": true,
+  "historicalReceiptsUnchanged": true,
+  "stagedFiles": 0,
+  "committedPushedOrPrOpenedByThisTask": false
+}

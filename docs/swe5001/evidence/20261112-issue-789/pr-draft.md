@@ -1,15 +1,15 @@
 # PR draft
 
-**Title:** `docs(swe5001): publish validation evidence, reconcile report audits and address #789`
+**Title:** `docs(swe5001): consolidate evidence, audits and #789 corrections`
 
 **Base:** `dev` · **Head:** `docs/swe5001-must-fix-evidence`
 
 ## What
 
-Publish the retained validation evidence, reconcile three report audits and address #789's nine original items plus ten review points. Covers `d521e57a`, `1007f6b7` and `af2ec5b2`, with pre-PR documentation cleanup.
+Combine evidence restoration, three-audit report reconciliation and #789's nine original items plus ten review points, including pre-PR cleanup and the latest V2 baseline selection.
 
 - Evidence/tooling: retain campaign provenance and diagnostics; bind k6's reviewed scaling-policy target independently of workload, with regression tests and unchanged acceptance thresholds.
-- Report: select R4-only V3 results; correct architecture/security/delivery/cost claims, logical/topology views, workload matrix and the 29-table typed dictionary.
+- Report: select the latest 11 November V2 baseline and R4-only V3 results, retaining earlier runs as history; correct architecture/security/delivery/cost claims, topology views, workload matrix and the 29-table typed dictionary.
 - Preservation: keep original R4 data/receipts and frozen metadata, with a dated publication addendum; add privacy projections and non-destructive retention safeguards.
 - Close-out: record operator runtime/generator retirement separately from failed nightly cleanup; retain private chargeable archives and one encrypted disk snapshot.
 - Peer handoff: provide the exact-base 23-file correction patch against `02c7b822`, preserving the editor's structure/style.

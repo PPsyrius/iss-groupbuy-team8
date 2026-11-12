@@ -11,6 +11,7 @@ Each run is judged on completed versus offered requests/s, client p95 latency, b
 
 #let perf-root = "https://github.com/PPsyrius/iss-groupbuy-team8/blob/b80debcd8b8cdeb1272219758789e1a9927b9d7d/"
 #let perf-source(path, body) = link(perf-root + path, body)
+#let v2-source(file, body) = link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-load-reruns/v2/" + file, body)
 #let r4-source(file, body) = link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-v3-r4/" + file, body)
 #let released-source(path, body) = link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/3a893036d70d028b29ae13ebf820283571c1ae00/" + path, body)
 
@@ -25,17 +26,17 @@ The dated AWS sessions targeted the SWE5001 CloudFront endpoint in Singapore (`a
 
 The workload exercises the catalogue-read portion of UC1, whose design is traced in Appendix A.3 and A.14. It does not verify the full NFR-15 scenario: that requirement uses 100 concurrent users, includes JOIN and My Orders, and bounds expiry lag. R4's arrival-rate browse result is assessed under NFR-64; those business-operation checks remain outstanding.
 
-*Evidence snapshots.* V2 retains its historical source pins. R4's package and chart are published at immutable evidence commit `0405b1f0`, not yet merged into `dev`; the tested application remains released source `3a893036`. Earlier V3 campaigns remain history, not additional selected results. The owner confirmed for \#789 that 10 November and r1/r2/r3 all used the same personal laptop through Docker Desktop; r4 moved to AWS. That confirms the machine/runner, not identical network conditions or a common cause of every earlier failure. #pending[Editor: the later \#789 factual follow-up still needs publication and final citation review; do not confuse an evidence commit with the tested application or `dev` integration.]
+*Evidence snapshots.* The selected V2 baseline is the 11 November released-monolith run; 16 October remains historical corroboration. V2 and R4 evidence is published at immutable commit `0405b1f0`, not yet merged into `dev`; the tested application remains released source `3a893036`. Earlier V3 campaigns remain history, not additional selected results. The owner confirmed for \#789 that 10 November and r1/r2/r3 all used the same personal laptop through Docker Desktop; r4 moved to AWS. That confirms the machine/runner, not identical network conditions or a common cause of every earlier failure. #pending[Editor: the later \#789 factual follow-up still needs publication and final citation review; do not confuse an evidence commit with the tested application or `dev` integration.]
 
 #figure(
   table(
     columns: (0.8fr, 2.1fr, 2.1fr),
     table.header([AWS run (2026)], [Topology and provenance], [Offered load and generator]),
-    [16 October: V2, two runs], [One stable monolith task. Image source `6c7a99ab`; tooling `767d980b`. Route, image digest and task observations retained in the dated record.], [Ten 60 s plateaus: 10, 20, 40, 60, 80, 100, 125, 150, 175, 200 RPS. Windows/Docker generator, 100 preallocated / 400 maximum virtual users (VUs).],
+    [11 November: V2], [One stable monolith task, revision 7. Released source `3a893036`; tooling `b911ea63`. Route/digest snapshots and 47 bracketing task observations retained.], [Ten 60 s plateaus: 10, 20, 40, 60, 80, 100, 125, 150, 175, 200 RPS. Windows/Docker generator, 1,000 preallocated / maximum virtual users (VUs).],
     [11 November: V3 R4], [Released source `3a893036`; commerce 1 vCPU / 2 GiB, RDS `db.t4g.small`, pools five. Starts at one commerce task, maximum six. Tooling base `b911ea63` plus disclosed hashed policy-binding/orchestration changes.], [40 → 200 RPS over 5 min; → 600 over 10 min; hold 10 min; → zero over 5 min. Dedicated AWS T3a Unlimited generator; k6 container eight vCPUs / 8 GiB, 1,000 preallocated / maximum VUs.],
   ),
   kind: table,
-  caption: [Workload and provenance for the retained #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md", [V2 baseline]) and selected #r4-source("README.md", [V3 R4 campaign]). Different revisions, sizing and generator locations prevent a controlled capacity comparison.],
+  caption: [Workload and provenance for the selected 11 November #v2-source("V2-REVIEW.md", [V2 baseline]) and #r4-source("README.md", [V3 R4 campaign]). The released application source is the same, but topology, sizing and generator location differ; these are not a controlled capacity comparison.],
 ) <tbl-performance-workloads>
 
 === Metrics and acceptance
@@ -61,34 +62,34 @@ The #perf-source("docs/swe5001/impl-verification-observability.md", [verificatio
   caption: [Load-test metric definitions and original scenario thresholds retained for R4. Native k6 thresholds, event-relative analysis and controlled linearity are distinct checks. Queue depth/age, drain time and dead-letter counts belong to V4.],
 ) <tbl-performance-metrics>
 
-=== Baseline results: 16 October 2026
+=== Selected V2 baseline: 11 November 2026
 
-Verified on AWS: both V2 runs completed exactly 57,600 workload requests plus one setup request, with zero browse failures and zero drops. Every plateau met its p95 and error thresholds. The repeat lasted 601.035 s including the terminal scheduler guard; its all-run client p50/p95/p99 were 16/25/53 ms. These all-run percentiles do not replace the per-plateau checks below. #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-summary.json", [Repeat summary]) · #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/v2-repeat-calibration.json", [Calibration]).
+Verified on AWS at released source `3a893036`: the selected V2 run completed all 57,600 browse requests through 200 RPS, with zero errors/drops and all-run client p95 30 ms. All ten plateaus passed p95 < 500 ms and error rate < 1%; the 200-RPS plateau p95 was 18 ms. This is the latest released-monolith baseline, not a selection for uniformly lower latency. #v2-source("V2-REVIEW.md", [Run review]) · #v2-source("summary.json", [Summary]).
 
 #figure(
   table(
     columns: (1fr, 1.4fr, 1.25fr, 1.25fr),
-    table.header([Offered RPS], [Completed per run], [First p95 (ms)], [Repeat p95 (ms)]),
-    [10], [600], [57.05], [53],
-    [20], [1,200], [34], [39.05],
-    [40], [2,400], [26], [27],
-    [60], [3,600], [43.05], [28],
-    [80], [4,800], [28], [23],
-    [100], [6,000], [26], [23],
-    [125], [7,500], [23], [42],
-    [150], [9,000], [26], [23],
-    [175], [10,500], [35], [23],
-    [200], [12,000], [49], [23],
+    table.header([Offered RPS], [Completed requests], [p95 (ms)], [Error rate (%)]),
+    [10], [600], [112.05], [0],
+    [20], [1,200], [36.05], [0],
+    [40], [2,400], [27.05], [0],
+    [60], [3,600], [52], [0],
+    [80], [4,800], [18], [0],
+    [100], [6,000], [17], [0],
+    [125], [7,500], [17], [0],
+    [150], [9,000], [19], [0],
+    [175], [10,500], [47], [0],
+    [200], [12,000], [18], [0],
   ),
   kind: table,
-  caption: [V2 AWS results, 16 October 2026. Each row is a 60 s plateau; both runs passed all rows. Source: #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md", [dated baseline record and summaries]).],
+  caption: [Selected V2 AWS results, 11 November 2026. Each row is a 60 s plateau; all passed. p95 is rounded to two decimal places where needed. Source: #v2-source("calibration.json", [Retained calibration]).],
 ) <tbl-performance-v2>
 
-The repeat's sampled service observations bracketed the run and showed one running/desired monolith, no pending task and the same task definition. Sampled generator-container CPU peaked at 15.89%; host observations covered only part of the run. The first run had no usable generator-resource capture. Most importantly, neither run reached saturation: the analyzer's `kneeRps=200` means the highest tested passing rate, not a located capacity knee. It is a tested lower bound for this monolith revision and working set, not proof of capacity per distributed task.
+Forty-seven hash-verified observations bracket execution with one stable monolith task and a maximum 17-second gap. The observer later exited 255 after a container-role metadata HTTP 500: the workload window is covered, but the planned full collection did not complete and AWS server-metric corroboration is missing. The analyzer's `kneeRps=200` is the highest tested passing rate, not observed saturation or capacity per distributed task. #v2-source("observer-resolution.json", [Coverage disposition]).
 
-=== Released monolith baseline: 11 November 2026
+=== Historical V2 corroboration: 16 October 2026
 
-Verified on AWS at released source `3a893036`: the fresh V2 completed 57,600 browse requests through 200 RPS, with zero errors/drops, all-run p95 30 ms and 18 ms p95 at the highest plateau. Forty-seven retained observations bracket execution with one stable task; the observer later exited 255, so full collector completion and AWS server-metric corroboration are not claimed. This is a tested lower bound, not a saturation knee or a controlled per-task comparison with R4. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-load-reruns/README.md")[V2 record] · #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261111-load-reruns/v2/observer-resolution.json")[Coverage disposition].
+Verified on AWS: both October runs completed 57,600 workload requests with zero errors/drops and passed every plateau through 200 RPS. The repeat's overall p95 was 25 ms and its 200-RPS plateau p95 was 23 ms, versus November's 30 ms and 18 ms. October provides repeatability and generator-resource evidence; neither campaign reached saturation. Different application revisions and generator configurations prevent attributing these latency differences to a performance improvement or regression. The complete historical table, summaries and partial-host-coverage limits remain in the #perf-source("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md", [October evidence record]).
 
 *Historical diagnostic, not selected R4 results.* On 19 October AWS observations, one 0.5-vCPU commerce task served 272–286 requests/s with ALB p50 about 1.1 s and CPU 90–100%; three tasks later served 425–461 requests/s with ALB p50 5–7 ms. That campaign failed the latency/drop gates, including 155,554 dropped iterations; it is evidence of historical saturation symptoms and scale-out, not accepted per-task capacity, controlled linearity or a capacity limit for R4's different sizing. #link("https://github.com/PPsyrius/iss-groupbuy-team8/blob/0405b1f0cbfd5442cb3dfef084c69f785b272d82/docs/swe5001/evidence/20261019-v3-autoscaling/README.md")[19 October record].
 

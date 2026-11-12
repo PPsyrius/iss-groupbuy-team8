@@ -163,7 +163,7 @@ Template headings are fixed. "Must contain" lists what an assessor will look for
 
 | Section | Owner | Must contain | Sources |
 |---|---|---|---|
-| 4.1 Performance | Pan | F1: workload model, metric definitions and thresholds, baseline and selected R4 results with limits; caching/load balancing; scaling policy; measured capacity boundary | [`perf/k6/`](../../../perf/k6/README.md), [V2 baseline](../evidence/20261016-http-baseline-dashboard/README.md), [V3 R4](../evidence/20261111-v3-r4/README.md) |
+| 4.1 Performance | Pan | F1: workload model, metrics/thresholds, selected V2/R4 results and limits; caching/load balancing; scaling policy; measured capacity boundary | [`perf/k6/`](../../../perf/k6/README.md), [11 November V2](../evidence/20261111-load-reruns/v2/V2-REVIEW.md), [October history](../evidence/20261016-http-baseline-dashboard/README.md), [V3 R4](../evidence/20261111-v3-r4/README.md) |
 | 4.2 Availability | Yu Qianshuo | Two zones, single-zone data tier, self-healing, rollback, failure drills with "AWS" or "local only" stated per result | Evidence `20261015-local-failure-rehearsal`, deck backup B12 |
 | 4.3 Security | Pan | Layered controls: Organization guardrails, Identity Center, OIDC, network isolation, encryption, secrets, pipeline scans; known gaps | Deck slide 22, [`infra/swe5001/github/`](../../../infra/swe5001/github/) |
 | 4.4 Extensibility and Maintainability | Lim | Measured reuse (audit queue), service template, architecture rules, API contract checks | Deck slide 11 |
