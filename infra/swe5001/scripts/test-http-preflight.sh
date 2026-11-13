@@ -33,7 +33,10 @@ aws() {
        headers:[{HeaderName:"X-Origin-Secret",HeaderValue:$secret}]}]}' ;;
     'ecs describe-services') jq -nc --arg service "$service" --arg group "$group" '
       {services:[{serviceName:$service,loadBalancers:[{targetGroupArn:$group,containerName:$service,containerPort:8589}]}],failures:[]}' ;;
-    'ecs list-tasks') if [ "$FAULT" = extra_task ]; then printf '["task:1","task:2"]\n'; else printf '["task:1"]\n'; fi ;;
+    'ecs list-tasks')
+      if [ "$FAULT" = extra_task ]; then printf '["task:1","task:2"]\n';
+      elif [ "$FAULT" = two_tasks ]; then printf '["task:1","task:2"]\n';
+      else printf '["task:1"]\n'; fi ;;
     'ecs describe-tasks') printf '{"tasks":[],"failures":[]}\n' ;;
     'application-autoscaling describe-scalable-targets') printf '{"ScalableTargets":[]}\n' ;;
     'application-autoscaling describe-scaling-policies')
@@ -75,6 +78,13 @@ printf 'PASS V2 captures the monolith, not distributed commerce\n'
 bash "$dir/http-preflight.sh" v3 > "$work/report.json"
 grep -q -- '--services commerce-svc' "$CALLS"
 printf 'PASS V3 captures distributed commerce\n'
+for mode in v5 identity; do
+  FAULT=two_tasks bash "$dir/http-preflight.sh" "$mode" > "$work/drill.json"
+  jq -e --arg mode "$mode" '.mode == $mode' "$work/drill.json" > /dev/null
+  grep -q -- '--tasks task:1 task:2' "$CALLS"
+  if bash "$dir/http-preflight.sh" "$mode" > /dev/null 2>&1; then exit 1; fi
+  printf 'PASS %s captures two commerce tasks and refuses a one-task start\n' "$mode"
+done
 FAULT=cpu_headroom bash "$dir/http-preflight.sh" v3 > "$work/report.json"
 jq -e --arg policy "$CPU_POLICY" '.cpuHeadroom.alarms == [{name:"blocbuy-swe5001-commerce-cpu-headroom",namespace:"AWS/ECS",
   metric:"CPUUtilization",statistic:"Average",period:60,evaluationPeriods:1,datapointsToAlarm:1,threshold:70,

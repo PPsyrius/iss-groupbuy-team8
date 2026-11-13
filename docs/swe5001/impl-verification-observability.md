@@ -98,10 +98,14 @@ The [operator preparation guide](../../perf/k6/SCALING.md) documents local prepa
 
 ### V5 Self-healing
 
+2026-11-13 preparation (#458/#459): the [shared AWS session plan](aws-validation-session-plan.md) sequences V5, identity outage, V4 and V7 in one distributed environment and reuses lifecycle timings for V8. [Steady browse, read-only capture and offline poison helpers](../../perf/drills/README.md) are prepared and fixture-tested, not live drill evidence. Only replacement-generator preparation was separately authorized; application startup/load/faults still require approval.
+
 - Under steady load at 50% of the knee with 2 `commerce-svc` tasks, stop one task with `aws ecs stop-task`.
 - Expected: zero non-2xx responses in k6; ECS replaces the task within 2 minutes.
 
 ### V6 Safe deployment
+
+2026-11-13 scope reconciliation: #459 explicitly dropped this live drill on 11 October. The original design below is historical planning, **not implemented tooling**: there is no `BLOCBUY_FAIL_HEALTH` switch or failure workflow input. The shared session excludes V6 unless it is separately authorized, implemented and reviewed; existing circuit-breaker configuration alone is not a rollback measurement.
 
 - Inside a manual session started by `swe5001-env.yml` (`up` on `prod`), never through a promotion merge, roll onto the running service an image built with `BLOCBUY_FAIL_HEALTH=true` (a demo-only switch that makes the health endpoint return DOWN; guarded by profile `demo`, with a test asserting it is ignored otherwise). The drill's workflow input is added in Phase B of #376, before the baseline session; the promotion run itself has no rolling deployment.
 - Expected: circuit breaker triggers, service rolls back to the previous task definition, no user-visible errors, and `/blocbuy/swe5001/release/commerce-svc` still holds the previous digest.

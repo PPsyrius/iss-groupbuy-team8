@@ -129,7 +129,7 @@ export function baselineRequestLimit(stageSeconds = 60) {
   return BASELINE_RATES.reduce((sum, rps) => sum + rps * stageSeconds, 0);
 }
 
-function validateRoute(snapshot, current, service) {
+export function validateRoute(snapshot, current, service) {
   const route = snapshot.routing;
   const edge = route?.edge;
   const reject = () => { throw new Error('Unverified CloudFront/ALB route to the observed ECS service'); };

@@ -183,6 +183,8 @@ Record the outputs (redacted) and the Logs Insights result in the day log before
 
 ## 6. During the session
 
+For the separately approved V4/V5/identity/V7 campaign, use the [shared validation session plan](aws-validation-session-plan.md) for phase isolation, the reviewed V4-only runtime-plan exception, restoration, evidence and time budget. Preparing that plan or its stopped replacement generator does not authorize the application session. The November campaign must recheck current state and cleanup-role readiness rather than treating the historical October timing/cost allowances below as current guarantees.
+
 - **Do not merge into `prod`.** A promotion starts `swe5001-deploy`, whose `down` job destroys the session.
 - **Finish before 23:00 SGT.** The nightly `down` (`ENABLE_SWE5001_NIGHTLY_DOWN=true`) destroys `runtime` then.
 - Do not change `runtime` resources in the console or run Terraform locally against `runtime`; the next `down` would leave drift or leftovers.
