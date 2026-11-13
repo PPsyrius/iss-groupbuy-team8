@@ -31,3 +31,12 @@ output "initial_capacity" {
     capacity_provider_strategy    = aws_ecs_service.this.capacity_provider_strategy
   }
 }
+
+output "runtime_settings" {
+  description = "Declared task sizing and target warm-up for offline wiring checks, not live readback"
+  value = {
+    cpu                             = aws_ecs_task_definition.this.cpu
+    memory                          = aws_ecs_task_definition.this.memory
+    target_group_slow_start_seconds = aws_lb_target_group.this.slow_start
+  }
+}

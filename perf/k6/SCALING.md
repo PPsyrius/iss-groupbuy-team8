@@ -48,6 +48,10 @@ The analyzer requires exact 2,000 source teams/expired teams/outbox events/publi
 
 ## Local verification and limits
 
+### 13 November authorized fixture-only R2
+
+The [revised-trial record](../../docs/swe5001/evidence/20261113-aws-validation/v4-r2-plan.md) preserves the original 2,000-team R1 scaling failure and the owner's separate approval for one bounded, explicitly identified count-only R2 up to 20,000 real teams. This is a revised test workload, not permission to slow consumers, change the target/policy, force workers or relabel R1. Preserve the default 2,000-team procedure and bind every revised count through confirmation, seed/report and analysis. Complete source/effect reconciliation and final drain before stopping the larger collection; a source-paced temporary zero is not full completion. Longer duration may expose a real scaling signal but cannot guarantee overload or a pass.
+
 Scale-out must be observed before the final quiet interval starts (`drainAfterScale`); first reaching four tasks during or after that interval fails acceptance, even if the queue drains and all source/effect counts match. If scale-out and the first quiet sample coincide, sampling cannot establish that order and the analyzer fails closed.
 
 ```bash

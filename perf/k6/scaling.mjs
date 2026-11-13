@@ -111,12 +111,14 @@ export function v3Accumulator(report, evidence) {
 }
 
 /** Analyze sampled queue drain plus exact source/effect counts; empty queues alone never pass. */
-export function analyzeV4(seed, observations, report) {
-  if (seed?.schema !== 1 || seed.evidenceKind !== 'demo-expiry-seed' || seed.teams !== 2000 || seed.members !== 2000 ||
+export function analyzeV4(seed, observations, report, expectedCount = 2000) {
+  if (expectedCount !== 2000 && expectedCount !== 20000) throw new Error('V4 expected count must be 2000 or the explicitly approved 20000');
+  const boundCount = receipt => receipt?.expectedCount === undefined ? 2000 : receipt.expectedCount;
+  if (seed?.schema !== 1 || seed.evidenceKind !== 'demo-expiry-seed' || boundCount(seed) !== expectedCount || seed.teams !== expectedCount || seed.members !== expectedCount ||
       typeof seed.runLabel !== 'string' || !/^[a-zA-Z0-9-]{1,24}$/.test(seed.runLabel) || !/^[0-9a-f]{40}$/.test(seed.toolingSha || '')) throw new Error('Invalid V4 seed receipt');
   const start = timestamp(seed.seededAt, 'seed timestamp'), expires = timestamp(seed.expiresAt, 'expiry timestamp');
   const end = timestamp(report?.observedAt, 'database report timestamp');
-  if (expires - start !== 60000 || end < expires || report.schema !== 1 || report.runLabel !== seed.runLabel) throw new Error('Mismatched V4 report or timing');
+  if (expires - start !== 60000 || end < expires || report.schema !== 1 || report.runLabel !== seed.runLabel || boundCount(report) !== expectedCount) throw new Error('Mismatched V4 report or timing');
   const times = orderedObservations(observations, start, end);
   const values = observations.map(row => {
     const q = row.notification;
@@ -143,9 +145,9 @@ export function analyzeV4(seed, observations, report) {
     times.at(-1) - times[quietIndex] >= 30000;
   const drainAfterScale = scaleIndex >= 0 && quietIndex > scaleIndex;
   const sourceAndEffectsMatch = ['teams', 'expiredTeams', 'outboxEvents', 'publishedEvents', 'notifications', 'consumedEvents']
-    .map(key => count(report[key], key)).every(value => value === 2000) && count(report.failedEvents, 'failed outbox events') === 0;
+    .map(key => count(report[key], key)).every(value => value === expectedCount) && count(report.failedEvents, 'failed outbox events') === 0;
   const dlqStayedEmpty = values.every(dlqEmpty);
-  return { schema: 1, runLabel: seed.runLabel, toolingSha: seed.toolingSha, quietStart, sourceAndEffectsMatch,
+  return { schema: 1, runLabel: seed.runLabel, toolingSha: seed.toolingSha, ...(expectedCount === 2000 ? {} : { expectedCount }), quietStart, sourceAndEffectsMatch,
     hasAwsDeploymentEvidence: seed.account === '402178232802' && seed.region === 'ap-southeast-1' && seed.cluster === 'blocbuy-swe5001' &&
       seed.profile === 'demo' && /^sha256:[0-9a-f]{64}$/.test(seed.commerceDigest || '') && typeof seed.commerceRevision === 'string' && !!seed.commerceRevision,
     backlogObserved, scaleToFourObserved, drainObserved, drainAfterScale, dlqStayedEmpty,

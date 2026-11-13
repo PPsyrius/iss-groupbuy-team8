@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "phase": "V7",
+  "workloadAttempt": "R1",
+  "date": "2026-11-13",
+  "issueReferences": [448, 458, 459],
+  "verificationLevel": "Offline review of retained AWS observations; no new AWS calls",
+  "outcomes": {
+    "recordedTechnicalGatesPassed": true,
+    "injectionFiveMinuteScreenPassed": false,
+    "sampledDlqDetectionFiveMinuteScreenPassed": true,
+    "humanAlarmEmailReceiptConfirmed": true,
+    "coreDrillAndEmailAcceptanceComplete": true,
+    "fullAlarmEmailAcceptanceComplete": true,
+    "blanketIssue448PassClaimed": false
+  },
+  "emailAcceptanceAmendment": {
+    "recordedAtUtc": "2026-11-13T07:52:00.558515Z",
+    "priorTechnicalAcceptance": {
+      "recordedAtUtc": "2026-11-13T07:28:14.889819Z",
+      "humanAlarmEmailReceiptConfirmedThen": false,
+      "fullAlarmEmailAcceptanceCompleteThen": false,
+      "pendingEmailStatusWasAccurateThen": true,
+      "originalPrivateRecordRetained": true
+    },
+    "ownerInboxAcknowledgementAtUtc": "2026-11-13T07:52:00.554888Z",
+    "evidence": "Owner supplied three actual inbox screenshots; the parent reviewed them and explicitly acknowledged receipt.",
+    "matchingScreenshotOrdinal": 3,
+    "alarmLogicalRole": "Notification DLQ not empty",
+    "observedAlarmTransitionSecondUtc": "2026-11-13T06:10:05Z",
+    "matchesRecordedAlarmTransitionToSecond": true,
+    "inboxDisplayedTime": "14:10 SGT",
+    "inboxTimestampPrecision": "minute",
+    "exactEmailDeliveryTimestampEstablished": false,
+    "emailDeliveryLatencyMeasured": false,
+    "otherScreenshots": {
+      "alarmRole": "Queue age",
+      "inboxDisplayedTimes": ["14:05 SGT", "14:08 SGT"]
+    },
+    "recipientAddressVisibleInScreenshot": false,
+    "configuredSessionRecipientSeparatelyConfirmed": true,
+    "subscriptionConfirmationUsedAsReceiptEvidence": false,
+    "screenshotHashesAvailable": false,
+    "noRepublishOrSyntheticEmailSubstitution": true,
+    "timingScreensUnchanged": true,
+    "scope": "Core drill and actual alarm-email acceptance are complete; the injection five-minute screen remains failed, the sampled DLQ detection screen remains passed, and no blanket issue 448 pass is claimed."
+  },
+  "workload": {
+    "poisonPublishes": 1,
+    "separateValidTransportControlPublishes": 1,
+    "controlIsRealPaymentEvidence": false,
+    "republishedForCaptureCorrection": false,
+    "actualProductionPoisonReceiveCounts": [1, 2, 3, 4, 5],
+    "distinctPoisonMessagesObserved": 1,
+    "controlAppliedLogObserved": true,
+    "businessEffectsObservedAtUtc": "2026-11-13T06:05:40.799676Z",
+    "businessEffects": {
+      "controlConsumerMarkers": 1,
+      "controlNotifications": 1,
+      "controlNotificationsForIntendedRecipient": 1,
+      "poisonConsumerMarkers": 0,
+      "poisonNotifications": 0
+    },
+    "operatorMainQueueReceives": 0,
+    "alarmStateArtificiallyChanged": false
+  },
+  "captureCorrection": {
+    "originalCapture": "C1",
+    "selectedReadOnlyCapture": "C2",
+    "c1FirstReceiveMissedByQueryWindow": true,
+    "firstServerReceiveRelativeToWorkstationPublishSeconds": -0.6023290157318115,
+    "c2LogQueryLookbackSeconds": 5,
+    "firstReceiveRecovered": true,
+    "originalInjectionAndAlarmClocksRetained": true,
+    "acceptanceGatesRelaxed": false,
+    "originalCaptureAndFailedFirstLogWaitRetained": true
+  },
+  "timing": {
+    "canonicalSource": "v7-timing-review.json",
+    "originalInjectionAtUtc": "2026-11-13T06:01:30.195329Z",
+    "lastObservedZeroDlqAtUtc": "2026-11-13T06:06:37.661336Z",
+    "earliestObservedPositiveDlqAtUtc": "2026-11-13T06:06:43.428616Z",
+    "realAlarmTransitionAtUtc": "2026-11-13T06:10:05.324000Z",
+    "thresholdSeconds": 300,
+    "injectionToAlarmSeconds": 515.128671,
+    "injectionScreenOutcome": "FAILED",
+    "earliestObservedDlqToAlarmSeconds": 201.895384,
+    "sampledDlqDetectionScreenOutcome": "PASSED",
+    "supersededC2OwnLaterSampleToAlarmSeconds": 195.082361,
+    "limitation": "DLQ counts are approximate and sampled, not an exact enqueue timestamp. The unified earliest positive observation supersedes C2's later own sample, also copied into the technical-acceptance record. The two five-minute screens are not interchangeable."
+  },
+  "observer": {
+    "completedWindowMinutes": 20,
+    "completedAtUtc": "2026-11-13T06:20:44.244499Z",
+    "collectionComplete": true,
+    "samples": 65,
+    "maximumGapSeconds": 19.492519,
+    "reportedCollectionErrors": 0,
+    "restorationPerformedByObserver": false,
+    "continuousEcsCaptureThroughDelayedCleanupClaimed": false,
+    "limitation": "This observer completed before the separate delayed cleanup around 15:23 SGT; it does not establish one uninterrupted ECS capture through that cleanup."
+  },
+  "cleanup": {
+    "identifiedPoisonDeletedAtUtc": "2026-11-13T07:20:49.619604Z",
+    "deletedCount": 1,
+    "identifiedPoisonOnly": true,
+    "mainAndDlqQuiet": true,
+    "finalSampleAtUtc": "2026-11-13T07:23:53.262678Z",
+    "finalSampleApproximateQueueCounts": {
+      "main": { "visible": 0, "notVisible": 0, "delayed": 0 },
+      "dlq": { "visible": 0, "notVisible": 0, "delayed": 0 }
+    },
+    "resetVerified": true,
+    "alarmState": "OK",
+    "alarmOkTransitionAtUtc": "2026-11-13T07:23:05.323000Z",
+    "alarmActionsEnabled": true,
+    "cleanupSamples": 12,
+    "operatorMainQueueReceives": 0,
+    "purges": 0,
+    "redrives": 0,
+    "alarmStateArtificiallyChanged": false,
+    "retainedFailuresAndCorrection": [
+      {
+        "attempt": "C1",
+        "outcome": "Zero-visibility DLQ inspection refused a returned count other than exactly one; no deletion attempted.",
+        "exactReturnedCountRetained": false
+      },
+      {
+        "attempt": "C2",
+        "outcome": "A maximum-ten zero-visibility inspection returned ten copies matching the approved poison while the queue reported one visible message; the conservative guard refused deletion.",
+        "correction": "Request at most one message for inspection and take, retaining full event, trace, message and body-hash validation before exact identified deletion."
+      }
+    ],
+    "previousFailedCleanupAttemptsRetained": true
+  },
+  "limits": [
+    "Technical-gate success does not turn the failed injection-to-alarm screen into a pass.",
+    "Alarm-email receipt was confirmed by a dated owner-inbox amendment, not by subscription confirmation. Minute-only inbox display establishes neither an exact delivery timestamp nor delivery latency; the screenshot does not show the recipient address, which was separately confirmed for the session.",
+    "The valid control demonstrates transport and notification effects, not a real payment transaction.",
+    "The completed observer and later cleanup are separate evidence windows.",
+    "No V6 execution, application promotion, campaign completion or teardown is established by this record."
+  ],
+  "publication": {
+    "privateResourceAndUserIdentifiersOmitted": true,
+    "privateMessageAndEventIdentifiersOmitted": true,
+    "providerPayloadsOmitted": true,
+    "privateInputsRead": "Only the thirteen explicitly approved evidence files listed in sourceSha256",
+    "privateInputCount": 13,
+    "sourceSha256": {
+      "v7-selected-capture.json": "03cf685401e05da6aa2e28b4ea10525c6dd2a5ac9a8a38bc746c2ae4f4923a52",
+      "v7-alarm-capture-c2.private.json": "8c2ba52c7be716016c5941d1753d1dd51c909ca27c4399e5f19d8b7cd6ca17b4",
+      "v7-timing-review.json": "dea334e428db150559f8c66e158d530e3035c99b2c9d6289416f09c9cc3489dd",
+      "v7-control-state.json": "083a80cf7defc369e46e7c91fec6f73d0f853357223acbe5265002499807d4e1",
+      "v7-cleanup.private.json": "e6404e2210295fbc67ab923a39ec69724d8f640f3b6d80b62ff3894b87299458",
+      "v7-poison-deleted.json": "ebb8abe24d5a43e2dc025cf1aedf3dc490d445549a4e8ad330d8bbb96ecc363c",
+      "v7-r1-technical-acceptance.json": "8d31786d021058a09f2c368a9523a5d5a7c4471c7906c8cdb97a2e6f1c039fed",
+      "v7-observer/observer-result.json": "5ff1997c709108e3b25ceec147c22b41f8964b7e49305cf3a762109580a9fcfb",
+      "v7-clock-window-correction.json": "7c4d0ed1690fa7d2173ea0f3461899eff8a3e8d91c986041eee4e04451432e4b",
+      "v7-cleanup-c1-failure.json": "b2721f099bc34ca55b00ae770236d3a40d0ac244fc35b00ba538a4e88ac7ebc2",
+      "v7-cleanup-c2-correction.json": "5d07f616243ff02a21dbb7c5ea22e53d6337a461c1f0fc102b970829d242e015",
+      "v7-email-acknowledgement.private.json": "22ac7aa8dd41d76fde4f90c3da00c4d86a8770e2839b00a2c8d793c8b8d84141",
+      "v7-r1-final-acceptance.json": "011a54032ef151704ea4d64853d9e2dbe780527a38dd5104cd41fb3db7135bca"
+    }
+  }
+}

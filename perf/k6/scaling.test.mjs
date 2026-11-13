@@ -128,6 +128,48 @@ test('V4 requires real source/effect counts, backlog, scale-to-four, stable drai
     const input = v4(); mutate(input); assert.equal(analyze4(input).passed, false);
   }
 });
+function largerV4() {
+  const input = v4();
+  Object.assign(input.seed, { expectedCount: 20000, teams: 20000, members: 20000 });
+  Object.assign(input.report, { expectedCount: 20000, teams: 20000, expiredTeams: 20000,
+    outboxEvents: 20000, publishedEvents: 20000, notifications: 20000, consumedEvents: 20000 });
+  return input;
+}
+test('V4 larger fixture requires explicit expected count and matching seed/report bindings', () => {
+  const input = largerV4();
+  assert.throws(() => analyze4(input), /seed receipt/);
+  const result = analyzeV4(input.seed, input.observations, input.report, 20000);
+  assert.equal(result.passed, true);
+  assert.equal(result.expectedCount, 20000);
+  assert.equal(result.drainAfterScale, true);
+  for (const expected of [0, 2001, 20001, '20000', null]) {
+    assert.throws(() => analyzeV4(input.seed, input.observations, input.report, expected), /expected count/);
+  }
+  for (const mutate of [x => delete x.seed.expectedCount, x => delete x.report.expectedCount,
+    x => x.seed.expectedCount = 2000, x => x.report.expectedCount = 2000,
+    x => x.seed.expectedCount = '20000', x => x.report.expectedCount = null,
+    x => x.seed.teams = 2000, x => x.seed.members = 2000]) {
+    const changed = largerV4(); mutate(changed);
+    assert.throws(() => analyzeV4(changed.seed, changed.observations, changed.report, 20000));
+  }
+});
+test('V4 larger fixture keeps every exact source/effect counter and scale-before-final-drain gate', () => {
+  for (const key of ['teams', 'expiredTeams', 'outboxEvents', 'publishedEvents', 'notifications', 'consumedEvents']) {
+    for (const value of [2000, 19999, 20001]) {
+      const input = largerV4(); input.report[key] = value;
+      assert.equal(analyzeV4(input.seed, input.observations, input.report, 20000).passed, false, key);
+    }
+  }
+  for (const mutate of [x => x.report.failedEvents = 1, x => x.observations[2].notification.dlqDelayed = 1,
+    x => x.observations.forEach(row => row.notificationTasks = 1),
+    x => x.observations.forEach((row, i) => row.notificationTasks = i >= 7 ? 4 : 1)]) {
+    const input = largerV4(); mutate(input);
+    assert.equal(analyzeV4(input.seed, input.observations, input.report, 20000).passed, false);
+  }
+  const historical = v4();
+  assert.equal(analyze4(historical).passed, true);
+  assert.throws(() => analyzeV4(historical.seed, historical.observations, historical.report, 20000));
+});
 test('V4 extra final bracketing sample preserves a proven quiet interval', () => {
   const input = v4();
   input.observations.push({ ...structuredClone(input.observations.at(-1)), observedAt: at(151) });
@@ -291,5 +333,18 @@ test('analysis CLIs preserve all-run failures, reject fixture acceptance and rep
     file('seed.json', v4().seed);
     const fixture4 = cli('analyze-v4.mjs', args4);
     assert.equal(fixture4.status, 1); assert.equal(fixture4.stdout, '');
+    const larger = largerV4();
+    Object.assign(larger.seed, { account: '402178232802', region: 'ap-southeast-1', cluster: 'blocbuy-swe5001',
+      profile: 'demo', commerceDigest: `sha256:${'c'.repeat(64)}`, commerceRevision: 'revision:1' });
+    file('seed.json', larger.seed); file('queue.jsonl', larger.observations, true); file('report.json', larger.report);
+    assert.equal(cli('analyze-v4.mjs', args4).status, 1);
+    const largerArgs = [...args4, '--expected-count', '20000'];
+    assert.equal(cli('analyze-v4.mjs', largerArgs).status, 0);
+    for (const value of ['20001', '020000', '2e4', '']) assert.equal(cli('analyze-v4.mjs', [...args4, '--expected-count', value]).status, 1);
+    assert.equal(cli('analyze-v4.mjs', [...args4, '--expected-count']).status, 1);
+    larger.observations.forEach(row => row.notificationTasks = 1); file('queue.jsonl', larger.observations, true);
+    assert.equal(cli('analyze-v4.mjs', largerArgs).status, 2);
+    delete larger.seed.account; file('seed.json', larger.seed);
+    assert.equal(cli('analyze-v4.mjs', largerArgs).status, 1);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

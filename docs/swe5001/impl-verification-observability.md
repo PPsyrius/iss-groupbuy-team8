@@ -103,6 +103,8 @@ The [operator preparation guide](../../perf/k6/SCALING.md) documents local prepa
 - Under steady load at 50% of the knee with 2 `commerce-svc` tasks, stop one task with `aws ecs stop-task`.
 - Expected: zero non-2xx responses in k6; ECS replaces the task within 2 minutes.
 
+2026-11-13 measured V5 amendment (#459): [R1/R2/R3 evidence](evidence/20261113-aws-validation/README.md) retains an interrupted controller attempt and a failed complete run before **R3 passed**. R3 used commerce-only 1 vCPU/2 GiB and 120-second ALB slow start, preserving images, health thresholds, pools, notification consumers, 100-RPS/ten-minute workload and scaling policy/bounds. It delivered exactly 60,000 workload GETs plus one setup GET with zero invalid/non-2xx/drops; the replacement started at 63.283 s and was first observed ALB healthy at 79.458 s from the stop request. Complete ECS/target capture and readback-verified raw artifacts support that attempt, not repeatability or the earlier smaller shape. The approved live order is now V5 → V4 → V7 → identity/Sandbox, with human-dependent work last; startup succeeded in 1,748.185 s and teardown remains pending at this checkpoint.
+
 ### V6 Safe deployment
 
 2026-11-13 scope reconciliation: #459 explicitly dropped this live drill on 11 October. The original design below is historical planning, **not implemented tooling**: there is no `BLOCBUY_FAIL_HEALTH` switch or failure workflow input. The shared session excludes V6 unless it is separately authorized, implemented and reviewed; existing circuit-breaker configuration alone is not a rollback measurement.

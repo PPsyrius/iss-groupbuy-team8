@@ -81,27 +81,32 @@ module "client_service" {
   source   = "../modules/ecs-service"
   for_each = local.clients
 
-  name                     = each.key
-  name_prefix              = local.name_prefix
-  cluster_name             = module.cluster.cluster_name
-  namespace_arn            = module.cluster.namespace_arn
-  image                    = "${local.ecr_registry}/swe5001/${each.value.repository}@${var.image_digests[each.key]}"
-  environment              = local.service_environment[each.key]
-  secrets                  = local.service_secrets[each.key]
-  task_policy_json         = each.value.task_policy_json
-  task_policy_enabled      = contains(["commerce-svc", "notification-svc"], each.key)
-  execution_role_arn       = module.cluster.execution_role_arn
-  role_path                = local.iam_role_path
-  permissions_boundary_arn = local.workload_boundary_arn
-  vpc_id                   = module.network.vpc_id
-  subnet_ids               = module.network.private_subnet_ids
-  security_group_ids       = [aws_security_group.svc.id]
-  listener_arn             = aws_lb_listener.http.arn
-  listener_priority        = each.value.listener_priority
-  path_patterns            = each.value.path_patterns
-  origin_secret            = data.aws_ssm_parameter.origin_secret.value
-  desired_count            = var.services_enabled ? var.commerce_min_capacity : 0
-  fargate_base_capacity    = var.commerce_min_capacity
-  enable_exec              = var.enable_exec
-  after_services           = [for name in each.value.connects_to : module.service[name].service_name]
+  name          = each.key
+  name_prefix   = local.name_prefix
+  cluster_name  = module.cluster.cluster_name
+  namespace_arn = module.cluster.namespace_arn
+  image         = "${local.ecr_registry}/swe5001/${each.value.repository}@${var.image_digests[each.key]}"
+  # A cold commerce JVM and the Service Connect proxy must not share the old
+  # half-vCPU task budget; the 1-vCPU Fargate shape requires at least 2 GiB.
+  cpu                             = each.key == "commerce-svc" ? 1024 : 512
+  memory                          = each.key == "commerce-svc" ? 2048 : 1024
+  target_group_slow_start_seconds = each.key == "commerce-svc" ? var.commerce_target_slow_start_seconds : 0
+  environment                     = local.service_environment[each.key]
+  secrets                         = local.service_secrets[each.key]
+  task_policy_json                = each.value.task_policy_json
+  task_policy_enabled             = contains(["commerce-svc", "notification-svc"], each.key)
+  execution_role_arn              = module.cluster.execution_role_arn
+  role_path                       = local.iam_role_path
+  permissions_boundary_arn        = local.workload_boundary_arn
+  vpc_id                          = module.network.vpc_id
+  subnet_ids                      = module.network.private_subnet_ids
+  security_group_ids              = [aws_security_group.svc.id]
+  listener_arn                    = aws_lb_listener.http.arn
+  listener_priority               = each.value.listener_priority
+  path_patterns                   = each.value.path_patterns
+  origin_secret                   = data.aws_ssm_parameter.origin_secret.value
+  desired_count                   = var.services_enabled ? var.commerce_min_capacity : 0
+  fargate_base_capacity           = var.commerce_min_capacity
+  enable_exec                     = var.enable_exec
+  after_services                  = [for name in each.value.connects_to : module.service[name].service_name]
 }

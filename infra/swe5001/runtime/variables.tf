@@ -120,6 +120,28 @@ variable "services_enabled" {
   default     = false
 }
 
+variable "notification_http_trace_logging_enabled" {
+  description = "Opt-in notification-only DispatcherServlet DEBUG for an authorized routing check; request details stay masked. Never enable broad web/SQL logging or send secrets in URL query strings."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.notification_http_trace_logging_enabled || var.topology == "distributed"
+    error_message = "Notification HTTP trace logging requires distributed topology."
+  }
+}
+
+variable "commerce_http_trace_logging_enabled" {
+  description = "Opt-in commerce-only masked DispatcherServlet request/status logging for an authorized signed-webhook drill; no payload/header details. Restore false afterward."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.commerce_http_trace_logging_enabled || var.topology == "distributed"
+    error_message = "Commerce HTTP trace logging requires distributed topology."
+  }
+}
+
 variable "commerce_min_capacity" {
   description = "Commerce task minimum: 2 for the demo/V5; set 1 for V2/V3 baseline sessions"
   type        = number
@@ -139,6 +161,17 @@ variable "commerce_requests_per_target" {
   validation {
     condition     = var.commerce_requests_per_target > 0
     error_message = "commerce_requests_per_target must be positive."
+  }
+}
+
+variable "commerce_target_slow_start_seconds" {
+  description = "Warm-up for newly healthy commerce targets; does not change offered load, health checks, scaling policy or worker counts"
+  type        = number
+  default     = 120
+
+  validation {
+    condition     = var.commerce_target_slow_start_seconds == 0 || (var.commerce_target_slow_start_seconds >= 30 && var.commerce_target_slow_start_seconds <= 900 && floor(var.commerce_target_slow_start_seconds) == var.commerce_target_slow_start_seconds)
+    error_message = "Commerce target slow start must be zero or an integer from 30 to 900 seconds."
   }
 }
 

@@ -40,6 +40,17 @@ variable "memory" {
   default     = 1024
 }
 
+variable "target_group_slow_start_seconds" {
+  description = "ALB warm-up for newly healthy targets; zero disables it. Not a health threshold or scaling cooldown."
+  type        = number
+  default     = 0
+
+  validation {
+    condition     = var.target_group_slow_start_seconds == 0 || (var.target_group_slow_start_seconds >= 30 && var.target_group_slow_start_seconds <= 900 && floor(var.target_group_slow_start_seconds) == var.target_group_slow_start_seconds)
+    error_message = "Target slow start must be zero or an integer from 30 to 900 seconds."
+  }
+}
+
 variable "container_port" {
   description = "Container port, also the target group and Service Connect port"
   type        = number

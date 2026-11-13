@@ -5,10 +5,12 @@ dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 repo=$(cd "$dir/../../.." && pwd)
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-mkdir -p "$work/scripts" "$work/backend/blocbuy-bootstrap/src/main/resources/db/seed/load"
+mkdir -p "$work/scripts" "$work/backend/blocbuy-bootstrap/src/main/resources/db/seed/load" "$work/perf/k6"
 cp "$dir/v4-expiry-seed.sh" "$work/scripts/"
 cp "$repo/backend/blocbuy-bootstrap/src/main/resources/db/seed/load/v4-expiry.sql" \
   "$work/backend/blocbuy-bootstrap/src/main/resources/db/seed/load/"
+cp "$repo/perf/k6/v4-expiry.sql" "$work/perf/k6/"
+unset V4_EXPECTED_COUNT
 export REPO_ROOT=$work CLUSTER=blocbuy-swe5001 FAULT=normal
 export CONFIRM_V4_SEED=2000 V4_RUN_LABEL=fixture V4_RECIPIENT_ID=0199aaaa-0000-7000-8000-000000000001
 EXPECTED_IMAGE_DIGEST="sha256:$(printf 'c%.0s' {1..64})"
@@ -27,7 +29,11 @@ run_db_init_task() {
   touch "$REPO_ROOT/task-started"
   DB_INIT_EXIT_CODE=0
   [ "$FAULT" != task_failure ] || DB_INIT_EXIT_CODE=1
-  DB_INIT_OUTPUT='{"schema":1,"runLabel":"fixture","teams":2000,"members":2000,"seededAt":"2026-10-16T00:00:00Z","expiresAt":"2026-10-16T00:01:00Z","evidenceKind":"demo-expiry-seed"}'
+  DB_INIT_OUTPUT=$(jq -nc --argjson count "${V4_EXPECTED_COUNT-2000}" '{schema:1,runLabel:"fixture",teams:$count,members:$count,seededAt:"2026-10-16T00:00:00Z",expiresAt:"2026-10-16T00:01:00Z",evidenceKind:"demo-expiry-seed"} +
+    (if $count == 20000 then {expectedCount:$count} else {} end)')
+  [ "$FAULT" != missing_count ] || DB_INIT_OUTPUT=$(jq -c 'del(.expectedCount)' <<< "$DB_INIT_OUTPUT")
+  [ "$FAULT" != wrong_count ] || DB_INIT_OUTPUT=$(jq -c '.expectedCount = 2000' <<< "$DB_INIT_OUTPUT")
+  [ "$FAULT" != wrong_teams ] || DB_INIT_OUTPUT=$(jq -c '.teams = 2000' <<< "$DB_INIT_OUTPUT")
   [ "$FAULT" != bad_report ] || DB_INIT_OUTPUT='{"schema":1,"teams":0}'
   [ "$FAULT" != duplicate_report ] || DB_INIT_OUTPUT="$DB_INIT_OUTPUT
 $DB_INIT_OUTPUT"
@@ -57,7 +63,8 @@ aws() {
 }
 export -f aws git
 bash "$work/scripts/v4-expiry-seed.sh" > "$work/report.json"
-jq -e '.teams == 2000 and .commerceDigest != null and .toolingSha == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"' "$work/report.json" > /dev/null
+jq -e '.teams == 2000 and (has("expectedCount") | not) and .commerceDigest != null and .toolingSha == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"' "$work/report.json" > /dev/null
+! grep -Fq expected_count "$work/task-command"
 printf 'PASS fixed bounded seed command and source/digest receipt\n'
 for fault in dirty rollout no_demo command relay_off slow_expiry no_tasks denied digest task_failure bad_report duplicate_report missing_marker; do
   rm -f "$work/task-started"
@@ -65,8 +72,20 @@ for fault in dirty rollout no_demo command relay_off slow_expiry no_tasks denied
   case "$fault" in task_failure|bad_report|duplicate_report|missing_marker) ;; *) [ ! -e "$work/task-started" ] ;; esac
   printf 'PASS rejects %s\n' "$fault"
 done
-for assignment in 'CONFIRM_V4_SEED=' 'V4_RUN_LABEL=bad_label' 'V4_RECIPIENT_ID=not-a-uuid' 'EXPECTED_IMAGE_DIGEST=wrong'; do
+V4_EXPECTED_COUNT=20000 CONFIRM_V4_SEED=20000 bash "$work/scripts/v4-expiry-seed.sh" > "$work/report.json"
+jq -e '.teams == 20000 and .members == 20000 and .expectedCount == 20000' "$work/report.json" > /dev/null
+grep -Fq -- "-v expected_count='20000' -v confirm_count='20000'" "$work/task-command"
+printf 'PASS explicitly confirmed 20000-team fixture and receipt binding\n'
+for fault in dirty missing_count wrong_count wrong_teams; do
+  rm -f "$work/task-started"
+  if V4_EXPECTED_COUNT=20000 CONFIRM_V4_SEED=20000 FAULT=$fault bash "$work/scripts/v4-expiry-seed.sh" > /dev/null 2>&1; then exit 1; fi
+  [ "$fault" != dirty ] || [ ! -e "$work/task-started" ]
+  printf 'PASS larger fixture rejects %s\n' "$fault"
+done
+for assignment in 'CONFIRM_V4_SEED=' 'CONFIRM_V4_SEED=20000' 'V4_EXPECTED_COUNT=20000' 'V4_EXPECTED_COUNT=' 'V4_EXPECTED_COUNT=2001' 'V4_EXPECTED_COUNT=20001' 'V4_EXPECTED_COUNT=020000' 'V4_EXPECTED_COUNT=2e4' 'V4_RUN_LABEL=bad_label' 'V4_RECIPIENT_ID=not-a-uuid' 'EXPECTED_IMAGE_DIGEST=wrong'; do
+  rm -f "$work/task-started"
   if env "$assignment" bash "$work/scripts/v4-expiry-seed.sh" > /dev/null 2>&1; then printf 'FAIL accepted %s\n' "$assignment"; exit 1; fi
+  [ ! -e "$work/task-started" ]
   printf 'PASS rejects invalid %s\n' "${assignment%%=*}"
 done
 if bash "$work/scripts/v4-expiry-seed.sh" arbitrary.sql > /dev/null 2>&1; then exit 1; fi
