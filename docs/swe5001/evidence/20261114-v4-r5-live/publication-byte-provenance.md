@@ -1,0 +1,21 @@
+# Publication-byte reconciliation — 14 November 2026
+
+Refs #458/#459 and PR #807. This is a local publication-integrity correction, not a workload/analyser rerun or new AWS verification. The authoritative public bytes are the UTF-8 LF Git blobs; directory-local `.gitattributes` now makes that checkout representation explicit. Private raw archives are immutable and are not regenerated.
+
+## Reproduced cause, not an assumed content change
+
+At the reviewed baseline `0b93d7d8`, `git config --get core.autocrlf` returned `true`; `git ls-files --eol` showed `i/lf w/crlf` for these packages. SHA-256 was calculated directly over `git show 0b93d7d8:<path>` bytes, then again after replacing each LF with CRLF. Six V4 manifest entries matched only the CRLF reconstruction: `v4-r5-pass.json`, `historical-cloudwatch-summary.json`, `observations.sanitized.jsonl`, `cloudwatch-2058-2122-points.jsonl`, `notification-scaling-activities.sanitized.json` and `private-package.json`. The other two matched the LF blobs. This reproduces every original V4 manifest mismatch without changing any JSON values. In particular, the sanitized observations' old `5fb572a4…` checksum is exactly the CRLF representation of the published LF `17e034d9…` bytes; the private raw observations' `901c1e6f…` checksum is a different artefact and remains unchanged.
+
+The same check found four V7 CRLF receipts: `acceptance.json`, `human-email-match.json`, `private-package.json` and `validation.json`; their old byte lengths equal the CRLF reconstruction lengths. All other V7 entries already matched LF. Thus neither the old mixed-line-ending manifests nor an arbitrary platform checkout can define a single reproducible publication representation.
+
+The manifests preserve the complete old maps as `originalFilesSha256` / `originalFiles`, and give current LF hashes (and V7 lengths) in their existing `filesSha256` / `files` maps. The V4 pass summary preserves `originalSanitizedObservationsSha256` and supplies the LF hash as `sanitizedObservationsSha256`; that metadata correction itself changes the summary's current publication hash. V7 `fullAcceptanceSourceSha256` remains the historical source receipt; `publishedFullAcceptanceSha256` identifies its LF publication instead. Historical source hashes embedded in narrative records remain historical, not current-publication claims.
+
+## Addendum is a later document revision
+
+The packaging receipt is dated `2026-11-14T02:12:22.086462+00:00`. The committed addendum explicitly incorporates the later V7 R4 pass, its `02:15:39.486396` technical acceptance, `02:31:54.470861` restoration readback and 10:34:53 SGT private preservation. Its section is explicitly headed “V7 R4 result — later dated amendment”. Neither the committed LF addendum nor its CRLF reconstruction matches the earlier `d1cc333b…` receipt; line endings alone cannot explain this mismatch. Its two sibling documents still match their original LF hashes. The chronology and labelled amendment establish that the current addendum is later than the packaging receipt, not that any original raw evidence changed. The exact earlier addendum bytes are not retained in Git, so a byte-for-byte reconstruction of that earlier document is not claimed.
+
+`packaging-verification.json` retains the old map as `originalNewDocumentSha256` and records the amended addendum's current LF checksum in `newDocumentSha256`. The local preserved V4/V5/V7 R1 TAR was independently hashed during this correction and still matches `2f2be4d0…`; its member listing contains no addendum. No archive or private receipt was written. This local hash check does not reverify remote encryption, upload responses or AWS state; those remain the original packaging-time observations.
+
+## Reproduction
+
+From the repository root run `python docs/swe5001/evidence/20261114-v4-r5-live/verify-publication.py --rev HEAD` after committing, or `--rev index` after staging. It reads Git objects, not platform-dependent checkout bytes, and checks both current manifests, document receipts, the sanitized-observation reference, V7 full-acceptance publication and the baseline LF/CRLF explanation. The original maps and private/archive checksums are retained rather than rewritten to make a check pass.

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "recordedAtUtc": "2026-11-14T02:39:42.073639+00:00",
-  "files": {
+  "originalFiles": {
     "acceptance.json": {
       "bytes": 5973,
       "sha256": "385c9d597beceae2b7aff4b6d8d19a11fc63d90e157cafc00716e81df34c9cd9"
@@ -35,6 +35,18 @@
       "sha256": "b9543b4926db7bbed25ac4249a1f8c148df6dc45c829e9889f5b4c619d8884c2"
     }
   },
+  "files": {
+    "acceptance.json": {"bytes": 5860, "sha256": "e47cf461f7688cbdbc17aaac26d0ebd2e740b1312fec47cb3b5add9b6972c9c9"},
+    "human-email-match.json": {"bytes": 1591, "sha256": "bd798c644996e5bb5d8ed6a1b971ca23d8ae7c4dc16b2a992ba4db4b247f57f2"},
+    "owner-confirmation.json": {"bytes": 797, "sha256": "da1b11dc632a8dd9bb8b32192b9acfb8a202543f8b8cbf9980503c6bf0cba0e1"},
+    "private-package.json": {"bytes": 3262, "sha256": "afed764065f8ced494b5c95acead9a1927036751a1ff2dac18330343d19ba5db"},
+    "README.md": {"bytes": 5973, "sha256": "ec77114e3f915094220b8c799d7a6120dbf99f88df8c9c1bd7709f51adced8c2"},
+    "restoration-readback.json": {"bytes": 4403, "sha256": "31c49b94c0bf61939f4f79ebe8f323b5a0c7449eb32fdcf98689044d2da321c7"},
+    "technical-acceptance.json": {"bytes": 532, "sha256": "992158f1d033cb2eb77296b5359c9c576fcccdbcc583250bdc8e02b7d930356c"},
+    "validation.json": {"bytes": 611, "sha256": "a3f83a2c9ca5409d59f912f6a28a2e164e3a0a3c7f3f5c3bba933443d31cf01a"}
+  },
+  "publicationHashScope": "Published UTF-8 LF bytes; originalFiles and fullAcceptanceSourceSha256 retain historical source receipts. See ../20261114-v4-r5-live/publication-byte-provenance.md.",
+  "publishedFullAcceptanceSha256": "e47cf461f7688cbdbc17aaac26d0ebd2e740b1312fec47cb3b5add9b6972c9c9",
   "fullAcceptanceSourceSha256": "385c9d597beceae2b7aff4b6d8d19a11fc63d90e157cafc00716e81df34c9cd9",
   "privateArchiveSha256": "e914253fcef97c53d0ce4b8bdc3fa05c17e0e67fbbc7a703bf0f53d4ce781c0e",
   "privateArchiveReadbackVerifiedFiles": 683,

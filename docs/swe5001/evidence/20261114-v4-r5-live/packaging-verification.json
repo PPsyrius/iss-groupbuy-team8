@@ -14,11 +14,17 @@
   "originalV5AcceptanceAndWorkloadOnlyAnalysisByteIdentical": true,
   "privateUrlsArnsAndCredentialPatternsAbsentFromPublishedFolder": true,
   "relativeMarkdownEvidenceLinksResolved": true,
-  "newDocumentSha256": {
+  "originalNewDocumentSha256": {
     "v4-r5-pass.md": "e5e378c52415ef90e6772e3548c00e0f8068668313dc28355b33c9cac3306f2e",
     "v5-r3-pass.md": "044c1656003d88c9b2eb9046f04a677ddfef73251247f4ec6021ce5b1f1c9894",
     "working-report-addendum.md": "d1cc333bcac484871317f5e0d259aa1b8fef467d8a596682a8032a705c4760ff"
   },
+  "newDocumentSha256": {
+    "v4-r5-pass.md": "e5e378c52415ef90e6772e3548c00e0f8068668313dc28355b33c9cac3306f2e",
+    "v5-r3-pass.md": "044c1656003d88c9b2eb9046f04a677ddfef73251247f4ec6021ce5b1f1c9894",
+    "working-report-addendum.md": "d2a0d7487e58dca5aeebcb8b142290feb1a7808e93f25b97d524e1b64ac5afbe"
+  },
+  "publicationHashScope": "Published UTF-8 LF bytes after the labelled V7 amendment; historical originalNewDocumentSha256 remains a packaging-time receipt, not a current-content assertion. See publication-byte-provenance.md.",
   "workloadAnalyzerOrRuntimeMutationPerformedDuringPackaging": false,
   "activeV7R2DirectoryReadOrChanged": false,
   "wholeCampaignPassClaimed": false

@@ -69,6 +69,12 @@ read -r -a task_arns <<< "$(jq -r 'join(" ")' <<< "$tasks")"
 observed=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "${task_arns[@]}" \
   --query '{tasks:tasks[].{taskArn:taskArn,taskDefinitionArn:taskDefinitionArn,lastStatus:lastStatus,desiredStatus:desiredStatus,availabilityZone:availabilityZone,containers:containers[].{name:name,imageDigest:imageDigest}},failures:failures}' \
   --output json)
+jq -e --argjson expected "$expected_tasks" --argjson requested "$tasks" '
+  (.failures | type == "array" and length == 0) and
+  (.tasks | type == "array" and length == $expected) and
+  ([.tasks[].taskArn] | sort) == ($requested | sort) and
+  all(.tasks[]; .lastStatus == "RUNNING" and .desiredStatus == "RUNNING")
+' <<< "$observed" > /dev/null || die "expected exactly $expected_tasks running described task(s) and zero failures"
 resource="service/$CLUSTER/$service"
 targets=$(aws application-autoscaling describe-scalable-targets --service-namespace ecs \
   --resource-ids "$resource" --scalable-dimension ecs:service:DesiredCount --output json)

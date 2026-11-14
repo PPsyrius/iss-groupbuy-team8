@@ -814,49 +814,145 @@ run "experimental_producer_upper_bounds_are_supported" {
 
 run "reject_zero_expiry_shards" {
   command = plan
-  variables { v4_producer_expiry_shards = 0 }
+  variables {
+    topology                  = "distributed"
+    services_enabled          = true
+    messaging_verified        = true
+    v4_demo_enabled           = true
+    v4_producer_expiry_shards = 0
+    frontend_url              = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
   expect_failures = [var.v4_producer_expiry_shards]
 }
 
 run "reject_excess_expiry_shards" {
   command = plan
-  variables { v4_producer_expiry_shards = 7 }
+  variables {
+    topology                  = "distributed"
+    services_enabled          = true
+    messaging_verified        = true
+    v4_demo_enabled           = true
+    v4_producer_expiry_shards = 7
+    frontend_url              = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
   expect_failures = [var.v4_producer_expiry_shards]
 }
 
 run "reject_fractional_expiry_shards" {
   command = plan
-  variables { v4_producer_expiry_shards = 2.5 }
+  variables {
+    topology                  = "distributed"
+    services_enabled          = true
+    messaging_verified        = true
+    v4_demo_enabled           = true
+    v4_producer_expiry_shards = 2.5
+    frontend_url              = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
   expect_failures = [var.v4_producer_expiry_shards]
 }
 
 run "reject_zero_sns_publish_concurrency" {
   command = plan
-  variables { v4_producer_sns_publish_concurrency = 0 }
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_sns_publish_concurrency = 0
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
   expect_failures = [var.v4_producer_sns_publish_concurrency]
 }
 
 run "reject_excess_sns_publish_concurrency" {
   command = plan
-  variables { v4_producer_sns_publish_concurrency = 9 }
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_sns_publish_concurrency = 9
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
   expect_failures = [var.v4_producer_sns_publish_concurrency]
 }
 
 run "reject_fractional_sns_publish_concurrency" {
   command = plan
-  variables { v4_producer_sns_publish_concurrency = 1.5 }
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_sns_publish_concurrency = 1.5
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
   expect_failures = [var.v4_producer_sns_publish_concurrency]
 }
 
 run "reject_hot_loop_relay_interval" {
   command = plan
-  variables { v4_producer_relay_interval = "PT0.01S" }
+  variables {
+    topology                   = "distributed"
+    services_enabled           = true
+    messaging_verified         = true
+    v4_demo_enabled            = true
+    v4_producer_relay_interval = "PT0.01S"
+    frontend_url               = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
   expect_failures = [var.v4_producer_relay_interval]
 }
 
 run "reject_slow_relay_interval" {
   command = plan
-  variables { v4_producer_relay_interval = "PT1M" }
+  variables {
+    topology                   = "distributed"
+    services_enabled           = true
+    messaging_verified         = true
+    v4_demo_enabled            = true
+    v4_producer_relay_interval = "PT1M"
+    frontend_url               = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
   expect_failures = [var.v4_producer_relay_interval]
 }
 
