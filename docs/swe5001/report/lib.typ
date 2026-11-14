@@ -173,3 +173,11 @@
 #let iss(n) = link(repo + "/issues/" + str(n))[\##n]
 #let pr(n) = link(repo + "/pull/" + str(n))[\##n]
 #let run(id, body) = link(repo + "/actions/runs/" + str(id), body)
+
+// Later validation records are published in PR #807, not in the historical
+// evidence freeze. This explicit branch reference is mutable, not a merge pin.
+#let validation-ref = "test/459-aws-session-preparation"
+#let published-evidence(path, body) = {
+  assert(("20261113-aws-validation/", "20261114-v4-r5-live/", "20261114-v7-r4-live/", "20261114-v8-r4-live/").any(prefix => path.starts-with(prefix)) and not path.contains(".."), message: "Expected a published PR #807 validation record")
+  link(repo + "/blob/" + validation-ref + "/docs/swe5001/evidence/" + path, body)
+}

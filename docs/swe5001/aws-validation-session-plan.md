@@ -2,6 +2,8 @@
 
 Prepared 13 November 2026 for #458/#459, with shared evidence for #448. **Reserve one 3–4½-hour AWS window**, rather than rebuilding for each test. Run separate phases, not simultaneous faults. Keep the existing [V3 r4 result and its limitations](evidence/20261111-v3-r4/README.md); this plan does not call for another V2/V3 campaign.
 
+**14 November execution/status amendment:** The original window, order, permissions and workload below are planning history, not instructions to repeat the campaign. Subsequent separately authorized execution established [V5 R3](evidence/20261114-v4-r5-live/v5-r3-pass.md), experimental [V4 R5](evidence/20261114-v4-r5-live/v4-r5-pass.md), qualified [V7 R4](evidence/20261114-v7-r4-live/README.md) and one [V8 R4](evidence/20261114-v8-r4-live/README.md) create–smoke–destroy pass. V4 used 80,000 teams under the later producer authorization; V7 used temporary 10-second application consumer visibility, restored to 60 seconds. Identity remains failed/deferred. These outcomes authorize no new run, promotion or archive disposal; the original clean-checkout requirement does not reclassify hash-bound overlays that were uncommitted at execution.
+
 ## Scope and permission
 
 This is a future-session plan, not permission to start the application, send load, inject faults, operate Stripe or dispatch workflows. The owner separately approved replacement-generator preparation before sleeping: one Singapore `t3a.2xlarge`, encrypted 40 GiB disk, SSM access, tool/fixture checks, then stop. The [preparation record](evidence/20261113-aws-preparation/README.md) records that narrower operation. Obtain approval for the application window after the owner returns around 09:00 SGT.

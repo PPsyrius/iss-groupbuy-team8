@@ -1,6 +1,8 @@
 # V4 producer experiment — controlled follow-up
 
-Prepared 14 November 2026 for #458/#459/#448. **The next producer-change run is V4 R4, following the owner's latest naming. No experimental image has been deployed and no new cohort has been seeded.** Preserve every earlier [V4 R3 failure and its actual closure](evidence/20261113-aws-validation/newv4-r3-20261113-2311.md); changing the next run's name does not rename earlier evidence.
+Prepared 14 November 2026 for #458/#459/#448. At the preparation checkpoint, the next producer-change run was V4 R4; no experimental image had been deployed or new cohort seeded. Preserve every earlier [V4 R3 failure and its actual closure](evidence/20261113-aws-validation/newv4-r3-20261113-2311.md); changing the next run's name does not rename earlier evidence.
+
+**14 November execution/publication amendment:** R4 subsequently failed unseeded setup; [V4 R5](evidence/20261114-v4-r5-live/v4-r5-pass.md) passed for its stated experimental producer configuration, with original commerce restoration verified. The owner later authorized unsigned commits/pushes on the existing branch and publication in PR #807, superseding the earlier publication prohibition below only. The executed overlays remain uncommitted-at-execution bytes, not a clean signed release; later source publication does not change their provenance or authorize another run.
 
 ## Measured problem and authorized scope
 

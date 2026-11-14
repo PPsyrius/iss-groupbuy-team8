@@ -36,7 +36,9 @@ A promotion run (`dev` → `prod` merge) creates `runtime`, smoke-tests it, publ
 | T | Present; follow section 6 |
 | Right after | Section 7 (destroy) |
 
-T − 60 min is the minimum planning allowance for distributed sessions after #447 adds the 15-minute routing-readiness wait; the historical monolith timings below do not include it. The original V8 under-30-minute up target is now unproven, not an acceptance claim. For 21 October (16:15–16:55 SGT) the [verification plan](impl-verification-observability.md), section 7, starts the session before 12:00, which leaves time for a second `up` after a failure and gives the dashboard a full hour of data.
+T − 60 min is the minimum planning allowance for distributed sessions after #447 adds the 15-minute routing-readiness wait; the historical monolith timings below do not include it. At that planning checkpoint the V8 under-30-minute up target was unproven. For 21 October (16:15–16:55 SGT) the [verification plan](impl-verification-observability.md), section 7, starts the session before 12:00, which leaves time for a second `up` after a failure and gives the dashboard a full hour of data.
+
+**14 November measured amendment:** [V8 R4](evidence/20261114-v8-r4-live/README.md) passed full canonical distributed up in 1794.158 seconds, including readiness/smoke, followed by final destruction and independent absence checks. This is one qualified operator pass, not repeatability, hosted-workflow acceptance or database recovery; the earlier startup failures remain unchanged. Retain the planning allowance rather than treating this narrow pass as a guaranteed duration.
 
 ## 4. Start
 

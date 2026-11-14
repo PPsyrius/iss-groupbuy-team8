@@ -17,6 +17,11 @@ BASE = 'ae3a32a3943b7952abdf71e5c85ffd27a24bf704'
 APP = '3a893036d70d028b29ae13ebf820283571c1ae00'
 EVIDENCE = '27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6'
 INSPECTED = 'b80debcd8b8cdeb1272219758789e1a9927b9d7d'
+VALIDATION_BRANCH = 'test/459-aws-session-preparation'
+VALIDATION_PACKAGES = (
+    '20261113-aws-validation/', '20261114-v4-r5-live/',
+    '20261114-v7-r4-live/', '20261114-v8-r4-live/',
+)
 
 
 def git(*args):
@@ -85,6 +90,27 @@ def check_account_read_boundary(security):
     assert not re.search(r'(?:AWS|command) output[^.\n]*independently verif', paragraph, re.I)
 
 
+def check_published_validation(sections):
+    """Check explicit PR links without promoting them to historical freeze pins."""
+    lib = text('lib.typ')
+    assert '#let validation-ref = "' + VALIDATION_BRANCH + '"' in lib
+    assert 'link(repo + "/blob/" + validation-ref + "/docs/swe5001/evidence/" + path, body)' in lib
+    assert 'not path.contains("..")' in lib
+    for prefix in VALIDATION_PACKAGES:
+        assert '"' + prefix + '"' in lib
+    targets = set()
+    for content in sections.values():
+        assert not re.search(r'working[- ](?:tree|copy|draft) (?:evidence|records|sources)|evidence awaiting publication|working-draft publication boundary', content, re.I), 'Stale validation-publication wording'
+        for path in re.findall(r'#published-evidence\("([^"]+)"\)', content):
+            assert path.startswith(VALIDATION_PACKAGES) and '..' not in path, path
+            git('cat-file', '-e', 'HEAD:docs/swe5001/evidence/' + path.split('#')[0])
+            targets.add(path)
+    assert len(targets) >= 9, 'Missing published validation records or receipts'
+    status = sections['02-project-conduct.typ']
+    assert 'mutable' in status and 'unmerged' in status and 'not frozen submission citations' in status
+    return len(targets)
+
+
 def main():
     checks = {}
     targets = set()
@@ -99,6 +125,10 @@ def main():
     for revision, path in sorted(targets):
         git('cat-file', '-e', revision + ':' + path)
     checks['immutable-source-and-evidence-targets'] = len(targets)
+    checks['published-pr-evidence-targets'] = check_published_validation({
+        source.name: text('sections/' + source.name)
+        for source in sorted((REPORT / 'sections').glob('*.typ'))
+    })
 
     perf = text('sections/04-1-performance.typ')
     rows = re.findall(r'^\s*\[(\d+)\], \[([\d,]+)\], \[([\d.]+)\], \[(\d+)\],$', perf, re.M)

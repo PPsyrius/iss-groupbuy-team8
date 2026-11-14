@@ -88,6 +88,8 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ### V4 Queue-driven scaling
 
+**14 November measured amendment:** Experimental [V4 R5](evidence/20261114-v4-r5-live/v4-r5-pass.md) passed with 80,000 exact source/effects, unchanged-policy automatic growth to four, drain and original commerce restoration. The 2,000-team design below remains the original scenario, not the cohort size of this later authorized trial. Earlier attempts remain failed; no release promotion or capacity ceiling is implied.
+
 - Seed script creates 2,000 open teams due to expire within one minute (`db/seed/load`), with scheduling on.
 - Expected: the expiry sweep publishes about 2,000 `TeamExpired` events; queue backlog rises; `notification-svc` scales to 4; backlog drains to zero; DLQ stays empty.
 - Captured: backlog and task-count graph, drain time, notification row count equals expected.
@@ -113,6 +115,8 @@ The [operator preparation guide](../../perf/k6/SCALING.md) documents local prepa
 - Expected: circuit breaker triggers, service rolls back to the previous task definition, no user-visible errors, and `/blocbuy/swe5001/release/commerce-svc` still holds the previous digest.
 
 ### V7 Poison message
+
+**14 November measured amendment:** [V7 R4](evidence/20261114-v7-r4-live/README.md) passed poison/control isolation, five receives, alarm/email, identified cleanup and restoration; injection→ALARM was 233.130 seconds with temporary 10-second application consumer visibility. Original 60-second visibility was restored; its injection timing is not thereby proven. Matched email time has minute precision, not exact delivery latency; earlier failures remain failed.
 
 - Publish a malformed envelope to `blocbuy-swe5001-domain-events` with SNS message attribute `eventType=PaymentSucceeded` (ADR 0007, #447), routing only to notification and excluding audit; a missing routing attribute is filtered out before SQS and cannot test redrive.
 - Expected: 5 receives, then the message is in the DLQ; the DLQ alarm fires; other messages are unaffected.
