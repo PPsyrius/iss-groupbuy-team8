@@ -145,6 +145,7 @@ resource "aws_lb_target_group" "this" {
   target_type          = "ip"
   vpc_id               = var.vpc_id
   deregistration_delay = 30
+  slow_start           = var.target_group_slow_start_seconds
 
   health_check {
     path                = var.health_check_path

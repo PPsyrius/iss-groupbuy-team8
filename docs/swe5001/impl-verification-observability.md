@@ -88,6 +88,8 @@ Pass on both shapes is the topology-parity evidence. Implemented in [`perf/smoke
 
 ### V4 Queue-driven scaling
 
+**14 November measured amendment:** Experimental [V4 R5](evidence/20261114-v4-r5-live/v4-r5-pass.md) passed with 80,000 exact source/effects, unchanged-policy automatic growth to four, drain and original commerce restoration. The 2,000-team design below remains the original scenario, not the cohort size of this later authorized trial. Earlier attempts remain failed; no release promotion or capacity ceiling is implied.
+
 - Seed script creates 2,000 open teams due to expire within one minute (`db/seed/load`), with scheduling on.
 - Expected: the expiry sweep publishes about 2,000 `TeamExpired` events; queue backlog rises; `notification-svc` scales to 4; backlog drains to zero; DLQ stays empty.
 - Captured: backlog and task-count graph, drain time, notification row count equals expected.
@@ -98,33 +100,48 @@ The [operator preparation guide](../../perf/k6/SCALING.md) documents local prepa
 
 ### V5 Self-healing
 
+2026-11-13 preparation (#458/#459): the [shared AWS session plan](aws-validation-session-plan.md) sequences V5, identity outage, V4 and V7 in one distributed environment and reuses lifecycle timings for V8. [Steady browse, read-only capture and offline poison helpers](../../perf/drills/README.md) are prepared and fixture-tested, not live drill evidence. Only replacement-generator preparation was separately authorized; application startup/load/faults still require approval.
+
 - Under steady load at 50% of the knee with 2 `commerce-svc` tasks, stop one task with `aws ecs stop-task`.
 - Expected: zero non-2xx responses in k6; ECS replaces the task within 2 minutes.
 
+2026-11-13 measured V5 amendment (#459): [R1/R2/R3 evidence](evidence/20261113-aws-validation/README.md) retains an interrupted controller attempt and a failed complete run before **R3 passed**. R3 used commerce-only 1 vCPU/2 GiB and 120-second ALB slow start, preserving images, health thresholds, pools, notification consumers, 100-RPS/ten-minute workload and scaling policy/bounds. It delivered exactly 60,000 workload GETs plus one setup GET with zero invalid/non-2xx/drops; the replacement started at 63.283 s and was first observed ALB healthy at 79.458 s from the stop request. Complete ECS/target capture and readback-verified raw artifacts support that attempt, not repeatability or the earlier smaller shape. The approved live order is now V5 → V4 → V7 → identity/Sandbox, with human-dependent work last; startup succeeded in 1,748.185 s and teardown remains pending at this checkpoint.
+
 ### V6 Safe deployment
+
+2026-11-13 scope reconciliation: #459 explicitly dropped this live drill on 11 October. The original design below is historical planning, **not implemented tooling**: there is no `BLOCBUY_FAIL_HEALTH` switch or failure workflow input. The shared session excludes V6 unless it is separately authorized, implemented and reviewed; existing circuit-breaker configuration alone is not a rollback measurement.
 
 - Inside a manual session started by `swe5001-env.yml` (`up` on `prod`), never through a promotion merge, roll onto the running service an image built with `BLOCBUY_FAIL_HEALTH=true` (a demo-only switch that makes the health endpoint return DOWN; guarded by profile `demo`, with a test asserting it is ignored otherwise). The drill's workflow input is added in Phase B of #376, before the baseline session; the promotion run itself has no rolling deployment.
 - Expected: circuit breaker triggers, service rolls back to the previous task definition, no user-visible errors, and `/blocbuy/swe5001/release/commerce-svc` still holds the previous digest.
 
 ### V7 Poison message
 
+**14 November measured amendment:** [V7 R4](evidence/20261114-v7-r4-live/README.md) passed poison/control isolation, five receives, alarm/email, identified cleanup and restoration; injection→ALARM was 233.130 seconds with temporary 10-second application consumer visibility. Original 60-second visibility was restored; its injection timing is not thereby proven. Matched email time has minute precision, not exact delivery latency; earlier failures remain failed.
+
 - Publish a malformed envelope to `blocbuy-swe5001-domain-events` with SNS message attribute `eventType=PaymentSucceeded` (ADR 0007, #447), routing only to notification and excluding audit; a missing routing attribute is filtered out before SQS and cannot test redrive.
 - Expected: 5 receives, then the message is in the DLQ; the DLQ alarm fires; other messages are unaffected.
 
 ### V8 Rebuild from zero
 
-- No separate cycle runs: every promotion run, the rehearsal and the presentation session are full creates from zero followed by a destroy.
+- Original promotion-based sampling: no separate cycle was planned; every promotion run, the rehearsal and the presentation session are full creates from zero followed by a destroy. The separately authorized 14 November operator cycle is recorded below as a dated extension.
 - Record create, smoke and destroy durations from at least three of them; target full up in under 30 minutes and no resource left after `env-status.sh`.
 
-**Measured on AWS:** the three runs below started with a clean runtime. The first Terraform apply added every runtime resource, with zero changes and zero destroys. The timings in seconds are the step timers in the linked up/down job logs. Full up is the wall time between GitHub's job start and completion, which includes provisioning, service readiness and smoke checks. Runtime destroy excludes the subsequent absence check.
+**Measured on AWS:** the original three promotion/session runs below started with a clean runtime. The first Terraform apply added every runtime resource, with zero changes and zero destroys. Their timings in seconds are the step timers in the linked up/down job logs; full up is the wall time between GitHub's job start and completion, including provisioning, service readiness and smoke checks. Runtime destroy excludes the subsequent absence check. The 14 November operator row explicitly distinguishes its full canonical-invocation timer and final cleanup from the historical GitHub-job timers.
 
 | Run (UTC, 2026) | Initial runtime apply | Smoke suite | Runtime destroy | Full up |
 |---|---:|---:|---:|---:|
 | 6 Oct, monolith promotion: [up](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078/job/112294177568), [down](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/37470479078/job/112300467712) | 506 s (71 added) | 67 s | 505 s (71 destroyed) | 12 min 46 s |
 | 17 Oct, three-service promotion: [up](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39008208244/job/117325956899), [down](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39008208244/job/117332083420) | 520 s (115 added) | 5 s | 709 s (115 destroyed) | 31 min 37 s |
 | 17 Oct, second three-service session: [up](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39014054529/job/117342374522), [down](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39016642278/job/117350012132) | 493 s (115 added) | 4 s | 761 s (115 destroyed) | 32 min 17 s |
+| 14 Nov, three-service local-operator V8 R4: [sanitized proof](evidence/20261114-v8-r4-live/acceptance.json), [private-package receipt](evidence/20261114-v8-r4-live/private-package.json) | 427 s (118 added) | 1 s | 736 s destroy step (118 destroyed); 772.510 s full final canonical down including its absence check | **1794.158 s (29 min 54.158 s), exit 0**; full canonical up including the unchanged 900 s routing wait, confirmed recipient, probes, stability and smoke |
 
-All three down jobs completed successfully. Only the monolith met the full-up target of under 30 minutes. The [19 October promotion](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39259845179) and [20 October promotion](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39435280952) each began by adding 3, changing 6 and destroying 3 resources. They are excluded from the clean-rebuild sample. These timings concern environment recreation and do not measure recovery of lost database contents.
+All three original down jobs completed successfully. In that original sample, only the monolith met the full-up target of under 30 minutes. The [19 October promotion](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39259845179) and [20 October promotion](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/39435280952) each began by adding 3, changing 6 and destroying 3 resources. They are excluded from the clean-rebuild sample. These timings concern environment recreation and do not measure recovery of lost database contents.
+
+**14 November 2026 operator extension:** V8 R4 passed the full create–smoke–destroy cycle, not just the initial apply. Startup ran 13:26:04–13:55:58 SGT; new-runtime final down ran 14:00:09–14:13:01 SGT. Independent absence passed at 14:13:41; zero managed runtime resources and lock absence passed at 14:13:48. The initial old-runtime pre-clean (398.283 s) is not counted as post-test cleanup. Foundation, edge, generator and earlier evidence archives were retained; release/candidate pointers were unchanged. See the [dated source/configuration and failure ledger](evidence/20261114-v8-r4-live/README.md).
+
+This was an authorized local operator run using released digests and the reviewed V5 sizing/warm-up configuration, not a hosted workflow or new release. Read retry and in-memory role-binding corrections and restoration of omitted base-tracked edge dependencies did not change lifecycle/readiness/smoke scripts, the 900-second gate, recipient enforcement or the 1800-second target. R1's ECS waiter transport failure, R2's actual SSO refresh failure and later renewal rejections, and R3's incomplete source-copy failure remain failed; the externally blocked R2 retry exceeded the 30-minute window and is not claimed otherwise. One measured R4 pass is not a recovery-time guarantee or database restore.
+
+Startup cloud logs were captured before final destruction. The existing private S3 AES256 archive was conditionally uploaded once, downloaded and all **1003 files** individually verified, including four attempts' executed sources and lifecycle/cleanup proofs; SHA-256 **`efdee10faa1902a21734dbe920749285256e0aede064aa8c9a6306484cf2d134`**. A separate host-side read-back verification passed. The [package receipt](evidence/20261114-v8-r4-live/private-package.json) states privacy exclusions and does not claim local TAR encryption. Report updates were authorized only after these gates; no identity/payment/replay, V6 or whole-campaign acceptance follows.
 
 ---
 

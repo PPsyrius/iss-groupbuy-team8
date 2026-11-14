@@ -76,6 +76,13 @@ public interface PaidGroupDealRepository {
     List<UUID> dueForExpiry(Instant now, int limit);
 
     /**
+     * One partition of the same eligible ids, selected before ordering and limiting. The partition
+     * is the unsigned final UUID byte modulo {@code shardCount}; count is 1..6, index is
+     * zero-based, and limit is 1..500. Count one retains the original unfiltered query.
+     */
+    List<UUID> dueForExpiry(Instant now, int limit, int shardCount, int shardIndex);
+
+    /**
      * Defers one failed expiry on the database clock. This write runs after the team's transaction
      * rolled back, so a poisoned oldest row cannot consume a batch slot on every sweep.
      */

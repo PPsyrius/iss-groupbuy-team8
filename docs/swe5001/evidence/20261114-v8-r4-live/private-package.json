@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "label": "session-evidence-20261114-v8-r4",
+  "preservedAtUtc": "2026-11-14T06:21:17.196946+00:00",
+  "archiveSha256": "efdee10faa1902a21734dbe920749285256e0aede064aa8c9a6306484cf2d134",
+  "archiveBytes": 1423619,
+  "individualFilesReadbackVerified": 1003,
+  "localArchiveAndDownloadedObjectByteIdentical": true,
+  "remoteExistingPrivateStorageEncryption": "S3 AES256 verified in upload and download responses",
+  "remoteReadbackVerified": true,
+  "uploadAndDownloadReturnedSha256ChecksumsMatch": true,
+  "conditionalUploadCount": 1,
+  "uploadSdkTotalAttempts": 1,
+  "newS3BucketEncryptionOrIamConfigurationApplied": false,
+  "localTarCopiesClaimedEncrypted": false,
+  "privateLocalDirectory": "evidence-v8-r4-20261114/reviewed-stage",
+  "archiveFilename": "session-evidence-20261114-v8-r4.tar.gz",
+  "downloadedFilename": "session-evidence-20261114-v8-r4.readback.tar.gz",
+  "archiveFileManifestContainedInTar": "evidence-files-sha256.json",
+  "preservationReceiptFilename": "session-evidence-20261114-v8-r4-preservation.json",
+  "preservationReceiptSha256": "214be97c4e7a51f619278b2da2fdfb6fdf0154fca3ab9d4ce65850e64b8d7244",
+  "independentHostReadbackVerificationSha256": "f39150a61e00b6831f3faa079b0ad4653b225833d3c0ad6a42959638d2c27e39",
+  "rawStorageCallEvidence": [
+    {
+      "operation": "get-object",
+      "sha256": "ae10601593d2bda9fd92b2b4228a590b24fc4a18eeedfaef5451277fc5a42fe2",
+      "serverSideEncryption": "AES256",
+      "returnedSha256ChecksumMatchesArchive": true
+    },
+    {
+      "operation": "put-object",
+      "sha256": "332443c3478b76795e61a449bcf66256d353a068819d41c147fc9e60ba96e866",
+      "serverSideEncryption": "AES256",
+      "returnedSha256ChecksumMatchesArchive": true
+    }
+  ],
+  "previousArchivesOrFailuresDeleted": false,
+  "rawPrivateStorageBucketKeyUrlsArnsCredentialsAndEndpointsPublished": false,
+  "retainedStorageRemainsChargeable": true,
+  "exclusions": [
+    "Credentials, cookies, SSO cache and authentication challenge output.",
+    "Private Terraform variable files, binary plans, raw show JSON and secret-bearing state; unchanged originals remain private locally.",
+    "Terraform provider/working directories and temporary secret-bearing edge-apply logs."
+  ],
+  "includedSafeEmptyStateProofsAndFourAttemptsSource": true
+}

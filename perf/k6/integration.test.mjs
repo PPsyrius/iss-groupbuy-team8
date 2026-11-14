@@ -190,3 +190,37 @@ test('full-duration V2 materializes every plateau and converts the candidate uni
     // Fixture throughput is never persisted as application/AWS capacity evidence.
   });
 });
+
+test('real k6 steady V5 driver sends only its exact GET budget and keeps the 70/30 mix', { timeout: 120000 }, async () => {
+  await fixture('good', async ({ name, output, args }) => {
+    const result = await run([...args, '--env', 'DRILL=v5', '--env', 'KNEE_RPS=20', '--env', 'TOPOLOGY=local-fixture', '/repo/perf/drills/browse.js']);
+    assert.equal(result.status, 0, result.output);
+    const report = JSON.parse(readFileSync(join(output, 'summary.json'), 'utf8'));
+    assert.equal(report.summary.metrics.browse_requests.values.count, 100);
+    assert.equal(report.summary.metrics.browse_non_2xx.values.count, 0);
+    assert.equal(report.summary.metrics.browse_errors.values.rate, 0);
+    assert.equal(report.summary.metrics.dropped_iterations.values.count, 0);
+    assert.equal(report.context.evidenceKind, 'local-fixture');
+    const stats = JSON.parse(docker(['exec', name, 'node', '-e', 'fetch("http://localhost:8080/stats").then(r=>r.text()).then(console.log)']));
+    assert.deepEqual(stats, { list: 71, detail: 30, other: 0 });
+  });
+});
+test('real k6 identity browse keeps expected write/webhook failures out of browse metrics', { timeout: 120000 }, async () => {
+  await fixture('good', async ({ output, args }) => {
+    const result = await run([...args, '--env', 'DRILL=identity', '--env', 'TOPOLOGY=local-fixture', '/repo/perf/drills/browse.js']);
+    assert.equal(result.status, 0, result.output);
+    const report = JSON.parse(readFileSync(join(output, 'summary.json'), 'utf8'));
+    assert.equal(report.summary.metrics.browse_requests.values.count, 20);
+    assert.equal(report.summary.metrics.browse_errors.values.rate, 0);
+    assert.equal(report.context.mode, 'identity');
+  });
+});
+test('real k6 steady driver rejects 200 error envelopes rather than treating them as availability', { timeout: 120000 }, async () => {
+  await fixture('bad-runtime', async ({ output, args }) => {
+    const result = await run([...args, '--env', 'DRILL=v5', '--env', 'KNEE_RPS=20', '--env', 'TOPOLOGY=local-fixture', '/repo/perf/drills/browse.js']);
+    assert.notEqual(result.status, 0);
+    const report = JSON.parse(readFileSync(join(output, 'summary.json'), 'utf8'));
+    assert.equal(report.summary.metrics.browse_errors.values.rate, 1);
+    assert.equal(report.summary.metrics.browse_non_2xx.values.count, 0);
+  });
+});

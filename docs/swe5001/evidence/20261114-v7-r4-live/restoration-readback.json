@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "at": "2026-11-14T02:31:54.470861+00:00",
+  "attempt": "V7 R4",
+  "passed": true,
+  "restored": true,
+  "quiet": true,
+  "regionVerified": "ap-southeast-1",
+  "accountAndOperatorRoleVerifiedPrivately": true,
+  "awsMutations": 0,
+  "originalTaskDefinitionMatches": true,
+  "originalImageDigestResourcesRolesSecretsEnvironmentWorkersMatch": true,
+  "temporaryVisibilityOverrideAbsent": true,
+  "normalVisibilitySeconds": 60,
+  "maxReceiveCount": 5,
+  "originalServiceConfigurationAndServiceConnectMatch": true,
+  "originalScalingTargetsFlagsPoliciesAndScheduledActionsMatch": true,
+  "originalQueuePoliciesAndAlarmConfigurationMatch": true,
+  "desiredCount": 1,
+  "runningCount": 1,
+  "pendingCount": 0,
+  "oneOriginalTaskRunningAndAlbHealthy": true,
+  "allObservedExperimentalTasksStopped": true,
+  "noNonterminalExperimentalOrStoppingNotificationTasks": true,
+  "queues": {
+    "main": {
+      "ApproximateNumberOfMessages": 0,
+      "ApproximateNumberOfMessagesNotVisible": 0,
+      "ApproximateNumberOfMessagesDelayed": 0
+    },
+    "dlq": {
+      "ApproximateNumberOfMessages": 0,
+      "ApproximateNumberOfMessagesNotVisible": 0,
+      "ApproximateNumberOfMessagesDelayed": 0
+    }
+  },
+  "noNonterminalStandaloneSqlTasksInCluster": true,
+  "noStoppingTasksInCluster": true,
+  "alarmState": "OK",
+  "alarmActionsEnabled": true,
+  "actualAlarmResetTimesUtc": [
+    "2026-11-14T02:15:05.324000+00:00"
+  ],
+  "quietSampleCount": 3,
+  "quietSamplesSpanSeconds": 38.014324,
+  "samples": [
+    {
+      "atUtc": "2026-11-14T02:31:15.978185+00:00",
+      "desiredCount": 1,
+      "runningCount": 1,
+      "pendingCount": 0,
+      "healthyAlbTargetCount": 1,
+      "queues": {
+        "main": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "dlq": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        }
+      },
+      "alarmState": "OK"
+    },
+    {
+      "atUtc": "2026-11-14T02:31:35.029758+00:00",
+      "desiredCount": 1,
+      "runningCount": 1,
+      "pendingCount": 0,
+      "healthyAlbTargetCount": 1,
+      "queues": {
+        "main": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "dlq": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        }
+      },
+      "alarmState": "OK"
+    },
+    {
+      "atUtc": "2026-11-14T02:31:53.992509+00:00",
+      "desiredCount": 1,
+      "runningCount": 1,
+      "pendingCount": 0,
+      "healthyAlbTargetCount": 1,
+      "queues": {
+        "main": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        },
+        "dlq": {
+          "ApproximateNumberOfMessages": 0,
+          "ApproximateNumberOfMessagesNotVisible": 0,
+          "ApproximateNumberOfMessagesDelayed": 0
+        }
+      },
+      "alarmState": "OK"
+    }
+  ],
+  "backstopRestorationRequestedAtUtc": "2026-11-14T02:15:40.668610+00:00",
+  "backstopAbsoluteTriggerDeadlineUtc": "2026-11-14T02:17:48.658222+00:00",
+  "originalTdStableReadbackAtUtc": "2026-11-14T02:20:39.067536+00:00",
+  "restoreRequestBeforeBackstopDeadline": true,
+  "stableRestorationCompletedBeforeBackstopDeadline": false,
+  "deadlineMeaning": "Absolute restoration-trigger deadline, not a guarantee that ECS draining completes within fifteen minutes.",
+  "rawReadCalls": 30,
+  "rawEvidence": "final-readback-c5.private.jsonl",
+  "rawEvidenceSha256": "aa1dcb3af62d63ff6ab716245533046b1464fd19b68c0d3b13e553b687dc770f",
+  "baselineEvidence": {
+    "v7-r4-live/original-task-definition.private.json": "bd807e46cf4ceaa2409a248d1a2fb340d4277fa3f48805565066c7ecfca2ea00",
+    "v7-r4-live/preflight.private.json": "8b820519f22ca52c669976da05e8416a7cb02acd56ecc66a40947262f079b6d6",
+    "r4-runtime-inputs-20261113T184040836305Z/queues.private.json": "2186ac1a0570e108875e9fa3d56ba0f152141155d7d0b75fa2000198750d2a25",
+    "r4-runtime-inputs-20261113T184040836305Z/scaling.private.json": "d1398130f8f72dfb8621f72076f16d0e75691f4e9b140367971c9eef9fb5fc63"
+  }
+}

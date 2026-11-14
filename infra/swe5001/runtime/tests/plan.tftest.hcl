@@ -533,10 +533,113 @@ run "reject_v4_on_non_distributed" {
   expect_failures = [var.v4_demo_enabled]
 }
 
+run "notification_http_trace_logging_is_default_off" {
+  command = plan
+  variables {
+    topology     = "distributed"
+    frontend_url = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+
+  assert {
+    condition     = module.client_service["commerce-svc"].runtime_settings == { cpu = "1024", memory = "2048", target_group_slow_start_seconds = 120 }
+    error_message = "Commerce must budget its cold JVM/proxy and admit newly healthy targets gradually, without changing the workload."
+  }
+
+  assert {
+    condition     = alltrue([for name in ["identity-svc", "notification-svc"] : module.service[name].runtime_settings == { cpu = "512", memory = "1024", target_group_slow_start_seconds = 0 }])
+    error_message = "The V5 cold-start fix must not change identity/notification resources or queue consumers."
+  }
+  assert {
+    condition     = alltrue([for env in values(local.service_environment) : !contains(keys(env), "SPRING_APPLICATION_JSON")])
+    error_message = "Ordinary sessions keep INFO defaults with no implicit HTTP debug logging."
+  }
+}
+
+run "notification_http_trace_logging_is_scoped_and_masked" {
+  command = plan
+  variables {
+    topology                                = "distributed"
+    frontend_url                            = "https://d111111abcdef8.cloudfront.net"
+    notification_http_trace_logging_enabled = true
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition     = jsondecode(local.service_environment["notification-svc"]["SPRING_APPLICATION_JSON"]).logging.level == { "org.springframework.web.servlet.DispatcherServlet" = "DEBUG" } && jsondecode(local.service_environment["notification-svc"]["SPRING_APPLICATION_JSON"]).spring.mvc["log-request-details"] == false
+    error_message = "Only the exact case-sensitive dispatcher logger is enabled, with request/header details explicitly masked."
+  }
+  assert {
+    condition     = !contains(keys(local.service_environment["identity-svc"]), "SPRING_APPLICATION_JSON") && !contains(keys(local.service_environment["commerce-svc"]), "SPRING_APPLICATION_JSON") && local.service_environment["notification-svc"]["BLOCBUY_EVENTS_CONSUMER_ENABLED"] == "false"
+    error_message = "The trace option must not affect identity/commerce or bypass consumer readiness."
+  }
+}
+
+run "reject_notification_http_trace_on_non_distributed" {
+  command = plan
+  variables {
+    notification_http_trace_logging_enabled = true
+  }
+  expect_failures = [var.notification_http_trace_logging_enabled]
+}
+
 run "reject_commerce_target" {
   command = plan
   variables { commerce_requests_per_target = 0 }
   expect_failures = [var.commerce_requests_per_target]
+}
+
+run "commerce_http_trace_logging_is_scoped_and_masked" {
+  command = plan
+  variables {
+    topology                            = "distributed"
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    commerce_http_trace_logging_enabled = true
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition     = jsondecode(local.service_environment["commerce-svc"]["SPRING_APPLICATION_JSON"]).logging.level == { "org.springframework.web.servlet.DispatcherServlet" = "DEBUG" } && jsondecode(local.service_environment["commerce-svc"]["SPRING_APPLICATION_JSON"]).spring.mvc["log-request-details"] == false
+    error_message = "Commerce trace logging must record dispatcher route/status only, with request details masked."
+  }
+  assert {
+    condition     = !contains(keys(local.service_environment["identity-svc"]), "SPRING_APPLICATION_JSON") && !contains(keys(local.service_environment["notification-svc"]), "SPRING_APPLICATION_JSON") && local.service_environment["commerce-svc"]["SPRING_PROFILES_ACTIVE"] == "ec2,commerce,aws" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_ENABLED"] == "false"
+    error_message = "The commerce trace flag must not change other services, enable V4, or bypass messaging readiness."
+  }
+}
+
+run "reject_commerce_http_trace_on_non_distributed" {
+  command = plan
+  variables { commerce_http_trace_logging_enabled = true }
+  expect_failures = [var.commerce_http_trace_logging_enabled]
+}
+
+run "reject_commerce_slow_start_below_supported_range" {
+  command = plan
+  variables { commerce_target_slow_start_seconds = 15 }
+  expect_failures = [var.commerce_target_slow_start_seconds]
+}
+
+run "reject_commerce_slow_start_above_supported_range" {
+  command = plan
+  variables { commerce_target_slow_start_seconds = 901 }
+  expect_failures = [var.commerce_target_slow_start_seconds]
+}
+
+run "reject_fractional_commerce_slow_start" {
+  command = plan
+  variables { commerce_target_slow_start_seconds = 120.5 }
+  expect_failures = [var.commerce_target_slow_start_seconds]
 }
 
 run "requires_edge_distribution" {
@@ -626,4 +729,247 @@ run "reject_fractional_cpu_headroom_threshold" {
   command = plan
   variables { commerce_cpu_scale_out_threshold = 70.5 }
   expect_failures = [var.commerce_cpu_scale_out_threshold]
+}
+
+run "normal_sessions_omit_experimental_producer_settings" {
+  command = plan
+  variables {
+    topology           = "distributed"
+    services_enabled   = true
+    messaging_verified = true
+    frontend_url       = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition = alltrue([for env in values(local.service_environment) :
+      !contains(keys(env), "BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT") &&
+      !contains(keys(env), "BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY") &&
+      !contains(keys(env), "BLOCBUY_EVENTS_RELAY_INTERVAL")
+    ])
+    error_message = "Normal sessions must retain the released producer environment without new experiment keys."
+  }
+}
+
+run "experimental_producer_settings_are_commerce_only" {
+  command = plan
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_expiry_shards           = 4
+    v4_producer_sns_publish_concurrency = 4
+    v4_producer_relay_interval          = "PT0.2S"
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT"] == "4" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY"] == "4" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_INTERVAL"] == "PT0.2S"
+    error_message = "Only explicitly selected producer settings must reach the experimental commerce task."
+  }
+  assert {
+    condition = alltrue([for name in ["identity-svc", "notification-svc"] :
+      !contains(keys(local.service_environment[name]), "BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT") &&
+      !contains(keys(local.service_environment[name]), "BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY") &&
+      !contains(keys(local.service_environment[name]), "BLOCBUY_EVENTS_RELAY_INTERVAL")
+    ])
+    error_message = "Producer experiments must not change identity or notification worker configuration."
+  }
+  assert {
+    condition     = alltrue([for env in values(local.service_environment) : env["SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE"] == "5"]) && aws_appautoscaling_target.notification[0].min_capacity == 1 && aws_appautoscaling_target.notification[0].max_capacity == 4 && !aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_in_suspended && !aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_out_suspended && !aws_appautoscaling_target.notification[0].suspended_state[0].scheduled_scaling_suspended
+    error_message = "Experiments must preserve five-connection pools and fully automatic notification bounds 1..4."
+  }
+}
+
+run "experimental_producer_upper_bounds_are_supported" {
+  command = plan
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_expiry_shards           = 6
+    v4_producer_sns_publish_concurrency = 8
+    v4_producer_relay_interval          = "PT0.1S"
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT"] == "6" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY"] == "8" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_INTERVAL"] == "PT0.1S"
+    error_message = "The validated experimental upper bounds must remain usable without changing service pools or consumers."
+  }
+}
+
+run "reject_zero_expiry_shards" {
+  command = plan
+  variables {
+    topology                  = "distributed"
+    services_enabled          = true
+    messaging_verified        = true
+    v4_demo_enabled           = true
+    v4_producer_expiry_shards = 0
+    frontend_url              = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  expect_failures = [var.v4_producer_expiry_shards]
+}
+
+run "reject_excess_expiry_shards" {
+  command = plan
+  variables {
+    topology                  = "distributed"
+    services_enabled          = true
+    messaging_verified        = true
+    v4_demo_enabled           = true
+    v4_producer_expiry_shards = 7
+    frontend_url              = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  expect_failures = [var.v4_producer_expiry_shards]
+}
+
+run "reject_fractional_expiry_shards" {
+  command = plan
+  variables {
+    topology                  = "distributed"
+    services_enabled          = true
+    messaging_verified        = true
+    v4_demo_enabled           = true
+    v4_producer_expiry_shards = 2.5
+    frontend_url              = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  expect_failures = [var.v4_producer_expiry_shards]
+}
+
+run "reject_zero_sns_publish_concurrency" {
+  command = plan
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_sns_publish_concurrency = 0
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  expect_failures = [var.v4_producer_sns_publish_concurrency]
+}
+
+run "reject_excess_sns_publish_concurrency" {
+  command = plan
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_sns_publish_concurrency = 9
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  expect_failures = [var.v4_producer_sns_publish_concurrency]
+}
+
+run "reject_fractional_sns_publish_concurrency" {
+  command = plan
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_sns_publish_concurrency = 1.5
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  expect_failures = [var.v4_producer_sns_publish_concurrency]
+}
+
+run "reject_hot_loop_relay_interval" {
+  command = plan
+  variables {
+    topology                   = "distributed"
+    services_enabled           = true
+    messaging_verified         = true
+    v4_demo_enabled            = true
+    v4_producer_relay_interval = "PT0.01S"
+    frontend_url               = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  expect_failures = [var.v4_producer_relay_interval]
+}
+
+run "reject_slow_relay_interval" {
+  command = plan
+  variables {
+    topology                   = "distributed"
+    services_enabled           = true
+    messaging_verified         = true
+    v4_demo_enabled            = true
+    v4_producer_relay_interval = "PT1M"
+    frontend_url               = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  expect_failures = [var.v4_producer_relay_interval]
+}
+
+run "reject_expiry_sharding_outside_v4" {
+  command = plan
+  variables { v4_producer_expiry_shards = 4 }
+  expect_failures = [var.v4_producer_expiry_shards]
+}
+
+run "reject_sns_tuning_outside_v4" {
+  command = plan
+  variables { v4_producer_sns_publish_concurrency = 4 }
+  expect_failures = [var.v4_producer_sns_publish_concurrency]
+}
+
+run "reject_relay_tuning_outside_v4" {
+  command = plan
+  variables { v4_producer_relay_interval = "PT0.2S" }
+  expect_failures = [var.v4_producer_relay_interval]
 }

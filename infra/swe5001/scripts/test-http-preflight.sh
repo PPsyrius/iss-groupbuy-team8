@@ -33,8 +33,21 @@ aws() {
        headers:[{HeaderName:"X-Origin-Secret",HeaderValue:$secret}]}]}' ;;
     'ecs describe-services') jq -nc --arg service "$service" --arg group "$group" '
       {services:[{serviceName:$service,loadBalancers:[{targetGroupArn:$group,containerName:$service,containerPort:8589}]}],failures:[]}' ;;
-    'ecs list-tasks') if [ "$FAULT" = extra_task ]; then printf '["task:1","task:2"]\n'; else printf '["task:1"]\n'; fi ;;
-    'ecs describe-tasks') printf '{"tasks":[],"failures":[]}\n' ;;
+    'ecs list-tasks')
+      if [ "$FAULT" = extra_task ]; then printf '["task:1","task:2"]\n';
+      elif [ "$FAULT" = two_tasks ]; then printf '["task:1","task:2"]\n';
+      else printf '["task:1"]\n'; fi ;;
+    'ecs describe-tasks')
+      [ "$FAULT" != describe_denied ] || return 1
+      local task_count=1
+      [ "$FAULT" != two_tasks ] || task_count=2
+      jq -nc --arg fault "${DESCRIBE_FAULT:-$FAULT}" --argjson count "$task_count" '
+        {tasks:[range(1; $count + 1) | {taskArn:("task:" + tostring),lastStatus:"RUNNING",desiredStatus:"RUNNING"}],failures:[]} |
+        if $fault == "missing_described_task" then .tasks |= .[1:]
+        elif $fault == "describe_failure" then .failures = [{arn:"task:missing",reason:"MISSING"}]
+        elif $fault == "stopped_after_list" then .tasks[0].lastStatus = "STOPPED"
+        elif $fault == "wrong_described_task" then .tasks[0].taskArn = "task:other"
+        else . end' ;;
     'application-autoscaling describe-scalable-targets') printf '{"ScalableTargets":[]}\n' ;;
     'application-autoscaling describe-scaling-policies')
       if [ "$FAULT" = cpu_headroom ] || [ "$FAULT" = cpu_alarm_denied ]; then
@@ -72,9 +85,27 @@ jq -e '.schema == 1 and .mode == "v2" and .account == "402178232802" and .baseUr
 printf 'PASS preflight records fixed account/origin and tooling source\n'
 grep -q -- '--services monolith' "$CALLS"
 printf 'PASS V2 captures the monolith, not distributed commerce\n'
+: > "$CALLS"
 bash "$dir/http-preflight.sh" v3 > "$work/report.json"
 grep -q -- '--services commerce-svc' "$CALLS"
 printf 'PASS V3 captures distributed commerce\n'
+for mode in v5 identity; do
+  : > "$CALLS"
+  FAULT=two_tasks bash "$dir/http-preflight.sh" "$mode" > "$work/drill.json"
+  jq -e --arg mode "$mode" '.mode == $mode' "$work/drill.json" > /dev/null
+  grep -q -- '--tasks task:1 task:2' "$CALLS"
+  for fault in missing_described_task describe_failure; do
+    : > "$CALLS"
+    if FAULT=two_tasks DESCRIBE_FAULT=$fault bash "$dir/http-preflight.sh" "$mode" > "$work/fault.json" 2> "$work/error"; then exit 1; fi
+    [ ! -s "$work/fault.json" ]
+    grep -q -- '--tasks task:1 task:2' "$CALLS"
+    printf 'PASS %s fails closed on %s after listing two tasks\n' "$mode" "$fault"
+  done
+  : > "$CALLS"
+  if bash "$dir/http-preflight.sh" "$mode" > /dev/null 2>&1; then exit 1; fi
+  printf 'PASS %s captures two commerce tasks and refuses a one-task start\n' "$mode"
+done
+: > "$CALLS"
 FAULT=cpu_headroom bash "$dir/http-preflight.sh" v3 > "$work/report.json"
 jq -e --arg policy "$CPU_POLICY" '.cpuHeadroom.alarms == [{name:"blocbuy-swe5001-commerce-cpu-headroom",namespace:"AWS/ECS",
   metric:"CPUUtilization",statistic:"Average",period:60,evaluationPeriods:1,datapointsToAlarm:1,threshold:70,
@@ -85,6 +116,7 @@ jq -e '.routing.rules[0].originHeaderMatches == true and .routing.rules[0].pathP
 printf 'PASS capture binds origin listener and compares protected header conditions\n'
 if grep -Fq "$SECRET_SENTINEL" "$work/report.json"; then exit 1; fi
 printf 'PASS origin/header values are absent from evidence\n'
+: > "$CALLS"
 FAULT=header_mismatch bash "$dir/http-preflight.sh" v2 > "$work/report.json"
 jq -e '.routing.rules[0].originHeaderMatches == false' "$work/report.json" > /dev/null
 printf 'PASS changed origin-header condition is recorded as a mismatch\n'
@@ -92,7 +124,8 @@ printf 'PASS changed origin-header condition is recorded as a mismatch\n'
 printf 'PASS private route inputs are removed after capture\n'
 if grep -Eq 'update-|register-|run-task|publish|send-message|put-' "$CALLS"; then exit 1; fi
 printf 'PASS capture issues no mutation or task-start requests\n'
-for fault in dirty denied extra_task route_read_denied cpu_alarm_denied; do
+for fault in dirty denied extra_task route_read_denied cpu_alarm_denied describe_denied missing_described_task describe_failure stopped_after_list wrong_described_task; do
+  : > "$CALLS"
   if FAULT=$fault bash "$dir/http-preflight.sh" v2 > "$work/fault.json" 2> "$work/error"; then
     printf 'FAIL preflight accepted %s\n' "$fault" >&2
     exit 1

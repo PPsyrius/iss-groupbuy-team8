@@ -1,0 +1,14 @@
+{
+  "atUtc": "2026-11-14T02:39:42.064972+00:00",
+  "scope": "Offline public-evidence reconciliation only; no additional source tests, AWS calls, uploads or runtime mutation.",
+  "jsonParsingPassed": true,
+  "publicRelativeLinksExist": true,
+  "identifierAndSecretPatternExclusionPassed": true,
+  "fullAcceptanceAndOriginalTechnicalBytesMatchPrivateAndDownloadedArchive": true,
+  "boundSourceHashesReverified": true,
+  "downloadedArchiveFilesReverified": 683,
+  "sprintEntryBulletCount": 6,
+  "olderV4V5PackageReceiptUnchanged": true,
+  "submittedReportsUntouched": true,
+  "gitStageCommitPushPerformed": false
+}

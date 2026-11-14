@@ -117,6 +117,31 @@ class ReviewedCheckerTests(unittest.TestCase):
     def test_review_scopes_diff_to_frozen_receipts_not_unrelated_code(self):
         self.run_report()
 
+    def test_published_validation_targets_are_separate_from_historical_pins(self):
+        sections = {p.name: reviewed.text('sections/' + p.name)
+                    for p in (reviewed.REPORT / 'sections').glob('*.typ')}
+        self.assertGreaterEqual(reviewed.check_published_validation(sections), 9)
+        for path in ('20261114-v4-r5-live/v4-r5-pass.md',
+                     '20261114-v8-r4-live/acceptance.json'):
+            self.assertEqual(reviewed.snapshot('docs/swe5001/evidence/' + path,
+                                               '05-devops.typ', None), reviewed.EVIDENCE)
+
+    def test_stale_validation_publication_claim_is_rejected(self):
+        with self.assertRaisesRegex(AssertionError, 'Stale validation-publication'):
+            self.run_report(lambda name, content: content + '\nWorking-tree evidence awaiting publication.'
+                            if name == 'sections/02-project-conduct.typ' else content)
+
+    def test_published_validation_rejects_unrelated_or_traversal_paths(self):
+        for path in ('20261114-v8-r4-live/../private.json', 'unrelated/README.md'):
+            with self.subTest(path=path), self.assertRaises(AssertionError):
+                self.run_report(lambda name, content: content + '\n#published-evidence("' + path + '")[invalid]'
+                                if name == 'sections/02-project-conduct.typ' else content)
+
+    def test_publication_must_not_claim_frozen_submission_citations(self):
+        with self.assertRaises(AssertionError):
+            self.run_report(lambda name, content: content.replace('not frozen submission citations', 'frozen submission citations')
+                            if name == 'sections/02-project-conduct.typ' else content)
+
     def test_changed_calibration_table_is_rejected(self):
         # Change the first completed-count cell independent of table formatting.
         def changed_row(name, content):

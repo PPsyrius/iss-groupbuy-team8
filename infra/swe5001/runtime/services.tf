@@ -77,7 +77,7 @@ locals {
         task_policy_json  = local.notification_event_policy
         connects_to       = []
 
-        environment = {
+        environment = merge({
           SPRING_PROFILES_ACTIVE       = "ec2,notification,aws"
           BLOCBUY_SCHEDULING_ENABLED   = "false"
           AWS_REGION                   = var.aws_region
@@ -86,7 +86,15 @@ locals {
           # Same gate as the commerce relay: the consumer stays off until env-up's
           # routing check has passed, so it never deletes the verifier's probes.
           BLOCBUY_EVENTS_CONSUMER_ENABLED = tostring(var.services_enabled && var.messaging_verified)
-        }
+          }, var.notification_http_trace_logging_enabled ? {
+          # JSON preserves the case-sensitive logger class name; an all-uppercase
+          # LOGGING_LEVEL_* environment variable would lowercase it and not bind.
+          # Only dispatcher request/status lines, never broad web/SQL/body logging.
+          SPRING_APPLICATION_JSON = jsonencode({
+            logging = { level = { "org.springframework.web.servlet.DispatcherServlet" = "DEBUG" } }
+            spring  = { mvc = { "log-request-details" = false } }
+          })
+        } : {})
 
         secrets = {}
       }
@@ -122,6 +130,19 @@ locals {
           SPRING_PROFILES_ACTIVE                    = "ec2,commerce,aws,demo"
           BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE = "500"
           BLOCBUY_SCHEDULING_TEAM_EXPIRY_INTERVAL   = "PT1S"
+          } : {}, var.v4_demo_enabled && (var.v4_producer_expiry_shards != 1 || var.v4_producer_sns_publish_concurrency != 1 || var.v4_producer_relay_interval != "PT2S") ? {
+          # Producer-only experiment: the released notification workers/policy stay untouched.
+          # All three settings disappear on normal/original-image restoration.
+          BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT = tostring(var.v4_producer_expiry_shards)
+          BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY       = tostring(var.v4_producer_sns_publish_concurrency)
+          BLOCBUY_EVENTS_RELAY_INTERVAL                = var.v4_producer_relay_interval
+          } : {}, var.commerce_http_trace_logging_enabled ? {
+          # Record the real signed webhook's route/status without its body/signature.
+          # Never enable request details or broader web/SQL logging for this drill.
+          SPRING_APPLICATION_JSON = jsonencode({
+            logging = { level = { "org.springframework.web.servlet.DispatcherServlet" = "DEBUG" } }
+            spring  = { mvc = { "log-request-details" = false } }
+          })
         } : {})
 
         secrets = {

@@ -1,0 +1,220 @@
+{
+  "schema": 1,
+  "atUtc": "2026-11-14T06:28:09.223430+00:00",
+  "attempt": "V8 R4",
+  "passed": true,
+  "fullCreateSmokeDestroyAndEvidenceClosurePassed": true,
+  "executionKind": "Authorized local operator using canonical scripts; not a GitHub workflow or new release",
+  "startup": {
+    "startedAtSgt": "2026-11-14T13:26:04.910532+08:00",
+    "completedAtSgt": "2026-11-14T13:55:58.963691+08:00",
+    "canonicalExitCode": 0,
+    "fullCanonicalWallSeconds": 1794.158,
+    "targetSeconds": 1800,
+    "strictlyUnderTarget": true,
+    "calculatedMarginSeconds": 5.842,
+    "runtimeResourcesInitiallyAdded": 118,
+    "mandatoryRoutingWaitSeconds": 900,
+    "stageTimings": [
+      { "step": "read edge URL", "seconds": 19 },
+      { "step": "read release image digests", "seconds": 2 },
+      { "step": "pause existing services and scaling before changing runtime", "seconds": 12 },
+      { "step": "apply runtime (services stopped, relay off, scaling suspended)", "seconds": 427 },
+      { "step": "run db-init", "seconds": 62 },
+      { "step": "verify messaging before enabling the commerce relay", "seconds": 985 },
+      { "step": "apply runtime (services started only after db-init and readiness)", "seconds": 20 },
+      { "step": "apply edge (point /api/* at the ALB)", "seconds": 66 },
+      { "step": "wait for services to be stable", "seconds": 199 },
+      { "step": "smoke suite", "seconds": 1 }
+    ],
+    "fullTimerStartsBeforeCompleteCanonicalInvocation": true,
+    "confirmedApprovedRecipientAndRoutingHealthStabilitySmokePassed": true
+  },
+  "initialOldRuntimePreclean": {
+    "canonicalExitCode": 0,
+    "wallSeconds": 398.283,
+    "notCountedAsNewRuntimeFinalCleanup": true
+  },
+  "newRuntimeFinalCleanup": {
+    "startedAtSgt": "2026-11-14T14:00:09.222623+08:00",
+    "completedAtSgt": "2026-11-14T14:13:01.683164+08:00",
+    "canonicalExitCode": 0,
+    "fullCanonicalWallSeconds": 772.51,
+    "destroyStepSeconds": 736,
+    "runtimeResourcesDestroyed": 118,
+    "independentAbsenceAtSgt": "2026-11-14T14:13:41.629194+08:00",
+    "emptyUnlockedStateAtSgt": "2026-11-14T14:13:48.227824+08:00",
+    "managedRuntimeResourcesAfterCleanup": 0,
+    "runtimeStateSerial": 526,
+    "forceUnlockPerformed": false
+  },
+  "verifiedRuntime": {
+    "topology": "distributed",
+    "services": [
+      {
+        "service": "commerce-svc",
+        "desired": 2,
+        "running": 2,
+        "pending": 0,
+        "releasedImageVerified": true,
+        "hikariPool": 5,
+        "cpu": "1024",
+        "memoryMiB": "2048",
+        "allAlbTargetsHealthy": true,
+        "normalProfilesFlagsAndNoExperimentalOverrides": true
+      },
+      {
+        "service": "identity-svc",
+        "desired": 1,
+        "running": 1,
+        "pending": 0,
+        "releasedImageVerified": true,
+        "hikariPool": 5,
+        "cpu": "512",
+        "memoryMiB": "1024",
+        "allAlbTargetsHealthy": true,
+        "normalProfilesFlagsAndNoExperimentalOverrides": true
+      },
+      {
+        "service": "notification-svc",
+        "desired": 1,
+        "running": 1,
+        "pending": 0,
+        "releasedImageVerified": true,
+        "hikariPool": 5,
+        "cpu": "512",
+        "memoryMiB": "1024",
+        "allAlbTargetsHealthy": true,
+        "normalProfilesFlagsAndNoExperimentalOverrides": true
+      }
+    ],
+    "commerceMinimum": 2,
+    "commerceRequestTargetPerMinute": 12000,
+    "commerceSlowStartSeconds": 120,
+    "normalNotificationVisibilitySeconds": 60,
+    "allScalingSuspensionFlagsFalse": true,
+    "singleApprovedAlarmRecipientConfirmed": true,
+    "recipientEndpointPublished": false,
+    "postgres": {
+      "DBInstanceClass": "db.t4g.micro",
+      "Engine": "postgres",
+      "EngineVersion": "18.3",
+      "MultiAZ": false,
+      "BackupRetentionPeriod": 0,
+      "StorageEncrypted": true
+    },
+    "valkey": {
+      "CacheNodeType": "cache.t4g.micro",
+      "AtRestEncryptionEnabled": true,
+      "TransitEncryptionEnabled": true,
+      "AuthTokenEnabled": true
+    }
+  },
+  "source": {
+    "baseCommit": "33a1a9a575c847e37c07f7df2c8cdeb09077c722",
+    "description": "Previously reviewed V5 sizing/warm-up overlay, with two omitted base-tracked edge dependencies restored; not a clean signed checkout",
+    "reviewedRuntimeOverlaySha256": {
+      "infra/swe5001/runtime/services.tf": "5744a1d8eeb1a63560f1591e7e5df5cf512ab5f58d63f6fc40e5a6c401b715d2",
+      "infra/swe5001/runtime/variables.tf": "81b7088ab869bacac79c2958603e6eb7a80ffdf911f7761d7f07435cd8bfb7e6",
+      "infra/swe5001/runtime/ecs.tf": "46eb87cf7357b2a96854b0d799330c90483b3016ade42af5b3b66130e25d42e7",
+      "infra/swe5001/runtime/tests/plan.tftest.hcl": "27e76907c8526498c399d2cc75658c7c4f211831f5622690b31737058d6a3d04",
+      "infra/swe5001/modules/ecs-service/main.tf": "e10c3f75c14c735988f3f64a7aa449e82858bcf781a99c889ed128dbf23f6488",
+      "infra/swe5001/modules/ecs-service/variables.tf": "e25515c59230a47dfed9c9f595a2be76892d789d06706b6d066812d8fed10d50",
+      "infra/swe5001/modules/ecs-service/outputs.tf": "da7cd985639517598f58a76ada3beba2f132b21133cf8d2db816bf7e917fc88d"
+    },
+    "restoredDependencySha256": {
+      "deployment/frontend/cloudfront/response-headers-policy.json": "8fad8b583fc2023c27bfb0db9001d9a07c1b7b39df40f9aa070afde8557ba2a5",
+      "deployment/frontend/cloudfront/spa-fallback.js": "ba40141120ce7a212f90f02c667cf0694b7a1a1620a6c8aec4f2d238dbeb21a5"
+    },
+    "canonicalLifecycleReadinessSmokeScriptsUnmodified": true,
+    "operatorReadRetryAndInMemoryRoleBindingOverlayRecordedSeparately": true,
+    "operatorImageSha256": "fb52d73953420038a48f94cf5f8f792f66079d5b5dc22375b4294ddcf8c4d719",
+    "releasedImageDigests": {
+      "commerce-svc": "sha256:f2e65b444395c2e5c26ae8675d4a4c203fbf97f0b3a98ae8e2eb187a6a51d92e",
+      "identity-svc": "sha256:fbc67dbe2e5912d8862e8cbedcee37bca0492ce987cf41d80f18fced0eaee074",
+      "notification-svc": "sha256:6e42508bd3ba990984aced334eac1bff57fd782c69e636a555dbb7d1f670699a"
+    }
+  },
+  "roleCoverageMetadata": {
+    "initialDown": {
+      "actualExpirationUtc": "2026-11-14T06:18:04+00:00",
+      "selectedExistingAccountAndRoleVerifiedPrivately": true,
+      "credentialValuesPublished": false
+    },
+    "up": {
+      "actualExpirationUtc": "2026-11-14T06:25:29+00:00",
+      "selectedExistingAccountAndRoleVerifiedPrivately": true,
+      "credentialValuesPublished": false
+    },
+    "finalDown": {
+      "actualExpirationUtc": "2026-11-14T07:00:02+00:00",
+      "selectedExistingAccountAndRoleVerifiedPrivately": true,
+      "credentialValuesPublished": false
+    }
+  },
+  "preservation": {
+    "archiveSha256": "efdee10faa1902a21734dbe920749285256e0aede064aa8c9a6306484cf2d134",
+    "archiveBytes": 1423619,
+    "downloadedFilesIndividuallyVerified": 1003,
+    "existingPrivateS3Encryption": "AES256",
+    "uploadDownloadChecksumsAndHostReverificationPassed": true
+  },
+  "retained": {
+    "foundationStateUnchanged": true,
+    "edgeGeneratorAndPriorArchivesVerifiedPresent": true,
+    "releaseCandidatePointersUnchanged": true,
+    "priorFailedAttemptsRetained": true
+  },
+  "attemptHistory": [
+    {
+      "attempt": "V8 R1",
+      "canonicalUpExitCode": 255,
+      "fullUpWallSeconds": 571.61,
+      "startupTargetPassed": false,
+      "endedAtSgt": "2026-11-14T11:12:04.643580+08:00",
+      "outcome": "Read-only ECS waiter connection closed after db-init submission; sole task later verified STOPPED / exit 0."
+    },
+    {
+      "attempt": "V8 R2",
+      "canonicalUpExitCode": 1,
+      "fullUpWallSeconds": 631.846,
+      "startupTargetPassed": false,
+      "endedAtSgt": "2026-11-14T11:42:18.717005+08:00",
+      "outcome": "Terraform output read failed on SSO OIDC CreateToken refresh after successful provisioning, before db-init submission. Subsequent device-login rejections were separate renewal failures."
+    },
+    {
+      "attempt": "V8 R3",
+      "canonicalUpExitCode": 1,
+      "fullUpWallSeconds": 1820.049,
+      "startupTargetPassed": false,
+      "endedAtSgt": "2026-11-14T13:06:34.032717+08:00",
+      "outcome": "Private source copy omitted two mandatory edge static dependencies. Routing passed; edge apply failed and canonical failure cleanup paused services."
+    },
+    {
+      "attempt": "V8 R4",
+      "canonicalUpExitCode": 0,
+      "fullUpWallSeconds": 1794.158,
+      "startupTargetPassed": true,
+      "endedAtSgt": "2026-11-14T13:55:58.963691+08:00",
+      "outcome": "Passed full startup target and final new-runtime destruction; encrypted evidence upload/download and individual file verification passed."
+    }
+  ],
+  "limitations": [
+    "One observed AWS operator pass, not a guaranteed recovery-time objective or acceptance of the unchanged hosted workflow.",
+    "The R2 retry window was exceeded during externally blocked SSO renewal; it is not represented as a within-window retry.",
+    "Runtime recreation does not restore deleted database contents or establish identity, payment/replay, V6 or whole-campaign acceptance.",
+    "Local TAR copies are private but not claimed encrypted. Auth challenges, credentials, raw private variables/plans and secret-bearing state are excluded; scoped reviews and safe empty-state proofs are retained."
+  ],
+  "privateArchivedEvidenceSha256": {
+    "v8-live-20261114-r4/up-result.json": "98f75d020c341a28a4166b5d5076cc65223e30fcd638b0502632e9f2b2f5810a",
+    "v8-live-20261114-r4/postflight-acceptance.json": "b68c296a7580b5b2f70cee6b27a82bd3deb4e1921668d308d22b0cd1d4d0ac7a",
+    "v8-live-20261114-r4/startup-cloud-logs-complete.json": "7c02c58c210308cea346b246143ef6abeb471e105563bc8ff2b91e1527a3c180",
+    "v8-live-20261114-r4/final-down-result.json": "17a5facd272bd835c7932afe12e891c0e7ed5c3b41c1ccaa7255efe706653dee",
+    "v8-live-20261114-r4/absent-after-final-down.json": "c88bced35ed9ae4f04caeedac9a7a19fbe507ddc4974eafb306ab8823a5015e4",
+    "v8-live-20261114-r4/final-empty-state-unlocked.json": "b8f3eeac8214b381f7e03c010eda0f37751a4b0e6a4ff8be3bd01bd6a1d96947",
+    "v8-live-20261114-r4/full-cycle-technical-acceptance.json": "3ad4b36c3dffce87884160d542777fbb7b14a22302d3eb1778c1ac7c74189a8e",
+    "v8-live-20261114-r4/source-inputs-verified.json": "fa4f2a65736d6bcf46da444b73f33b5d20f954d698efc7ddb1c5aa612544810a",
+    "v8-live-20261114-r4/execution-overlay-verified.json": "643f1676830294967c7c40438fc2a280509a8fa023b4934ffeb315098f69f0cb",
+    "v8-live-20261114-r4/edge-dependency-fix-reviewed.json": "4df44f103795bae21f3ccc49cc9ff368b5df7221b5a2ec26c10afcdbbf59321c"
+  }
+}

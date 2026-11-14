@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "historicalStartUtc": "2026-11-13T20:58:00Z",
+  "historicalEndExclusiveUtc": "2026-11-13T21:22:00Z",
+  "originalPolicyTarget": 50,
+  "originalPolicyScaleOutCooldownSeconds": 60,
+  "originalPolicyScaleInCooldownSeconds": 180,
+  "originalPolicyScaleInDisabled": false,
+  "activities": [
+    {
+      "startTime": "2026-11-13T21:06:32.011000+00:00",
+      "endTime": "2026-11-13T21:07:40.473000+00:00",
+      "statusCode": "Successful",
+      "desiredCount": 4,
+      "alarmMonitorCause": true,
+      "referencesUnchangedOriginalPolicy": true,
+      "sourceActivitySha256": "fcef7fb76991962d40eb4b81c5974592e15fc6f2c3f67d4cfe40ee496f748ec8"
+    }
+  ],
+  "rawHistoricalActivityReceiptSha256": "fde190004b2143c2cd5cd390dc9250f0f921b686ac15cfca873ff349c65b630b",
+  "resourceAlarmAndActivityIdentifiersAndRawCauseOmitted": true
+}

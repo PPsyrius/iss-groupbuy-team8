@@ -115,6 +115,25 @@
         LIMIT #{limit}
     </select>
 
+    <!-- Same eligibility and logical retry key as the legacy scan. Partition before LIMIT so no
+         candidate is discarded by application-side filtering. No provider/server hash function. -->
+    <select id="selectDueForExpiryShard" resultType="java.util.UUID" flushCache="true" useCache="false">
+        SELECT deal.id
+        FROM biz_group_deal deal
+        WHERE deal.deleted = false AND deal.status = 'open' AND deal.expire_time &lt;= #{now}
+          AND get_byte(uuid_send(deal.id), 15) % #{shardCount} = #{shardIndex}
+          AND NOT EXISTS (
+              SELECT 1
+              FROM sys_scheduled_item_retry retry
+              WHERE retry.job_key = 'team-expiry-sweep'
+                AND retry.item_id = deal.id
+                AND retry.deleted = false
+                AND retry.retry_after > #{now}
+          )
+        ORDER BY deal.expire_time, deal.id
+        LIMIT #{limit}
+    </select>
+
     <!-- This statement runs after the failed expiry transaction has rolled back. Its own commit is
          what prevents one poisoned oldest team from monopolizing every bounded candidate batch. -->
     <insert id="deferExpiryRetry">

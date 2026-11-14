@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "pr": 807,
+  "reviewedHead": "8466bb459eb6f6dcfa7fb76e7c18c44abfa427a6",
+  "scope": "Documentation corrections only; no AWS calls, credentials, IAM or runtime changes",
+  "findings": [
+    "Observer AWS mount must match HOME=/home/operator",
+    "Results and SSO cache mounts must permit writes by UID/GID 10001:10001",
+    "Availability summary must place V5/V7 configuration and email-precision limits beside their pass claims"
+  ],
+  "offlineMountCheck": {
+    "image": "blocbuy-swe5001-drill-operator:pr807-nonroot",
+    "network": "none",
+    "uid": 10001,
+    "gid": 10001,
+    "home": "/home/operator",
+    "configuration": "Synthetic region-only profile; no credential or SSO token values",
+    "defaultProfileDiscovery": "aws configure list-profiles resolved only the synthetic profile",
+    "writeProbesCreatedAndRemoved": ["/results", "/home/operator/.aws/sso/cache"],
+    "exit": 0,
+    "limit": "Synthetic Docker Desktop bind mounts only, not access verification of an owner's real private directories or AWS login"
+  },
+  "reportChecks": {
+    "immutableSourceTargets": 135,
+    "v2Rows": 10,
+    "checkerRegressionTests": 18,
+    "typstWarnings": 0,
+    "pdfPages": 151,
+    "textSpansOutsidePage": 0
+  },
+  "scopeDisposition": "Owner explicitly requires one existing branch and PR; do not split or weaken issue acceptance criteria"
+}

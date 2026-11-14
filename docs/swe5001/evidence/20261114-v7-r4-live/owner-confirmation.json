@@ -1,0 +1,18 @@
+{
+  "evidenceKind": "owner-confirmed alarm email receipt with supplied screenshot",
+  "dateSgt": "2026-11-14",
+  "ownerReportedReceiptTimeSgt": "10:12",
+  "receiptTimePrecision": "minute only",
+  "screenshotAlarmTransitionUtc": "2026-11-14T02:12:05Z",
+  "screenshotAlarmTransitionSgt": "2026-11-14T10:12:05+08:00",
+  "screenshotTransition": "OK -> ALARM",
+  "screenshotMetricPeriodSeconds": 60,
+  "screenshotEvaluationPeriods": 1,
+  "screenshotStatistic": "Maximum",
+  "screenshotPositiveMetricValue": 1,
+  "humanEmailReceiptConfirmed": true,
+  "exactDeliveryLatencyEstablished": false,
+  "attemptAssociation": "must match actual captured alarm transition before acceptance",
+  "overallV7AcceptanceEstablishedByEmailAlone": false,
+  "privateAccountResourceIdentitiesAndConsoleUrlsOmitted": true
+}

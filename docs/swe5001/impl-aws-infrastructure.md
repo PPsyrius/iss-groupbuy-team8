@@ -81,7 +81,7 @@ Origin TLS: the ALB listener is HTTP because there is no custom domain for an AC
 | VPC CIDR | `10.50.0.0/16` (does not overlap the default VPC used by the EC2 dev host) |
 | Public subnets | `10.50.0.0/24` (a), `10.50.1.0/24` (b): ALB, fck-nat |
 | Private subnets | `10.50.10.0/24` (a), `10.50.11.0/24` (b): ECS tasks only; default route to fck-nat |
-| Data subnets | `10.50.20.0/24` (a), `10.50.21.0/24` (b): RDS and ElastiCache only; one route table with the local VPC route and nothing else (no NAT, no S3 endpoint). Added 2026-11-04 for #589 (assessor remark F6); `terraform test` asserts the two sets are disjoint. Configured, not yet applied on AWS |
+| Data subnets | `10.50.20.0/24` (a), `10.50.21.0/24` (b): RDS and ElastiCache only; one route table with the local VPC route and nothing else (no NAT, no S3 endpoint). Added 2026-11-04 for #589 (F6); `terraform test` asserts disjoint sets. [10 November AWS evidence](evidence/20261110-subnet-verification/README.md) verifies dated placement/connectivity, not continuous or negative packet-isolation guarantees |
 | Egress | fck-nat on `t4g.nano` in public subnet a, route `0.0.0.0/0` from both private route tables. Needed for Stripe, Google OAuth and AWS APIs |
 | VPC endpoints | Gateway endpoint for S3 (free; ECR layer pulls). Interface endpoints are skipped for cost; traffic to ECR API, SSM, SNS, SQS and CloudWatch goes through fck-nat |
 
@@ -113,7 +113,7 @@ Target groups: type `ip`, port 8589, health check `GET /api/actuator/health`, ma
 
 - Cluster with Container Insights (enhanced observability off for cost), capacity providers `FARGATE` and `FARGATE_SPOT`; strategy base 1 on `FARGATE`, weight 1 `FARGATE` : 3 `FARGATE_SPOT` above the base.
 - Service Connect namespace `blocbuy-swe5001.local`; each service publishes port name `http` with DNS name equal to the service name (`identity-svc:8589`).
-- Task definition per service: `ARM64`, 512 CPU / 1024 MiB, container port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75`, `awslogs` to `/blocbuy/swe5001/<service>` (7-day retention, created by Terraform), health check grace 120 s, `stopTimeout` 30 s.
+- Task definition per service: `ARM64`, originally 512 CPU / 1024 MiB each; PR #807's reviewed source uses commerce 1024 CPU / 2048 MiB and keeps identity/notification at 512 CPU / 1024 MiB. [V5 R3](evidence/20261114-v4-r5-live/v5-r3-pass.md) verified that commerce shape with 120-second target warm-up; its success does not pass the smaller shape or prove every deployment uses the newer PR source. Container port 8589, `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=75`, `awslogs` to `/blocbuy/swe5001/<service>` (7-day retention, created by Terraform), health check grace 120 s, `stopTimeout` 30 s.
 - Image: `<repo>@<digest>` from SSM `/blocbuy/swe5001/release/<service>`; the deploy workflow replaces it later.
 - Deployment: rolling, minimum healthy 100%, maximum 200%, circuit breaker with rollback.
 - Environment and secrets follow the backend plan, section 7. Secrets use `valueFrom` SSM ARNs.

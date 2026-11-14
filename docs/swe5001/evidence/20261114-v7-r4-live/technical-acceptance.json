@@ -1,0 +1,19 @@
+{
+  "at": "2026-11-14T02:15:39.486396+00:00",
+  "attempt": "R4",
+  "passed": true,
+  "gates": {
+    "fiveProductionReceives": true,
+    "injectionToActualAlarmWithin300": true,
+    "observedDlqToActualAlarmWithin300": true,
+    "controlApplied": true,
+    "exactControlEffect": true,
+    "poisonNoEffect": true,
+    "identifiedPoisonDeleted": true,
+    "quietAndAlarmReset": true,
+    "continuousObserver": true
+  },
+  "humanEmailReceiptVerified": false,
+  "fullAlarmEmailAcceptanceComplete": false,
+  "realPaymentClaimed": false
+}

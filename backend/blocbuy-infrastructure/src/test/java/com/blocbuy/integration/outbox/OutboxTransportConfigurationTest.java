@@ -3,6 +3,8 @@ package com.blocbuy.integration.outbox;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,12 +64,48 @@ class OutboxTransportConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasSingleBean(SnsClient.class);
                     assertThat(context).hasSingleBean(SnsOutboxEventTransport.class);
+                    assertThat(context.getBean(SnsPublisherProperties.class).publishConcurrency())
+                            .isEqualTo(1);
                     assertThat(context).doesNotHaveBean(SqsClient.class);
                     assertTimeouts(
                             context.getBean(SnsClient.class)
                                     .serviceClientConfiguration()
                                     .overrideConfiguration());
                 });
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 4, 8})
+    void acceptsBoundedSnsConcurrency(int concurrency) {
+        runner.withPropertyValues(
+                        "blocbuy.events.enabled=true",
+                        "blocbuy.events.relay.enabled=true",
+                        "blocbuy.events.transport=sns",
+                        "blocbuy.events.region=us-east-1",
+                        "blocbuy.events.sns.topic-arn=arn:aws:sns:us-east-1:000000000000:events",
+                        "blocbuy.events.sns.publish-concurrency=" + concurrency)
+                .run(context -> {
+                    assertThat(context).hasSingleBean(SnsOutboxEventTransport.class);
+                    assertThat(context.getBean(SnsPublisherProperties.class).publishConcurrency())
+                            .isEqualTo(concurrency);
+                });
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1, 9})
+    void refusesOutOfBoundsSnsConcurrencyAtStartup(int concurrency) {
+        runner.withPropertyValues(
+                        "blocbuy.events.enabled=true",
+                        "blocbuy.events.relay.enabled=true",
+                        "blocbuy.events.transport=sns",
+                        "blocbuy.events.region=us-east-1",
+                        "blocbuy.events.sns.topic-arn=arn:aws:sns:us-east-1:000000000000:events",
+                        "blocbuy.events.sns.publish-concurrency=" + concurrency)
+                .run(context ->
+                        assertThat(context)
+                                .getFailure()
+                                .hasRootCauseMessage(
+                                        "blocbuy.events.sns.publish-concurrency must be between 1 and 8"));
     }
 
     @Test

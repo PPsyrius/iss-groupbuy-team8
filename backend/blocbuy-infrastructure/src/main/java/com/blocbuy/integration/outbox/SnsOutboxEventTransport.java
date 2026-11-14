@@ -2,10 +2,10 @@ package com.blocbuy.integration.outbox;
 
 import com.blocbuy.common.model.OutboxEvent;
 import com.blocbuy.common.model.OutboxPublishResult;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sns.model.PublishBatchRequest;
@@ -13,13 +13,36 @@ import software.amazon.awssdk.services.sns.model.PublishBatchRequestEntry;
 import tools.jackson.databind.ObjectMapper;
 
 /** SNS protocol adapter for the shared lease-aware batch publisher. */
-@RequiredArgsConstructor
-public class SnsOutboxEventTransport
-        extends BatchingOutboxEventTransport<PublishBatchRequestEntry> {
+public final class SnsOutboxEventTransport
+        extends BatchingOutboxEventTransport<PublishBatchRequestEntry> implements AutoCloseable {
 
     private final SnsClient client;
     private final String topicArn;
     private final ObjectMapper json;
+
+    /** Preserves the sequential default for existing callers. */
+    public SnsOutboxEventTransport(SnsClient client, String topicArn, ObjectMapper json) {
+        this(client, topicArn, json, 1);
+    }
+
+    /** Bounds only SNS batch I/O; the client and its timeout budget remain externally owned. */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification =
+                    "Spring owns the shared thread-safe SDK client and configured mapper; "
+                            + "this transport neither reconfigures nor closes them")
+    public SnsOutboxEventTransport(
+            SnsClient client, String topicArn, ObjectMapper json, int concurrency) {
+        super(new PublishingSettings(concurrency, true));
+        this.client = client;
+        this.topicArn = topicArn;
+        this.json = json;
+    }
+
+    @Override
+    public void close() {
+        closePublisher();
+    }
 
     @Override
     protected PublishBatchRequestEntry entry(OutboxEvent event) {

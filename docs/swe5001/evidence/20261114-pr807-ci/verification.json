@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "pr": 807,
+  "issue": 459,
+  "failedHead": "7bafbd61b088e09253be426698857f355d430a7f",
+  "scripts": {
+    "job": "https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/43568531592/job/132367596515",
+    "diagnosticSource": "gh api repos/PPsyrius/iss-groupbuy-team8/actions/jobs/132367596515/logs --allow-escape-sequences",
+    "findings": [
+      {"rule": "SC2154", "file": "infra/swe5001/scripts/test-http-preflight.sh", "line": 42, "message": "expected_tasks is referenced but not assigned"},
+      {"rule": "SC2251", "file": "infra/swe5001/scripts/test-v4-expiry-tools.sh", "line": 92, "message": "This ! is not on a condition and skips errexit"}
+    ],
+    "fix": "Make the mocked task count independent of production variables; make the forbidden argv assertion explicitly exit on a match."
+  },
+  "configuration": {
+    "job": "https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/43568531611/job/132367627663",
+    "artifact": "trivy-configuration",
+    "artifactId": 14102254914,
+    "artifactArchiveSha256": "43ed081cc4547a3bfb1ed6f5b1c8de2c08b8adeb1c49500cb955384b79ab086c",
+    "diagnosticSource": "gh run download 43568531611 --name trivy-configuration",
+    "scanner": "Trivy 0.74.0",
+    "findings": [
+      {"rule": "DS-0002", "severity": "HIGH", "file": "perf/drills/operator.Dockerfile", "line": 1, "message": "Specify at least 1 USER command in Dockerfile with non-root user as argument"}
+    ],
+    "attribution": "Branch-added operator Dockerfile, absent from origin/dev at the integrated 9623bda4 baseline; not an unrelated infrastructure finding.",
+    "fix": "Default local operator tooling to UID/GID 10001:10001 with its own writable home; no application runtime, IAM, policy, suppression or gate changes."
+  },
+  "localVerification": {
+    "shellcheck": {"command": "shellcheck -x infra/swe5001/scripts/*.sh perf/smoke/smoke.sh", "image": "koalaman/shellcheck-alpine@sha256:5921d946dac740cbeec2fb1c898747b6105e585130cc7f0602eec9a10f7ddb63", "exit": 0},
+    "operatorBuild": {"command": "docker build -f perf/drills/operator.Dockerfile -t blocbuy-swe5001-drill-operator:pr807-nonroot perf/drills", "exit": 0},
+    "operatorTests": {"scripts": ["test-http-preflight.sh", "test-v4-expiry-seed.sh", "test-v4-expiry-tools.sh", "test-identity-drill-report.sh"], "uid": 10001, "homeWritable": true, "network": "none", "mount": "repository read-only", "passAssertions": 137, "exit": 0},
+    "configuration": {"command": "trivy config --severity HIGH,CRITICAL --exit-code 1 /repo", "version": "0.74.0", "scope": "Fresh copy of every git ls-files path using working-tree bytes, matching a clean checkout without ignored local build outputs", "detectedConfigFiles": 58, "highCriticalFindings": 0, "exit": 0},
+    "limitations": "Local checks of the correction, not hosted CI acceptance or live AWS verification. Historical archives remain unchanged."
+  }
+}

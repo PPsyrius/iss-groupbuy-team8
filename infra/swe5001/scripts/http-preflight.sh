@@ -5,11 +5,13 @@
 # shellcheck source=./lib.sh source-path=SCRIPTDIR
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-[ "$#" -eq 1 ] || die "usage: http-preflight.sh v2|v3"
+[ "$#" -eq 1 ] || die "usage: http-preflight.sh v2|v3|v5|identity"
+expected_tasks=1
 case "$1" in
   v2) service=monolith ;;
   v3) service=commerce-svc ;;
-  *) die "usage: http-preflight.sh v2|v3" ;;
+  v5|identity) service=commerce-svc; expected_tasks=2 ;;
+  *) die "usage: http-preflight.sh v2|v3|v5|identity" ;;
 esac
 guard_account
 umask 077
@@ -62,11 +64,17 @@ rules=$(jq -c --slurpfile edge "$work/edge.json" '
 edge=$(jq -c 'del(.origins[].headers)' "$work/edge.json")
 tasks=$(aws ecs list-tasks --cluster "$CLUSTER" --service-name "$service" --desired-status RUNNING \
   --query taskArns --output json)
-jq -e 'type == "array" and length == 1 and all(.[]; type == "string")' <<< "$tasks" > /dev/null || die "expected exactly one running task"
-task=$(jq -r '.[0]' <<< "$tasks")
-observed=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$task" \
+jq -e --argjson expected "$expected_tasks" 'type == "array" and length == $expected and all(.[]; type == "string" and length > 0 and (test("\\s") | not))' <<< "$tasks" > /dev/null || die "expected exactly $expected_tasks running task(s)"
+read -r -a task_arns <<< "$(jq -r 'join(" ")' <<< "$tasks")"
+observed=$(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "${task_arns[@]}" \
   --query '{tasks:tasks[].{taskArn:taskArn,taskDefinitionArn:taskDefinitionArn,lastStatus:lastStatus,desiredStatus:desiredStatus,availabilityZone:availabilityZone,containers:containers[].{name:name,imageDigest:imageDigest}},failures:failures}' \
   --output json)
+jq -e --argjson expected "$expected_tasks" --argjson requested "$tasks" '
+  (.failures | type == "array" and length == 0) and
+  (.tasks | type == "array" and length == $expected) and
+  ([.tasks[].taskArn] | sort) == ($requested | sort) and
+  all(.tasks[]; .lastStatus == "RUNNING" and .desiredStatus == "RUNNING")
+' <<< "$observed" > /dev/null || die "expected exactly $expected_tasks running described task(s) and zero failures"
 resource="service/$CLUSTER/$service"
 targets=$(aws application-autoscaling describe-scalable-targets --service-namespace ecs \
   --resource-ids "$resource" --scalable-dimension ecs:service:DesiredCount --output json)

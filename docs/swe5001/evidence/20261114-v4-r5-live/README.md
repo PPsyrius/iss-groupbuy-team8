@@ -1,0 +1,67 @@
+# V4 R5 — actual execution and acceptance
+
+**Current result: V4 R5 accepted at 05:25:56 SGT.** See [final acceptance](#final-v4-r5-acceptance--0525-sgt); the earlier checkpoint statements below retain their original times and limitations.
+
+Refs #458/#459/#448, NFR-63/64. This is the **05:00 SGT, 14 November 2026** checkpoint (**21:00Z, 13 November**), not a completed measurement, cleanup receipt or V4 acceptance. The owner requires V4 acceptance before further V7/V8 execution; no such later drill was performed here.
+
+## Retained R4 failure and original-image recovery
+
+R4 remains failed, unseeded setup. Its one registration created experimental revision 51; the original revision 50 stayed ACTIVE. R4's healthy-six result does not extend its old deadlines. Its v3 cleanup claimed restoration at 20:18:59Z, returned count/flag requests, then failed image restoration with `Drain proof expired before image mutation`. The attempted current-six replacement failed before ARM after capacity had returned to two; neither container was paused or deleted and no count-six request was replayed.
+
+The first original50 recovery completed its read-only task successfully but stopped on an exclusive local-file collision with the independently supplied `connection-admission.json`, before any image-update claim. That failure, SQL task, provider receipts and D's original connection-admission bytes remain preserved. Reconciliation established that exact task STOPPED/exit 0 and that no image update had been claimed. A separately claimed read-only task then supplied a genuinely fresh proof, rather than reusing the expired proof or blindly replaying a submission.
+
+The fresh final SQL proof at **20:46:57.008404Z** matched all six immutable future-team IDs/expiries, with zero other open teams, zero eligible work in its one-hour horizon and zero pending outbox. The original ACTIVE definition and healthy-two capacity were read before SQL. Holding the existing shared OS lock through the sole SQL task's successful STOPPED proof allowed the original50 update claim at **20:47:22.596259Z**, proof age **25.587855 seconds**, without intervening slow capacity/definition reads. That update returned once. Homogeneous original50, healthy commerce two/identity one/notification one and no old/STOPPING/SQL tasks were verified at **20:52:23.442468Z**, after 33.957 seconds of homogeneous health.
+
+## Genuinely fresh R5 execution
+
+| Event | Actual UTC, 13 November 2026 | Evidence |
+| --- | --- | --- |
+| New independent backstop ARM | 20:53:20.582454 | New persistent container and source-bound heartbeat; original healthy 2/1/1 admission. |
+| Existing revision 51 rollout request | 20:53:24.640185 | One update at desired two; no registration, build or push. |
+| Homogeneous healthy experimental two | 20:57:31.994127 | All old/STOPPING commerce tasks drained. This is not a claimed 60-second two-task hold. |
+| Commerce ScaleIn-only hold claim | 20:57:34.044315 | ScaleOut/scheduled flags, bounds and policies unchanged. |
+| Desired-six claim | 20:57:35.777022 | One request, no replay or forced notification count. |
+| Same-TD healthy-six interval | 20:58:59.912246–21:00:01.114550 | **61.202305 seconds**, same six commerce task IDs; eight nonterminal application tasks. |
+| D's sole seed submission returned | 21:00:07.075483 | Fresh label `v4-20261114-r5-a`, 80,000 teams; MIN 600/MAX 1,200 seconds. SQL completion is not established by submission. |
+
+All R5 source/controller wiring and D's existing collector were present before ARM. The collector was already running; no duplicate collector was launched and no manual parent release was required. D generated its own fresh release under the shared lock after matching the real ready-six receipt to current task definitions, image digests and target health. The forward controller implements no seed or registration operation.
+
+The new backstop's actual selected-profile STS/export metadata gave role expiration **21:53:08Z**. Its new count/normal/end deadlines are **21:33:20.582454Z / 21:48:20.582454Z / 21:51:20.582454Z**. These are new R5 bounds, not edits to R4 receipts. Exported credential values were neither displayed nor persisted. At the 21:00:13Z observation, the collector and backstop were actually running, the heartbeat was armed and no restore claim existed.
+
+## Effective source, controls and remaining gates
+
+The experimental native ARM64 image remains `sha256:ed49c1bff23d55fbb974761c671ebba34263ef85f651c9402110f04350a07e2c`, built from reviewed uncommitted backend overlay `88770039451cf05593e76a2a174fba503178312bd253dc76c400d28673150486`; it is not an official promoted release or clean signed baseline. R5 reused the retained revision 51 without rebuilding, pushing or registering. Identity/notification definitions, five-connection pools, commerce sizing, Service Connect, autoscaling policies and notification's automatic 1..4 bounds remain protected.
+
+Every forward write requires the actual armed heartbeat no older than 15 seconds and no restore markers inside the same shared lock. Writes use one total SDK attempt with exclusive claims; approved reads use three. Cleanup attempts count two and original flags independently before health/drain waits. The corrected original-image path performs definition/capacity reads before final SQL and holds the lock through successful STOPPED proof and immediate image update. Its cleanup behavior has not yet completed in this checkpoint.
+
+The exact-six allowlist admits only those unchanged future IDs/expiries; it does not waive other open work or pending outbox. No team/message/container/evidence deletion, SQL/task kill, queue purge, consumer manipulation, IAM change, Git commit/push or promotion occurred. Earlier V4 failures and identity deferral remain unchanged.
+
+**Remaining:** successful sole seed completion, all 80,000 source/effect counts with zero failed events, unchanged-policy automatic growth to four before final drain, canonical analyzer result, final quiet interval, actual original-image/count/flag restoration and evidence readback. Neither a submitted seed nor healthy-six readiness passes these gates. Immutable private receipt hashes are in [the checkpoint manifest](checkpoint.json); raw provider bodies, task/resource identities and credential caches remain private.
+
+## Later actual measurement — 05:12 SGT
+
+The preceding remaining-gates statement is historical to the 05:00 checkpoint. The sole seed completed with 80,000 teams and memberships, seeded **21:00:26.779536Z**, expiring **21:01:26.779536Z**; its task has a successful STOPPED receipt. The original collector ended at **21:12:37.667681Z**, exit **0**. Its original canonical [analyzer output](analysis.json) has `passed=true`, exit **0**; [collection result](collection-result.json) has `measurementPassed=true`, unchanged-policy automatic-four activity verified and no qualifications. These are the original outputs, not a recovered analyzer relabeled as canonical.
+
+The [final database report](database-report.json), observed **21:12:08.021302Z**, reconciles **80,000 each** teams, expired teams, outbox events, published events, notifications and consumed-event markers, with **zero failed events**. The first complete report was observed at **21:10:44.596713Z**. Autoscaling's successful original-policy desired-four activity started **21:06:32.011Z**; the first post-expiry four-task observation was **21:07:34.475840Z**. All original quiet-start, source/effects, backlog, four-task growth, sampled drain-after-scale and empty-DLQ gates pass across **126 observations**, maximum gap **15.624351 seconds**.
+
+The analyzer's **472.693 seconds** is the start of its final sampled queue-quiet suffix relative to expiry, not a proven full-pipeline completion time. Its `queueAgeCoverageComplete=false` is the preserved diagnostic, not part of its passing conjunction. Separate actual regional capture retained **23 queries, 21 populated series, six dashboard PNGs and zero image errors**, with every returned metric status Complete. The 20:55:35Z–21:14:37Z window recorded maximum visible backlog **32,936**, maximum oldest-message age **153 seconds**, RDS connections **56**, sampled notification/audit DLQ maxima **zero**, and retained audit visible messages **142,000**. Missing series are not asserted to be zero and no audit purge occurred.
+
+Independent restoration claimed at **21:12:40.425741Z**, **115.829028 seconds after the first complete source proof** and after the final report/collector completion; no early-restoration qualification was lost in a polling race. Final original50/count/flag restoration and complete private evidence readback remain pending in this measurement amendment. The three linked original output copies were SHA-256 readback-verified: analyzer `d23b8eb4f4892af5eb6b80dc51bfef5880f153c82095b29b19edff754ae4dccd`, report `11b9090eb7a3f542484c29335dfd60b9b059a5aaed915e679fa8fb5d12f3eb83`, result `10f4f08d59eff8d9981b66e7067170adf2f1669f59e23f26bf8c0e771e39f09a`.
+
+## Final V4 R5 acceptance — 05:25 SGT
+
+**Actual V4 R5 accepted at 21:25:56.951085Z (05:25:56 SGT)** after original measurement, independent restoration, fresh readback and encrypted evidence verification. The [acceptance record](acceptance.json) is byte-identical to the private final receipt, SHA-256 `7e77116bd22675808cfc80ceb83bfb4d5f7d5da1935a3adfb9e82c4bf814e8b7`. This accepts only the stated experimental producer image/configuration; it does not promote that image, pass an earlier attempt or establish whole-session/V7/V8/identity acceptance. The original collector's `overallSessionAccepted=false` remains unchanged.
+
+Cleanup's count-two claim was **21:12:43.197581Z** and original-flag claim **21:12:44.263051Z**, independently before health/drain waits. Final read-only drain proof **21:15:50.212497Z** again matched only the exact six unchanged future-team IDs/expiries, zero other open teams, zero eligible work and zero pending outbox. The sole original50 image-update claim **21:16:16.314447Z** used that proof aged **26.101950 seconds**, with successful STOPPED SQL and no slow reads after the proof. Independent backstop completion at **21:20:32.362518Z**, container exit **0**, verified original50 homogeneous healthy commerce two and original flags; no mutation replay or fatal error occurred.
+
+Fresh actual selected-profile readback at **21:23:44.460412Z** confirmed all three original task definitions ACTIVE and semantically exact, original images/Service Connect/bounds/flags/policies/schedules, all targets healthy, pending counts zero, public health **HTTP 200/UP**, no nonterminal SQL or STOPPING tasks, and quiet notification/main DLQ/audit DLQ. Actual running counts were **commerce two / identity one / notification four**: notification remained automatic within its unchanged **1..4** policy, not forced back to one. This is deliberately **not an exact 2/1/1 count claim**. Audit retained **142,000 visible messages**; no purge, teardown or data deletion occurred.
+
+The completed R5 private snapshot has **2,144 individual files** readback-verified from a **7,816,864-byte local encrypted archive**, SHA-256 **`2418ef434b947c51254fa026636acd651d93f5871b340a6e13a8305fde0ccf71`**. Encryption/decryption and every manifest file hash were verified with network disabled, without any AWS credential mount, S3 upload or plaintext archive file. The separate random local archive key was neither printed nor included in the archive; exported credentials/cache contents are excluded. All original sources, failed attempts, task/container records and prior archives remain retained. No agent Git commit/push or further V7/V8 execution was performed.
+
+## Later reviewed package and separate report draft — 09:58 SGT
+
+The preceding no-S3-upload statement describes the 05:24 local snapshot, not this later authorized preservation. [V4 R5 pass/raw evidence](v4-r5-pass.md) and [retained V5 R3 pass/raw evidence](v5-r3-pass.md) now link the original outputs, exact source bindings, sanitized observations and the real **20:58Z–21:22Z** historical CloudWatch capture. All 20 requested series returned data; the actual queue-age maximum was 153 seconds. The new selected **109-file** archive was uploaded once to the previously approved private encrypted storage, downloaded and verified, SHA-256 **`2f2be4d09d30c69a9dd8343f11020b1e696cbaf418d53db54e023cf3500e5f45`**; see [the storage/privacy receipt](private-package.json). Earlier archives and failed attempts remain unchanged.
+
+The [separate working report addendum](working-report-addendum.md) is for the next PR/report, not a submitted-report edit. It retains V4/V5 passes, the separately owned new V7 R2's pending result, R1's failed injection timing, V8's completed three-run evidence but failed distributed under-30-minute timing, and failed/deferred identity. This packaging task did not read or mutate the active V7 R2 directory, run another workload/analyzer, change runtime/source or stage/commit/push Git changes; no whole-campaign pass is claimed.
+
+[Final packaging verification](packaging-verification.json) confirms matching S3 upload/download SHA-256 checksums and AES256 metadata, exact observation/metric-value preservation, resolved evidence links and the publication privacy boundary. Tracked SWE5001 and SWE5006 submitted-report paths have no diff; the separate addendum remains a working draft.

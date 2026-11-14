@@ -120,6 +120,73 @@ variable "services_enabled" {
   default     = false
 }
 
+variable "v4_producer_expiry_shards" {
+  description = "Explicit experimental V4 commerce expiry partitions. Default one preserves the legacy single-flight job; never changes notification workers or seeds data."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.v4_producer_expiry_shards >= 1 && var.v4_producer_expiry_shards <= 6 && var.v4_producer_expiry_shards == floor(var.v4_producer_expiry_shards)
+    error_message = "v4_producer_expiry_shards must be an integer from 1 through 6."
+  }
+  validation {
+    condition     = var.v4_demo_enabled || var.v4_producer_expiry_shards == 1
+    error_message = "Experimental expiry sharding requires explicit distributed V4 demo mode."
+  }
+}
+
+variable "v4_producer_sns_publish_concurrency" {
+  description = "Explicit V4 commerce SNS batch concurrency, default one. Requires a reviewed experimental commerce image; notification configuration is unchanged."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.v4_producer_sns_publish_concurrency >= 1 && var.v4_producer_sns_publish_concurrency <= 8 && var.v4_producer_sns_publish_concurrency == floor(var.v4_producer_sns_publish_concurrency)
+    error_message = "v4_producer_sns_publish_concurrency must be an integer from 1 through 8."
+  }
+  validation {
+    condition     = var.v4_demo_enabled || var.v4_producer_sns_publish_concurrency == 1
+    error_message = "Experimental SNS publishing requires explicit distributed V4 demo mode."
+  }
+}
+
+variable "v4_producer_relay_interval" {
+  description = "Allowlisted experimental V4 commerce relay pacing. Default PT2S retains normal behavior; no consumer delay or queue holding is introduced."
+  type        = string
+  default     = "PT2S"
+
+  validation {
+    condition     = contains(["PT0.1S", "PT0.2S", "PT0.5S", "PT1S", "PT2S"], var.v4_producer_relay_interval)
+    error_message = "v4_producer_relay_interval must be PT0.1S, PT0.2S, PT0.5S, PT1S or PT2S."
+  }
+  validation {
+    condition     = var.v4_demo_enabled || var.v4_producer_relay_interval == "PT2S"
+    error_message = "Experimental relay pacing requires explicit distributed V4 demo mode."
+  }
+}
+
+variable "notification_http_trace_logging_enabled" {
+  description = "Opt-in notification-only DispatcherServlet DEBUG for an authorized routing check; request details stay masked. Never enable broad web/SQL logging or send secrets in URL query strings."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.notification_http_trace_logging_enabled || var.topology == "distributed"
+    error_message = "Notification HTTP trace logging requires distributed topology."
+  }
+}
+
+variable "commerce_http_trace_logging_enabled" {
+  description = "Opt-in commerce-only masked DispatcherServlet request/status logging for an authorized signed-webhook drill; no payload/header details. Restore false afterward."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.commerce_http_trace_logging_enabled || var.topology == "distributed"
+    error_message = "Commerce HTTP trace logging requires distributed topology."
+  }
+}
+
 variable "commerce_min_capacity" {
   description = "Commerce task minimum: 2 for the demo/V5; set 1 for V2/V3 baseline sessions"
   type        = number
@@ -139,6 +206,17 @@ variable "commerce_requests_per_target" {
   validation {
     condition     = var.commerce_requests_per_target > 0
     error_message = "commerce_requests_per_target must be positive."
+  }
+}
+
+variable "commerce_target_slow_start_seconds" {
+  description = "Warm-up for newly healthy commerce targets; does not change offered load, health checks, scaling policy or worker counts"
+  type        = number
+  default     = 120
+
+  validation {
+    condition     = var.commerce_target_slow_start_seconds == 0 || (var.commerce_target_slow_start_seconds >= 30 && var.commerce_target_slow_start_seconds <= 900 && floor(var.commerce_target_slow_start_seconds) == var.commerce_target_slow_start_seconds)
+    error_message = "Commerce target slow start must be zero or an integer from 30 to 900 seconds."
   }
 }
 

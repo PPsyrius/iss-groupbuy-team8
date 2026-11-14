@@ -135,6 +135,21 @@ public class PaidGroupDealRepositoryImpl implements PaidGroupDealRepository {
         return mapper.selectDueForExpiry(now, limit);
     }
 
+    /** Validates the complete bounded partition before any database access. */
+    @Override
+    public List<UUID> dueForExpiry(Instant now, int limit, int shardCount, int shardIndex) {
+        if (limit < 1 || limit > 500) {
+            throw new IllegalArgumentException("limit must be between 1 and 500");
+        }
+        if (shardCount < 1 || shardCount > 6 || shardIndex < 0 || shardIndex >= shardCount) {
+            throw new IllegalArgumentException("invalid team-expiry shard count or index");
+        }
+        if (shardCount == 1) {
+            return dueForExpiry(now, limit);
+        }
+        return mapper.selectDueForExpiryShard(now, limit, shardCount, shardIndex);
+    }
+
     /** Persists retry backoff independently of the failed team's rolled-back transaction. */
     @Override
     public void deferExpiryRetry(UUID dealId, Duration delay) {

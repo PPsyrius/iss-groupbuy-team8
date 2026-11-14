@@ -6,6 +6,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -21,6 +22,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
  * committed events to {@code failed_at} after its retry budget.
  */
 @Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(SnsPublisherProperties.class)
 @ConditionalOnExpression(
         "${blocbuy.events.enabled:false} and ${blocbuy.events.relay.enabled:false}")
 public class OutboxTransportConfiguration {
@@ -73,14 +75,18 @@ public class OutboxTransportConfiguration {
                 .build();
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     @ConditionalOnProperty(name = "blocbuy.events.transport", havingValue = SNS)
     SnsOutboxEventTransport snsOutboxEventTransport(
             SnsClient client,
             @Value("${blocbuy.events.sns.topic-arn:}") String topicArn,
-            tools.jackson.databind.ObjectMapper json) {
+            tools.jackson.databind.ObjectMapper json,
+            SnsPublisherProperties properties) {
         return new SnsOutboxEventTransport(
-                client, required("blocbuy.events.sns.topic-arn", topicArn), json);
+                client,
+                required("blocbuy.events.sns.topic-arn", topicArn),
+                json,
+                properties.publishConcurrency());
     }
 
     /**

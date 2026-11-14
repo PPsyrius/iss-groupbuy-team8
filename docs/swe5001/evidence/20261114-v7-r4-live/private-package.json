@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "label": "session-evidence-20261114-v7-r4",
+  "preservedAtUtc": "2026-11-14T02:34:53.581005+00:00",
+  "archiveSha256": "e914253fcef97c53d0ce4b8bdc3fa05c17e0e67fbbc7a703bf0f53d4ce781c0e",
+  "archiveBytes": 331316,
+  "individualFilesReadbackVerified": 683,
+  "localArchiveAndDownloadedObjectByteIdentical": true,
+  "remoteExistingPrivateStorageEncryption": "S3 AES256 verified in upload and download responses",
+  "remoteReadbackVerified": true,
+  "uploadAndDownloadReturnedSha256ChecksumsMatch": true,
+  "conditionalUploadCount": 1,
+  "uploadSdkTotalAttempts": 1,
+  "newS3BucketEncryptionOrIamConfigurationApplied": false,
+  "localTarCopiesClaimedEncrypted": false,
+  "privateLocalDirectory": "evidence-v7-r4-20261114/reviewed-stage",
+  "archiveFilename": "session-evidence-20261114-v7-r4.tar.gz",
+  "downloadedFilename": "session-evidence-20261114-v7-r4.readback.tar.gz",
+  "archiveFileManifestContainedInTar": "evidence-files-sha256.json",
+  "preservationReceiptFilename": "session-evidence-20261114-v7-r4-preservation.json",
+  "preservationReceiptSha256": "2c618073250af432ab4f9596f9aefa1c7550607aa1c2b4feb90b7661427b15a5",
+  "rawStorageCallEvidence": [
+    {
+      "operation": "put-object",
+      "sha256": "6b5e8f97b21155c8ae284e98fb7dcb79f6ef0546edf20105a8cf004b26ee9906",
+      "serverSideEncryption": "AES256",
+      "returnedSha256ChecksumMatchesArchive": true
+    },
+    {
+      "operation": "get-object",
+      "sha256": "6c192d3995cef7426368d2c6358676a5f2c305e3043dc9ce375cccab62e6367d",
+      "serverSideEncryption": "AES256",
+      "returnedSha256ChecksumMatchesArchive": true
+    }
+  ],
+  "fullAcceptanceSha256": "385c9d597beceae2b7aff4b6d8d19a11fc63d90e157cafc00716e81df34c9cd9",
+  "originalTechnicalReceiptSha256": "992158f1d033cb2eb77296b5359c9c576fcccdbcc583250bdc8e02b7d930356c",
+  "humanConfirmationSha256": "da1b11dc632a8dd9bb8b32192b9acfb8a202543f8b8cbf9980503c6bf0cba0e1",
+  "earlierV4V5PackageUnchangedSha256": "2f2be4d09d30c69a9dd8343f11020b1e696cbaf418d53db54e023cf3500e5f45",
+  "previousArchivesOrFailuresDeleted": false,
+  "rawPrivateStorageBucketKeyUrlsArnsAndAliasMappingPublished": false,
+  "retainedStorageRemainsChargeable": true,
+  "exclusions": [
+    "credentials/cookies and SSO caches",
+    "checkout URLs and payment/identity provider HTTP bodies",
+    "Terraform plans/state/private variable files",
+    "V4/V5 raw workloads and parent live controls",
+    "unredacted inbox screenshot/image; safe owner-confirmation metadata is included",
+    "R1 generic cleanup HTTP/provider body; unchanged original remains private and its source hash is archived"
+  ],
+  "limitations": [
+    "V7-only closed-evidence selection, not every operator workspace file.",
+    "Historical helper/readback failures remain preserved, including the incomplete null timing-watcher receipt.",
+    "Some ephemeral harness stream files were unavailable; persistent original exit receipts, container stdout/stderr, raw AWS responses and completion notifications are retained.",
+    "Local TAR files are private but are not claimed encrypted; encryption is the verified existing S3 AES256 storage setting.",
+    "This preservation does not establish teardown, future absence, V8 startup acceptance or identity-outage recovery."
+  ]
+}

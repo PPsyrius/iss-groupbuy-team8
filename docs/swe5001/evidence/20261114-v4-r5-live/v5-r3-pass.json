@@ -1,0 +1,65 @@
+{
+  "at": "2026-11-13T05:31:00.518412+00:00",
+  "phase": "V5",
+  "attempt": "R3",
+  "evidencePrefix": "v5-c",
+  "passed": true,
+  "gates": {
+    "strictRawBrowsePass": true,
+    "allGeneratorExitsZero": true,
+    "archiveAndFilesReadbackVerified": true,
+    "generatorContinuousAndUnsaturated": true,
+    "observerComplete": true,
+    "observerBracketsEntireLoad": true,
+    "healthCaptureComplete": true,
+    "healthBracketsEntireLoad": true,
+    "oneExactPreflightTaskStopped": true,
+    "faultAtLoadMinuteThree": true,
+    "unchangedDesiredCountsAndDefinitions": true,
+    "releasedDigestsThroughout": true,
+    "replacementWasNewAndObserved": true,
+    "replacementRunningWithin120": true,
+    "replacementAlbHealthyWithin120": true,
+    "postLoadServicesStable": true,
+    "postLoadTwoCommerceAZs": true
+  },
+  "httpWorkloadGETs": 60000,
+  "httpRequestsIncludingSetup": 60001,
+  "invalid": 0,
+  "non2xx": 0,
+  "drops": 0,
+  "replacementRunningSeconds": 63.282591,
+  "replacementObservedHealthySeconds": 79.457879,
+  "lastInitialTargetSeconds": 73.956638,
+  "latencyMilliseconds": {
+    "min": 7,
+    "med": 10,
+    "max": 1686,
+    "p(95)": 16,
+    "p(99)": 66,
+    "avg": 13.5734
+  },
+  "generatorArchiveSha256": "40ab56a16878ef083ffd0e370c09b726bd35f38e497dc53a4fdd11d08d753357",
+  "evidenceFilesSha256": {
+    "v5-c-preflight.json": "825c4b1ff4fbab5bd0e6acc3bc9ccee09da7ec21f1f178cf363932fa34c74b92",
+    "v5-c-stop-task.private.json": "4f219cba6722807319785c380ff1666698c225db29ad547b8458a5b66d05ad6c",
+    "v5-c-earliest-health-review.json": "8dfcaa4e0789eefbd1966ccc9cb524c4135da1ee8c4cca4080426fb4e9e3a3c2",
+    "v5-c-observer/observations.jsonl": "8211bf678f527f627338ff64be8bb97f388188a0ca4a7109daed912174ee5dae",
+    "v5-c-health/observations.jsonl": "f0d7df8be6cf1d2fc0126a94e0d394afadff61ea7c642a394cbdb9b7653dc25c",
+    "v5-c-raw-review.json": "66b189611aa98abc027f032669632a0bff2da71c2cebf5c439e94ce6393b69de"
+  },
+  "toolingSha": "732c49b5af7526b0d82c5c332df8db9949e8a82e",
+  "imageSha": "3a893036d70d028b29ae13ebf820283571c1ae00",
+  "configurationSource": {
+    "baseCommit": "33a1a9a575c847e37c07f7df2c8cdeb09077c722",
+    "uncommittedReviewedFiles": {
+      "infra/swe5001/runtime/services.tf": "5744a1d8eeb1a63560f1591e7e5df5cf512ab5f58d63f6fc40e5a6c401b715d2",
+      "infra/swe5001/runtime/variables.tf": "81b7088ab869bacac79c2958603e6eb7a80ffdf911f7761d7f07435cd8bfb7e6",
+      "infra/swe5001/runtime/ecs.tf": "46eb87cf7357b2a96854b0d799330c90483b3016ade42af5b3b66130e25d42e7",
+      "infra/swe5001/runtime/tests/plan.tftest.hcl": "27e76907c8526498c399d2cc75658c7c4f211831f5622690b31737058d6a3d04",
+      "infra/swe5001/modules/ecs-service/main.tf": "e10c3f75c14c735988f3f64a7aa449e82858bcf781a99c889ed128dbf23f6488",
+      "infra/swe5001/modules/ecs-service/variables.tf": "e25515c59230a47dfed9c9f595a2be76892d789d06706b6d066812d8fed10d50",
+      "infra/swe5001/modules/ecs-service/outputs.tf": "da7cd985639517598f58a76ada3beba2f132b21133cf8d2db816bf7e917fc88d"
+    }
+  }
+}

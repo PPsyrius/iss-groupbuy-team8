@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "reviewedAtUtc": "2026-11-14T01:54:31.558703+00:00",
+  "originalFilesSha256": {
+    "v4-r5-pass.json": "c660bb7eecf2dd90216a7a85e8b4afb6882ac054d87c3c2cfc7113997f7a0946",
+    "v5-r3-pass.json": "501c83c694c6ab51dc90d4154d322928212a7366dd1cef45c587e0742cebb5fe",
+    "v5-r3-original-browse-analysis.json": "4c2dd0e7ac61942720c3a39fe6069fef8b58dea296846ca2b4e0dbda018cc8fb",
+    "historical-cloudwatch-summary.json": "2ea88f4344057ef99df867971acd17c58cd2ce70ae4e7c1c8cba30339937e414",
+    "observations.sanitized.jsonl": "5fb572a4070053a263cec386e3e1c263deafd3b6182cdf653cd39c92b7741c67",
+    "cloudwatch-2058-2122-points.jsonl": "cfe557a5647149babe88cf08306ee98cdf9f2e709f0f0e6117d70a0f082fed46",
+    "notification-scaling-activities.sanitized.json": "640e2c4fadccc90cfd537fd63057528358d36b859265d83d63c0a3b5ad149cdd",
+    "private-package.json": "ae800d39b0bb469bf618c97f78e924be75697b3acdc91748b74d29102ef94567"
+  },
+  "filesSha256": {
+    "v4-r5-pass.json": "0d5cdfc12b43977ac7d39d29df70f7f1ee03709c3c212f3267762a30546dc2bb",
+    "v5-r3-pass.json": "501c83c694c6ab51dc90d4154d322928212a7366dd1cef45c587e0742cebb5fe",
+    "v5-r3-original-browse-analysis.json": "4c2dd0e7ac61942720c3a39fe6069fef8b58dea296846ca2b4e0dbda018cc8fb",
+    "historical-cloudwatch-summary.json": "830e3d70f2b87b9b2c9f980c9e6999a987afd6fb538c64ef03f6d387756bfa9b",
+    "observations.sanitized.jsonl": "17e034d9714750e849be041323890c26f1312269f4c50772031a7f335284eefc",
+    "cloudwatch-2058-2122-points.jsonl": "269c3ce4646f94d13e7a95001a65c48815782ab44287e77897ba40ca278d7cda",
+    "notification-scaling-activities.sanitized.json": "e7ec17f6764fa6f3bba5c193477e65bd8e2bb9fbfd0211622c6c42359aaccbe9",
+    "private-package.json": "9c12d0b67ce28959c5b65ee4071c8da9b37d74b53f2350fd63e1b5bf45785445"
+  },
+  "publicationHashScope": "Published UTF-8 LF bytes; originalFilesSha256 preserves the historical mixed-line-ending receipt. See publication-byte-provenance.md.",
+  "originalObservationsPreservedPrivately": true,
+  "sanitization": "Only resource/URL identifiers and raw alarm causes removed; observation times/counts/null ages retained; CloudWatch timestamps normalized to UTC without filling absent metric samples.",
+  "workloadOrAnalyzerRerunPerformed": false,
+  "sourceOrSubmittedReportChangesPerformed": false
+}

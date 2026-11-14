@@ -6,11 +6,19 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 [ "$#" -eq 0 ] || die 'v4-burst.sh accepts no arguments'
 guard_account
 umask 077
-[ "${CONFIRM_V4_SEED:-}" = 2000 ] || die 'CONFIRM_V4_SEED=2000 is required'
+V4_EXPECTED_COUNT=${V4_EXPECTED_COUNT-2000}
+case "$V4_EXPECTED_COUNT" in 2000|20000|40000|80000) ;; *) die 'V4_EXPECTED_COUNT must be an explicitly approved 2000, 20000, 40000 or 80000 (maximum 80000)' ;; esac
+export V4_EXPECTED_COUNT
+[ "${CONFIRM_V4_SEED:-}" = "$V4_EXPECTED_COUNT" ] || die "CONFIRM_V4_SEED=$V4_EXPECTED_COUNT is required"
 [[ "${V4_RUN_LABEL:-}" =~ ^[a-zA-Z0-9-]{1,24}$ ]] || die 'invalid V4_RUN_LABEL'
 [[ "${EXPECTED_NOTIFICATION_DIGEST:-}" =~ ^sha256:[0-9a-f]{64}$ ]] || die 'reviewed EXPECTED_NOTIFICATION_DIGEST is required'
 max=${V4_MAX_SECONDS:-1800}
-if ! [[ "$max" =~ ^[0-9]+$ ]] || [ "$max" -lt 300 ] || [ "$max" -gt 3600 ]; then die 'V4_MAX_SECONDS must be 300..3600'; fi
+if ! [[ "$max" =~ ^[0-9]{3,4}$ ]] || [ "$max" -lt 300 ] || [ "$max" -gt 3600 ]; then die 'V4_MAX_SECONDS must be 300..3600'; fi
+minimum=300
+[ "$V4_EXPECTED_COUNT" = 2000 ] || minimum=600
+min=${V4_MIN_SECONDS-$minimum}
+if ! [[ "$min" =~ ^[0-9]{3,4}$ ]] || [ "$min" -lt "$minimum" ] || [ "$min" -ge "$max" ]; then die "V4_MIN_SECONDS must be at least $minimum and strictly less than V4_MAX_SECONDS"; fi
+export V4_MIN_SECONDS=$min
 if [ -z "${V4_RESULTS_DIR:-}" ] || [ ! -d "$V4_RESULTS_DIR" ]; then die 'create a private V4_RESULTS_DIR outside the checkout'; fi
 results=$(cd "$V4_RESULTS_DIR" && pwd)
 case "$results/" in "$REPO_ROOT/"*) die 'results must be outside the reviewed checkout' ;; esac
@@ -90,14 +98,43 @@ trap 'exit 143' TERM
 observer=$!
 started=$(date +%s)
 bash "$SWE5001_DIR/scripts/v4-expiry-seed.sh" > "$results/seed.json"
-# Keep at least five minutes of observations for CloudWatch/task-start lag; a quiet
+# Keep at least five minutes (ten for revised cohorts) for CloudWatch/task-start lag; a quiet
 # queue can precede later expiry batches, so the final database report is mandatory.
+reports=0
+next_report=0
+producer_complete_at=0
+collection_complete=false
+quiet_samples() {
+  tail -n 3 "$results/observations.jsonl" | jq -se --argjson after "$1" '
+    length == 3 and all(.[]; .notification.visible == 0 and .notification.notVisible == 0 and .notification.delayed == 0) and
+    (if $after == 0 then true else all(.[]; (.observedAt | fromdateiso8601) >= $after) and
+      ((.[-1].observedAt | fromdateiso8601) - (.[0].observedAt | fromdateiso8601) >= 30) end)' > /dev/null
+}
+source_effects_complete() {
+  jq -e --argjson expected "$V4_EXPECTED_COUNT" '.expectedCount == $expected and .failedEvents == 0 and
+    all([.teams,.expiredTeams,.outboxEvents,.publishedEvents,.notifications,.consumedEvents][]; . == $expected)' "$1" > /dev/null
+}
 while [ "$(($(date +%s) - started))" -lt "$max" ]; do
   kill -0 "$observer" 2>/dev/null || die 'observer failed; retain diagnostics, do not reseed'
   [ ! -s "$results/observer.err" ] || die 'observer errors invalidate coverage'
   elapsed=$(($(date +%s) - started))
-  if [ "$elapsed" -ge 300 ] && tail -n 3 "$results/observations.jsonl" | jq -se '
-    length == 3 and all(.[]; .notification.visible == 0 and .notification.notVisible == 0 and .notification.delayed == 0)' > /dev/null; then break; fi
+  if [ "$elapsed" -ge "$min" ] && quiet_samples 0; then
+    # Preserve the historical 2,000-team collection path exactly. For the revised
+    # arrival-paced fixture, quiet queues alone cannot establish producer completion.
+    if [ "$V4_EXPECTED_COUNT" = 2000 ]; then break; fi
+    if [ "$producer_complete_at" -eq 0 ] && [ "$elapsed" -ge "$next_report" ]; then
+      reports=$((reports + 1))
+      check="$results/database-report-check-$reports.json"
+      # Synchronous, at most one operator DB task; retain every incomplete receipt.
+      bash "$SWE5001_DIR/scripts/v4-expiry-report.sh" > "$check"
+      if source_effects_complete "$check"; then producer_complete_at=$(date +%s); fi
+      next_report=$(($(date +%s) - started + 60))
+    fi
+    if [ "$producer_complete_at" -gt 0 ] && quiet_samples "$producer_complete_at"; then
+      collection_complete=true
+      break
+    fi
+  fi
   sleep 5
 done
 bash "$SWE5001_DIR/scripts/v4-expiry-report.sh" > "$results/database-report.json"
@@ -108,5 +145,9 @@ observer=''
 sleep 1 # Keep strictly increasing UTC-second timestamps after the observer's last poll.
 snapshot >> "$results/observations.jsonl"
 [ ! -s "$results/observer.err" ] || die 'observer errors invalidate coverage'
+if [ "$V4_EXPECTED_COUNT" != 2000 ]; then
+  [ "$collection_complete" = true ] || die 'revised V4 reached its maximum without complete source/effects followed by a final quiet interval; retain evidence, never reseed'
+  source_effects_complete "$results/database-report.json" || die 'final revised V4 source/effect counts do not match; retain evidence, never reseed'
+fi
 log "V4 evidence saved in $results; analyze before claiming drain/scale-out acceptance"
 log 'Oldest-message age is a CloudWatch metric, not an SQS queue attribute; capture that graph separately.'

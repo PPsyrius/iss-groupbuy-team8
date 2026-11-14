@@ -1,0 +1,57 @@
+{
+  "scenario": "V8 rebuild from zero",
+  "historicalWorkflowReadbackAtUtc": "2026-11-13T19:49:56.503424+00:00",
+  "requiredThreeRunEvidenceCollection": "done",
+  "historicalRebuildAndDestroyWorkflows": "successful",
+  "distributedFullUpUnder30Minutes": "failed",
+  "overallV8Passed": false,
+  "currentRetainedSessionTeardown": "not performed",
+  "additionalRebuildRequiredForEvidenceCount": false,
+  "newRebuildOrTeardownStarted": false,
+  "samples": [
+    {
+      "dateUtc": "2026-10-06",
+      "topology": "monolith",
+      "upRunId": "37470479078",
+      "downRunId": "37470479078",
+      "initialRuntimeApplySeconds": 506,
+      "smokeSeconds": 67,
+      "runtimeDestroySeconds": 505,
+      "fullUpWallSeconds": 766,
+      "fullUpUnder30Minutes": true,
+      "workflowReadbackConclusion": "success"
+    },
+    {
+      "dateUtc": "2026-10-17",
+      "topology": "distributed",
+      "upRunId": "39008208244",
+      "downRunId": "39008208244",
+      "initialRuntimeApplySeconds": 520,
+      "smokeSeconds": 5,
+      "runtimeDestroySeconds": 709,
+      "fullUpWallSeconds": 1897,
+      "fullUpUnder30Minutes": false,
+      "workflowReadbackConclusion": "success"
+    },
+    {
+      "dateUtc": "2026-10-17",
+      "topology": "distributed",
+      "upRunId": "39014054529",
+      "downRunId": "39016642278",
+      "initialRuntimeApplySeconds": 493,
+      "smokeSeconds": 4,
+      "runtimeDestroySeconds": 761,
+      "fullUpWallSeconds": 1937,
+      "fullUpUnder30Minutes": false,
+      "workflowReadbackConclusion": "success"
+    }
+  ],
+  "limits": [
+    "Historical step durations are retained measurements, not newly timed operations.",
+    "Full up is GitHub up-job wall time, not the initial Terraform apply alone.",
+    "Runtime destroy durations exclude the subsequent absence check.",
+    "Successful historical teardown does not prove the retained runtime is currently absent.",
+    "Environment recreation does not establish recovery of database contents.",
+    "No entire-session issue or failed distributed timing gate is marked complete."
+  ]
+}
