@@ -1,0 +1,12 @@
+{
+  "analyzerExitCode": 0,
+  "at": "2026-11-13T21:12:37.650289+00:00",
+  "automaticFourActivityBoundToOriginalPolicy": true,
+  "cleanupOwnedByParent": true,
+  "cloudOperationsActuallyPerformed": true,
+  "measurementPassed": true,
+  "overallSessionAccepted": false,
+  "qualifications": [],
+  "runLabel": "v4-20261114-r5-a",
+  "teams": 80000
+}

@@ -1,0 +1,31 @@
+{
+  "publicRunName": "V4 R4",
+  "outcome": "setup failed; workload not submitted",
+  "seedSubmitted": false,
+  "measurementResultExists": false,
+  "autoscalingAcceptanceEstablished": false,
+  "experimentalCommerceTaskDefinitionRegistered": true,
+  "experimentalServiceUpdateIssued": true,
+  "commerceScaleInHoldIssued": true,
+  "commerceDesiredSixIssued": true,
+  "healthySixProofAtUtc": "2026-11-13T20:07:03+00:00",
+  "continuousHealthySixSeconds": 62.56,
+  "restorationStartedAtUtc": "2026-11-13T20:18:59.603540+00:00",
+  "countAndOriginalFlagsRestored": true,
+  "firstOriginalImageRestorationVerified": false,
+  "firstOriginalImageRestorationFailure": "Drain proof expired before image mutation",
+  "replacementBackstopArmedBeforeOriginalCleanup": false,
+  "originalImageRestorationSubsequentlyVerifiedAtUtc": "2026-11-13T20:52:23+00:00",
+  "nextAttempt": "V4 R5",
+  "nextAttemptIsSeparateFromR4": true,
+  "priorFailuresPreserved": true,
+  "oldTaskDefinitionsDeregistered": false,
+  "runtimeOrQueuesDestroyed": false,
+  "baselineFutureTeamsDeletedOrForcedExpired": false,
+  "limitations": [
+    "Healthy producer capacity is not a started workload or an autoscaling result.",
+    "Count and flag restoration did not establish original-image restoration at the first cleanup.",
+    "The later successful original-image restoration does not repair the failed R4 setup.",
+    "R5 execution or acceptance must be supported by its own actual receipts."
+  ]
+}

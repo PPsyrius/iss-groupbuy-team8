@@ -17,7 +17,7 @@ public class OutboxRelayJob {
     private final LeasedJobRunner runner;
     private final OutboxRelayService relay;
 
-    @Scheduled(fixedDelay = 2_000, initialDelay = 2_000)
+    @Scheduled(fixedDelayString = "${blocbuy.events.relay.interval:PT2S}", initialDelay = 2_000)
     public void run() {
         runner.run(
                 JOB,

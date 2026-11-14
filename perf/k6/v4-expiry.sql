@@ -1,5 +1,5 @@
 -- Explicit performance fixture, NOT a migration. The original 2,000-team fixture is unchanged.
--- Only the separately approved 20,000-team revision may extend the default workload.
+-- Only explicitly confirmed counts in the fixed allowlist are supported; maximum 80,000.
 \set ON_ERROR_STOP on
 \if :{?expected_count}
 \else
@@ -7,7 +7,7 @@
 \endif
 \if :{?confirm_count}
 \else
-\set confirm_count 2000
+\set confirm_count ''
 \endif
 BEGIN;
 SET LOCAL search_path = domain, public;
@@ -21,9 +21,9 @@ SELECT set_config('blocbuy.v4.profile', :'profile', true),
 
 DO $guard$
 BEGIN
-    IF current_setting('blocbuy.v4.expected_count') NOT IN ('2000', '20000') OR
+    IF current_setting('blocbuy.v4.expected_count') NOT IN ('2000', '20000', '40000', '80000') OR
        current_setting('blocbuy.v4.confirm_count') <> current_setting('blocbuy.v4.expected_count') THEN
-        RAISE EXCEPTION 'V4 count must be 2000 or 20000 and explicitly confirmed';
+        RAISE EXCEPTION 'V4 count must be 2000, 20000, 40000 or 80000 and explicitly confirmed';
     END IF;
     IF current_setting('blocbuy.v4.profile') <> 'demo' THEN
         RAISE EXCEPTION 'V4 seed requires the demo profile';
@@ -35,7 +35,7 @@ BEGIN
     PERFORM pg_advisory_xact_lock(hashtextextended(
         'blocbuy-v4-' || current_setting('blocbuy.v4.run_label'), 0));
     IF EXISTS (SELECT 1 FROM biz_group_deal
-               WHERE deal_no LIKE 'V4-EXPIRY-' || current_setting('blocbuy.v4.run_label') || '-%') THEN
+               WHERE deal_no ~ ('^V4-EXPIRY-' || current_setting('blocbuy.v4.run_label') || '-[0-9]+$')) THEN
         RAISE EXCEPTION 'V4 run label already used; never reset or overwrite prior evidence';
     END IF;
     IF (SELECT count(*) FROM biz_product
@@ -62,13 +62,14 @@ INSERT INTO biz_group_member
 SELECT uuidv7(), id, leader_user_id, 'leader', 'joined', CURRENT_TIMESTAMP,
        leader_user_id, leader_user_id
 FROM biz_group_deal
-WHERE deal_no LIKE 'V4-EXPIRY-' || current_setting('blocbuy.v4.run_label') || '-%';
+WHERE deal_no ~ ('^V4-EXPIRY-' || current_setting('blocbuy.v4.run_label') || '-[0-9]+$');
 
 COMMIT;
-SELECT json_build_object('schema', 1, 'runLabel', :'run_label', 'expectedCount', :'expected_count'::integer, 'teams', count(*),
+SELECT json_build_object('schema', 1, 'runLabel', :'run_label', 'expectedCount', :'expected_count'::integer,
+    'confirmedCount', :'confirm_count'::integer, 'teams', count(*),
     'members', (SELECT count(*) FROM domain.biz_group_member member
                 JOIN domain.biz_group_deal deal ON deal.id = member.deal_id
-                WHERE deal.deal_no LIKE 'V4-EXPIRY-' || :'run_label' || '-%'),
+                WHERE deal.deal_no ~ ('^V4-EXPIRY-' || :'run_label' || '-[0-9]+$')),
     'seededAt', min(start_time), 'expiresAt', max(expire_time), 'evidenceKind', 'demo-expiry-seed')
 FROM domain.biz_group_deal
-WHERE deal_no LIKE 'V4-EXPIRY-' || :'run_label' || '-%';
+WHERE deal_no ~ ('^V4-EXPIRY-' || :'run_label' || '-[0-9]+$');

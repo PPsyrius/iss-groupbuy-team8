@@ -13,6 +13,8 @@ import com.blocbuy.bootstrap.scheduling.RefundWorkerJob;
 import com.blocbuy.bootstrap.scheduling.TeamExpirySweepJob;
 import com.blocbuy.common.exception.BizException;
 import com.blocbuy.groupbuy.event.TeamSucceeded;
+import com.blocbuy.groupbuy.service.GroupDealExpiryService;
+import com.blocbuy.groupbuy.service.GroupDealExpirySweeper;
 import com.blocbuy.payment.exception.PaymentErrorCode;
 import com.blocbuy.payment.gateway.CheckoutGateway;
 import com.blocbuy.payment.gateway.RefundGateway;
@@ -22,12 +24,21 @@ import com.blocbuy.payment.repository.CheckoutPaymentRepository;
 import com.blocbuy.payment.service.PaymentBrowserService;
 import com.blocbuy.payment.service.StripeCheckoutService;
 import com.jayway.jsonpath.JsonPath;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
@@ -88,6 +99,8 @@ class TeamExpirySchedulingIT {
     @Autowired private JdbcTemplate jdbc;
     @Autowired private ApplicationEventPublisher events;
     @Autowired private PlatformTransactionManager transactions;
+    @Autowired private GroupDealExpiryService expiry;
+    @Autowired private GroupDealExpirySweeper sweeper;
     @MockitoBean private CheckoutGateway gateway;
     @MockitoBean private RefundGateway refundGateway;
     private final Map<String, CheckoutGateway.Session> sessions = new ConcurrentHashMap<>();
@@ -419,6 +432,168 @@ class TeamExpirySchedulingIT {
         assertThat(auditCount(payment, "PROVIDER_SUCCEEDED")).isEqualTo(1);
         assertThat(refunds(deal)).isEqualTo(1);
         verify(refundGateway, times(2)).createRefund(any());
+    }
+
+    @Test
+    void contendingExpiryAndSettlementCommitOneTerminalEventAndOneRefundPerPayment()
+            throws Exception {
+        UUID deal = paidTeam();
+        UUID joiner = buyer();
+        UUID intent = coordinator.intent(joiner, "JOIN", deal);
+        var prepared = payments.prepare(joiner, intent, UUID.randomUUID().toString());
+        CheckoutPayment payment = repository.findById(prepared.paymentId()).orElseThrow();
+        sessions.put(payment.sessionId(), session(payment, "complete", "paid"));
+        overdue(deal, 1);
+        Integer stockBefore =
+                jdbc.queryForObject(
+                        "SELECT stock FROM biz_product WHERE id=?", Integer.class, product);
+        var start = new CountDownLatch(1);
+        List<Future<?>> racers = new ArrayList<>();
+        try (var executor = Executors.newFixedThreadPool(3)) {
+            new TransactionTemplate(transactions)
+                    .executeWithoutResult(status -> {
+                        jdbc.queryForObject(
+                                "SELECT id FROM biz_group_deal WHERE id=? FOR UPDATE",
+                                UUID.class,
+                                deal);
+                        for (int i = 0; i < 2; i++) {
+                            racers.add(
+                                    executor.submit(() -> {
+                                        awaitStart(start);
+                                        return expiry.expireOne(deal);
+                                    }));
+                        }
+                        racers.add(
+                                executor.submit(() -> {
+                                    awaitStart(start);
+                                    payments.recover(payment.id(), "test-operator", true);
+                                }));
+                        start.countDown();
+                        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+                        while (jdbc.queryForObject(
+                                        "SELECT count(*) FROM pg_stat_activity"
+                                                + " WHERE datname=current_database() AND wait_event_type='Lock'",
+                                        Integer.class)
+                                < 2) {
+                            if (System.nanoTime() >= deadline) {
+                                throw new AssertionError(
+                                        "expiry/settlement did not contend on real PostgreSQL locks");
+                            }
+                            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(10));
+                        }
+                    });
+            for (Future<?> racer : racers) {
+                racer.get(20, TimeUnit.SECONDS);
+            }
+        } finally {
+            start.countDown();
+        }
+        assertThat(dealStatus(deal)).isEqualTo("expired");
+        assertThat(orderStatus(deal)).isEqualTo("cancelled");
+        assertThat(refunds(deal)).isEqualTo(1);
+        assertThat(expiredEvents(deal)).isEqualTo(1);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_refund WHERE payment_id=?",
+                                Long.class,
+                                payment.id()))
+                .isEqualTo(1);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT count(*) FROM biz_order WHERE payment_id=?",
+                                Long.class,
+                                payment.id()))
+                .isZero();
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT stock FROM biz_product WHERE id=?", Integer.class, product))
+                .isEqualTo(stockBefore);
+        assertThat(expiry.expireOne(deal)).isFalse();
+        assertThat(expiredEvents(deal)).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"refund", "outbox"})
+    void aShardedSubscriberOrOutboxFailureRollsBackAloneAndRetriesExactlyOnce(String failure) {
+        UUID poisoned = paidTeam();
+        UUID healthy = paidTeam();
+        overdue(poisoned, 2);
+        overdue(healthy, 1);
+        String table = failure.equals("refund") ? "biz_refund" : "sys_outbox";
+        String condition =
+                failure.equals("refund")
+                        ? "NEW.deal_id='" + poisoned + "'::uuid"
+                        : "NEW.event_type='TeamExpired' AND NEW.aggregate_id='"
+                                + poisoned
+                                + "'::uuid";
+        jdbc.execute(
+                "CREATE FUNCTION test_fail_sharded_expiry() RETURNS trigger LANGUAGE plpgsql AS"
+                        + " $$ BEGIN RAISE EXCEPTION 'injected sharded expiry failure'; END $$");
+        jdbc.execute(
+                "CREATE TRIGGER test_fail_sharded_expiry BEFORE INSERT ON "
+                        + table
+                        + " FOR EACH ROW WHEN ("
+                        + condition
+                        + ") EXECUTE FUNCTION test_fail_sharded_expiry()");
+        try {
+            sweepEveryShard();
+        } finally {
+            jdbc.execute("DROP TRIGGER test_fail_sharded_expiry ON " + table);
+            jdbc.execute("DROP FUNCTION test_fail_sharded_expiry()");
+        }
+        assertThat(dealStatus(poisoned)).isEqualTo("open");
+        assertThat(orderStatus(poisoned)).isEqualTo("pending");
+        assertThat(refunds(poisoned)).isZero();
+        assertThat(expiredEvents(poisoned)).isZero();
+        assertThat(dealStatus(healthy)).isEqualTo("expired");
+        assertThat(orderStatus(healthy)).isEqualTo("cancelled");
+        assertThat(refunds(healthy)).isEqualTo(1);
+        assertThat(expiredEvents(healthy)).isEqualTo(1);
+        assertThat(
+                        jdbc.queryForObject(
+                                "SELECT failure_count FROM sys_scheduled_item_retry"
+                                        + " WHERE job_key='team-expiry-sweep' AND item_id=?",
+                                Integer.class,
+                                poisoned))
+                .isEqualTo(1);
+        sweepEveryShard();
+        assertThat(dealStatus(poisoned)).isEqualTo("open");
+        jdbc.update(
+                "UPDATE sys_scheduled_item_retry SET retry_after=clock_timestamp()-interval '1 second'"
+                        + " WHERE job_key='team-expiry-sweep' AND item_id=?",
+                poisoned);
+        sweepEveryShard();
+        sweepEveryShard();
+        assertThat(dealStatus(poisoned)).isEqualTo("expired");
+        assertThat(orderStatus(poisoned)).isEqualTo("cancelled");
+        assertThat(refunds(poisoned)).isEqualTo(1);
+        assertThat(expiredEvents(poisoned)).isEqualTo(1);
+        assertThat(refunds(healthy)).isEqualTo(1);
+        assertThat(expiredEvents(healthy)).isEqualTo(1);
+    }
+
+    private void sweepEveryShard() {
+        for (int index = 0; index < 6; index++) {
+            sweeper.sweep(500, 6, index, () -> true);
+        }
+    }
+
+    private long expiredEvents(UUID deal) {
+        return jdbc.queryForObject(
+                "SELECT count(*) FROM sys_outbox WHERE event_type='TeamExpired' AND aggregate_id=?",
+                Long.class,
+                deal);
+    }
+
+    private static void awaitStart(CountDownLatch start) {
+        try {
+            if (!start.await(5, TimeUnit.SECONDS)) {
+                throw new AssertionError("race start gate timed out");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("race interrupted", e);
+        }
     }
 
     /** A paid leader's team: one member, one pending order, one successful payment. */

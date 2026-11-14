@@ -3,9 +3,12 @@ package com.blocbuy.groupbuy.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.blocbuy.groupbuy.model.DealStatus;
@@ -18,6 +21,8 @@ import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -177,6 +182,28 @@ class PaidGroupDealRepositoryImplTest {
         when(mapper.selectDueForExpiry(NOW, 50)).thenReturn(java.util.List.of(DEAL));
 
         assertThat(repository.dueForExpiry(NOW, 50)).containsExactly(DEAL);
+    }
+
+    @Test
+    void partitionedExpiryPassesOnlyValidatedBoundedParameters() {
+        when(mapper.selectDueForExpiryShard(NOW, 500, 6, 5)).thenReturn(java.util.List.of(DEAL));
+        assertThat(repository.dueForExpiry(NOW, 500, 6, 5)).containsExactly(DEAL);
+        verify(mapper, never()).selectDueForExpiry(any(), anyInt());
+    }
+
+    @Test
+    void countOneRetainsTheUnfilteredMapperMethod() {
+        when(mapper.selectDueForExpiry(NOW, 500)).thenReturn(java.util.List.of(DEAL));
+        assertThat(repository.dueForExpiry(NOW, 500, 1, 0)).containsExactly(DEAL);
+        verify(mapper, never()).selectDueForExpiryShard(any(), anyInt(), anyInt(), anyInt());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0,6,0", "501,6,0", "1,0,0", "1,7,0", "1,6,-1", "1,6,6"})
+    void invalidExpiryPartitionsNeverReachTheMapper(int limit, int count, int index) {
+        assertThatThrownBy(() -> repository.dueForExpiry(NOW, limit, count, index))
+                .isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(mapper);
     }
 
     @Test

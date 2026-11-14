@@ -2,9 +2,11 @@ package com.blocbuy.bootstrap.config;
 
 import com.blocbuy.bootstrap.scheduling.LeasedJobRunner;
 import com.blocbuy.bootstrap.scheduling.OutboxRelayJob;
+import com.blocbuy.bootstrap.scheduling.OutboxRelayProperties;
 import com.blocbuy.bootstrap.scheduling.PurchaseIntentExpiryJob;
 import com.blocbuy.bootstrap.scheduling.RefundWorkerJob;
 import com.blocbuy.bootstrap.scheduling.SchedulingProperties;
+import com.blocbuy.bootstrap.scheduling.TeamExpiryShardingProperties;
 import com.blocbuy.bootstrap.scheduling.TeamExpirySweepJob;
 import com.blocbuy.common.gateway.OutboxEventTransport;
 import com.blocbuy.common.repository.OutboxRelayRepository;
@@ -27,7 +29,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling
-@EnableConfigurationProperties(SchedulingProperties.class)
+@EnableConfigurationProperties({
+    SchedulingProperties.class,
+    OutboxRelayProperties.class,
+    TeamExpiryShardingProperties.class
+})
 public class SchedulingConfiguration {
 
     @Bean
@@ -44,8 +50,9 @@ public class SchedulingConfiguration {
             LeasedJobRunner runner,
             GroupDealExpirySweeper sweeper,
             SchedulingProperties properties,
+            TeamExpiryShardingProperties sharding,
             MeterRegistry meters) {
-        return new TeamExpirySweepJob(runner, sweeper, properties.teamExpiry(), meters);
+        return new TeamExpirySweepJob(runner, sweeper, properties.teamExpiry(), sharding, meters);
     }
 
     @Bean

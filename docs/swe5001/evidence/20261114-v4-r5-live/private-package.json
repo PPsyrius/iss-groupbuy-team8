@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "label": "session-evidence-20261114-v4r5-v5r3-v7r1",
+  "preservedAtUtc": "2026-11-14T01:58:25.069913+00:00",
+  "archiveSha256": "2f2be4d09d30c69a9dd8343f11020b1e696cbaf418d53db54e023cf3500e5f45",
+  "archiveBytes": 8977504,
+  "individualFilesReadbackVerified": 109,
+  "localArchiveAndDownloadedObjectByteIdentical": true,
+  "remoteExistingPrivateStorageEncryption": "S3 AES256 verified in both upload and download responses",
+  "remoteReadbackVerified": true,
+  "newS3BucketEncryptionOrIamConfigurationApplied": false,
+  "localTarCopiesClaimedEncrypted": false,
+  "privateLocalDirectory": "evidence-v4r5-v5r3-20261114/reviewed-stage",
+  "archiveFilename": "session-evidence-20261114-v4r5-v5r3-v7r1.tar.gz",
+  "downloadedFilename": "session-evidence-20261114-v4r5-v5r3-v7r1.readback.tar.gz",
+  "archiveFileManifestContainedInTar": "evidence-files-sha256.json",
+  "exclusions": [
+    "credentials/cookies and caches",
+    "checkout URLs and payment/identity provider HTTP bodies",
+    "generic CLI wrappers",
+    "Terraform plans/state/private variable files",
+    "active V7 R2 and parent live directories",
+    "V7 generic cleanup body response; immutable source hash retained separately"
+  ],
+  "originalV5R3ArchiveSha256": "40ab56a16878ef083ffd0e370c09b726bd35f38e497dc53a4fdd11d08d753357",
+  "originalV5R3RawMembersIndividuallyVerified": 18,
+  "previousArchivesOrFailuresDeleted": false,
+  "rawPrivateStorageBucketKeyUrlsArnsAndAliasMappingPublished": false,
+  "preservationReceiptSha256": "3829c04a07d998622ee0342114fec1baf86bd9b1046215122f171b1dc7577298",
+  "limitations": [
+    "Selected closed-evidence package, not every operator workspace file.",
+    "The active V7 R2 directory and parent live controls were excluded.",
+    "Generic provider/CLI response bodies, cookies and Terraform data were excluded; requested AWS telemetry and task/policy evidence remain private.",
+    "Prior comprehensive local encrypted R5 archive remains separately retained; this selected package is a new object, not a replacement."
+  ]
+}

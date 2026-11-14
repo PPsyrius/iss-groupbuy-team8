@@ -5,10 +5,11 @@
 \set expected_count 2000
 \endif
 -- Fail before the query for unsupported counts, without emitting another result row.
-SELECT 1 / (:'expected_count' IN ('2000', '20000'))::integer AS valid_count \gset
+SELECT 1 / ((:'expected_count' IN ('2000', '20000', '40000', '80000')) AND
+    (:'run_label' ~ '^[a-zA-Z0-9-]{1,24}$'))::integer AS valid_scope \gset
 WITH teams AS (
     SELECT id, status FROM domain.biz_group_deal
-    WHERE deal_no LIKE 'V4-EXPIRY-' || :'run_label' || '-%' AND deleted = false
+    WHERE deal_no ~ ('^V4-EXPIRY-' || :'run_label' || '-[0-9]+$') AND deleted = false
 ), events AS (
     SELECT outbox.id, outbox.published_at, outbox.failed_at
     FROM domain.sys_outbox outbox JOIN teams ON teams.id = outbox.aggregate_id

@@ -730,3 +730,150 @@ run "reject_fractional_cpu_headroom_threshold" {
   variables { commerce_cpu_scale_out_threshold = 70.5 }
   expect_failures = [var.commerce_cpu_scale_out_threshold]
 }
+
+run "normal_sessions_omit_experimental_producer_settings" {
+  command = plan
+  variables {
+    topology           = "distributed"
+    services_enabled   = true
+    messaging_verified = true
+    frontend_url       = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition = alltrue([for env in values(local.service_environment) :
+      !contains(keys(env), "BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT") &&
+      !contains(keys(env), "BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY") &&
+      !contains(keys(env), "BLOCBUY_EVENTS_RELAY_INTERVAL")
+    ])
+    error_message = "Normal sessions must retain the released producer environment without new experiment keys."
+  }
+}
+
+run "experimental_producer_settings_are_commerce_only" {
+  command = plan
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_expiry_shards           = 4
+    v4_producer_sns_publish_concurrency = 4
+    v4_producer_relay_interval          = "PT0.2S"
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT"] == "4" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY"] == "4" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_INTERVAL"] == "PT0.2S"
+    error_message = "Only explicitly selected producer settings must reach the experimental commerce task."
+  }
+  assert {
+    condition = alltrue([for name in ["identity-svc", "notification-svc"] :
+      !contains(keys(local.service_environment[name]), "BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT") &&
+      !contains(keys(local.service_environment[name]), "BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY") &&
+      !contains(keys(local.service_environment[name]), "BLOCBUY_EVENTS_RELAY_INTERVAL")
+    ])
+    error_message = "Producer experiments must not change identity or notification worker configuration."
+  }
+  assert {
+    condition     = alltrue([for env in values(local.service_environment) : env["SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE"] == "5"]) && aws_appautoscaling_target.notification[0].min_capacity == 1 && aws_appautoscaling_target.notification[0].max_capacity == 4 && !aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_in_suspended && !aws_appautoscaling_target.notification[0].suspended_state[0].dynamic_scaling_out_suspended && !aws_appautoscaling_target.notification[0].suspended_state[0].scheduled_scaling_suspended
+    error_message = "Experiments must preserve five-connection pools and fully automatic notification bounds 1..4."
+  }
+}
+
+run "experimental_producer_upper_bounds_are_supported" {
+  command = plan
+  variables {
+    topology                            = "distributed"
+    services_enabled                    = true
+    messaging_verified                  = true
+    v4_demo_enabled                     = true
+    v4_producer_expiry_shards           = 6
+    v4_producer_sns_publish_concurrency = 8
+    v4_producer_relay_interval          = "PT0.1S"
+    frontend_url                        = "https://d111111abcdef8.cloudfront.net"
+    image_digests = {
+      identity-svc     = "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+      commerce-svc     = "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      notification-svc = "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  }
+  assert {
+    condition     = local.service_environment["commerce-svc"]["BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT"] == "6" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY"] == "8" && local.service_environment["commerce-svc"]["BLOCBUY_EVENTS_RELAY_INTERVAL"] == "PT0.1S"
+    error_message = "The validated experimental upper bounds must remain usable without changing service pools or consumers."
+  }
+}
+
+run "reject_zero_expiry_shards" {
+  command = plan
+  variables { v4_producer_expiry_shards = 0 }
+  expect_failures = [var.v4_producer_expiry_shards]
+}
+
+run "reject_excess_expiry_shards" {
+  command = plan
+  variables { v4_producer_expiry_shards = 7 }
+  expect_failures = [var.v4_producer_expiry_shards]
+}
+
+run "reject_fractional_expiry_shards" {
+  command = plan
+  variables { v4_producer_expiry_shards = 2.5 }
+  expect_failures = [var.v4_producer_expiry_shards]
+}
+
+run "reject_zero_sns_publish_concurrency" {
+  command = plan
+  variables { v4_producer_sns_publish_concurrency = 0 }
+  expect_failures = [var.v4_producer_sns_publish_concurrency]
+}
+
+run "reject_excess_sns_publish_concurrency" {
+  command = plan
+  variables { v4_producer_sns_publish_concurrency = 9 }
+  expect_failures = [var.v4_producer_sns_publish_concurrency]
+}
+
+run "reject_fractional_sns_publish_concurrency" {
+  command = plan
+  variables { v4_producer_sns_publish_concurrency = 1.5 }
+  expect_failures = [var.v4_producer_sns_publish_concurrency]
+}
+
+run "reject_hot_loop_relay_interval" {
+  command = plan
+  variables { v4_producer_relay_interval = "PT0.01S" }
+  expect_failures = [var.v4_producer_relay_interval]
+}
+
+run "reject_slow_relay_interval" {
+  command = plan
+  variables { v4_producer_relay_interval = "PT1M" }
+  expect_failures = [var.v4_producer_relay_interval]
+}
+
+run "reject_expiry_sharding_outside_v4" {
+  command = plan
+  variables { v4_producer_expiry_shards = 4 }
+  expect_failures = [var.v4_producer_expiry_shards]
+}
+
+run "reject_sns_tuning_outside_v4" {
+  command = plan
+  variables { v4_producer_sns_publish_concurrency = 4 }
+  expect_failures = [var.v4_producer_sns_publish_concurrency]
+}
+
+run "reject_relay_tuning_outside_v4" {
+  command = plan
+  variables { v4_producer_relay_interval = "PT0.2S" }
+  expect_failures = [var.v4_producer_relay_interval]
+}

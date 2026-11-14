@@ -130,6 +130,12 @@ locals {
           SPRING_PROFILES_ACTIVE                    = "ec2,commerce,aws,demo"
           BLOCBUY_SCHEDULING_TEAM_EXPIRY_BATCH_SIZE = "500"
           BLOCBUY_SCHEDULING_TEAM_EXPIRY_INTERVAL   = "PT1S"
+          } : {}, var.v4_demo_enabled && (var.v4_producer_expiry_shards != 1 || var.v4_producer_sns_publish_concurrency != 1 || var.v4_producer_relay_interval != "PT2S") ? {
+          # Producer-only experiment: the released notification workers/policy stay untouched.
+          # All three settings disappear on normal/original-image restoration.
+          BLOCBUY_SCHEDULING_TEAMEXPIRY_SHARDING_COUNT = tostring(var.v4_producer_expiry_shards)
+          BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY       = tostring(var.v4_producer_sns_publish_concurrency)
+          BLOCBUY_EVENTS_RELAY_INTERVAL                = var.v4_producer_relay_interval
           } : {}, var.commerce_http_trace_logging_enabled ? {
           # Record the real signed webhook's route/status without its body/signature.
           # Never enable request details or broader web/SQL logging for this drill.

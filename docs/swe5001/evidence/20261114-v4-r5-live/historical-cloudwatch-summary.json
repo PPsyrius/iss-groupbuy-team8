@@ -1,0 +1,315 @@
+{
+  "schema": 1,
+  "capturedAtUtc": "2026-11-14T01:47:59.891268+00:00",
+  "startUtc": "2026-11-13T20:58:00Z",
+  "endExclusiveUtc": "2026-11-13T21:22:00Z",
+  "queries": [
+    {
+      "id": "running0",
+      "logicalLabel": "commerce-svc running tasks",
+      "namespace": "ECS/ContainerInsights",
+      "metricName": "RunningTaskCount",
+      "statistic": "Average",
+      "periodSeconds": 60
+    },
+    {
+      "id": "cpu0",
+      "logicalLabel": "commerce-svc CPU percent",
+      "namespace": "AWS/ECS",
+      "metricName": "CPUUtilization",
+      "statistic": "Average",
+      "periodSeconds": 60
+    },
+    {
+      "id": "memory0",
+      "logicalLabel": "commerce-svc memory percent",
+      "namespace": "AWS/ECS",
+      "metricName": "MemoryUtilization",
+      "statistic": "Average",
+      "periodSeconds": 60
+    },
+    {
+      "id": "running1",
+      "logicalLabel": "identity-svc running tasks",
+      "namespace": "ECS/ContainerInsights",
+      "metricName": "RunningTaskCount",
+      "statistic": "Average",
+      "periodSeconds": 60
+    },
+    {
+      "id": "running2",
+      "logicalLabel": "notification-svc running tasks",
+      "namespace": "ECS/ContainerInsights",
+      "metricName": "RunningTaskCount",
+      "statistic": "Average",
+      "periodSeconds": 60
+    },
+    {
+      "id": "cpu2",
+      "logicalLabel": "notification-svc CPU percent",
+      "namespace": "AWS/ECS",
+      "metricName": "CPUUtilization",
+      "statistic": "Average",
+      "periodSeconds": 60
+    },
+    {
+      "id": "memory2",
+      "logicalLabel": "notification-svc memory percent",
+      "namespace": "AWS/ECS",
+      "metricName": "MemoryUtilization",
+      "statistic": "Average",
+      "periodSeconds": 60
+    },
+    {
+      "id": "visible",
+      "logicalLabel": "Notification visible backlog",
+      "namespace": "AWS/SQS",
+      "metricName": "ApproximateNumberOfMessagesVisible",
+      "statistic": "Maximum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "inflight",
+      "logicalLabel": "Notification in-flight",
+      "namespace": "AWS/SQS",
+      "metricName": "ApproximateNumberOfMessagesNotVisible",
+      "statistic": "Maximum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "age",
+      "logicalLabel": "Notification oldest age seconds",
+      "namespace": "AWS/SQS",
+      "metricName": "ApproximateAgeOfOldestMessage",
+      "statistic": "Maximum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "dead",
+      "logicalLabel": "Notification DLQ visible",
+      "namespace": "AWS/SQS",
+      "metricName": "ApproximateNumberOfMessagesVisible",
+      "statistic": "Maximum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "published",
+      "logicalLabel": "Domain messages published",
+      "namespace": "AWS/SNS",
+      "metricName": "NumberOfMessagesPublished",
+      "statistic": "Sum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "dbconnections",
+      "logicalLabel": "RDS connections maximum",
+      "namespace": "AWS/RDS",
+      "metricName": "DatabaseConnections",
+      "statistic": "Maximum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "visibleaverage",
+      "logicalLabel": "Notification minute-average visible backlog",
+      "namespace": "AWS/SQS",
+      "metricName": "ApproximateNumberOfMessagesVisible",
+      "statistic": "Average",
+      "periodSeconds": 60
+    },
+    {
+      "id": "backlogpertask",
+      "logicalLabel": "Notification policy minute-average backlog per running task",
+      "expression": "visibleaverage / IF(running2 > 0, running2, 1)"
+    },
+    {
+      "id": "auditvisible",
+      "logicalLabel": "Retained audit visible messages - no consumer or purge",
+      "namespace": "AWS/SQS",
+      "metricName": "ApproximateNumberOfMessagesVisible",
+      "statistic": "Maximum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "auditdead",
+      "logicalLabel": "Audit DLQ visible",
+      "namespace": "AWS/SQS",
+      "metricName": "ApproximateNumberOfMessagesVisible",
+      "statistic": "Maximum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "received",
+      "logicalLabel": "Notification receives per minute",
+      "namespace": "AWS/SQS",
+      "metricName": "NumberOfMessagesReceived",
+      "statistic": "Sum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "deleted",
+      "logicalLabel": "Notification deletes per minute",
+      "namespace": "AWS/SQS",
+      "metricName": "NumberOfMessagesDeleted",
+      "statistic": "Sum",
+      "periodSeconds": 60
+    },
+    {
+      "id": "delayed",
+      "logicalLabel": "Notification delayed messages",
+      "namespace": "AWS/SQS",
+      "metricName": "ApproximateNumberOfMessagesDelayed",
+      "statistic": "Maximum",
+      "periodSeconds": 60
+    }
+  ],
+  "series": {
+    "running0": {
+      "samples": 24,
+      "minimum": 2.0,
+      "maximum": 6.0,
+      "sum": 106.0,
+      "status": "Complete"
+    },
+    "cpu0": {
+      "samples": 24,
+      "minimum": 0.75694479731222,
+      "maximum": 33.07369286980894,
+      "sum": 151.01655851076873,
+      "status": "Complete"
+    },
+    "memory0": {
+      "samples": 24,
+      "minimum": 10.774287471064815,
+      "maximum": 20.5078125,
+      "sum": 437.6782452618634,
+      "status": "Complete"
+    },
+    "running1": {
+      "samples": 24,
+      "minimum": 1.0,
+      "maximum": 1.0,
+      "sum": 24.0,
+      "status": "Complete"
+    },
+    "running2": {
+      "samples": 24,
+      "minimum": 1.0,
+      "maximum": 4.0,
+      "sum": 66.0,
+      "status": "Complete"
+    },
+    "cpu2": {
+      "samples": 24,
+      "minimum": 1.657313992579778,
+      "maximum": 94.73581074799101,
+      "sum": 440.29353266581893,
+      "status": "Complete"
+    },
+    "memory2": {
+      "samples": 24,
+      "minimum": 10.139973958333334,
+      "maximum": 40.364583333333336,
+      "sum": 846.807861328125,
+      "status": "Complete"
+    },
+    "visible": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 32936.0,
+      "sum": 133677.0,
+      "status": "Complete"
+    },
+    "inflight": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 4.0,
+      "sum": 17.0,
+      "status": "Complete"
+    },
+    "age": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 153.0,
+      "sum": 609.0,
+      "status": "Complete"
+    },
+    "dead": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 0.0,
+      "sum": 0.0,
+      "status": "Complete"
+    },
+    "published": {
+      "samples": 5,
+      "minimum": 7441.0,
+      "maximum": 19060.0,
+      "sum": 80000.0,
+      "status": "Complete"
+    },
+    "dbconnections": {
+      "samples": 24,
+      "minimum": 35.0,
+      "maximum": 56.0,
+      "sum": 1045.0,
+      "status": "Complete"
+    },
+    "visibleaverage": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 32936.0,
+      "sum": 133677.0,
+      "status": "Complete"
+    },
+    "auditvisible": {
+      "samples": 24,
+      "minimum": 62000.0,
+      "maximum": 142000.0,
+      "sum": 2942604.0,
+      "status": "Complete"
+    },
+    "auditdead": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 0.0,
+      "sum": 0.0,
+      "status": "Complete"
+    },
+    "received": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 12709.0,
+      "sum": 80000.0,
+      "status": "Complete"
+    },
+    "deleted": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 12701.0,
+      "sum": 80000.0,
+      "status": "Complete"
+    },
+    "delayed": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 0.0,
+      "sum": 0.0,
+      "status": "Complete"
+    },
+    "backlogpertask": {
+      "samples": 24,
+      "minimum": 0.0,
+      "maximum": 32936.0,
+      "sum": 121648.5,
+      "status": "Complete"
+    }
+  },
+  "seriesWithData": 20,
+  "dashboardPngsRetainedPrivately": 6,
+  "imageErrors": [],
+  "rawMetricResponseSha256": "145c7b17efa326244cdc5ff98b6f9a7f5ae0cddc4ccbd14591f1d11238cc9aff",
+  "sanitizedPointsSha256": "cfe557a5647149babe88cf08306ee98cdf9f2e709f0f0e6117d70a0f082fed46",
+  "missingSamplesNotFilledWithZero": true,
+  "timestampsNormalizedToUtcOnly": true,
+  "note": "Task series are minute averages, not exact instantaneous integer task counts. SNS has five returned minute buckets; absent buckets remain absent."
+}

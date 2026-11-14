@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "runLabel": "v4-20261114-r5-a",
+  "toolingSha": "8bec6bbea50cee05487bf33476730489653b4355",
+  "expectedCount": 80000,
+  "quietStart": true,
+  "sourceAndEffectsMatch": true,
+  "hasAwsDeploymentEvidence": true,
+  "backlogObserved": true,
+  "scaleToFourObserved": true,
+  "drainObserved": true,
+  "drainAfterScale": true,
+  "dlqStayedEmpty": true,
+  "queueAgeCoverageComplete": false,
+  "drainSecondsUpperBound": 472.693,
+  "passed": true,
+  "note": "Queue attributes are approximate sampled observations, not a guarantee of future emptiness; retain source/effect reports, task graphs and original CloudWatch evidence."
+}

@@ -120,6 +120,51 @@ variable "services_enabled" {
   default     = false
 }
 
+variable "v4_producer_expiry_shards" {
+  description = "Explicit experimental V4 commerce expiry partitions. Default one preserves the legacy single-flight job; never changes notification workers or seeds data."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.v4_producer_expiry_shards >= 1 && var.v4_producer_expiry_shards <= 6 && var.v4_producer_expiry_shards == floor(var.v4_producer_expiry_shards)
+    error_message = "v4_producer_expiry_shards must be an integer from 1 through 6."
+  }
+  validation {
+    condition     = var.v4_demo_enabled || var.v4_producer_expiry_shards == 1
+    error_message = "Experimental expiry sharding requires explicit distributed V4 demo mode."
+  }
+}
+
+variable "v4_producer_sns_publish_concurrency" {
+  description = "Explicit V4 commerce SNS batch concurrency, default one. Requires a reviewed experimental commerce image; notification configuration is unchanged."
+  type        = number
+  default     = 1
+
+  validation {
+    condition     = var.v4_producer_sns_publish_concurrency >= 1 && var.v4_producer_sns_publish_concurrency <= 8 && var.v4_producer_sns_publish_concurrency == floor(var.v4_producer_sns_publish_concurrency)
+    error_message = "v4_producer_sns_publish_concurrency must be an integer from 1 through 8."
+  }
+  validation {
+    condition     = var.v4_demo_enabled || var.v4_producer_sns_publish_concurrency == 1
+    error_message = "Experimental SNS publishing requires explicit distributed V4 demo mode."
+  }
+}
+
+variable "v4_producer_relay_interval" {
+  description = "Allowlisted experimental V4 commerce relay pacing. Default PT2S retains normal behavior; no consumer delay or queue holding is introduced."
+  type        = string
+  default     = "PT2S"
+
+  validation {
+    condition     = contains(["PT0.1S", "PT0.2S", "PT0.5S", "PT1S", "PT2S"], var.v4_producer_relay_interval)
+    error_message = "v4_producer_relay_interval must be PT0.1S, PT0.2S, PT0.5S, PT1S or PT2S."
+  }
+  validation {
+    condition     = var.v4_demo_enabled || var.v4_producer_relay_interval == "PT2S"
+    error_message = "Experimental relay pacing requires explicit distributed V4 demo mode."
+  }
+}
+
 variable "notification_http_trace_logging_enabled" {
   description = "Opt-in notification-only DispatcherServlet DEBUG for an authorized routing check; request details stay masked. Never enable broad web/SQL logging or send secrets in URL query strings."
   type        = bool

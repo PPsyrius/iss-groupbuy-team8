@@ -7,7 +7,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 guard_account
 umask 077
 expected=${V4_EXPECTED_COUNT-2000}
-case "$expected" in 2000|20000) ;; *) die 'V4_EXPECTED_COUNT must be 2000 or the explicitly approved 20000' ;; esac
+case "$expected" in 2000|20000|40000|80000) ;; *) die 'V4_EXPECTED_COUNT must be an explicitly approved 2000, 20000, 40000 or 80000 (maximum 80000)' ;; esac
 [ "${CONFIRM_V4_SEED:-}" = "$expected" ] || die "CONFIRM_V4_SEED=$expected is required"
 [[ "${V4_RUN_LABEL:-}" =~ ^[a-zA-Z0-9-]{1,24}$ ]] || die 'V4_RUN_LABEL must contain 1..24 letters/digits/hyphens'
 [[ "${V4_RECIPIENT_ID:-}" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] || die 'V4_RECIPIENT_ID must be a UUID'
@@ -44,12 +44,8 @@ jq -e --arg revision "$revision" --arg digest "$EXPECTED_IMAGE_DIGEST" --argjson
     any(.containers[]; .name == "commerce-svc" and .imageDigest == $digest))' \
   <<< "$observed" > /dev/null || die 'commerce task revision/digest mismatch'
 
-seed_sql="$REPO_ROOT/backend/blocbuy-bootstrap/src/main/resources/db/seed/load/v4-expiry.sql"
-count_args=''
-if [ "$expected" = 20000 ]; then
-  seed_sql="$REPO_ROOT/perf/k6/v4-expiry.sql"
-  count_args="-v expected_count='$expected' -v confirm_count='$CONFIRM_V4_SEED'"
-fi
+seed_sql="$REPO_ROOT/perf/k6/v4-expiry.sql"
+count_args="-v expected_count='$expected' -v confirm_count='$CONFIRM_V4_SEED'"
 sql=$(base64 < "$seed_sql" | tr -d '\n')
 command="set -eu
 active=\$(PGDATABASE=identity psql --no-psqlrc -At -v ON_ERROR_STOP=1 <<'SQL'
@@ -65,7 +61,7 @@ run_db_init_task "$overrides" 'V4_SEED_COMPLETE|ERROR'
 grep -Fxq V4_SEED_COMPLETE <<< "$DB_INIT_OUTPUT" || die 'V4 seed completion marker is missing; do not reseed'
 report=$(printf '%s\n' "$DB_INIT_OUTPUT" | sed -n '/^{/p' | jq -sce 'select(length == 1) | .[0]') || die 'expected exactly one V4 seed receipt'
 jq -e --arg run "$V4_RUN_LABEL" --argjson expected "$expected" 'type == "object" and .schema == 1 and .runLabel == $run and
-  (if has("expectedCount") then .expectedCount else 2000 end) == $expected and .teams == $expected and .members == $expected and .evidenceKind == "demo-expiry-seed" and
+  .expectedCount == $expected and .confirmedCount == $expected and .teams == $expected and .members == $expected and .evidenceKind == "demo-expiry-seed" and
   (.seededAt | type == "string") and (.expiresAt | type == "string")' <<< "$report" > /dev/null || die 'missing or incomplete V4 seed receipt'
 jq -c --arg sha "$(git -C "$REPO_ROOT" rev-parse HEAD)" --arg digest "$EXPECTED_IMAGE_DIGEST" --arg revision "$revision" \
   '. + {toolingSha:$sha,commerceDigest:$digest,commerceRevision:$revision,profile:"demo",

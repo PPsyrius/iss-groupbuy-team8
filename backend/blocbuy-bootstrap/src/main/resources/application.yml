@@ -73,6 +73,7 @@ blocbuy:
     relay:
       # Delivery is independently opt-in; the EC2 dev profile has no broker and leaves this off.
       enabled: ${BLOCBUY_EVENTS_RELAY_ENABLED:false}
+      interval: ${BLOCBUY_EVENTS_RELAY_INTERVAL:PT2S}
     transport: ${BLOCBUY_EVENTS_TRANSPORT:sqs}
     # Empty: the AWS SDK default region chain (AWS_REGION on ECS). Never a guessed Region.
     region: ${BLOCBUY_EVENTS_REGION:}
@@ -81,6 +82,7 @@ blocbuy:
       queue-url: ${BLOCBUY_EVENTS_SQS_QUEUE_URL:}
     sns:
       topic-arn: ${BLOCBUY_EVENTS_SNS_TOPIC_ARN:}
+      publish-concurrency: ${BLOCBUY_EVENTS_SNS_PUBLISH_CONCURRENCY:1}
     consumer:
       # Notification SQS consumer (#446), independently opt-in; the EC2 dev stack runs no broker.
       # Receives from blocbuy.events.sqs.queue-url with the region/endpoint above, whatever the

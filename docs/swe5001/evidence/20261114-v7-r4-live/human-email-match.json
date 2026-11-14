@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "recordedAtUtc": "2026-11-14T02:22:50.536132+00:00",
+  "attempt": "V7 R4",
+  "humanEmailReceiptVerified": true,
+  "evidenceKind": "owner-confirmed alarm email receipt with supplied screenshot",
+  "ownerReceiptDateSgt": "2026-11-14",
+  "ownerReportedReceiptTimeSgt": "10:12",
+  "receiptTimePrecision": "minute only",
+  "screenshotAlarmTransitionUtc": "2026-11-14T02:12:05Z",
+  "actualCapturedAlarmTransitionUtc": "2026-11-14T02:12:05.323000+00:00",
+  "transitionMatchesAtScreenshotSecondPrecision": true,
+  "cloudWatchHistoryMatchesExactCapturedTransition": true,
+  "matchingDatapointUtc": "2026-11-14T02:10:00Z",
+  "matchingDatapointValue": 1,
+  "metricPeriodSeconds": 60,
+  "statistic": "Maximum",
+  "evaluationPeriods": 1,
+  "successfulAlarmActionSeparatelyVerified": true,
+  "exactDeliveryTimestampEstablished": false,
+  "exactDeliveryLatencyEstablished": false,
+  "deliveryLatencySeconds": null,
+  "appliesToEarlierAttempts": false,
+  "overallV7AcceptanceEstablishedByEmailAlone": false,
+  "historicalTechnicalAcceptanceUnmodified": true,
+  "sources": {
+    "owner": {
+      "relativePath": "v7-user-email-confirmation-20261114-1012.json",
+      "sha256": "da1b11dc632a8dd9bb8b32192b9acfb8a202543f8b8cbf9980503c6bf0cba0e1"
+    },
+    "capture": {
+      "relativePath": "v7-r4-live/capture.private.json",
+      "sha256": "af4276d1e66cf1416a3c830ae34f707be92c0acb1ab0cc2976303bcd5b2a0d36"
+    },
+    "history": {
+      "relativePath": "v7-r4-live/alarm-history.private.json",
+      "sha256": "cb5431f9af2667535e3dc02ad2f54b1259e0b143480a9ef22e9d8e3a1aa018fb"
+    }
+  }
+}

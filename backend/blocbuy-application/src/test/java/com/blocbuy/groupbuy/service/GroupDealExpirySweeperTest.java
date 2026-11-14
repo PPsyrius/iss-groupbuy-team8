@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 /** One batch read, one transaction per team, and no team's failure reaches another. */
 class GroupDealExpirySweeperTest {
@@ -100,6 +102,49 @@ class GroupDealExpirySweeperTest {
     void aNonPositiveLimitIsRejectedBeforeAnyQuery() {
         assertThatThrownBy(() -> sweeper.sweep(0)).isInstanceOf(IllegalArgumentException.class);
 
+        verifyNoInteractions(deals, expiry);
+    }
+
+    @Test
+    void aSingleShardUsesTheExactLegacyCandidateMethod() {
+        when(deals.currentTime()).thenReturn(DB_NOW);
+        when(deals.dueForExpiry(DB_NOW, 500)).thenReturn(List.of());
+
+        assertThat(sweeper.sweep(500, 1, 0, () -> true))
+                .isEqualTo(new GroupDealExpirySweeper.Result(0, 0, 0, 0));
+
+        verify(deals).dueForExpiry(DB_NOW, 500);
+        verify(deals, never())
+                .dueForExpiry(
+                        any(),
+                        org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
+    void partitionedWorkFinishesTheCurrentItemAndStopsAfterLeaseLoss() {
+        when(deals.currentTime()).thenReturn(DB_NOW);
+        when(deals.dueForExpiry(DB_NOW, 500, 6, 5)).thenReturn(List.of(FIRST, SECOND));
+        var valid = new AtomicBoolean(true);
+        when(expiry.expireOne(FIRST))
+                .thenAnswer(call -> {
+                    valid.set(false);
+                    return true;
+                });
+
+        assertThat(sweeper.sweep(500, 6, 5, valid::get))
+                .isEqualTo(new GroupDealExpirySweeper.Result(2, 1, 0, 0));
+
+        verify(expiry, never()).expireOne(SECOND);
+        verify(deals, never()).dueForExpiry(any(), org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0,6,0", "501,6,0", "1,0,0", "1,7,0", "1,6,-1", "1,6,6"})
+    void invalidPartitionsAreRejectedBeforeQueries(int limit, int count, int index) {
+        assertThatThrownBy(() -> sweeper.sweep(limit, count, index, () -> true))
+                .isInstanceOf(IllegalArgumentException.class);
         verifyNoInteractions(deals, expiry);
     }
 }

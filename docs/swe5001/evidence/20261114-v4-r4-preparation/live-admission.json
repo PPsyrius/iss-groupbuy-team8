@@ -1,0 +1,50 @@
+{
+  "publicRunName": "V4 R4",
+  "snapshotAtUtc": "2026-11-13T19:45:16.759264+00:00",
+  "snapshotAtSgt": "2026-11-14T03:45:16.759264+08:00",
+  "experimentalImage": {
+    "pushedAtUtc": "2026-11-13T18:54:09.614774+00:00",
+    "pushExitCode": 0,
+    "indexDigest": "sha256:c9f160806fe1d7fe99aa8a542e3e13d9216e3dda7b14e8d4cd18a97bb688eca3",
+    "nativeArm64Digest": "sha256:ed49c1bff23d55fbb974761c671ebba34263ef85f651c9402110f04350a07e2c",
+    "sourceSha256": "88770039451cf05593e76a2a174fba503178312bd253dc76c400d28673150486",
+    "jarSha256": "1a1ce93e46d9c7a25974ea901d227baf4b2911d6779e9afbb0da1fabdef7e65c",
+    "trivyExitCode": 0,
+    "highFindings": 0,
+    "criticalFindings": 0,
+    "originalPackagerExitCode": 1,
+    "originalPackagerFailure": "unsupported-or-missing-local-manifest-descriptor",
+    "directArtifactRecovery": true,
+    "officialReleasePromoted": false,
+    "pushReplayedAfterSuccess": false
+  },
+  "authentication": {
+    "actualSelectedProfileFailureAtUtc": "2026-11-13T19:24:58+00:00",
+    "failureExitCode": 255,
+    "failure": "SSO token expired and refresh failed",
+    "ownerRenewedSession": true,
+    "actualStsSucceededAtUtc": "2026-11-13T19:34:22.836168+00:00",
+    "expectedAccountAndRoleConfirmed": true,
+    "applicationHttpStatusAtLatestCheck": 200,
+    "applicationSessionValid": true
+  },
+  "databaseAdmission": {
+    "originalReadOnlyTaskSubmittedAtUtc": "2026-11-13T19:03:56.318397+00:00",
+    "originalTaskRecoveredStoppedExitCode": 0,
+    "originalEmptyWorkAssertionPassed": false,
+    "originalOpenTeams": 6,
+    "originalEligibleWithin600Seconds": 0,
+    "originalPendingOutbox": 0,
+    "freshReadOnlyTaskCompletedAtUtc": "2026-11-13T19:44:30.538247+00:00",
+    "freshOpenTeams": 6,
+    "freshEligibleBeforeR4End": 0,
+    "freshPendingOutbox": 0,
+    "earliestExistingExpiryUtc": "2027-12-31T23:59:59+00:00",
+    "existingTeamsDeletedOrExpiredByOperator": false,
+    "tasksRelaunchedOrKilled": false
+  },
+  "workloadSeedSubmittedAtSnapshot": false,
+  "autoscalingAcceptanceEstablished": false,
+  "priorFailuresPreserved": true,
+  "gitCommitOrPushPerformed": false
+}

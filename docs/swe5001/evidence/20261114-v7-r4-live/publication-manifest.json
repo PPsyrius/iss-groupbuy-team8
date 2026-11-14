@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "recordedAtUtc": "2026-11-14T02:39:42.073639+00:00",
+  "files": {
+    "acceptance.json": {
+      "bytes": 5973,
+      "sha256": "385c9d597beceae2b7aff4b6d8d19a11fc63d90e157cafc00716e81df34c9cd9"
+    },
+    "human-email-match.json": {
+      "bytes": 1630,
+      "sha256": "2bd1ea9a691eed17b657da6cbf224f6d99fb61116a995bbb52c7054a466f3808"
+    },
+    "owner-confirmation.json": {
+      "bytes": 797,
+      "sha256": "da1b11dc632a8dd9bb8b32192b9acfb8a202543f8b8cbf9980503c6bf0cba0e1"
+    },
+    "private-package.json": {
+      "bytes": 3319,
+      "sha256": "53cbecf0895f341be5b7bdbd9786620c9d124a7f1627e45895d76a98673c89b5"
+    },
+    "README.md": {
+      "bytes": 5973,
+      "sha256": "ec77114e3f915094220b8c799d7a6120dbf99f88df8c9c1bd7709f51adced8c2"
+    },
+    "restoration-readback.json": {
+      "bytes": 4403,
+      "sha256": "31c49b94c0bf61939f4f79ebe8f323b5a0c7449eb32fdcf98689044d2da321c7"
+    },
+    "technical-acceptance.json": {
+      "bytes": 532,
+      "sha256": "992158f1d033cb2eb77296b5359c9c576fcccdbcc583250bdc8e02b7d930356c"
+    },
+    "validation.json": {
+      "bytes": 624,
+      "sha256": "b9543b4926db7bbed25ac4249a1f8c148df6dc45c829e9889f5b4c619d8884c2"
+    }
+  },
+  "fullAcceptanceSourceSha256": "385c9d597beceae2b7aff4b6d8d19a11fc63d90e157cafc00716e81df34c9cd9",
+  "privateArchiveSha256": "e914253fcef97c53d0ce4b8bdc3fa05c17e0e67fbbc7a703bf0f53d4ce781c0e",
+  "privateArchiveReadbackVerifiedFiles": 683,
+  "privateRawIdentitiesAndScreenshotPublished": false,
+  "publicDocumentationCreatedAfterPrivateArchiveVerification": true,
+  "publicFilesNotClaimedMembersOfThatEarlierRawArchive": true
+}

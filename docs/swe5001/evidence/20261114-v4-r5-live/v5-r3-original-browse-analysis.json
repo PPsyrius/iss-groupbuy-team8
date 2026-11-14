@@ -1,0 +1,7 @@
+{
+  "browseGatesPass": true,
+  "evidenceKind": "aws-drill-preflight-required",
+  "requests": 60000,
+  "awsAcceptanceComplete": false,
+  "remaining": "Review fault time, task identities, health and <=120s replacement with continuous observations"
+}

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "reviewedAtUtc": "2026-11-14T01:54:31.558703+00:00",
+  "filesSha256": {
+    "v4-r5-pass.json": "c660bb7eecf2dd90216a7a85e8b4afb6882ac054d87c3c2cfc7113997f7a0946",
+    "v5-r3-pass.json": "501c83c694c6ab51dc90d4154d322928212a7366dd1cef45c587e0742cebb5fe",
+    "v5-r3-original-browse-analysis.json": "4c2dd0e7ac61942720c3a39fe6069fef8b58dea296846ca2b4e0dbda018cc8fb",
+    "historical-cloudwatch-summary.json": "2ea88f4344057ef99df867971acd17c58cd2ce70ae4e7c1c8cba30339937e414",
+    "observations.sanitized.jsonl": "5fb572a4070053a263cec386e3e1c263deafd3b6182cdf653cd39c92b7741c67",
+    "cloudwatch-2058-2122-points.jsonl": "cfe557a5647149babe88cf08306ee98cdf9f2e709f0f0e6117d70a0f082fed46",
+    "notification-scaling-activities.sanitized.json": "640e2c4fadccc90cfd537fd63057528358d36b859265d83d63c0a3b5ad149cdd",
+    "private-package.json": "ae800d39b0bb469bf618c97f78e924be75697b3acdc91748b74d29102ef94567"
+  },
+  "originalObservationsPreservedPrivately": true,
+  "sanitization": "Only resource/URL identifiers and raw alarm causes removed; observation times/counts/null ages retained; CloudWatch timestamps normalized to UTC without filling absent metric samples.",
+  "workloadOrAnalyzerRerunPerformed": false,
+  "sourceOrSubmittedReportChangesPerformed": false
+}

@@ -128,11 +128,11 @@ test('V4 requires real source/effect counts, backlog, scale-to-four, stable drai
     const input = v4(); mutate(input); assert.equal(analyze4(input).passed, false);
   }
 });
-function largerV4() {
+function largerV4(expectedCount = 20000) {
   const input = v4();
-  Object.assign(input.seed, { expectedCount: 20000, teams: 20000, members: 20000 });
-  Object.assign(input.report, { expectedCount: 20000, teams: 20000, expiredTeams: 20000,
-    outboxEvents: 20000, publishedEvents: 20000, notifications: 20000, consumedEvents: 20000 });
+  Object.assign(input.seed, { expectedCount, confirmedCount: expectedCount, teams: expectedCount, members: expectedCount });
+  Object.assign(input.report, { expectedCount, teams: expectedCount, expiredTeams: expectedCount,
+    outboxEvents: expectedCount, publishedEvents: expectedCount, notifications: expectedCount, consumedEvents: expectedCount });
   return input;
 }
 test('V4 larger fixture requires explicit expected count and matching seed/report bindings', () => {
@@ -169,6 +169,43 @@ test('V4 larger fixture keeps every exact source/effect counter and scale-before
   const historical = v4();
   assert.equal(analyze4(historical).passed, true);
   assert.throws(() => analyzeV4(historical.seed, historical.observations, historical.report, 20000));
+});
+test('V4 allowlisted 40000/80000 cohorts bind confirmation and preserve every acceptance gate', () => {
+  for (const expected of [40000, 80000]) {
+    const input = largerV4(expected);
+    const analyze = x => analyzeV4(x.seed, x.observations, x.report, expected);
+    assert.equal(analyze(input).passed, true);
+    assert.equal(analyze(input).expectedCount, expected);
+    assert.throws(() => analyze4(input));
+    for (const mutate of [x => delete x.seed.expectedCount, x => delete x.report.expectedCount,
+      x => delete x.seed.confirmedCount, x => x.seed.confirmedCount = String(expected),
+      x => x.seed.confirmedCount = 20000, x => x.report.expectedCount = 20000,
+      x => x.seed.teams--, x => x.seed.members++]) {
+      const changed = largerV4(expected); mutate(changed); assert.throws(() => analyze(changed));
+    }
+    for (const key of ['teams', 'expiredTeams', 'outboxEvents', 'publishedEvents', 'notifications', 'consumedEvents']) {
+      for (const delta of [-1, 1]) {
+        const changed = largerV4(expected); changed.report[key] += delta;
+        assert.equal(analyze(changed).passed, false, `${expected} ${key} ${delta}`);
+      }
+    }
+    for (const mutate of [x => x.report.failedEvents = 1,
+      ...['dlqVisible', 'dlqNotVisible', 'dlqDelayed'].map(key => x => x.observations[2].notification[key] = 1),
+      x => x.observations.forEach(row => row.notificationTasks = 1),
+      x => x.observations.forEach(row => row.notification.visible = 0),
+      x => x.observations.forEach((row, i) => row.notificationTasks = i >= 2 ? 4 : 1),
+      x => x.observations.forEach((row, i) => row.notificationTasks = i >= 7 ? 4 : 1),
+      x => x.observations.at(-2).notification.notVisible = 1]) {
+      const changed = largerV4(expected); mutate(changed); assert.equal(analyze(changed).passed, false);
+    }
+  }
+  for (const expected of [-1, 40001, 79999, 80001, 100000, Infinity, '80000', NaN]) {
+    const input = largerV4(80000);
+    assert.throws(() => analyzeV4(input.seed, input.observations, input.report, expected), /expected count/);
+  }
+  const historical = largerV4(); delete historical.seed.confirmedCount;
+  assert.equal(analyzeV4(historical.seed, historical.observations, historical.report, 20000).passed, true,
+    'original signed R2 receipts remain analyzable without inventing a confirmation field');
 });
 test('V4 extra final bracketing sample preserves a proven quiet interval', () => {
   const input = v4();
@@ -340,11 +377,23 @@ test('analysis CLIs preserve all-run failures, reject fixture acceptance and rep
     assert.equal(cli('analyze-v4.mjs', args4).status, 1);
     const largerArgs = [...args4, '--expected-count', '20000'];
     assert.equal(cli('analyze-v4.mjs', largerArgs).status, 0);
-    for (const value of ['20001', '020000', '2e4', '']) assert.equal(cli('analyze-v4.mjs', [...args4, '--expected-count', value]).status, 1);
+    for (const value of ['20001', '80001', '100000', '080000', '020000', '2e4', '8e4', '']) assert.equal(cli('analyze-v4.mjs', [...args4, '--expected-count', value]).status, 1);
     assert.equal(cli('analyze-v4.mjs', [...args4, '--expected-count']).status, 1);
     larger.observations.forEach(row => row.notificationTasks = 1); file('queue.jsonl', larger.observations, true);
     assert.equal(cli('analyze-v4.mjs', largerArgs).status, 2);
     delete larger.seed.account; file('seed.json', larger.seed);
     assert.equal(cli('analyze-v4.mjs', largerArgs).status, 1);
+    for (const expected of [40000, 80000]) {
+      const bounded = largerV4(expected);
+      Object.assign(bounded.seed, { account: '402178232802', region: 'ap-southeast-1', cluster: 'blocbuy-swe5001',
+        profile: 'demo', commerceDigest: `sha256:${'c'.repeat(64)}`, commerceRevision: 'revision:1' });
+      file('seed.json', bounded.seed); file('queue.jsonl', bounded.observations, true); file('report.json', bounded.report);
+      const boundedArgs = [...args4, '--expected-count', String(expected)];
+      assert.equal(cli('analyze-v4.mjs', boundedArgs).status, 0);
+      bounded.observations.forEach(row => row.notificationTasks = 1); file('queue.jsonl', bounded.observations, true);
+      assert.equal(cli('analyze-v4.mjs', boundedArgs).status, 2);
+      delete bounded.seed.account; file('seed.json', bounded.seed);
+      assert.equal(cli('analyze-v4.mjs', boundedArgs).status, 1);
+    }
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

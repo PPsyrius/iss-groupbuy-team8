@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "phase": "V4",
+  "workloadAttempt": "R2",
+  "date": "2026-11-13",
+  "issueReferences": [458, 459],
+  "verificationLevel": "Offline review of retained AWS evidence and aggregate observations; no new AWS calls",
+  "outcomes": {
+    "originalCollectorExitedZero": true,
+    "sourceAndEffectsReconciled": true,
+    "dlqStayedEmptyInSamples": true,
+    "strictScalingAcceptancePassed": false,
+    "scaleToFourBeforeFinalDrainObserved": false,
+    "fullV4PassClaimed": false,
+    "applicationFailureClaimed": false,
+    "original2000TeamR1StillFailed": true
+  },
+  "executionSource": {
+    "signedExecutionCommit": "8bec6bbea50cee05487bf33476730489653b4355",
+    "recordedSignatureStatus": "G",
+    "cleanReviewedExecutionCheckout": true,
+    "applicationReleaseCommitUnchanged": "3a893036d70d028b29ae13ebf820283571c1ae00",
+    "priorDrillToolingCommitNotUsedAsR2Proof": "732c49b5af7526b0d82c5c332df8db9949e8a82e",
+    "applicationPromotionPerformed": false,
+    "retainedCredentialFreeVerificationPassed": true,
+    "retainedTestCounts": {
+      "nodeTests": 55,
+      "postgresIntegrationTests": 1,
+      "seedShellChecks": 31,
+      "toolShellChecks": 38
+    },
+    "freshSignedCloneNodeAndPostgresRevalidated": true,
+    "testsRerunForThisEvidencePreparation": false
+  },
+  "workload": {
+    "originalR1AndOrdinaryDefaultCount": 2000,
+    "explicitR2ExpectedCount": 20000,
+    "countEnvironmentVariable": "V4_EXPECTED_COUNT",
+    "sourceWorkloadRevisedFromR1": true,
+    "seededTeams": 20000,
+    "seededMemberships": 20000,
+    "seededAtUtc": "2026-11-13T08:05:24.941261Z",
+    "expiresAtUtc": "2026-11-13T08:06:24.941261Z",
+    "sourcePath": "Real expiry to transactional outbox to SNS to SQS to notification consumer",
+    "directEventInjection": false,
+    "paymentsOrdersOrRefundsSeeded": false,
+    "applicationImagesConsumersResourcesPoliciesAndThresholdsUnchanged": true,
+    "additionalFixtureOrManualScalingAppliedDuringTrial": false
+  },
+  "collection": {
+    "startReceiptAtUtc": "2026-11-13T08:04:14.154209Z",
+    "resultRecordedAtUtc": "2026-11-13T08:18:06.414504Z",
+    "resultRecordedAtSgt": "2026-11-13T16:18:06.414504+08:00",
+    "originalCollectorExitCode": 0,
+    "wallSeconds": 832.297,
+    "timedOut": false,
+    "requestedMinimumSeconds": 600,
+    "maximumAllowedSeconds": 1800,
+    "strictAcceptanceRecordedAtUtc": "2026-11-13T08:18:57.608242Z",
+    "strictAcceptancePassed": false,
+    "limitation": "Collector completion is not strict scaling acceptance."
+  },
+  "sourceAndEffects": {
+    "databaseReportAtUtc": "2026-11-13T08:17:20.346793Z",
+    "teams": 20000,
+    "expiredTeams": 20000,
+    "outboxEvents": 20000,
+    "publishedEvents": 20000,
+    "notifications": 20000,
+    "consumerMarkers": 20000,
+    "failedOutboxEvents": 0
+  },
+  "strictGates": {
+    "quietStart": true,
+    "sourceAndEffectsMatch": true,
+    "hasAwsDeploymentEvidence": true,
+    "backlogObserved": true,
+    "scaleToFourObserved": false,
+    "drainObserved": true,
+    "drainAfterScale": false,
+    "dlqStayedEmpty": true,
+    "collectorExitedZero": true
+  },
+  "sampledObservationSummary": {
+    "samples": 50,
+    "firstAtUtc": "2026-11-13T08:04:37Z",
+    "lastAtUtc": "2026-11-13T08:18:04Z",
+    "maximumGapSeconds": 18,
+    "maximumObservedNotificationTasks": 1,
+    "maximumApproximateQueueCounts": {
+      "visible": 64,
+      "notVisible": 4,
+      "delayed": 0,
+      "dlqVisible": 0,
+      "dlqNotVisible": 0,
+      "dlqDelayed": 0
+    },
+    "finalSampledQuietSuffix": {
+      "startsAtUtc": "2026-11-13T08:12:06Z",
+      "reportedSecondsAfterExpiryRounded": 341.059,
+      "samples": 23,
+      "meaning": "Start of the final sampled quiet queue suffix only; not complete pipeline drain or source/effect reconciliation time."
+    },
+    "completionAdditionallyRequiredProducerAndEffectReconciliation": true,
+    "postReportQuietConfirmation": {
+      "requiredMinimumSamples": 3,
+      "requiredMinimumSpanSeconds": 30,
+      "observedSamples": 4,
+      "firstAtUtc": "2026-11-13T08:17:28Z",
+      "lastAtUtc": "2026-11-13T08:18:04Z",
+      "observedSpanSeconds": 36,
+      "allQueueAndDlqCountsQuiet": true
+    },
+    "limitation": "Queue counts are approximate samples, not guarantees between samples or of future emptiness. Queue-attribute age coverage was not complete."
+  },
+  "scalingSignal": {
+    "metricPeriodSeconds": 60,
+    "policyBacklogStatistic": "Average",
+    "policyTaskCountStatistic": "Average",
+    "targetBacklogPerTask": 50,
+    "scaleOutEvaluationPeriods": 3,
+    "completeSourceActiveBuckets": [
+      { "atUtc": "2026-11-13T08:07:00Z", "published": 3200, "averageBacklogPerTask": 0 },
+      { "atUtc": "2026-11-13T08:08:00Z", "published": 3500, "averageBacklogPerTask": 0 },
+      { "atUtc": "2026-11-13T08:09:00Z", "published": 3300, "averageBacklogPerTask": 55 },
+      { "atUtc": "2026-11-13T08:10:00Z", "published": 3800, "averageBacklogPerTask": 8 }
+    ],
+    "breachingBucketsAmongThoseFour": 1,
+    "finalSignalSnapshotAtUtc": "2026-11-13T08:22:38.386991Z",
+    "autoscalingActivitiesObserved": 0,
+    "finalDesiredNotificationTasks": 1,
+    "finalRunningNotificationTasks": 1,
+    "statisticsMatchActualPolicy": true,
+    "missingDataInterpretedAsZero": false,
+    "interpretation": "One brief threshold breach did not supply the three 60-second evaluation periods required by the unchanged policy; no four-worker scale-before-drain ordering was observed. These bucket values establish neither a producer-rate ceiling nor consumer capacity."
+  },
+  "laterCloudWatchReceipt": {
+    "recordedAtUtc": "2026-11-13T08:22:41.533640Z",
+    "regionalMetricQueries": 21,
+    "seriesWithData": 19,
+    "dashboardImagesSavedPrivately": 6,
+    "imageErrors": 0,
+    "missingSeriesAssumedZero": false,
+    "alarmStateModified": false,
+    "chronology": "The strict acceptance record still requested graphs; this later receipt records capture, not a changed scaling verdict or proof of complete queue-age coverage."
+  },
+  "limitsAndNextScope": [
+    "R2 used a revised 20000-team source workload; neither R2 nor the original 2000-team R1 is relabeled as a strict V4 pass.",
+    "All source/effect counts reconciled, but this is not evidence of application failure or measured producer/consumer capacity.",
+    "The 341.059-second sampled quiet-suffix start is not a complete-pipeline drain measurement.",
+    "No further count-only seed, consumer or policy manipulation, or forced worker is authorized by this evidence; next scope remains a read-only proposal and owner decision.",
+    "Identity, phase-active controls, restoration, campaign completion and teardown remain outside this record and with the parent task."
+  ],
+  "publication": {
+    "privateAwsResourceUserMessageAndEventIdentifiersOmitted": true,
+    "rawLogsAndProviderPayloadsOmitted": true,
+    "observationsReviewedAsAggregateCountsAndTimestampsOnly": true,
+    "privateInputCount": 12,
+    "sourceSha256": {
+      "v4-b-start.json": "2ef26380b5c4c02fac95b0115c1e55f6a96773502a10ee8dbcb8b257f5a20352",
+      "v4-b-result.json": "f8e13cdf2521f7e77f635b30babb2b07b5f96dd4df946e302b7818af4947769b",
+      "v4-b-acceptance.json": "331667afab3248148871993a60b589f7508175b1169a04663f31342aa7f4b9f1",
+      "v4-b-analysis.json": "45d6e9089e5c0cc52ac36385535e5f0a7233c8c40277d375830cb322cce67f13",
+      "v4-b-seed-binding.json": "f7ad51cb90cfe06b389de9e00bed07102eb2d700c6ad03032b55242c3f1be3f8",
+      "v4-b-early-signal-decision.json": "13ab3cd2eb5131042adc7531756c5e6d950e315078b9bdfcabbc4f561adad9c4",
+      "v4-b-signal-final.private.json": "dedd3a9db5d218fab53fb8d72c0f9e293fec3ac8d73bda93367f1ec579ce2b58",
+      "cloudwatch-v4-b/receipt.json": "6d86c6c281388e17b78fb6f02522f27c71606f9f489f22b783e091d8387486a7",
+      "v4-b/database-report.json": "3236db0c645fcd4492bfcd4f63d5db6396f7b0dbc7b587dc13f361b801495f09",
+      "v4-b/observations.jsonl": "d7a908dcbe8217f550753125347525fc1ff0821ddccc9412a59994c4722a1915",
+      "v4-r2-tooling-approved.json": "c0d883334f6d57e495e8f6d0fbd00a1a87195be2b27690018487024852551541",
+      "v4-r2-verification-signed.json": "8fb464154d501d4f3698c276768cb64d916c9512b644d3e1ee5657630e6eec1b"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "acceptedAtUtc": "2026-11-13T21:25:56.951085+00:00",
+  "runLabel": "v4-20261114-r5-a",
+  "teams": 80000,
+  "passed": true,
+  "v4Accepted": true,
+  "overallSessionAccepted": false,
+  "acceptanceScope": "Actual V4 R5 experimental producer image/configuration only; no official promotion or retroactive earlier-attempt pass",
+  "nativeCommerceDigest": "sha256:ed49c1bff23d55fbb974761c671ebba34263ef85f651c9402110f04350a07e2c",
+  "reviewedUncommittedBackendSourceSha256": "88770039451cf05593e76a2a174fba503178312bd253dc76c400d28673150486",
+  "originalCollectorExitCode": 0,
+  "originalAnalyzerExitCode": 0,
+  "automaticFourBoundToUnchangedOriginalPolicy": true,
+  "earlyRestorationQualification": false,
+  "allSixSourceEffectCounts": 80000,
+  "failedEvents": 0,
+  "original50RestorationVerifiedAtUtc": "2026-11-14T05:20:32.362518+08:00",
+  "original50ImageUpdateProofAgeSeconds": 26.10195,
+  "finalReadonlyReadbackAtUtc": "2026-11-13T21:23:44.460412+00:00",
+  "finalServiceRunningCounts": {
+    "commerce-svc": 2,
+    "identity-svc": 1,
+    "notification-svc": 4
+  },
+  "notificationCountRemainsAutomaticWithinUnchangedOneToFourBounds": true,
+  "exactBaselineCounts211AtReadback": false,
+  "nonterminalSqlTasks": 0,
+  "publicHealth": {
+    "httpStatus": 200,
+    "status": "UP"
+  },
+  "retainedFutureBaselineTeams": 6,
+  "pendingOutboxAtFinalDrain": 0,
+  "retainedAuditVisibleAtReadback": 142000,
+  "encryptedArchive": {
+    "relativeDirectory": "r5-completed-local-archive-20261114-a",
+    "file": "r5-completed-evidence.tar.gz.enc",
+    "sha256": "2418ef434b947c51254fa026636acd651d93f5871b340a6e13a8305fde0ccf71",
+    "bytes": 7816864,
+    "individualFilesReadbackVerified": 2144,
+    "readbackVerified": true,
+    "localEncryptedStorage": true,
+    "keyNeverPrintedOrIncludedInArchive": true
+  },
+  "evidenceFilesSha256": {
+    "originalCanonicalAnalyzer": "d23b8eb4f4892af5eb6b80dc51bfef5880f153c82095b29b19edff754ae4dccd",
+    "originalCanonicalCollectorResult": "10f4f08d59eff8d9981b66e7067170adf2f1669f59e23f26bf8c0e771e39f09a",
+    "finalSourceEffectsReport": "11b9090eb7a3f542484c29335dfd60b9b059a5aaed915e679fa8fb5d12f3eb83",
+    "actualCollectorExit": "9079bd6211cad93ca73339d4b63bb8524659d16ec54c4387e744bac50c231f4a",
+    "independentRestorationResult": "9807602a35ad32bd150620bcc6ee8083ce76cae6106ce48640fe5b88780dcbc3",
+    "finalReadonlyReadback": "1457fda8355d911bff4bbd7c1eb9a79d124fb9f4877b1107845e9a5b61eddf72",
+    "regionalMetricReceipt": "cbb66742116508d1aba1411e3dc0fa5351388e80962b3cd9ac4bbe33c418e6dc",
+    "localEncryptedPreservationReceipt": "790299edd964d21cabf63a22072dc6f7451a98ea054f3c4fc99c2126c8d31f8f"
+  },
+  "previousFailedAttemptsOrContainersDeleted": false,
+  "notificationConsumerPoliciesPoolsIamOrReleaseChanged": false,
+  "v7V8ExecutedByThisController": false,
+  "noGitCommitOrPush": true
+}

@@ -59,6 +59,28 @@ public class GroupDealExpirySweeper {
         // Candidate selection only: expireOne re-reads the clock under the row lock and decides.
         Instant now = deals.currentTime();
         List<UUID> due = deals.dueForExpiry(now, limit);
+        return resolve(due, leaseValid);
+    }
+
+    /**
+     * One bounded partition read, followed by the same independently transactional aggregate
+     * writes.
+     */
+    public Result sweep(int limit, int shardCount, int shardIndex, BooleanSupplier leaseValid) {
+        if (limit < 1 || limit > 500) {
+            throw new IllegalArgumentException("limit must be between 1 and 500");
+        }
+        if (shardCount < 1 || shardCount > 6 || shardIndex < 0 || shardIndex >= shardCount) {
+            throw new IllegalArgumentException("invalid team-expiry shard count or index");
+        }
+        if (shardCount == 1) {
+            return sweep(limit, leaseValid);
+        }
+        Instant now = deals.currentTime();
+        return resolve(deals.dueForExpiry(now, limit, shardCount, shardIndex), leaseValid);
+    }
+
+    private Result resolve(List<UUID> due, BooleanSupplier leaseValid) {
         int expired = 0;
         int alreadyResolved = 0;
         int failed = 0;

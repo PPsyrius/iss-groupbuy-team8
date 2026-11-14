@@ -1,0 +1,13 @@
+{
+  "consumedEvents": 80000,
+  "expectedCount": 80000,
+  "expiredTeams": 80000,
+  "failedEvents": 0,
+  "notifications": 80000,
+  "observedAt": "2026-11-13T21:12:08.021302+00:00",
+  "outboxEvents": 80000,
+  "publishedEvents": 80000,
+  "runLabel": "v4-20261114-r5-a",
+  "schema": 1,
+  "teams": 80000
+}

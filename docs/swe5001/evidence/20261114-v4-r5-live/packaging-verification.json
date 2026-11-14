@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "verifiedAtUtc": "2026-11-14T02:12:22.086462+00:00",
+  "archiveSha256": "2f2be4d09d30c69a9dd8343f11020b1e696cbaf418d53db54e023cf3500e5f45",
+  "archiveAndDownloadedCopyByteIdentical": true,
+  "s3UploadAndDownloadChecksumSha256BothMatch": true,
+  "s3ServerSideEncryptionVerified": "AES256",
+  "individualArchiveFilesReadbackVerified": 109,
+  "originalV5ArchiveSha256": "40ab56a16878ef083ffd0e370c09b726bd35f38e497dc53a4fdd11d08d753357",
+  "originalV5MembersVerifiedDuringReview": 18,
+  "originalObservationTimesCountsAndNullAgesUnchanged": true,
+  "historicalMinuteRowsMatchOriginalReturnedValuesExactly": true,
+  "missingMetricValuesNotFilled": true,
+  "originalV5AcceptanceAndWorkloadOnlyAnalysisByteIdentical": true,
+  "privateUrlsArnsAndCredentialPatternsAbsentFromPublishedFolder": true,
+  "relativeMarkdownEvidenceLinksResolved": true,
+  "newDocumentSha256": {
+    "v4-r5-pass.md": "e5e378c52415ef90e6772e3548c00e0f8068668313dc28355b33c9cac3306f2e",
+    "v5-r3-pass.md": "044c1656003d88c9b2eb9046f04a677ddfef73251247f4ec6021ce5b1f1c9894",
+    "working-report-addendum.md": "d1cc333bcac484871317f5e0d259aa1b8fef467d8a596682a8032a705c4760ff"
+  },
+  "workloadAnalyzerOrRuntimeMutationPerformedDuringPackaging": false,
+  "activeV7R2DirectoryReadOrChanged": false,
+  "wholeCampaignPassClaimed": false
+}

@@ -239,6 +239,35 @@ class SchedulerLeaseRepositoryIT {
         assertThat(rows(key)).isEqualTo(1);
     }
 
+    @Test
+    void eachExpiryShardHasOneWinnerWhileAllSixDifferentShardsCanProgress() throws Exception {
+        var start = new CountDownLatch(1);
+        List<Future<Boolean>> results = new ArrayList<>();
+        try (var pool = Executors.newFixedThreadPool(12)) {
+            for (int shard = 0; shard < 6; shard++) {
+                String key = "team-expiry-sweep/v1/6/" + shard;
+                for (int contender = 0; contender < 2; contender++) {
+                    String owner = "shard-racer-" + contender;
+                    results.add(
+                            pool.submit(() -> {
+                                if (!start.await(5, TimeUnit.SECONDS)) {
+                                    throw new IllegalStateException("start gate timed out");
+                                }
+                                return leases.tryAcquire(key, owner, LEASE);
+                            }));
+                }
+            }
+            start.countDown();
+            for (int shard = 0; shard < 6; shard++) {
+                int winners =
+                        (results.get(shard * 2).get(10, TimeUnit.SECONDS) ? 1 : 0)
+                                + (results.get(shard * 2 + 1).get(10, TimeUnit.SECONDS) ? 1 : 0);
+                assertThat(winners).isEqualTo(1);
+                assertThat(rows("team-expiry-sweep/v1/6/" + shard)).isEqualTo(1);
+            }
+        }
+    }
+
     /**
      * R6: a session sitting on the lease row must cost one failed run, not the scheduler thread.
      */

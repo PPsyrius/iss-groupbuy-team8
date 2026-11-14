@@ -74,6 +74,15 @@ public interface PaidGroupDealMapper {
      */
     List<UUID> selectDueForExpiry(@Param("now") Instant now, @Param("limit") int limit);
 
+    /**
+     * Same bounded scan restricted by the unsigned final UUID byte before ordering and limiting.
+     */
+    List<UUID> selectDueForExpiryShard(
+            @Param("now") Instant now,
+            @Param("limit") int limit,
+            @Param("shardCount") int shardCount,
+            @Param("shardIndex") int shardIndex);
+
     /** Records or extends database-clock backoff for a failed team-expiry attempt. */
     int deferExpiryRetry(
             @Param("dealId") UUID dealId, @Param("retryDelaySeconds") double retryDelaySeconds);

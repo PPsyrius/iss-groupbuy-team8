@@ -112,9 +112,11 @@ export function v3Accumulator(report, evidence) {
 
 /** Analyze sampled queue drain plus exact source/effect counts; empty queues alone never pass. */
 export function analyzeV4(seed, observations, report, expectedCount = 2000) {
-  if (expectedCount !== 2000 && expectedCount !== 20000) throw new Error('V4 expected count must be 2000 or the explicitly approved 20000');
+  if (![2000, 20000, 40000, 80000].includes(expectedCount)) throw new Error('V4 expected count must be an explicitly approved 2000, 20000, 40000 or 80000 (maximum 80000)');
   const boundCount = receipt => receipt?.expectedCount === undefined ? 2000 : receipt.expectedCount;
-  if (seed?.schema !== 1 || seed.evidenceKind !== 'demo-expiry-seed' || boundCount(seed) !== expectedCount || seed.teams !== expectedCount || seed.members !== expectedCount ||
+  const confirmed = seed?.confirmedCount;
+  if (seed?.schema !== 1 || seed.evidenceKind !== 'demo-expiry-seed' || boundCount(seed) !== expectedCount ||
+      (confirmed !== undefined ? confirmed !== expectedCount : expectedCount > 20000) || seed.teams !== expectedCount || seed.members !== expectedCount ||
       typeof seed.runLabel !== 'string' || !/^[a-zA-Z0-9-]{1,24}$/.test(seed.runLabel) || !/^[0-9a-f]{40}$/.test(seed.toolingSha || '')) throw new Error('Invalid V4 seed receipt');
   const start = timestamp(seed.seededAt, 'seed timestamp'), expires = timestamp(seed.expiresAt, 'expiry timestamp');
   const end = timestamp(report?.observedAt, 'database report timestamp');

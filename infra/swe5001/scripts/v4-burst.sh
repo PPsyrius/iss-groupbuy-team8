@@ -7,15 +7,18 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 guard_account
 umask 077
 V4_EXPECTED_COUNT=${V4_EXPECTED_COUNT-2000}
-case "$V4_EXPECTED_COUNT" in 2000|20000) ;; *) die 'V4_EXPECTED_COUNT must be 2000 or the explicitly approved 20000' ;; esac
+case "$V4_EXPECTED_COUNT" in 2000|20000|40000|80000) ;; *) die 'V4_EXPECTED_COUNT must be an explicitly approved 2000, 20000, 40000 or 80000 (maximum 80000)' ;; esac
 export V4_EXPECTED_COUNT
 [ "${CONFIRM_V4_SEED:-}" = "$V4_EXPECTED_COUNT" ] || die "CONFIRM_V4_SEED=$V4_EXPECTED_COUNT is required"
 [[ "${V4_RUN_LABEL:-}" =~ ^[a-zA-Z0-9-]{1,24}$ ]] || die 'invalid V4_RUN_LABEL'
 [[ "${EXPECTED_NOTIFICATION_DIGEST:-}" =~ ^sha256:[0-9a-f]{64}$ ]] || die 'reviewed EXPECTED_NOTIFICATION_DIGEST is required'
 max=${V4_MAX_SECONDS:-1800}
-if ! [[ "$max" =~ ^[0-9]+$ ]] || [ "$max" -lt 300 ] || [ "$max" -gt 3600 ]; then die 'V4_MAX_SECONDS must be 300..3600'; fi
-min=${V4_MIN_SECONDS-300}
-if ! [[ "$min" =~ ^[0-9]+$ ]] || ! [ "$min" -ge 300 ] 2>/dev/null || ! [ "$min" -le "$max" ] 2>/dev/null; then die 'V4_MIN_SECONDS must be 300..V4_MAX_SECONDS'; fi
+if ! [[ "$max" =~ ^[0-9]{3,4}$ ]] || [ "$max" -lt 300 ] || [ "$max" -gt 3600 ]; then die 'V4_MAX_SECONDS must be 300..3600'; fi
+minimum=300
+[ "$V4_EXPECTED_COUNT" = 2000 ] || minimum=600
+min=${V4_MIN_SECONDS-$minimum}
+if ! [[ "$min" =~ ^[0-9]{3,4}$ ]] || [ "$min" -lt "$minimum" ] || [ "$min" -ge "$max" ]; then die "V4_MIN_SECONDS must be at least $minimum and strictly less than V4_MAX_SECONDS"; fi
+export V4_MIN_SECONDS=$min
 if [ -z "${V4_RESULTS_DIR:-}" ] || [ ! -d "$V4_RESULTS_DIR" ]; then die 'create a private V4_RESULTS_DIR outside the checkout'; fi
 results=$(cd "$V4_RESULTS_DIR" && pwd)
 case "$results/" in "$REPO_ROOT/"*) die 'results must be outside the reviewed checkout' ;; esac
@@ -95,7 +98,7 @@ trap 'exit 143' TERM
 observer=$!
 started=$(date +%s)
 bash "$SWE5001_DIR/scripts/v4-expiry-seed.sh" > "$results/seed.json"
-# Keep at least five minutes of observations for CloudWatch/task-start lag; a quiet
+# Keep at least five minutes (ten for revised cohorts) for CloudWatch/task-start lag; a quiet
 # queue can precede later expiry batches, so the final database report is mandatory.
 reports=0
 next_report=0
@@ -142,7 +145,7 @@ observer=''
 sleep 1 # Keep strictly increasing UTC-second timestamps after the observer's last poll.
 snapshot >> "$results/observations.jsonl"
 [ ! -s "$results/observer.err" ] || die 'observer errors invalidate coverage'
-if [ "$V4_EXPECTED_COUNT" = 20000 ]; then
+if [ "$V4_EXPECTED_COUNT" != 2000 ]; then
   [ "$collection_complete" = true ] || die 'revised V4 reached its maximum without complete source/effects followed by a final quiet interval; retain evidence, never reseed'
   source_effects_complete "$results/database-report.json" || die 'final revised V4 source/effect counts do not match; retain evidence, never reseed'
 fi

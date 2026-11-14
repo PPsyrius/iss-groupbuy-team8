@@ -54,3 +54,5 @@ Four further decisions shape how the platform runs and changes, rather than what
   kind: table,
   caption: [Other architectural decisions (AD-16 to AD-19). Source: `registers.md`.],
 ) <tbl-ad-other>
+
+*14 November 2026 experiment boundary.* AD-16 describes the released scheduling design and its calculated relay rate, not a measured throughput ceiling. V4 R5 separately tested an authorized, uncommitted producer-only overlay with bounded expiry sharding and publication pacing; its result and restored settings are identified in §4.1. It did not promote a new release, remove the per-team transaction or change the default scheduling decision. V5 and V7 provide the separately scoped AWS recovery and isolation evidence in §4.2.
