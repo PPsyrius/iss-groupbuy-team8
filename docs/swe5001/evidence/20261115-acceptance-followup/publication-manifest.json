@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "publicationDateSgt": "2026-11-15",
+  "issues": [448, 459, 460],
+  "pullRequest": 808,
+  "releasedApplicationSha": "3a893036d70d028b29ae13ebf820283571c1ae00",
+  "executionSourceSha": "479d3409ba6992a7991953ae3544f559ca614dea",
+  "hostedCi": {
+    "run": 43619694588,
+    "headSha": "be5e7c41580ba2bbd0fac97a5978d3951278d4fc",
+    "suites": 241,
+    "tests": 2144,
+    "failures": 0,
+    "errors": 0,
+    "skippedOptInBenchmarks": 2,
+    "laterPublicationHeadVerifiedByThisRun": false
+  },
+  "qualifiedNormalTeamSuccess": {
+    "paidFulfilledPayments": 2,
+    "appliedParticipationReceipts": 2,
+    "paidMembers": 2,
+    "confirmedOrders": 2,
+    "publishedTeamSucceededEvents": 1,
+    "exactRecipientNotifications": 2,
+    "extraOrDeletedRecipientRows": 0,
+    "notificationConsumedMarkers": 1,
+    "bothRecipientsCompleteInitialRepeatApiIdsMatchDb": true,
+    "backendSourceArtifactHashesVerified": 50,
+    "independentApiSourceHashesVerified": 6,
+    "futureFixtureLifetimeSeconds": 7200,
+    "adminProvisioningRequired": true,
+    "originalFailurePreserved": true,
+    "identityFaultExecuted": false,
+    "wholeIssue460Closed": false
+  },
+  "privateSourceReceiptSha256": {
+    "backendAcceptance": "f64c59cbe41948252df9996252a6527152ccd55d06dff3316e61184082ba5d79",
+    "backendSourceManifest": "388a054d2a36407fbb3f5c812db56f6adddf490a1bb1bec614c370138aeddfa5",
+    "independentParentApi": "cda75ebe0059f573dff5ee8da4e7ae97c6dc3229fc7c5ecb43007cd70efb97bf",
+    "hostedCiReview": "dcad2b581e27cc120b4af4ac53906c2f04b239b2a1b26c66ffcf38258456c20d"
+  },
+  "files": {
+    "README.md": {
+      "bytes": 3520,
+      "sha256": "887ce096211673ba7008a7ae272a5efc903e28ce944ef265c7779d6524cdd828"
+    },
+    "normal-team-success-r2.md": {
+      "bytes": 9539,
+      "sha256": "49a30637bae0683ce78288a5415ae13cb95503c913066dd1b729e54576d3b4fc"
+    }
+  },
+  "hashScope": "Exact published UTF-8 LF bytes, excluding this self-referential manifest; private raw sources remain private and are not claimed publicly archived",
+  "acceptanceLimits": [
+    "Admin granted rather than pre-existing",
+    "Two-hour future-team fixture rather than unchanged forty-minute fixture",
+    "OAuth redirect-chain and direct Valkey state observations incomplete",
+    "Cross-date smoke reuse and full EC2 manual parity require disposition",
+    "No identity outage, replay, teardown or whole-campaign acceptance"
+  ]
+}
