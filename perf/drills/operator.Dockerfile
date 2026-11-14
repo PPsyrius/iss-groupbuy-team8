@@ -7,4 +7,7 @@ RUN curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
     && unzip -q /tmp/terraform.zip -d /usr/local/bin \
     && rm /tmp/terraform.zip \
     && git config --system --add safe.directory /repo
+RUN mkdir -p /home/operator && chown 10001:10001 /home/operator
+ENV HOME=/home/operator
+USER 10001:10001
 ENTRYPOINT ["/bin/bash"]

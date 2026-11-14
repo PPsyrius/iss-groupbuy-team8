@@ -89,7 +89,7 @@ printf 'PASS report rejects arbitrary SQL/arguments\n'
 for count in 20000 40000 80000; do
   V4_EXPECTED_COUNT=$count bash "$work/repo/scripts/v4-expiry-report.sh" > "$work/report.json"
   jq -e --argjson count "$count" '.expectedCount == $count and .notifications == $count and .consumedEvents == $count' "$work/report.json" > /dev/null
-  ! grep -Fq -- '-v source=' "$work/repo/task-command"
+  if grep -Fq -- '-v source=' "$work/repo/task-command"; then exit 1; fi
   grep -Fq 'set source' "$work/repo/task-command"
   printf 'PASS fixed %s report binds count and streams event IDs through stdin\n' "$count"
 done

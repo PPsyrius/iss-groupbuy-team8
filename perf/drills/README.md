@@ -14,7 +14,7 @@ docker run --rm --network none -v "$PWD:/repo:ro" -w /repo \
   blocbuy-swe5001-drill-operator:20261113 -c 'set -e; bash infra/swe5001/scripts/test-http-preflight.sh; bash infra/swe5001/scripts/test-v4-expiry-seed.sh; bash infra/swe5001/scripts/test-v4-expiry-tools.sh; bash infra/swe5001/scripts/test-identity-drill-report.sh'
 ```
 
-Use Node 24 and the pinned [k6 1.6.1 image](../k6/README.md). The one full-duration V2 integration case remains opt-in; compressed generator fixtures do not measure application performance. The operator image pins AWS CLI and Terraform 1.16.4, with the Terraform archive SHA-256 taken from HashiCorp's published checksum list. Package versions beyond those pins are not a fully reproducible OS lock. No profile, token or source checkout is baked into the image.
+Use Node 24 and the pinned [k6 1.6.1 image](../k6/README.md). The one full-duration V2 integration case remains opt-in; compressed generator fixtures do not measure application performance. The operator image pins AWS CLI and Terraform 1.16.4, with the Terraform archive SHA-256 taken from HashiCorp's published checksum list. Package versions beyond those pins are not a fully reproducible OS lock. It defaults to non-root UID/GID `10001:10001` with a writable `/home/operator`; any explicitly mounted output directory must permit that UID to write. No profile, token or source checkout is baked into the image.
 
 ## Steady browse: future authorized session only
 

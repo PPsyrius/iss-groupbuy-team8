@@ -39,7 +39,9 @@ aws() {
       else printf '["task:1"]\n'; fi ;;
     'ecs describe-tasks')
       [ "$FAULT" != describe_denied ] || return 1
-      jq -nc --arg fault "${DESCRIBE_FAULT:-$FAULT}" --argjson count "$expected_tasks" '
+      local task_count=1
+      [ "$FAULT" != two_tasks ] || task_count=2
+      jq -nc --arg fault "${DESCRIBE_FAULT:-$FAULT}" --argjson count "$task_count" '
         {tasks:[range(1; $count + 1) | {taskArn:("task:" + tostring),lastStatus:"RUNNING",desiredStatus:"RUNNING"}],failures:[]} |
         if $fault == "missing_described_task" then .tasks |= .[1:]
         elif $fault == "describe_failure" then .failures = [{arn:"task:missing",reason:"MISSING"}]
