@@ -166,10 +166,14 @@ Source at released `3a893036`: #src(".github/workflows/swe5001-deploy.yml", rev:
     [Destroy and absence check], [`down` (`env-down.sh`, `env-status.sh`)], [709 s destroy (17 Oct); 13 min 4 s job (11 Nov); manual teardown on 16 Oct: 113 resources in 784 s, absence at 14:35], [None],
     [Evidence], [`evidence`], [7 s (11 Nov)], [None],
     [Whole release run], [`swe5001-deploy.yml`], [51 min 15 s (17 Oct); 45 min 55 s (19 Oct); 47 min 12 s (20 Oct); 53 min 33 s (10 Nov); 53 min 48 s (11 Nov)], [—],
+    [V8 R4 full startup (14 Nov; operator, not promotion)], [Local canonical `env-up.sh --release`], [*1794.158 s (29 min 54.158 s), exit 0*; includes the full routing wait, recipient confirmation, routing probes, stability and smoke], [Single approved alarm recipient confirmed; tested configuration qualified below],
+    [V8 R4 new-runtime final cleanup (14 Nov)], [Canonical `env-down.sh` and independent checks], [*772.510 s full down, exit 0*; 118 resources destroyed; independent absence and empty/unlocked state verified], [Capture logs before destruction; private archive read-back verified],
   ),
   kind: table,
-  caption: [Delivery stages and recorded durations, 16 October – 11 November. Source: GitHub runs #run("39008208244")[39008208244], #run("39014054529")[39014054529], #run("42653347818")[42653347818] and #run("42947289936")[42947289936] and the #src("docs/swe5001/impl-verification-observability.md")[V8 timing record].],
+  caption: [Delivery stages and recorded durations, 16 October – 14 November. Historical sources: GitHub runs #run("39008208244")[39008208244], #run("39014054529")[39014054529], #run("42653347818")[42653347818] and #run("42947289936")[42947289936] and the #src("docs/swe5001/impl-verification-observability.md")[V8 timing record]. The 14 November operator evidence is identified below.],
 ) <tbl-delivery-timings>
+
+*14 November operator V8.* Verified on AWS: R4 passed the full create–smoke–destroy cycle in @tbl-delivery-timings, using released digests and the reviewed V5 sizing/warm-up configuration (§4.2), not the hosted workflow's defaults. Its private source copy and operator read-retry/role-binding corrections are recorded; canonical readiness, recipient enforcement, health/smoke checks and the startup target were unchanged. The newly created runtime was destroyed after log capture, and independent absence plus empty/unlocked state passed. Foundation, edge, generator, prior archives and release/candidate pointers were retained. The complete permitted evidence was uploaded to existing private encrypted storage, downloaded and individually hash-verified before this amendment. R1–R3 remain failed; this one observed pass is neither a recovery-time guarantee nor database recovery, a new promotion or whole-campaign acceptance. Working-copy sources, not yet at the report's historical citation pins: `docs/swe5001/evidence/20261114-v8-r4-live/README.md`, `acceptance.json` and `private-package.json` in that directory.
 
 === Failure handling and operator sessions
 
