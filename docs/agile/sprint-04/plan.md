@@ -1,6 +1,6 @@
 # Sprint 4 plan (2026-10-12 to 2026-10-23)
 
-Status: draft for Sprint Planning on 2026-10-12. Numbers, owners and dates change only at that meeting; after it, this file mirrors the Sprint 4 container issue #465. Amended three times on 2026-10-11 before Planning; see §12.
+Status: draft for Sprint Planning on 2026-10-12. Numbers, owners and dates change only at that meeting; after it, this file mirrors the Sprint 4 container issue #465. Amended three times on 2026-10-11 before Planning (§12), and twice after Planning, on 2026-10-13 and 2026-10-15 (§13).
 
 Sources read on 2026-10-11: `origin/dev` at `414ee79a`, `docs/agile/sprint-03/plan.md` and `review.md`, open issues and PRs, `docs/swe5001/HANDOFF.md`, the SWE5001 proposal, refactoring plan and implementation plans, backend ADR 0007 (#443), the SWE5001 briefing and presentation guidelines, the SWE5006 project requirements, and both course report templates.
 
@@ -84,13 +84,13 @@ Capacity is 224.5 h across both courses; issue estimates in ideal days are conve
 | P2 | `identity-svc`, `commerce-svc` and `notification-svc` assemblies, ADR 0008, grants, guardrails | 5001 | @l0sgAi | @EricWang1358 | 21 | #455 | 10-14 |
 | P3 | Distributed topology on ECS (three services) | 5001 | @l0sgAi | @PPsyrius | 11 | #456 | 10-16 |
 | P4 | HTTP target-tracking scaling, three-row dashboard, min 2 commerce tasks | 5001 | @PPsyrius | @EricWang1358 | 5 | #457 | 10-16 |
-| P5 | k6 scripts, V4 seed, V2 baseline, V3/V4 runs | 5001 | @EricWang1358 | @Yorick-Yu | 5 | #458 | V2 10-15; V3/V4 10-19 |
+| P5 | k6 scripts, V4 seed, V2 baseline, V3/V4 runs | 5001 | @PPsyrius (from @EricWang1358, 10-15) | @Yorick-Yu | 5 | #458 | V2 10-15; V3/V4 10-19 |
 | P6 | Drills V5, V7, identity outage; V8 timings from existing runs | 5001 | @Yorick-Yu | @PPsyrius | 4 | #459 | 10-20 |
 | P7 | Smoke suite and manual sign-in and notification checks on ECS | 5001 | @limjiechao | @Yorick-Yu | 3 | #460 | 10-19 |
 | P8 | SWE5001 presentation slides, demo script, rehearsal, fallback recording (lead) | 5001 | @limjiechao | @l0sgAi | 13 | #461 | 10-21 |
 | P9 | SWE5001 progress report 2 | 5001 | @l0sgAi | @limjiechao | 2 | #462 | 10-18 |
 | P10 | Session roles outside identity (WP-B4) | 5001 | @PPsyrius | @l0sgAi | 6 | #467 | 10-15 |
-| P11 | Remote identity check from commerce (WP-B5) | 5001 | @EricWang1358 | @Yorick-Yu | 15 | #468 | 10-16 |
+| P11 | Remote identity check from commerce (WP-B5) | 5001 | @l0sgAi (from @EricWang1358, 10-13) | @Yorick-Yu | 15 | #468 | 10-16 |
 | P12 | Admin attention nicknames through the identity port, no `sys_user` join | both | @Yorick-Yu | @PPsyrius | 6 | #469 | 10-15 |
 | S3C | Sprint 3 review, retrospective, progress report | 5006 | @limjiechao | @l0sgAi | 4 | #451 | 10-13 |
 | RPT | SWE5006 report drafts: one use case and one design problem each (6 h × 5), agile artefacts (@PPsyrius 5 h), chapters 1, 2, 3.3 (@limjiechao 6 h) | 5006 | all, editor @limjiechao | — | 41 | #463 | 10-23 |
@@ -101,13 +101,13 @@ Capacity is 224.5 h across both courses; issue estimates in ideal days are conve
 
 Per member:
 
-- @l0sgAi (Liu Jin): 2 (US34) + 3 (DEC) + 4 (NFR) + 21 (P2) + 11 (P3) + 2 (P9) + 6 (RPT) + 2 (EV) = 51. The highest load; Planning may move #448 to another member.
+- @l0sgAi (Liu Jin): 2 (US34) + 3 (DEC) + 4 (NFR) + 21 (P2) + 11 (P3) + 2 (P9) + 15 (P11, from @EricWang1358) + 6 (RPT) + 2 (EV) = 66 (planned 51). The highest load; Planning may move #448 to another member.
 - @Yorick-Yu (Yu Qianshuo): 7 (US13) + 1 (US14) + 12 (US39) + 10 (US40) + 4 (P6) + 6 (P12) + 6 (RPT) + 2 (EV) = 48.
-- @EricWang1358 (Wang Ziang): 2 (RF) + 12 (US41) + 5 (P5) + 15 (P11) + 4 (SM) + 6 (RPT) + 2 (EV) = 46.
-- @PPsyrius (Panpakorn Siripanich): 0.5 (US28b) + 1 (US17) + 8 (US38) + 8 (P1) + 5 (P4) + 6 (P10) + 11 (RPT: 6 drafts + 5 artefacts) + 2 (EV) = 41.5.
+- @EricWang1358 (Wang Ziang): 2 (RF) + 12 (US41) + 4 (SM) + 6 (RPT) + 2 (EV) = 26 (planned 46; P11 and P5 moved away).
+- @PPsyrius (Panpakorn Siripanich): 0.5 (US28b) + 1 (US17) + 8 (US38) + 8 (P1) + 5 (P4) + 5 (P5, from @EricWang1358) + 6 (P10) + 11 (RPT: 6 drafts + 5 artefacts) + 2 (EV) = 46.5 (planned 41.5).
 - @limjiechao (Lim Jiechao): 3 (P7) + 13 (P8) + 4 (S3C) + 12 (RPT: 6 drafts + 6 chapters) + 4 (PRS) + 2 (EV) = 38.
 
-SWE5001 Phase A (#376) was carried mainly by @l0sgAi and @PPsyrius; Phase B moves a large share to the other three members so that the contribution record stays balanced for peer assessment.
+SWE5001 Phase A (#376) was carried mainly by @l0sgAi and @PPsyrius; Phase B moves a large share to the other three members so that the contribution record stays balanced for peer assessment. The per-member lines above show the hours after the two amendments in §13; the total stays 224.5 h, and the planned figures are in §13.
 
 Acceptance criteria live in each issue; the sprint-level conditions are in §8.
 
@@ -212,3 +212,43 @@ The report template requires one use case (analysis and design class and sequenc
 2. `identity-svc` reinstated as a hard requirement (#467, #468, #469; §4 item 3): 256 h.
 3. The microservice split ranked above notifications (§4 item 0, §6 item 6).
 4. Grade-driven cuts, environment split by course, SWE5006 presentation on 2026-10-26 and report drafts moved into the sprint (§4 items 1, 2, 4, 8): 224.5 h.
+
+## 13. Amendments after Planning
+
+Two owner changes were made after Sprint Planning on 2026-10-12, both recorded on the issue first. The §5 owner cells and per-member lines were updated on 2026-10-18 to match. Scope, due dates and reviewers are unchanged by this section unless the table says otherwise. The total stays 224.5 h.
+
+| Date | Item | Change | Hours effect | Source |
+|---|---|---|---|---|
+| 2026-10-13 | P11 remote identity check (#468) | Owner @EricWang1358 to @l0sgAi, to rebalance Sprint 4 load; scope and due date unchanged. Delivered by PR #479 (`afec4e83`, merged 2026-10-13), approved by @PPsyrius rather than the planned reviewer @Yorick-Yu; issue closed 2026-10-14. | @EricWang1358 -15 h, @l0sgAi +15 h | [#468 comment](https://github.com/PPsyrius/iss-groupbuy-team8/issues/468#issuecomment-6137411205); [#479](https://github.com/PPsyrius/iss-groupbuy-team8/pull/479); [day log 2026-10-13](log/2026-10-13.md); [handoff B3 row](../../swe5001/HANDOFF.md) |
+| 2026-10-15 | P5 k6 scripts and V2/V3/V4 runs (#458) | Owner @EricWang1358 to @PPsyrius, who commented "I'm taking this over since I need this for #457". He delivered the first tooling slice in PR #506 (`767d980b`, merged 2026-10-16); PR #518 (`552a6d08`, merged 2026-10-16) recorded the V2 baseline and dashboard session. Issue #458 is still open and lists both as assignees. | @EricWang1358 -5 h, @PPsyrius +5 h | [#458 comment](https://github.com/PPsyrius/iss-groupbuy-team8/issues/458#issuecomment-6195951428); [#506](https://github.com/PPsyrius/iss-groupbuy-team8/pull/506); [#518](https://github.com/PPsyrius/iss-groupbuy-team8/pull/518); [day log 2026-10-16](log/2026-10-16.md) |
+
+Hours per member (total 224.5 h):
+
+| Member | Planned (§5 at Planning) | After 2026-10-13 | After 2026-10-15 |
+|---|---|---|---|
+| @EricWang1358 | 46 | 31 | 26 |
+| @l0sgAi | 51 | 66 | 66 |
+| @PPsyrius | 41.5 | 41.5 | 46.5 |
+| @Yorick-Yu | 48 | 48 | 48 |
+| @limjiechao | 38 | 38 | 38 |
+| Total | 224.5 | 224.5 | 224.5 |
+
+Sources: issues #458, #465 and #468; PRs #479, #506 and #518; the day logs linked in the table. The #458 reassignment is recorded only in the issue comment; nothing else in the repository mentions it.
+
+### Open points, settled on 2026-10-25
+
+1. **Reviewers and due dates of P5 and P11.** §5 keeps the planned reviewers and dates; what happened is recorded here.
+   - P11 (#468) merged on 2026-10-13 (PR #479), three days before its 10-16 due date, approved by @PPsyrius.
+   - P5 (#458): the tooling merged on 2026-10-16 (PR #506, approved by @limjiechao). The V2 baseline was recorded the same day (PR #518, approved by @l0sgAi), one day after its 10-15 due date. The V3 run of 2026-10-19 is recorded in PR #555 but was not accepted, and V4 was not run, so #458 is carry-over.
+2. **Board and #465 in sync.** They are not.
+   - #465 was last edited on 2026-10-11, before Planning, and still shows the §5 draft.
+   - #458 lists both @PPsyrius and @EricWang1358; it should list @PPsyrius only.
+   - The board's Estimate field was never updated. None of the 47 cards that carry an estimate changed between the 2026-10-12 and 2026-10-24 snapshots in [`docs/agile/metrics/`](../metrics/).
+   - The Sprint 4 review (#619) therefore reconstructs remaining work from merge dates, not from the board.
+3. **P12's 6 h.** They stay with the planned owner, @Yorick-Yu.
+   - @l0sgAi paired on the work and opened PR #490, which carries commits from both.
+   - Card hours are planned, not actual, so the pairing is recorded here rather than split.
+4. **The 2026-10-15 mid-sprint check, the identity go/no-go, and what Planning changed.** None of these has a record.
+   - The 2026-10-15 day log and #465 (no comments) do not mention the check, and no Planning minutes exist.
+   - The go/no-go had nothing left to gate: #467, #468 and #469 had merged by 2026-10-14 (PRs #474, #479, #490).
+   - The §5 table is therefore the plan of record, changed only by the two amendments above.
