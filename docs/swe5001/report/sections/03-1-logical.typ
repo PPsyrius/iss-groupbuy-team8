@@ -40,7 +40,7 @@ BlocBuy is one codebase that runs as three services on AWS. @tbl-views lists the
 
 == Logical Architecture & Design
 
-When a member's payment fills the last seat of a team, one transaction must check the payment, lock the team, admit the buyer, create the order and take one unit of stock. If those steps lived in different services, a crash between them could leave a buyer paid without a seat, or seated without stock. So we split only where no transaction crosses the boundary (AD-02). BlocBuy runs as three services: `identity-svc` and `notification-svc` are reusable platform services, and `commerce-svc` holds the business. They talk through one synchronous call and an event bus. Code boundaries keep the six DDD bounded contexts apart, so a context can be extracted later (AD-01, AD-18). Database permissions separate only the three services, because the four contexts in `commerce-svc` share one runtime role (AD-03, @tbl-ownership).
+When a member's payment fills the last seat of a team, one transaction must check the payment, lock the team, admit the buyer, create the order and take one unit of stock. If those steps lived in different services, a crash between them could leave a buyer paid without a seat, or seated without stock. So we split only where no transaction crosses the boundary (AD-02). BlocBuy runs as three services: `identity-svc` and `notification-svc` are reusable platform services, and `commerce-svc` holds the business. They talk through one synchronous call and an event bus. ArchUnit rules enforce the layer and service boundaries; inside `commerce-svc` the four contexts are kept apart by package conventions and interfaces, so a context can be extracted later (AD-01, AD-18). Database permissions separate only the three services, because the four contexts in `commerce-svc` share one runtime role (AD-03, @tbl-ownership).
 
 The logical elements, interfaces and interactions in §3.1 are roles, not products; §3.2 maps them to AWS products and network placement.
 
@@ -101,7 +101,7 @@ Five further decisions keep that split safe: one codebase with two topologies (A
       *Context:* Browsing and session checks need no call to `identity-svc`. Issuing a purchase intent, settling a payment (`OrderFulfilmentAdapter.fulfil`) and the administrator's payment-attention views must check that a buyer is `ACTIVE` (`UserAppService.requireActive`) or resolve public nicknames (`UserAppService.publicNicknames`). \
       *Options considered:* (a) replicate `sys_user` into `commerce-svc` through events: rejected for the course window, because a stale copy could admit a disabled user to a paid team; (b) fail open when `identity-svc` cannot be reached: rejected, because admitting an unchecked or disabled buyer breaks the payment rules; (c) a synchronous HTTP adapter (`RemoteUserAppService`) over internal service discovery (`GET /internal/users/{id}/active`, `GET /internal/users/{id}/public-nickname` and `POST /internal/users/public-nicknames`), with a 500 ms connect and 1,500 ms read timeout, no retry, and failing closed. \
       *Choice:* (c). Only HTTP 404 (`IDENTITY_404_001`) and HTTP 403 (`IDENTITY_403_001`) map to business refusals, which record a refund obligation. A timeout, a 5xx answer or a routing error throws `IdentityUnavailableException` (HTTP 500) and rolls back the settlement, so Stripe retries later. \
-      *Trade-off:* New checkouts and webhook settlements pause while `identity-svc` is down (AISS-03). Personally identifiable information (PII) stays in `identity-svc`, and a network fault never causes a false business refund. The call holds the settlement's row locks for up to its timeout. \
+      *Trade-off:* New checkouts and webhook settlements pause while `identity-svc` is down (AISS-03). `identity-svc` owns profile and contact information, the personally identifiable information (PII), although `commerce-svc` and `notification-svc` still process personal identifiers such as user IDs; a network fault never causes a false business refund. The call holds the settlement's row locks for up to its timeout. \
       *Consequence:* Tested locally, not on AWS, on 15 October: in the #src("docs/swe5001/evidence/20261015-local-failure-rehearsal/README.md")[identity-outage rehearsal], START and a signed webhook returned HTTP 500 while identity was down, and redelivery succeeded once it was back (AISS-13). On AWS the 13 November attempt failed; the focused R11 run on 15 November returned HTTP 500 for START while identity was down and 200 once it was back, and the failed request wrote nothing (§4.2). Signed-webhook redelivery is still tested only locally (AISS-13).
     ]),
   ),
@@ -466,7 +466,7 @@ Arrows in @fig-d4-context-map point from the downstream context to the upstream 
     [Keeps `payment` business-agnostic and reusable for future seeds: it drives settlement through its own ports without importing `order` or `groupbuy`.],
 
     [`groupbuy` (U) → `payment` (D)],
-    [Domain event (in-process)],
+    [Customer–Supplier],
     [In-process event (`BEFORE_COMMIT`)],
     [`TeamExpired` domain event record, handled `BEFORE_COMMIT` by `TeamExpiryRefundSubscriber` (`@Order(20)`).],
     [Decouples team expiry from refund persistence, while `DealStatus.EXPIRED` and the `biz_refund` rows still commit atomically.],
@@ -478,7 +478,7 @@ Arrows in @fig-d4-context-map point from the downstream context to the upstream 
     [Versioned JSON contracts omit names, email and payment credentials, but retain user IDs as personal data. They let `notification-svc` consume business facts without calling `commerce-svc`. The audit queue is a second subscriber queue with no consumer, not a bounded context.],
 
     [`common` ↔ all contexts],
-    [Shared Kernel],
+    [Shared technical library (not a Shared Kernel: no shared domain model)],
     [Compile-time library],
     [`com.blocbuy.common` (`ErrorCode`, `BizException`, `Result`, `UuidV7`, `PageQuery`, `RoleCode`).],
     [Kept minimal (technical primitives, no business entities), so its changes do not ripple across domain models.],
@@ -487,7 +487,7 @@ Arrows in @fig-d4-context-map point from the downstream context to the upstream 
   caption: [Context-map relationships with their pattern, interaction style, mechanism and rationale. Source: @fig-d4-context-map and the code.],
 ) <tbl-context-map>
 
-#afig("d4-context-map", [Context map (UML component diagram with DDD context-map labels). Each dashed arrow runs from the downstream (D) context to the upstream (U) one and names the pattern; Partnership and Shared Kernel are undirected. External systems sit behind anti-corruption layers, and payment owns the ports that order implements (Separated Interface). The Customer–Supplier edge to Identity starts at the commerce-svc boundary: all four of its contexts call `UserAppService`.])
+#afig("d4-context-map", [Context map (UML component diagram with DDD context-map labels). Each dashed arrow runs from the downstream (D) context to the upstream (U) one and names the pattern; Partnership and the shared library are undirected. External systems sit behind anti-corruption layers, and payment owns the ports that order implements (Separated Interface). The Customer–Supplier edge to Identity starts at the commerce-svc boundary: all four of its contexts call `UserAppService`.])
 
 ==== Aggregate derivation and lifecycles
 
@@ -527,7 +527,7 @@ Three further transactions write more than one aggregate for the same reasons: t
     [None],
 
     [`TeamPricePolicy` \ (`catalog`)],
-    [Entity: `TeamPriceQuote`, stored in `biz_team_price_quote` through the same `TeamPriceRepository` \ Value objects: `ListingPrice`, `GroupDealOffer`],
+    [Entity: `TeamPriceQuote`, an immutable price snapshot that refers to its policy by `policyVersion` (not a part of it), stored in `biz_team_price_quote` through the same `TeamPriceRepository` \ Value objects: `ListingPrice`, `GroupDealOffer`],
     [`TeamPriceAppService.configure`, `requireQuotable`],
     [The team price is lower than `Product.originalPrice`; policy revisions are append-only within `[validFrom, validUntil]`.],
     [One local transaction on the `commerce` database (`biz_team_price_policy`, `biz_team_price_quote`).],

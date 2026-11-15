@@ -47,6 +47,8 @@
   // "Figure n:" (report-figure); a table caption is plain "Table n: ..." (table-caption).
   show figure.caption: it => context {
     set text(size: 9pt)
+    // Report-local: caption inline code at an absolute 8 pt, not the template's compounded em.
+    show raw.where(block: false): set text(size: 8pt)
     set par(justify: false)
     set align(left)
     if it.numbering == none { it.body } else {

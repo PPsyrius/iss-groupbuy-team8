@@ -41,7 +41,7 @@ Three choices kept the plan inside the guideline. The split stopped at three ser
 
 == Project Status
 
-The scoped platform is built and deployed, with AWS evidence for routing, load-driven scale-out, task replacement and the normal two-buyer paid journey. Verification remains incomplete: @tbl-status distinguishes observed results from configured behaviour, and @tbl-verification-scenarios defines the scenarios V1–V8. Performance and availability results, including their tested configurations, are in §4.1–§4.2.
+The scoped platform was built and deployed, with AWS evidence for routing, load-driven scale-out, task replacement and the normal two-buyer paid journey. Verification remains incomplete: @tbl-status distinguishes observed results from configured behaviour, and @tbl-verification-scenarios defines the scenarios V1–V8. Performance and availability results, including their tested configurations, are in §4.1–§4.2.
 
 #figure(
   table(

@@ -9,7 +9,7 @@ BlocBuy is a community group-buying platform: buyers form a team at a team price
 
 *Starting point.* On 29 September 2026 BlocBuy was one Java 21 and Spring Boot 4 application in the Alibaba COLA (Clean Object-Oriented and Layered Architecture) layering, with six bounded contexts in one deployable unit. It ran under Docker Compose on one Amazon EC2 host with PostgreSQL 18 and Redis 8, and the SWE5006 deployment still runs that way (#src("docs/swe5001/microservice-refactoring-plan.md")[refactoring plan, §1]).
 
-*What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They run on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchange events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. Terraform creates the runtime for each working session and destroys it afterwards.
+*What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They ran on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchanged events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. Terraform created the runtime for each working session and destroyed it afterwards.
 
 Times are Singapore time (SGT, UTC+8).
 
