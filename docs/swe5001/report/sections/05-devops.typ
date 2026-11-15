@@ -5,7 +5,7 @@
 
 = DevOps and Development Lifecycle
 
-A change to BlocBuy must reach AWS as an image we have scanned, run in an environment that exists only for a session, and leave no runtime behind when the session ends. This chapter follows one change along that path: a reviewed pull request into `dev` (§5.1), the checks that gate it (§5.2) and a promotion into `prod` that builds, deploys, smoke-tests and releases, then attempts to destroy the runtime (AD-19, §5.3). §5.3 also says what we still did by hand.
+A change to BlocBuy must reach AWS as an image we have scanned, run in an environment that exists only for a session, and leave no runtime behind when the session ends. This chapter follows one change along that path: a reviewed pull request into `dev` (§5.1), the checks that gate it (§5.2) and a promotion into `prod` that builds, deploys, smoke-tests and releases, then attempts to destroy the runtime (AD-19, §5.3).
 
 == Source Control Strategy
 <sec-source-control>
@@ -155,7 +155,7 @@ The sequence below follows the deployment workflow and scripts of the source rel
 
 Source at released `3a893036`: #src(".github/workflows/swe5001-deploy.yml", rev: freeze)[job order, publication and evidence], #src("infra/swe5001/scripts/env-up.sh", rev: freeze)[start-up], #src("perf/smoke/smoke.sh", rev: freeze)[smoke scope] and #src("infra/swe5001/scripts/env-down.sh", rev: freeze)[destroy and absence check].
 
-*Lifecycle benefit and cost (briefing Q7).* A whole promotion run took 45 min 55 s to 53 min 48 s (@tbl-delivery-timings); some runs updated an existing runtime, so clean rebuilds are the separate 30 min 59 s to 33 min 47 s start-ups (§4.2). Fresh-runtime promotions created and destroyed 115–120 runtime resources, and the down job then verified that no runtime was left; foundation and edge stayed. Only the three steps named at the end of this paragraph are manual. The pipeline links that source revision to its candidate and release digests and to each stage's record. The permanent foundation and edge stacks keep a stable entry point while the runtime is disposable; this limits idle cost but adds start-up time and loses runtime data and logs not captured first. One promotion runs nine jobs (four image builds and scans, publish, up, release, down, evidence). We did not time a manual rebuild, so hours saved are unmeasured. Changes to the edge response-headers policy, confirming alarm-email subscriptions and reserving a conflict-free session window remain manual (@tbl-delivery-timings).
+*Lifecycle benefit and cost (briefing Q7).* The pipeline links that source revision to its candidate and release digests and to each stage's record. The permanent foundation and edge stacks keep a stable entry point while the runtime is disposable; this limits idle cost but adds start-up time and loses runtime data and logs not captured first. A whole promotion run took 45 min 55 s to 53 min 48 s (@tbl-delivery-timings); some runs updated an existing runtime, so clean rebuilds are the separate 30 min 59 s to 33 min 47 s start-ups (§4.2). Fresh-runtime promotions created and destroyed 115–120 runtime resources, and the down job then verified that no runtime was left; foundation and edge stayed. One promotion runs nine jobs (four image builds and scans, publish, up, release, down, evidence). We did not time a manual rebuild, so hours saved are unmeasured. Only three steps remain manual: changing the edge response-headers policy, confirming alarm-email subscriptions and reserving a conflict-free session window (@tbl-delivery-timings).
 
 #figure(
   table(
@@ -208,7 +208,7 @@ On AWS, 13 promotions into `prod` ran the deployment between 6 October and 11 No
   caption: [Delivery runs and sessions of 17 October and 9–15 November. Source: the runs and records named in each row.],
 ) <tbl-delivery-runs>
 
-During the load campaign of 10 and 11 November we changed running environments by hand, outside the promotion pipeline. The next three paragraphs say what we changed, how each change ended and which part we committed back to source.
+During the load campaign of 10 and 11 November we changed running environments by hand, outside the promotion pipeline.
 
 *The 10 November session and its experiment.* On 10 November on AWS, a one-off `db-init` task ran a read-only SQL report, not a migration or data load, which showed 74 unreserved database connections (#src("docs/swe5001/evidence/20261110-load-preflight/README.md")[preflight record]). In the same session we set the connection pool to five by hand in new task revisions (identity 18, commerce 32, notification 30), with the released images unchanged; §4.1.4 gives the connection budget, which pools of ten did not fit on `db.t4g.micro`. For the measurement we lowered the commerce minimum to one, then restored two to six; three tasks were still running at readback, so two-task recovery was not shown. The scheduled destroy at 07:52 ended the experiment; it was not a rollback to pools of ten.
 
