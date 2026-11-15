@@ -5,7 +5,17 @@ Read-only readback of both AWS accounts on 15 November 2026, 17:19–17:30 SGT, 
 - Project account 402178232802 (profile `blocbuy`, region `ap-southeast-1`; Cost Explorer and IAM are global).
 - Management account 592877955899 (profile `blocbuy-mgmt`).
 
-Only `describe`, `get`, `list`, `lookup-events`, Cost Explorer and STS reads were used. Every file below is the JSON output of one command, sanitised before publication: access keys, session tokens, source IP addresses, user-agent strings, request ids, event ids and email fields were removed, and the CloudFront custom origin header value is replaced by `[redacted]`. Account ids and resource names that the report already names are kept. Times in CloudTrail records are as AWS returned them (UTC, or SGT where the field carries `+08:00`).
+Only `describe`, `get`, `list`, `lookup-events`, Cost Explorer and STS reads were used for the readback. The command outputs listed below were sanitised before publication: access keys, session tokens, source IP addresses, user-agent strings, request ids, event ids and email fields were removed, and the CloudFront custom origin header value is replaced by `[redacted]`. Account ids and resource names that the report already names are kept. Times in CloudTrail records are as AWS returned them (UTC, or SGT where the field carries `+08:00`).
+
+## Direct operator and effort records
+
+| Record | Evidence and scope |
+| --- | --- |
+| [operator-retirement.json](operator-retirement.json) | Saved-plan execution and independent absence checks: 9 edge and 23 foundation resources, 39 ECR images, four repositories and the dedicated generator with its disk/network/IAM helpers removed. Final checks completed at 15:57 SGT. Private source-receipt hashes bind the projection; raw plans and state are excluded. |
+| [containerinsights-export.json](containerinsights-export.json) | Before retirement, 15,433 events from the remaining one-day-retention performance log group were downloaded and verified: 19,489,496 JSON bytes, valid pagination, unique event IDs and SHA-256. Raw logs remain private; this is not a complete campaign backup or another test. |
+| [effort-estimates.json](effort-estimates.json) | Current work-package estimates: 77.5 team person-days, including Pan 23.5 and Jiechao 15.5. This supplies the revised figures without rewriting the historical reconstruction or changing participation scores. |
+
+These are projections of operator receipts and report-review inputs, not outputs of the later read-only account survey. The raw Container Insights export, private source receipts and secret-bearing Terraform files remain outside Git. The operator's independent checks also confirmed retained state/evidence storage and absent state locks; the historical snapshot, retained log group and unlisted SSM scope prevent an “all AWS gone” or zero-cost claim.
 
 ## Commands
 

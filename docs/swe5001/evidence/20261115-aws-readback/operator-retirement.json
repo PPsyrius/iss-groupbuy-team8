@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "kind": "Sanitized projection of direct operator execution and independent AWS absence checks",
+  "verifiedAtUtc": "2026-11-15T07:57:17.2633886Z",
+  "region": "ap-southeast-1",
+  "scope": "SWE5001 runtime, edge, foundation and dedicated generator; SWE5006 excluded",
+  "runtime": {
+    "resourcesDestroyedEarlier": 118,
+    "absent": true
+  },
+  "edge": {
+    "resourcesDestroyed": 9,
+    "managedResourcesRemaining": 0,
+    "distributionAbsent": true,
+    "functionAbsent": true,
+    "originAccessControlAbsent": true,
+    "responseHeadersPolicyAbsent": true,
+    "spaBucketAbsent": true
+  },
+  "foundation": {
+    "resourcesDestroyed": 23,
+    "managedResourcesRemaining": 0,
+    "ecrImagesDeleted": 39,
+    "ecrRepositoriesAbsent": 4,
+    "githubRolesAbsent": 3,
+    "workloadBoundaryAbsent": true
+  },
+  "generator": {
+    "instancesTerminated": 1,
+    "encryptedGp3VolumesDeleted": 1,
+    "volumeGiB": 40,
+    "primaryNetworkInterfacesRemoved": 1,
+    "securityGroupsDeleted": 1,
+    "instanceProfilesDeleted": 1,
+    "rolesDeleted": 1,
+    "inlineRolePoliciesDeleted": 1,
+    "standaloneBoundaryPoliciesDeleted": 1,
+    "targetedComputeStorageAndIamHelpersRemaining": 0
+  },
+  "independentChecks": {
+    "nonterminatedCourseTaggedInstances": 0,
+    "courseTaggedEbsVolumes": 0,
+    "runtimeLockAbsent": true,
+    "edgeLockAbsent": true,
+    "foundationLockAbsent": true
+  },
+  "preserved": {
+    "sharedStateBucket": true,
+    "evidenceStorage": true,
+    "historicalGeneratorSnapshot": true,
+    "historicalSnapshotIsNotTheTerminatedGeneratorVolume": true
+  },
+  "limits": {
+    "allAwsResourcesGone": false,
+    "zeroOngoingCost": false,
+    "completeRawBackup": false,
+    "ssmParametersInventoried": false,
+    "retainedContainerInsightsLogGroupDeleted": false,
+    "privateStatePlansLogsAndIdentifiersIncluded": false
+  },
+  "privateSourceSha256": {
+    "final-retirement-receipt.sanitized.json": "1a4b8206ae8a76e00dd7ebc5147c3fd3099c65adc1d0f0ce29641839370588bd",
+    "edge-apply-result.json": "ba9fbe9f1fc3ab47cdeeaf3a14a88ad72230c19479f4b630788fe19cdd1a7854",
+    "foundation-apply-result.json": "f9b39b0e85596a3ad9f3f627aaf58bd6db79ec5b12edf5eaa9388c3c42956752",
+    "edge-independent-absence.json": "e7a5c0dfbde35bb7dc92032baeb12f48c4400924a3e50a26c7b00659da403489",
+    "foundation-independent-absence.json": "f563fb576b122c68fd61dba1128b6e3088c2706c64fac8c4943a5f7886521617",
+    "final-runtime-lock-storage-check.json": "13edd398d1b10b93de3a80a5a7fc721df9d893041085158170d470a01d993a40",
+    "ecr-image-retirement.json": "b4471d1f15f15245f09a4be530955611b740ec63e152b283a739bd79196e67c7",
+    "generator-final-retirement-receipt.sanitized.json": "4f452176ffb497f16dd20c2c90c418155b462a75cf67103e609adc27e30e7ee0"
+  }
+}

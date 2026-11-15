@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "kind": "Sanitized verification receipt for a privately retained CloudWatch export",
+  "verifiedAtUtc": "2026-11-15T07:41:49.330780+00:00",
+  "logGroup": "/aws/ecs/containerinsights/blocbuy-swe5001/performance",
+  "retentionDaysAtCapture": 1,
+  "command": "aws logs filter-log-events --log-group-name /aws/ecs/containerinsights/blocbuy-swe5001/performance --output json",
+  "events": 15433,
+  "uniqueEventIds": 15433,
+  "bytes": 19489496,
+  "sha256": "9e8abfdec0eb192d98ceec1083b52ff0ee3eee2160edcf3e407408aba5f7259d",
+  "firstEventUtc": "2026-11-14T13:48:00+00:00",
+  "lastEventUtc": "2026-11-15T06:07:00+00:00",
+  "awsCliAutomaticPagination": true,
+  "continuationTokenPresent": false,
+  "jsonParsePassed": true,
+  "rawExportPublished": false,
+  "privateReceiptSha256": "e3850f0b0f78a4fd8a8c3d0c983e6ac0db60716f46f33bc9da3c7e2ec5c36a50",
+  "scope": "Events retrievable at capture time, not a complete campaign or generator-disk backup",
+  "limits": [
+    "The raw export contains private identifiers and remains outside Git.",
+    "The JSON byte count is not the CloudWatch storedBytes value.",
+    "This preservation operation is not a new performance or availability test."
+  ]
+}

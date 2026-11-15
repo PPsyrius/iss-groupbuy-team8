@@ -133,7 +133,7 @@ Estimated effort is 77.5 person-days: about 50 through the presentation and 27.5
     [*Total*], [*≈ 50*], [*≈ 27.5*], [*≈ 77.5*], [],
   ),
   kind: table,
-  caption: [Estimated effort by member and phase, in person-days (pd). Sources: #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6] and our work estimates.],
+    caption: [Estimated effort by member and phase, in person-days (pd). Sources: #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6] and `effort-estimates.json` in the 15 November readback evidence.],
 ) <tbl-effort>
 
 We estimated effort by work package, using six working hours per person-day (#src("docs/agile/sprint-04/plan.md")[Sprint 4 plan, §5]). When we reconstructed the figures, we counted each piece of work once and did not count automated runs as anyone's effort (#src("docs/swe5001/evidence/20261112-issue-789/effort-estimate.md", rev: "ae3a32a3943b7952abdf71e5c85ffd27a24bf704")[reconstruction method]).
