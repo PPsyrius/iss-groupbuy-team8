@@ -11,6 +11,8 @@ BlocBuy is a community group-buying platform: buyers form a team at a team price
 
 *What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They run on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchange events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. Terraform creates the runtime for each working session and destroys it afterwards. The logical design is in §3.1 and the physical design in §3.2.
 
+Times are Singapore time (SGT, UTC+8).
+
 == Business Needs
 
 Group buying works only if enough people join before the deadline. Today that coordination happens in chat groups and spreadsheets, so it is slow, opaque and manual for everyone involved (@tbl-pain-points).
