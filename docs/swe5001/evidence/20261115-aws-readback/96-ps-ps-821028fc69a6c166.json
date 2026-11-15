@@ -1,0 +1,8 @@
+{
+  "PermissionSet": {
+    "Name": "PowerUserAccess",
+    "PermissionSetArn": "arn:aws:sso:::permissionSet/ssoins-8210b0c8e54ef88f/ps-821028fc69a6c166",
+    "CreatedDate": "2026-08-25T16:37:27.744000+08:00",
+    "SessionDuration": "PT1H"
+  }
+}

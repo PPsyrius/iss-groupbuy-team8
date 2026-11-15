@@ -1,0 +1,144 @@
+{
+  "Reservations": [
+    {
+      "ReservationId": "r-0eb44feeef725a91f",
+      "OwnerId": "402178232802",
+      "Groups": [],
+      "Instances": [
+        {
+          "Architecture": "x86_64",
+          "BlockDeviceMappings": [
+            {
+              "DeviceName": "/dev/sda1",
+              "Ebs": {
+                "AttachTime": "2026-08-29T15:37:13+00:00",
+                "DeleteOnTermination": true,
+                "Status": "attached",
+                "VolumeId": "vol-08df685248a8b1aea",
+                "EbsCardIndex": 0
+              }
+            }
+          ],
+          "ClientToken": "b2dc850a-ef92-482a-9505-1b6ebeb4f7f0",
+          "EbsOptimized": true,
+          "EnaSupport": true,
+          "Hypervisor": "xen",
+          "IamInstanceProfile": {
+            "Arn": "arn:aws:iam::402178232802:instance-profile/BlocBuy-dev",
+            "Id": "AIPAV3I5Q2HRNFX6UGVAR"
+          },
+          "NetworkInterfaces": [
+            {
+              "Attachment": {
+                "AttachTime": "2026-08-29T15:37:12+00:00",
+                "AttachmentId": "eni-attach-0d754196c79eb542c",
+                "DeleteOnTermination": true,
+                "DeviceIndex": 0,
+                "Status": "attached",
+                "NetworkCardIndex": 0
+              },
+              "Description": "",
+              "Groups": [
+                {
+                  "GroupId": "sg-04358da6b0bc71343",
+                  "GroupName": "launch-wizard-1"
+                }
+              ],
+              "NetworkInterfaceId": "eni-0828b23ce6b6641d8",
+              "OwnerId": "402178232802",
+              "SourceDestCheck": true,
+              "Status": "in-use",
+              "SubnetId": "subnet-04a488b09a0a111c5",
+              "VpcId": "vpc-02681842f187e8677",
+              "InterfaceType": "interface",
+              "Operator": {
+                "Managed": false
+              }
+            }
+          ],
+          "RootDeviceName": "/dev/sda1",
+          "RootDeviceType": "ebs",
+          "SecurityGroups": [
+            {
+              "GroupId": "sg-04358da6b0bc71343",
+              "GroupName": "launch-wizard-1"
+            }
+          ],
+          "SourceDestCheck": true,
+          "Tags": [
+            {
+              "Key": "Name",
+              "Value": "BlocBuy-dev"
+            }
+          ],
+          "VirtualizationType": "hvm",
+          "CpuOptions": {
+            "CoreCount": 1,
+            "ThreadsPerCore": 2
+          },
+          "CapacityReservationSpecification": {
+            "CapacityReservationPreference": "open"
+          },
+          "HibernationOptions": {
+            "Configured": false
+          },
+          "MetadataOptions": {
+            "State": "applied",
+            "HttpTokens": "required",
+            "HttpPutResponseHopLimit": 2,
+            "HttpEndpoint": "enabled",
+            "HttpProtocolIpv6": "disabled",
+            "InstanceMetadataTags": "disabled"
+          },
+          "EnclaveOptions": {
+            "Enabled": false
+          },
+          "BootMode": "uefi-preferred",
+          "PlatformDetails": "Linux/UNIX",
+          "UsageOperation": "RunInstances",
+          "UsageOperationUpdateTime": "2026-08-29T15:37:12+00:00",
+          "PrivateDnsNameOptions": {
+            "HostnameType": "ip-name",
+            "EnableResourceNameDnsARecord": true,
+            "EnableResourceNameDnsAAAARecord": false
+          },
+          "MaintenanceOptions": {
+            "AutoRecovery": "default",
+            "RebootMigration": "default"
+          },
+          "CurrentInstanceBootMode": "uefi",
+          "NetworkPerformanceOptions": {
+            "BandwidthWeighting": "default"
+          },
+          "Operator": {
+            "Managed": false,
+            "HiddenByDefault": false
+          },
+          "InstanceId": "i-0852b6c3475b19f05",
+          "ImageId": "ami-03acbba64aef9bf5c",
+          "State": {
+            "Code": 16,
+            "Name": "running"
+          },
+          "StateTransitionReason": "",
+          "KeyName": "BlocBuy-dev",
+          "AmiLaunchIndex": 0,
+          "ProductCodes": [],
+          "InstanceType": "t3.large",
+          "LaunchTime": "2026-11-09T05:51:20+00:00",
+          "Placement": {
+            "AvailabilityZoneId": "apse1-az1",
+            "GroupName": "",
+            "Tenancy": "default",
+            "AvailabilityZone": "ap-southeast-1b"
+          },
+          "Monitoring": {
+            "State": "disabled"
+          },
+          "SubnetId": "subnet-04a488b09a0a111c5",
+          "VpcId": "vpc-02681842f187e8677"
+        }
+      ]
+    }
+  ]
+}

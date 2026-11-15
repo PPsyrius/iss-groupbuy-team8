@@ -1,0 +1,13 @@
+{
+  "Policy": {
+    "PolicySummary": {
+      "Id": "p-4hlb2c8g",
+      "Arn": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-4hlb2c8g",
+      "Name": "Region-Pin",
+      "Description": "Pins all member accounts to ap-southeast-1; the single place for scoped region exceptions",
+      "Type": "SERVICE_CONTROL_POLICY",
+      "AwsManaged": false
+    },
+    "Content": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Sid\": \"OneRegionOnly\",\n      \"Effect\": \"Deny\",\n      \"NotAction\": [\n        \"iam:*\",\n        \"organizations:*\",\n        \"sts:*\",\n        \"budgets:*\",\n        \"ce:*\",\n        \"support:*\",\n        \"cloudfront:*\",\n        \"route53:*\",\n        \"s3:GetBucketLocation\",\n        \"wafv2:*\",\n        \"cloudwatch:GetMetricData\",\n        \"cloudwatch:ListMetrics\"\n      ],\n      \"Resource\": \"*\",\n      \"Condition\": {\n        \"StringNotEquals\": {\n          \"aws:RequestedRegion\": [\n            \"ap-southeast-1\"\n          ]\n        }\n      }\n    },\n    {\n      \"Sid\": \"WafHomeRegionOrCloudFrontScope\",\n      \"Effect\": \"Deny\",\n      \"Action\": \"wafv2:*\",\n      \"Resource\": \"*\",\n      \"Condition\": {\n        \"StringNotEquals\": {\n          \"aws:RequestedRegion\": [\n            \"ap-southeast-1\",\n            \"us-east-1\"\n          ]\n        }\n      }\n    },\n    {\n      \"Sid\": \"DenyMetricReadsOutsideApse1AndUse1\",\n      \"Effect\": \"Deny\",\n      \"Action\": [\n        \"cloudwatch:GetMetricData\",\n        \"cloudwatch:ListMetrics\"\n      ],\n      \"Resource\": \"*\",\n      \"Condition\": {\n        \"StringNotEquals\": {\n          \"aws:RequestedRegion\": [\n            \"ap-southeast-1\",\n            \"us-east-1\"\n          ]\n        }\n      }\n    },\n    {\n      \"Sid\": \"DenyUse1MetricReadsExceptTeam8\",\n      \"Effect\": \"Deny\",\n      \"Action\": [\n        \"cloudwatch:GetMetricData\",\n        \"cloudwatch:ListMetrics\"\n      ],\n      \"Resource\": \"*\",\n      \"Condition\": {\n        \"StringEquals\": {\n          \"aws:RequestedRegion\": \"us-east-1\"\n        },\n        \"StringNotEquals\": {\n          \"aws:PrincipalAccount\": \"402178232802\"\n        }\n      }\n    }\n  ]\n}"
+  }
+}

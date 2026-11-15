@@ -1,0 +1,427 @@
+{
+  "Roles": [
+    {
+      "Path": "/aws-reserved/sso.amazonaws.com/ap-southeast-1/",
+      "RoleName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+      "RoleId": "AROAV3I5Q2HRKOV56JE35",
+      "Arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+      "CreateDate": "2026-08-25T08:52:54+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::402178232802:saml-provider/AWSSSO_3492700004ce569f_DO_NOT_DELETE"
+            },
+            "Action": [
+              "sts:AssumeRoleWithSAML",
+              "sts:TagSession"
+            ],
+            "Condition": {
+              "StringEquals": {
+                "SAML:aud": "https://signin.aws.amazon.com/saml"
+              }
+            }
+          }
+        ]
+      },
+      "MaxSessionDuration": 43200
+    },
+    {
+      "Path": "/aws-reserved/sso.amazonaws.com/ap-southeast-1/",
+      "RoleName": "AWSReservedSSO_PowerUserAccess_322186c7b3849630",
+      "RoleId": "AROAV3I5Q2HRBZ3CYCHS3",
+      "Arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_PowerUserAccess_322186c7b3849630",
+      "CreateDate": "2026-08-25T08:52:21+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::402178232802:saml-provider/AWSSSO_3492700004ce569f_DO_NOT_DELETE"
+            },
+            "Action": [
+              "sts:AssumeRoleWithSAML",
+              "sts:TagSession"
+            ],
+            "Condition": {
+              "StringEquals": {
+                "SAML:aud": "https://signin.aws.amazon.com/saml"
+              }
+            }
+          }
+        ]
+      },
+      "MaxSessionDuration": 43200
+    },
+    {
+      "Path": "/aws-service-role/ecs.application-autoscaling.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForApplicationAutoScaling_ECSService",
+      "RoleId": "AROAV3I5Q2HRIGIE2ONBH",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService",
+      "CreateDate": "2026-10-15T13:53:42+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ecs.application-autoscaling.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/autoscaling.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForAutoScaling",
+      "RoleId": "AROAV3I5Q2HRAQMD7KRPK",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
+      "CreateDate": "2026-10-06T08:08:07+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "autoscaling.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/logger.cloudfront.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForCloudFrontLogger",
+      "RoleId": "AROAV3I5Q2HRJNDUPTIPK",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/logger.cloudfront.amazonaws.com/AWSServiceRoleForCloudFrontLogger",
+      "CreateDate": "2026-09-22T08:06:54+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "logger.cloudfront.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/ecs.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForECS",
+      "RoleId": "AROAV3I5Q2HREHMWCSOHY",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS",
+      "CreateDate": "2026-10-06T08:07:36+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ecs.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "Description": "Policy to enable Amazon ECS to manage your EC2 instances and related resources.",
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/elasticache.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForElastiCache",
+      "RoleId": "AROAV3I5Q2HRDQUCNRH6Y",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/elasticache.amazonaws.com/AWSServiceRoleForElastiCache",
+      "CreateDate": "2026-10-06T08:07:58+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "elasticache.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "Description": "This policy allows ElastiCache to manage AWS resources on your behalf as necessary for managing your cache.",
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/elasticloadbalancing.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForElasticLoadBalancing",
+      "RoleId": "AROAV3I5Q2HRDHVS3Y6F4",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing",
+      "CreateDate": "2026-09-05T14:11:35+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "elasticloadbalancing.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "Description": "Allows ELB to call AWS services on your behalf.",
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/organizations.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForOrganizations",
+      "RoleId": "AROAV3I5Q2HRMGMTGVZDY",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/organizations.amazonaws.com/AWSServiceRoleForOrganizations",
+      "CreateDate": "2026-08-25T07:06:29+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "organizations.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "Description": "Service-linked role used by AWS Organizations to enable integration of other AWS services with Organizations.",
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/rds.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForRDS",
+      "RoleId": "AROAV3I5Q2HRKG5YZMVZA",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS",
+      "CreateDate": "2026-10-06T08:08:00+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "rds.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "Description": "Allows Amazon RDS to manage AWS resources on your behalf",
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/resource-explorer-2.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForResourceExplorer",
+      "RoleId": "AROAV3I5Q2HRP25G4AXM3",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/resource-explorer-2.amazonaws.com/AWSServiceRoleForResourceExplorer",
+      "CreateDate": "2026-08-25T07:45:54+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "resource-explorer-2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/sso.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForSSO",
+      "RoleId": "AROAV3I5Q2HRMDCPEJBYG",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/sso.amazonaws.com/AWSServiceRoleForSSO",
+      "CreateDate": "2026-08-25T08:34:29+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "sso.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "Description": "Service-linked role used by AWS SSO to manage AWS resources, including IAM roles, policies and SAML IdP on your behalf.",
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/support.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForSupport",
+      "RoleId": "AROAV3I5Q2HRJZSJGXJE5",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/support.amazonaws.com/AWSServiceRoleForSupport",
+      "CreateDate": "2026-08-25T07:06:26+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "support.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "Description": "Enables resource access for AWS to provide billing, administrative and support services",
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/aws-service-role/trustedadvisor.amazonaws.com/",
+      "RoleName": "AWSServiceRoleForTrustedAdvisor",
+      "RoleId": "AROAV3I5Q2HRL3SOSUVNJ",
+      "Arn": "arn:aws:iam::402178232802:role/aws-service-role/trustedadvisor.amazonaws.com/AWSServiceRoleForTrustedAdvisor",
+      "CreateDate": "2026-08-25T07:06:26+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "trustedadvisor.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "Description": "Access for the AWS Trusted Advisor Service to help reduce cost, increase performance, and improve security of your AWS environment.",
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/",
+      "RoleName": "BlocBuyEc2Runtime",
+      "RoleId": "AROAV3I5Q2HRDSATG3IQL",
+      "Arn": "arn:aws:iam::402178232802:role/BlocBuyEc2Runtime",
+      "CreateDate": "2026-09-04T13:10:05+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/",
+      "RoleName": "BlocBuyGitHubBackendDeploy",
+      "RoleId": "AROAV3I5Q2HRA5J4CASGT",
+      "Arn": "arn:aws:iam::402178232802:role/BlocBuyGitHubBackendDeploy",
+      "CreateDate": "2026-09-04T13:26:54+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::402178232802:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": "repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:backend-dev"
+              }
+            }
+          }
+        ]
+      },
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/",
+      "RoleName": "BlocBuyGitHubEcrPush",
+      "RoleId": "AROAV3I5Q2HRLDSZNIFBV",
+      "Arn": "arn:aws:iam::402178232802:role/BlocBuyGitHubEcrPush",
+      "CreateDate": "2026-09-04T13:28:45+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::402178232802:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": "repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:ref:refs/heads/dev"
+              }
+            }
+          }
+        ]
+      },
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/",
+      "RoleName": "BlocBuyGitHubFrontendDeployDev",
+      "RoleId": "AROAV3I5Q2HRJDFCTOFKC",
+      "Arn": "arn:aws:iam::402178232802:role/BlocBuyGitHubFrontendDeployDev",
+      "CreateDate": "2026-09-22T07:58:46+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": "arn:aws:iam::402178232802:oidc-provider/token.actions.githubusercontent.com"
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "token.actions.githubusercontent.com:sub": "repo:PPsyrius@19505219/iss-groupbuy-team8@1344446887:environment:frontend-dev"
+              }
+            }
+          }
+        ]
+      },
+      "MaxSessionDuration": 3600
+    },
+    {
+      "Path": "/",
+      "RoleName": "OrganizationAccountAccessRole",
+      "RoleId": "AROAV3I5Q2HROFBFS6IOT",
+      "Arn": "arn:aws:iam::402178232802:role/OrganizationAccountAccessRole",
+      "CreateDate": "2026-08-25T07:06:26+00:00",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::592877955899:root"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "MaxSessionDuration": 3600
+    }
+  ]
+}

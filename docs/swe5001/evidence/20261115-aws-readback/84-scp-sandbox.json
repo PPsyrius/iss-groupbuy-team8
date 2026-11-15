@@ -1,0 +1,13 @@
+{
+  "Policy": {
+    "PolicySummary": {
+      "Id": "p-8hwmgw9u",
+      "Arn": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-8hwmgw9u",
+      "Name": "Sandbox-Guardrails",
+      "Description": "Sandbox cost caps: expensive services denied, small EC2 and RDS classes only",
+      "Type": "SERVICE_CONTROL_POLICY",
+      "AwsManaged": false
+    },
+    "Content": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Sid\": \"NoExpensiveServices\",\n      \"Effect\": \"Deny\",\n      \"Action\": [\n        \"sagemaker:*\",\n        \"bedrock:*\",\n        \"redshift:*\",\n        \"eks:*\",\n        \"elasticmapreduce:*\",\n        \"kendra:*\",\n        \"opensearch:*\",\n        \"es:*\",\n        \"ec2:PurchaseReservedInstancesOffering\",\n        \"ec2:ModifyReservedInstances\",\n        \"savingsplans:*\",\n        \"route53domains:RegisterDomain\",\n        \"aws-marketplace:*\",\n        \"aoss:*\"\n      ],\n      \"Resource\": \"*\"\n    },\n    {\n      \"Sid\": \"SmallInstancesOnly\",\n      \"Effect\": \"Deny\",\n      \"Action\": [\n        \"ec2:RunInstances\",\n        \"ec2:ModifyInstanceAttribute\"\n      ],\n      \"Resource\": \"arn:aws:ec2:*:*:instance/*\",\n      \"Condition\": {\n        \"StringNotLike\": {\n          \"ec2:InstanceType\": [\n            \"t3.*\",\n            \"t3a.*\",\n            \"t4g.*\"\n          ]\n        }\n      }\n    },\n    {\n      \"Sid\": \"SmallRdsOnly\",\n      \"Effect\": \"Deny\",\n      \"Action\": [\n        \"rds:CreateDBInstance\",\n        \"rds:ModifyDBInstance\",\n        \"rds:RestoreDBInstanceFromDBSnapshot\",\n        \"rds:RestoreDBInstanceToPointInTime\",\n        \"rds:CreateDBInstanceReadReplica\"\n      ],\n      \"Resource\": \"*\",\n      \"Condition\": {\n        \"StringNotLike\": {\n          \"rds:DatabaseClass\": [\n            \"db.t3.*\",\n            \"db.t4g.*\"\n          ]\n        }\n      }\n    }\n  ]\n}"
+  }
+}

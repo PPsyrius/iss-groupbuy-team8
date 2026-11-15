@@ -1,0 +1,10 @@
+{
+  "Targets": [
+    {
+      "TargetId": "r-5yu3",
+      "Arn": "arn:aws:organizations::592877955899:root/o-37mek1w37u/r-5yu3",
+      "Name": "Root",
+      "Type": "ROOT"
+    }
+  ]
+}

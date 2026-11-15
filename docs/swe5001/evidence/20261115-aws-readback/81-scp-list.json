@@ -1,0 +1,36 @@
+{
+  "Policies": [
+    {
+      "Id": "p-4hlb2c8g",
+      "Arn": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-4hlb2c8g",
+      "Name": "Region-Pin",
+      "Description": "Pins all member accounts to ap-southeast-1; the single place for scoped region exceptions",
+      "Type": "SERVICE_CONTROL_POLICY",
+      "AwsManaged": false
+    },
+    {
+      "Id": "p-8hwmgw9u",
+      "Arn": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-8hwmgw9u",
+      "Name": "Sandbox-Guardrails",
+      "Description": "Sandbox cost caps: expensive services denied, small EC2 and RDS classes only",
+      "Type": "SERVICE_CONTROL_POLICY",
+      "AwsManaged": false
+    },
+    {
+      "Id": "p-FullAWSAccess",
+      "Arn": "arn:aws:organizations::aws:policy/service_control_policy/p-FullAWSAccess",
+      "Name": "FullAWSAccess",
+      "Description": "Allows access to every operation",
+      "Type": "SERVICE_CONTROL_POLICY",
+      "AwsManaged": true
+    },
+    {
+      "Id": "p-tveef62a",
+      "Arn": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-tveef62a",
+      "Name": "Org-Baseline",
+      "Description": "Org-wide denies: leave/close account, member Identity Center instances, changes to AWSReservedSSO roles",
+      "Type": "SERVICE_CONTROL_POLICY",
+      "AwsManaged": false
+    }
+  ]
+}
