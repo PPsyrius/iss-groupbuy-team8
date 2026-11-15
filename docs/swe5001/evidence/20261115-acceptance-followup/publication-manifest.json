@@ -131,8 +131,8 @@
   },
   "files": {
     "README.md": {
-      "bytes": 4753,
-      "sha256": "7cd6ad9d21bfd06e0ec1940564740882efc3b8b18201fd10c8586497e19b4a44"
+      "bytes": 5592,
+      "sha256": "85b8399134de8d6c30c3d05f815d7e255e1d160423b5d73ff78bc7a8a20c738a"
     },
     "normal-team-success-r2.md": {
       "bytes": 10554,
@@ -145,12 +145,16 @@
     "focused-identity-payment-r11.md": {
       "bytes": 7120,
       "sha256": "67d937de0366f23d746e053c30c9128c444893f4e12499efd69cf8c9274f6b2c"
+    },
+    "cleanup-receipt.json": {
+      "bytes": 2121,
+      "sha256": "5448dda9db01e503cf1bcd0e8406c40e3df5e2290fe3e248c0dbb81d53bc1858"
     }
   },
   "hashScope": "Exact published UTF-8 LF bytes, excluding this self-referential manifest; private raw sources remain private and are not claimed publicly archived",
   "acceptanceLimits": [
     "OAuth redirect-chain and direct Valkey state observations incomplete",
     "Cross-date smoke reuse and full EC2 manual parity require disposition",
-    "Focused payment-initiation outage proof only; no signed webhook/replay, teardown or full original #459/whole-campaign acceptance"
+    "Focused payment-initiation proof does not establish signed webhook/replay or full original #459; separate cleanup receipt is not all-AWS absence or zero cost"
   ]
 }
