@@ -143,7 +143,7 @@ Compute is managed containers on ARM (AD-07, AD-08) behind one guarded entry poi
       *Context:* One HTTPS entry point for the website and the API, with the load balancer not usable directly. \
       *Options considered:* (a) a public ALB with its own certificate, rejected because it needs a custom domain and leaves the ALB open to direct calls; (b) API Gateway with a VPC link, rejected because it adds a hop and a per-request charge; (c) CloudFront → ALB. \
       *Choice:* (c): CloudFront → ALB on HTTP port 80; the ALB security group admits only CloudFront's origin-facing prefix list, and an ALB rule rejects requests without the `X-Origin-Secret` header. \
-      *Trade-off:* One domain and no certificate to manage for the ALB; but the hops from CloudFront to the ALB and from the ALB to the tasks are not encrypted, so the origin secret travels in clear (AISS-08) and the secret sits in Terraform state (AISS-09). \
+      *Trade-off:* One domain and no certificate to manage for the ALB; but the hops from CloudFront to the ALB and from the ALB to the tasks are not encrypted, so the origin secret travels in clear (AISS-08) and the secret sits in Terraform state (AISS-09). The prefix list admits every CloudFront distribution, not only ours, so the header is what ties a request to our distribution; because it travels over plain HTTP (AISS-08), it is a shared secret, not authentication. \
       *Consequence:* Requests that bypass CloudFront are refused; there is no per-client rate limiting (no WAF). \
       *Record:* No ADR; options study `02-proposed-architecture.md`.
     ]),
@@ -173,7 +173,7 @@ Compute is managed containers on ARM (AD-07, AD-08) behind one guarded entry poi
       *Context:* An always-on runtime would cost about US\$125 a month (estimated in the project proposal) for a system used a few hours a week. \
       *Options considered:* (a) always on, rejected for that cost; (b) scale to zero, rejected because the database, the cache, the ALB and the NAT instance still bill while idle; (c) destroy and rebuild. \
       *Choice:* (c): the `edge` stack (CloudFront, S3) is permanent; the `runtime` stack is created for each session or release and destroyed afterwards. \
-      *Trade-off:* Estimated US\$0.17 to US\$0.20 an hour while up (`impl-aws-infrastructure.md` §9); but a full up job took 31 min 37 s on 17 October and 29 min 54 s in V8 R4 on 14 November, run by hand (@tbl-delivery-timings, AISS-06), and no data survives a session. \
+      *Trade-off:* Estimated US\$0.17 to US\$0.20 an hour while up at the release sizing of 11 November, every task 0.5 vCPU and 1 GiB (`impl-aws-infrastructure.md` §9); the larger sizing of the 11 November session cost about US\$0.27 an hour (§6.3); but a full up job took 31 min 37 s on 17 October and 29 min 54 s in V8 R4 on 14 November, run by hand (@tbl-delivery-timings, AISS-06), and no data survives a session. \
       *Consequence:* Every release is also a rebuild-from-nothing test; backups are deliberately off. \
       *Record:* No ADR; project proposal.
     ]),
@@ -275,7 +275,7 @@ In code, every aggregate reaches its tables the same way: a repository interface
 
 ==== Data stores and table ownership
 
-Every service database runs the same Flyway migration stream (`V1` to `V28`), so each database contains all 29 tables. Ownership is enforced by grants, not by which tables exist: after every Flyway run (each service start), `afterMigrate__service_grants.sql` gives the service's app role `SELECT, INSERT, UPDATE, DELETE` on the tables it owns and revokes everything on the others (@tbl-ownership). The owner role runs migrations; the app role used at runtime cannot change the schema.
+Every service database runs the same Flyway migration stream (`V1` to `V28`), so each database contains all 29 tables. Ownership is enforced by grants, not by which tables exist: after every Flyway run (each service start), `afterMigrate__service_grants.sql` gives the service's app role `SELECT, INSERT, UPDATE, DELETE` on the tables it owns and revokes everything on the others (@tbl-ownership). The owner role runs migrations; the app role used at runtime cannot change the schema. The service process still receives the owner credentials for its start-up migration, so the split limits the runtime connection pool, not a compromised process (§4.3.4).
 
 #figure(
   table(
@@ -316,7 +316,7 @@ Every table also carries the audit columns `create_by`, `create_time`, `update_b
 
 ==== Indexes that protect invariants
 
-Several business rules are enforced by unique indexes, so that a race between two transactions ends in a constraint violation instead of a wrong state. If Stripe delivers the same webhook twice and two threads process it at once, the second insert into `log_payment_webhook_event` fails on `uq_log_payment_webhook_event_event_id`, so the payment settles once (@tbl-invariant-indexes):
+Several business rules are enforced by unique indexes, so that a race between two transactions ends in a constraint violation instead of a wrong state. If Stripe delivers the same webhook twice and two threads process it at once, the second insert into `log_payment_webhook_event` conflicts on `uq_log_payment_webhook_event_event_id` and writes nothing (`ON CONFLICT DO NOTHING`), so `claimEvent` returns false and the payment settles once (@tbl-invariant-indexes):
 
 #figure(
   table(

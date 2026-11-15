@@ -36,7 +36,7 @@ Three choices kept the plan inside the guideline. The split stopped at three ser
     [Phase D, from 22 Oct], [Separate data subnets (AD-15); promotions of 10 and 11 November; load reruns; V4 R5, V5 R3 and V7 R4 passed on AWS within the limits in §4.1–§4.2], [AD-15],
   ),
   kind: table,
-  caption: [Architecture changes per period, with the main decisions of each period only; The other ADs are not placed in a period. Source: @tbl-milestones and the AD tables (§3.1.1, §3.2.1, §3.3).],
+  caption: [Architecture changes per period, with only the main decisions of each period; the other ADs are not placed in a period. Source: @tbl-milestones and the AD tables (§3.1.1, §3.2.1, §3.3).],
 ) <tbl-sprint-architecture>
 
 == Project Status
@@ -51,12 +51,12 @@ The scoped platform was built and deployed, with AWS evidence for routing, load-
     [Unchanged monolith on ECS Fargate (strangler step 0)], [Verified on AWS], [First green promotion, 6 October, #run("37470479078")[run 37470479078]],
     [Promotion pipeline: build, scan, create, smoke, release, destroy], [Verified on AWS], [Six successful promotions from 6 October to 11 November; the failed 9 November promotion also destroyed its runtime (§5.3, @tbl-delivery-runs). Smoke covers nine read-only assertions over five unauthenticated GET requests: health, catalogue, session refusals, internal-route isolation and trace headers (#src("perf/smoke/smoke.sh")[`smoke.sh`])],
     [Three services running on ECS (`distributed` topology)], [Verified on AWS], [First distributed promotion on 17 October; later promotions and sessions in @tbl-delivery-runs (§5.3), placement evidence in §3.2 and load results in §4.1],
-    [HTTP target-tracking auto-scaling and the CloudWatch dashboard], [Partly verified on AWS (11 Nov)], [On 11 November V3 r4 met the k6 gates up to 600 req/s while commerce scaled from one to six tasks. That session used 1 vCPU and 2 GiB, `db.t4g.small` and a target of 6,000. There is no analyser verdict (#src("docs/swe5001/evidence/20261111-v3-r4/README.md")[V3 r4 record], §4.1, AISS-12). After the load, Application Auto Scaling lowered the desired commerce count from six to two at 23:09–23:21 SGT, with three tasks still running at 23:21, as CloudTrail shows (read on 15 November, `docs/swe5001/evidence/20261115-aws-readback/`); we did not test scale-in],
+    [HTTP target-tracking auto-scaling and the CloudWatch dashboard], [Partly verified on AWS (11 Nov)], [On 11 November V3 r4 met the k6 gates up to 600 req/s while commerce scaled from one to six tasks. That session used 1 vCPU and 2 GiB, `db.t4g.small` and a target of 6,000. There is no analyser verdict (#src("docs/swe5001/evidence/20261111-v3-r4/README.md")[V3 r4 record], §4.1, AISS-12). After the load, Application Auto Scaling lowered the desired commerce count from six to two at 23:09–23:21 SGT, with three tasks still running at 23:21; we read this in CloudTrail on 15 November (`docs/swe5001/evidence/20261115-aws-readback/`). We did not test scale-in],
     [Monolith load baseline (V2)], [Verified on AWS], [Passed every plateau up to 200 req/s on 11 November on the released source, the selected baseline; two runs on 16 October corroborate it. 200 req/s is a tested lower bound, not the capacity (§4.1)],
     [Outbox, SNS and SQS fan-out and the idempotent consumer], [Partly verified on AWS (14–15 Nov)], [V4 R5 showed team expiries producing notifications with an experimental expiry configuration (§4.1); V7 R4 isolated a poison message and its alarm email reached one of us (§4.2); @tbl-followup-15nov checks the event and the notifications of a normal paid team],
-    [Stripe test-mode Checkout in `commerce-svc`], [Deployed 20 Oct; normal path verified 15 Nov], [#pr(565), #pr(574)\; paid START and JOIN and team success in @tbl-followup-15nov],
+    [Stripe test-mode Checkout in `commerce-svc`], [Deployed 20 Oct; partly verified on AWS (15 Nov, normal path)], [#pr(565), #pr(574)\; paid START and JOIN and team success in @tbl-followup-15nov],
     [Identity outage and poison message to the dead-letter queue], [Partly verified on AWS (14–15 Nov)], [V7 R4 and the focused identity-outage run of 15 November (R11) passed with the limits in §4.2; the 13 November identity attempt failed (AISS-13)],
-    [Self-healing after a stopped task (V5)], [Verified on AWS (13 Nov)], [R3 passed after we corrected the commerce size, the connection pool and the warm-up; R1 was interrupted and R2 failed (§4.2, AISS-13)],
+    [Self-healing after a stopped task (V5)], [Verified on AWS (13 Nov)], [R3 passed after we corrected the commerce size and the warm-up; R1 was interrupted and R2 failed (§4.2, AISS-13)],
     [Safe deployment rollback with a broken image (V6)], [Not run], [Drill cut on 11 October; the circuit breaker is configured (§4.2)],
     [Queue-driven scaling (V4) and the connection budget], [Partly verified on AWS (14 Nov); budget calculated], [With an experimental expiry configuration, the unchanged policy grew `notification-svc` to four tasks on its own, and we checked the events, the notifications and the restored settings. It is not a release or capacity test (§4.1, AISS-13). #pr(784) committed five-connection distributed pools; the connection budget is calculated, not accepted under load (§4.1, §5.3)],
     [Two-buyer paid journey on the deployed system], [Partly verified on AWS (15 Nov)], [Two buyers paid, the team succeeded and each notification reached the right buyer; the limits of the test data and of the topology comparison are in @tbl-followup-15nov (#iss(460))],
@@ -72,7 +72,7 @@ The scoped platform was built and deployed, with AWS evidence for routing, load-
     table.header([ID], [Scenario], [Status and section]),
     [V1], [Smoke suite through CloudFront after each start-up (topology parity)], [Passed in every green promotion (§5.3)],
     [V2], [Monolith load baseline: ten 60 s plateaus up to 200 req/s], [Passed on AWS, 11 Nov (baseline) and 16 Oct (§4.1)],
-    [V3], [HTTP auto-scaling: ramp to 600 req/s while commerce scales out], [V3 r4 met the k6 gates, no analyser verdict (§4.1)],
+    [V3], [HTTP auto-scaling: ramp to 600 req/s while commerce scales out], [V3 r4 met the k6 gates on AWS, 11 Nov, with session-only settings (@tbl-perf-configs); no analyser verdict, and V3 r1–r3 failed (§4.1, AISS-12)],
     [V4], [Queue-driven scaling: an expiry burst of about 2,000 teams grows the notification backlog and its tasks], [R5 passed on AWS, 14 Nov, with an experimental expiry configuration; not a release or capacity test (§4.1, AISS-13)],
     [V5], [Self-healing: a task stopped under steady load], [R3 passed on AWS, 13 Nov, after the size and warm-up correction; R1 was interrupted and R2 failed (§4.2, AISS-13)],
     [V6], [Safe deployment: a broken image rolled back by the circuit breaker], [Cut on 11 Oct (§4.2, AISS-13)],
@@ -111,7 +111,7 @@ Most delivery milestones were met on time or early. Four slipped: the monolith o
     [Presentation (phase C ends)], [23 Oct, moved to 21 Oct], [21 Oct], [#iss(393)],
     [Remarks answered: report framework, data subnets, diagrams (phase D)], [—], [22 Oct – 6 Nov], [#pr(593), #pr(740), #pr(743), #pr(745), #pr(746)],
     [All SWE5001 stacks destroyed], [16 Nov], [15 Nov], [@tbl-delivery-runs],
-    [Section drafts; report submitted], [11 Nov; 16 Nov], [In progress], [#iss(462)],
+    [Section drafts; report submitted], [11 Nov; 16 Nov], [This report], [#iss(462)],
   ),
   kind: table,
   caption: [Planned and achieved milestones, 2026. Planned dates: #src("docs/swe5001/project-proposal.typ")[proposal, Table 8] and #iss(465)\; the repository has no GitHub milestones.],
@@ -133,7 +133,7 @@ Estimated effort is 77.5 person-days: about 50 through the presentation and 27.5
     [*Total*], [*≈ 50*], [*≈ 27.5*], [*≈ 77.5*], [],
   ),
   kind: table,
-    caption: [Estimated effort by member and phase, in person-days (pd). Sources: #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6] and `effort-estimates.json` in the 15 November readback evidence.],
+    caption: [Estimated effort by member and phase, in person-days (pd). Sources: #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6] and our estimates recorded on 15 November (`effort-estimates.json`, `docs/swe5001/evidence/20261115-aws-readback/`).],
 ) <tbl-effort>
 
-We estimated effort by work package, using six working hours per person-day (#src("docs/agile/sprint-04/plan.md")[Sprint 4 plan, §5]). When we reconstructed the figures, we counted each piece of work once and did not count automated runs as anyone's effort (#src("docs/swe5001/evidence/20261112-issue-789/effort-estimate.md", rev: "ae3a32a3943b7952abdf71e5c85ffd27a24bf704")[reconstruction method]).
+We estimated effort by work package, using six working hours per person-day (#src("docs/agile/sprint-04/plan.md")[Sprint 4 plan, §5]). When we reconstructed the figures, we counted each piece of work once and did not count automated runs as anyone's effort (#src("docs/swe5001/evidence/20261112-issue-789/effort-estimate.md", rev: "ae3a32a3943b7952abdf71e5c85ffd27a24bf704")[reconstruction method])\; its 12 November figures were revised on 15 November, and @tbl-effort uses the revised figures.

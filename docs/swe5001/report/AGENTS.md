@@ -77,7 +77,7 @@ Initially checked against the repository on 21 October 2026; the lock-order clar
 
 ## Diagram rules
 
-15 November 2026 publication note: the PR #807 validation records are pinned to `479d3409` on `dev`, not to a branch. The 15 November records (`20261115-acceptance-followup/`, `20261115-aws-readback/`) are published by PR #808 and are cited as repository-relative paths until the post-merge freeze pins them to the #808 merge commit. Use §4.2 `tbl-followup-15nov` as the one account of the #448, #459 and #460 follow-up results, with all their configuration, fixture, administrator set-up and topology-comparison limits. Do not repin the tested application or historical sources, or change submitted PDFs.
+15 November 2026 publication note: the PR #807 validation records are pinned to `479d3409` on `dev`, not to a branch. The 15 November records are published by PR #808 (`20261115-acceptance-followup/`) and PR #809 (`20261115-aws-readback/`) and are cited as repository-relative paths until the post-merge freeze pins them. Use §4.2 `tbl-followup-15nov` as the one account of the #448, #459 and #460 follow-up results, with all their configuration, fixture, administrator set-up and topology-comparison limits. Do not repin the tested application or historical sources, or change submitted PDFs.
 
 - Use UML or a named notation (C4, DDD context map, crow's foot) and say which in the caption.
 - Each caption names the viewpoint and what the reader should notice: "Figure 3.5: Physical deployment view. Only the ALB and NAT sit in public subnets."

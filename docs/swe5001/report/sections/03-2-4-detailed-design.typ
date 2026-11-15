@@ -80,7 +80,7 @@ If two transactions lock the same rows in different orders, each can wait for th
   table(
     columns: (0.32fr, 2.6fr, 1.75fr),
     table.header([Step], [What happens], [Design element (figure)]),
-    [1], [The buyer opens the invite link and asks to join; the system creates a purchase intent that freezes the team price], [`StripeCheckoutController.intent`, `PurchaseIntentAppService` (@fig-d12b-two-buyers-join)],
+    [1], [The buyer opens the invite link and asks to join; the system creates a purchase intent that freezes the team price], [`StripeCheckoutController.intent` (@fig-d12b-two-buyers-join), `PurchaseIntentAppService`],
     [2], [The buyer asks to pay; the system creates the payment and a Stripe Checkout session and returns its URL], [`StripeCheckoutController.checkout`, `StripeCheckoutService`],
     [3], [The buyer pays on Stripe. Stripe reports the payment by webhook; the system verifies the signature and reads the session back from Stripe], [`StripeWebhookController`, `StripeCheckoutService.handleWebhook`],
     [4], [In one settlement transaction, the system claims the event ID], [`CheckoutPaymentRepository.claimEvent`],
