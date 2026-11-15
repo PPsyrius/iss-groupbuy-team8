@@ -38,7 +38,7 @@ These properties give the architecture its drivers. @tbl-drivers lists them in p
     [Consistency], [A successful settlement records the payment, the admission and the order in one transaction; a paid admission that is refused records a refund obligation instead, and an expiry records its refund obligations in the same transaction], [Exactly one outcome per verified payment: seat and order, or refund obligation], [§3.1.4, §3.2.3, §3.2.4],
     [Security], [Least privilege and a data tier unreachable from outside], [Data tier unreachable from outside (NFR-70); no stored cloud keys in the pipeline (AD-17, AISS-17)], [§3.2, §4.3],
     [Cost], [A demonstration-scale budget], [The runtime exists only while it is used], [§3.2.1 (AD-12), §6.3],
-    [Scalability], [Browsing and payment or event bursts scale independently of each other], [200 req/s at p95 below 500 ms (V2); 80% of linear scaling from one to four tasks (V3, NFR-64)], [§3.2, §4.1 (Performance)],
+    [Scalability], [Browsing and payment or event bursts scale independently of each other], [200 req/s at p95 below 500 ms (V2); 80% of linear scaling from one to four tasks (V3, verification plan); commerce scales one to six tasks (NFR-64)], [§3.2, §4.1 (Performance)],
     [Availability], [A failed task or a broker outage loses no committed payment or event], [Rebuild in under 30 min (V8); no lost committed event], [§4.2],
     [Modifiability], [A new service, consumer or seed reuses the platform instead of starting again], [A new event consumer is added without changing a producer], [§4.4],
   ),
@@ -90,7 +90,7 @@ The briefing's first success criterion asks for the seed, the producers and the 
 
 == Project Scope
 
-SWE5001 changed how BlocBuy is built and run, not what it does. The business functions UC1–UC9 already existed. The project made them run in a second, distributed topology, added event-driven notifications, and built the cloud platform, the pipeline and the evidence around them. The work ran in five phases (@tbl-phases); their dates are in §2.3.
+SWE5001 changed how BlocBuy is built and run, not what it does. The business functions UC1–UC9 already existed. We made them run in a second, distributed topology, added event-driven notifications and built the cloud platform, the pipeline and the evidence around them. The work ran in five phases (@tbl-phases); their dates are in §2.3.
 
 #figure(
   table(
@@ -136,7 +136,7 @@ Every use case keeps its SWE5006 behaviour in the monolith and has one owning se
 Besides the use cases, the scope covered the platform itself:
 
 - *Platform capabilities:* the three service assemblies, the shared modules and the golden-path `ecs-service` Terraform module (§4.4); the outbox and messaging (§3.2.3); three Terraform stacks (§3.2.2); the promotion pipeline (§5).
-- *Four scripted demonstrations* promised in the proposal: HTTP auto-scaling, queue-driven scaling, self-healing and safe deployment rollback. §2.2 states which of them ran on AWS, which ran locally, and which did not run.
+- *Four scripted demonstrations* promised in the proposal: HTTP auto-scaling, queue-driven scaling, self-healing and safe deployment rollback. §2.2 states which of them ran on AWS, which ran locally and which did not run.
 
 === Functionality out of scope
 
@@ -153,7 +153,7 @@ During the project we also left out email and push notifications; notifications 
 
 Seller self-service is out of scope as well. SWE5006 excluded a merchant self-service interface (#src("docs/swe5006/report/sections/01-introduction.md")[SWE5006 report, §1.4.2]), and SWE5001 kept that exclusion. The code defines only the `buyer` and `admin` roles (#src("backend/blocbuy-bootstrap/src/main/resources/db/migration/V3__identity.sql")[`V3__identity.sql`]), so the platform administrator publishes every listing on sellers' behalf (UC9). No seller role or merchant console was designed for SWE5001; the architecture options study only notes the gap (#src("docs/swe5001/architecture-options-study/06-eventstorming-ddd.md")[study, hotspot HS-9]).
 
-*Architected but not built.* Some designs exist only on paper. @tbl-not-built lists them, so that no later section is read as a claim that they run.
+*Architected but not built.* Some designs exist only on paper; @tbl-not-built lists them so that none is mistaken for running code.
 
 #figure(
   table(
