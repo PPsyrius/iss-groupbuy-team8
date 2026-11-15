@@ -248,7 +248,7 @@ The solution uses managed AWS services wherever one exists, so we run no servers
   caption: [Technology and services with versions and sizes. Source: `backend/pom.xml`, `backend/Dockerfile` and `infra/swe5001`; the rows mark the sizes used in the 11 November load runs and the commerce size committed by #pr(807).],
 ) <tbl-tech>
 
-*Encryption and secrets.* Configured, not tested: the data stores, the domain-event topic (`alias/aws/sns`), the queues, ECR and the state bucket are encrypted at rest; the alarm topic `blocbuy-swe5001-alerts` is not. The CloudFront → ALB hop is plain HTTP (AISS-08), and the Valkey AUTH token and the origin secret are in Terraform state (AISS-09). Database passwords are generated as ephemeral values and written with write-only arguments, so they never reach Terraform state. @tbl-security-boundaries gives each boundary, its control and its limit (§4.3).
+*Encryption and secrets.* Configured, not tested: the data stores, the domain-event topic (`alias/aws/sns`), the queues, ECR and the state bucket are encrypted at rest; the alarm topic `blocbuy-swe5001-alerts` is not. The CloudFront → ALB and ALB → task hops are plain HTTP (AISS-08), and the Valkey AUTH token and the origin secret are in Terraform state (AISS-09). Database passwords are generated as ephemeral values and written with write-only arguments, so they never reach Terraform state. @tbl-security-boundaries gives each boundary, its control and its limit (§4.3).
 
 *Cost.* The disposable runtime limits idle charges but leaves permanent edge and storage costs. §6.3 separates measured billing, shared-account allocation and list-price estimates.
 

@@ -463,7 +463,7 @@ Arrows in @fig-d4-context-map point from the downstream context to the upstream 
     [Separated Interface (payment owns the port, order implements it; an architectural pattern, not GoF)],
     [In-process call],
     [`payment` declares `PaymentBusinessPort` and `PaymentIntentPort`; `order` implements them (`OrderFulfilmentAdapter` implements `PaymentBusinessPort`; `PurchaseIntentAppService` implements `PaymentIntentPort`).],
-    [Keeps `payment` business-agnostic and reusable for future seeds: it drives settlement through its own ports without importing `order` or `groupbuy`.],
+    [Keeps settlement reusable for future seeds: `payment` drives it through its own ports and calls no `order` or `groupbuy` code. Its only imports from them are `groupbuy`'s `TeamExpired` event (the Customer–Supplier edge below) and `order`'s `PurchaseOperation` code list.],
 
     [`groupbuy` (U) → `payment` (D)],
     [Customer–Supplier],
@@ -701,7 +701,7 @@ BlocBuy serves producers and consumers, and other services can consume its event
 - *Producers.* The platform administrator publishes product listings on sellers' behalf, configures `TeamPricePolicy` and sets `ProductTeamTerms` (UC9). Team leaders and sharers act as demand producers: by paying first to open a team (UC3), sharing an invite link (`ShareInvite`, UC7) and being credited for it (UC12), they bring buyers from outside chat groups to the platform.
 - *Consumers.* Members (UC1, UC4, UC8) browse dual-priced listings, join open teams with automatic refund protection and read in-app notifications. On the technical side, `notification-svc` consumes `commerce-svc` facts as events, and the `audit` queue is ready for the next consumer.
 
-Settlement is a reusable module inside `commerce-svc`: `payment` drives it through `PaymentBusinessPort` and `PaymentIntentPort` without importing `order` or `groupbuy` (@tbl-context-map). A new seed reuses it in-process today; extracting it as a service is AISS-02.
+Settlement is a reusable module inside `commerce-svc`: `payment` drives it through `PaymentBusinessPort` and `PaymentIntentPort` and calls no `order` or `groupbuy` code (@tbl-context-map). A new seed reuses it in-process today; extracting it as a service is AISS-02.
 
 *How the platform extends.*
 - *A new subscriber needs no producer change.* The `audit` queue (no consumer; demonstrates fan-out, ADR 0007) and its dead-letter queue receive every event whose `eventType` starts with `Team`. They were created with the notification queue on 14 October by two lines of Terraform in `infra/swe5001/modules/messaging/main.tf` (one `consumers` element and one filter line), with no change to `commerce-svc`. A working consumer also needs its checks and its worker; @tbl-seams lists the full edit.
