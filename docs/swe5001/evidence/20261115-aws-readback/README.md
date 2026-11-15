@@ -15,7 +15,7 @@ Only `describe`, `get`, `list`, `lookup-events`, Cost Explorer and STS reads wer
 | [containerinsights-export.json](containerinsights-export.json) | Before retirement, 15,433 events from the remaining one-day-retention performance log group were downloaded and verified: 19,489,496 JSON bytes, valid pagination, unique event IDs and SHA-256. Raw logs remain private; this is not a complete campaign backup or another test. |
 | [effort-estimates.json](effort-estimates.json) | Current work-package estimates: 77.5 team person-days, including Pan 23.5 and Jiechao 15.5. This supplies the revised figures without rewriting the historical reconstruction or changing participation scores. |
 
-These are projections of operator receipts and report-review inputs, not outputs of the later read-only account survey. The raw Container Insights export, private source receipts and secret-bearing Terraform files remain outside Git. The operator's independent checks also confirmed retained state/evidence storage and absent state locks; the historical snapshot, retained log group and unlisted SSM scope prevent an “all AWS gone” or zero-cost claim.
+These are projections of operator receipts and report-review inputs, not outputs of the later read-only account survey. The raw Container Insights export, private source receipts and secret-bearing Terraform files remain outside Git. The operator's independent checks also confirmed retained state/evidence storage and absent state locks; the historical snapshot, retained log group and the 13 remaining SSM parameters prevent an “all AWS gone” or zero-cost claim.
 
 ## Commands
 
@@ -92,7 +92,7 @@ These are projections of operator receipts and report-review inputs, not outputs
 - `08-s3.json`: four buckets: the SWE5006 frontend and media buckets, the SWE5001 generator evidence bucket `blocbuy-swe5001-generator-20261111-402178232802` and the Terraform state bucket `blocbuy-tfstate-402178232802`.
 - `39-ebs-snapshots.json`: one snapshot, `snap-08d8687ce2487f63e` (40 GiB, encrypted, 12 November), of the 11 November generator disk.
 - `10-rds-snapshots.json`: no database snapshot.
-- SSM Parameter Store was not listed, so the parameters seeded outside Terraform under `/blocbuy/swe5001/` are not covered by this readback.
+- `ssm-swe5001-parameters.json` (read separately at 23:10 SGT on 15 November; names, types and last-modified dates only, no values): 13 parameters under `/blocbuy/swe5001/` remained, 5 SecureString (the Stripe API key and webhook secret, the Google client ID and secret, and the shared origin secret) and 8 String image pointers under `candidate/` and `release/`.
 
 **Governance.**
 - `81-scp-list.json` to `87-tgt-sandbox.json`, `98-parents-project.json`, `99-ou-root.json`: `Org-Baseline` and `Region-Pin` are attached at the root and `Sandbox-Guardrails` at the Sandbox unit, which holds the project account; the policy text of each.
