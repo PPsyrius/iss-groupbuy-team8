@@ -2,7 +2,7 @@
 
 = Quality Attributes
 
-@tbl-qa-status summarises each quality attribute, the tactic and decision behind it, how far we verified it and the issue that limits it.
+For each quality attribute we set a target in §1, chose tactics in §3 and then tried to show on AWS that the target holds. In short, performance is met as a lower bound and modifiability in the source; consistency, scalability, availability and security are partly met, each limited by a named issue. @tbl-qa-status gives the tactic, evidence and limit for each.
 
 #figure(
   table(

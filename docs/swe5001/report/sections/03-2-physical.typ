@@ -16,7 +16,7 @@
 
 == Physical Architecture & Design
 
-The physical design answers one question: how do we run three isolated services on AWS for a system used a few hours a week, when an always-on runtime would cost about US\$125 a month (AD-12)? We buy isolation and a small bill rather than always-on capacity. The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the VPC hold the data stores (AD-15, @fig-d6-network). Runtime is disposable; by design the edge and foundation stacks stay between sessions (AD-12); we destroyed them after the final campaign on 15 November (§5.3).
+The physical design answers one question: how do we run three isolated services on AWS for a system used a few hours a week, when an always-on runtime would cost about US\$125 a month (AD-12)? We buy isolation and a small bill rather than always-on capacity. The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the VPC hold the data stores (AD-15, @fig-d6-network). We create the runtime for each session and destroy it afterwards. By design the edge and foundation stacks stay between sessions (AD-12); we destroyed them too after the final campaign on 15 November (§5.3).
 
 @tbl-logical-physical maps each logical element of @tbl-logical-elements (§3.1.3) to the product that implements it. The last three rows have no logical counterpart: they exist only because of where the system runs.
 
@@ -68,7 +68,7 @@ The paths in @fig-d5a-communication-paths work as follows:
 
 AWS chooses each data store's zone. On 10 November on AWS, RDS ran in `ap-southeast-1b` and Valkey in `ap-southeast-1a`; one commerce task ran in each zone, and the identity and notification tasks both ran in `ap-southeast-1a` (#src("docs/swe5001/evidence/20261110-subnet-verification/README.md")[10 November record]). These are observations of one session, not a placement guarantee, and a subnet group in two zones does not make RDS or Valkey multi-zone.
 
-*Topologies.* The figures draw the distributed topology. The same code also deploys as a monolith, so three deployments exist (@tbl-topologies, ADR 0008). The monolith fallback (`topology = monolith`) runs the SWE5006 image as one ECS service on `/api/*` in the same network.
+*Topologies.* The figures draw the distributed topology. The same code also deploys as a monolith, in two places: the SWE5006 EC2 host and an ECS fallback in this network. That makes three deployments (@tbl-topologies, ADR 0008). The monolith fallback (`topology = monolith`) runs the SWE5006 image as one ECS service on `/api/*` in the same network. In-process domain listeners run in every topology, so turning messaging off does not turn off the financial consequences of a payment.
 
 #figure(
   table(
@@ -79,7 +79,7 @@ AWS chooses each data store's zone. On 10 November on AWS, RDS ran in `ap-southe
     [SWE5001 distributed], [Three Fargate services; three databases on one RDS server and Valkey], [Commerce calls identity through Service Connect; outbox → SNS → notification and audit queues], [Released; the subject of §3.2 and §4],
   ),
   kind: table,
-  caption: [The three deployment topologies of one code base. In-process domain listeners run in every topology, so turning messaging off does not turn off the financial consequences of a payment. Source: ADR 0008 and `infra/swe5001/runtime/services.tf`.],
+  caption: [The three deployment topologies of one code base. Source: ADR 0008 and `infra/swe5001/runtime/services.tf`.],
 ) <tbl-topologies>
 
 *Network and security groups.* @fig-d6-network draws the network in AWS group notation: every subnet with its CIDR, its route table and the security group of each resource.
@@ -113,7 +113,7 @@ Tested locally, not on AWS: module validation rejects reused data CIDRs, and `te
 
 === Key Architectural Decisions
 
-The physical decisions are managed containers on ARM (AD-07, AD-08), one guarded entry point (AD-09), single shared data and egress nodes (AD-10, AD-11), a runtime that exists only while used (AD-12), no Kubernetes (AD-13), a tag-fenced stack in the shared team account (AD-14), data subnets with no route out (AD-15) and scaling on requests per task (AD-20); @tbl-ad-physical states each one. Prices are on-demand list prices for `ap-southeast-1` from our cost estimate of 25 September 2026 (`04-aws-cost-estimate.md`), unless the row names another source.
+Compute is managed containers on ARM (AD-07, AD-08) behind one guarded entry point (AD-09). Data and egress each run on one shared node (AD-10, AD-11). The runtime exists only while used (AD-12) and needs no Kubernetes (AD-13). It sits in a tag-fenced stack in the shared team account (AD-14), with data subnets that have no route out (AD-15), and commerce scales on requests per task (AD-20). @tbl-ad-physical states each one. Prices are on-demand list prices for `ap-southeast-1` from our cost estimate of 25 September 2026 (`04-aws-cost-estimate.md`), unless the row names another source.
 
 #figure(
   ad-table(
@@ -132,7 +132,7 @@ The physical decisions are managed containers on ARM (AD-07, AD-08), one guarded
       *Driver:* Cost; availability (a guaranteed floor). \
       *Context:* Commerce needs a guaranteed floor for availability but extra capacity only during load. \
       *Options considered:* (a) all on-demand, rejected because burst capacity would pay the full price; (b) all Spot, rejected because a reclaim could take commerce below its floor; (c) a mixed strategy. \
-      *Choice:* (c): capacity provider strategy `FARGATE` with base equal to the commerce minimum (two in demonstration sessions) and weight 1, plus `FARGATE_SPOT` with weight 3. \
+      *Choice:* (c): capacity provider strategy `FARGATE` with base equal to the commerce minimum (two in demonstration sessions) and weight 1, plus `FARGATE_SPOT` with weight 3: above the base, about one extra task in four runs on regular Fargate and three on Spot. \
       *Trade-off:* Spot capacity is cheaper but can be reclaimed with two minutes' notice; the base keeps two tasks on regular Fargate, so a reclaim never takes commerce below its floor. \
       *Consequence:* The 16 and 19 October records show the configured strategy, not each task's provider. On 11 November on AWS, an ARM64 commerce task on definition 37 ran on `FARGATE_SPOT`, stopped with `SpotInterruption` and was replaced (#src("docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/FINDINGS.md")[11 November task record], §4.2). \
       *Record:* No ADR.
@@ -297,7 +297,7 @@ The schema follows our PostgreSQL DDL conventions:
 
 - *Keys.* Native `uuid` primary keys generated as UUIDv7 (`DEFAULT uuidv7()`, PostgreSQL 18). UUIDv7 is time-ordered, so new rows mostly append to the index and split fewer pages, and the database assigns it at insert, so the outbox row ID serves as the event ID. Two exceptions: `biz_payment_review_case` names its key `case_id`, and `sys_consumed_message` has the composite key (`event_id`, `consumer`).
 - *Prefixes.* `sys_` for platform and technical tables, `biz_` for business entities, `rel_` for many-to-many links, `log_` for append-only records.
-- *Audit and soft delete.* Ordinary business tables carry `create_time`, `create_by`, `update_time`, `update_by` and `deleted`; most mutable aggregates also carry `version` for optimistic locking (exceptions under the figures). Most active-row uniqueness rules use partial indexes `WHERE deleted = false`, so a soft-deleted row does not block a new one; `uq_biz_team_price_policy_product_version` (V6) is a plain index, and `uq_biz_refund_provider_id` (V11) is partial on `provider_refund_id IS NOT NULL`; rules that must hold for every row ever written (one member, order, refund or review case per payment; one webhook event; one notification per event and recipient) use plain unique indexes.
+- *Audit and soft delete.* Ordinary business tables carry `create_time`, `create_by`, `update_time`, `update_by` and `deleted`; most mutable aggregates also carry `version` for optimistic locking (exceptions under the figures). A soft-deleted row must not block a new one, so most active-row uniqueness rules are partial indexes `WHERE deleted = false`. Two exceptions: `uq_biz_team_price_policy_product_version` (V6) is a plain index, and `uq_biz_refund_provider_id` (V11) is partial on `provider_refund_id IS NOT NULL`. Rules that must hold for every row ever written use plain unique indexes: one member, order, refund or review case per payment; one webhook event; one notification per event and recipient.
 - *No foreign keys or CHECK constraints.* Relationships are logical, kept by the application inside its transactions. This lets a table move to another service's database without unpicking constraints, and keeps validation in one place (the domain model). The cost is that the database does not catch an orphaned row; the unique indexes below catch the errors that matter most.
 
 ==== Logical data models
@@ -316,7 +316,7 @@ Every table also carries the audit columns `create_by`, `create_time`, `update_b
 
 ==== Indexes that protect invariants
 
-Several business rules are enforced by unique indexes, so that a race between two transactions ends in a constraint violation instead of a wrong state (@tbl-invariant-indexes):
+Several business rules are enforced by unique indexes, so that a race between two transactions ends in a constraint violation instead of a wrong state. If Stripe delivers the same webhook twice and two threads process it at once, the second insert into `log_payment_webhook_event` fails on `uq_log_payment_webhook_event_event_id`, so the payment settles once (@tbl-invariant-indexes):
 
 #figure(
   table(
@@ -369,7 +369,7 @@ Several business rules are enforced by unique indexes, so that a race between tw
 
 ==== Transactions and concurrency
 
-One business transaction never spans two databases; this is why payment, team and order stay in one service (AD-02). Their settlement and expiry transactions use a fixed lock order to prevent deadlocks and serialise the last-seat race (§3.2.4).
+One business transaction never spans two databases; this is why payment, team and order stay in one service (AD-02). The settlement and expiry transactions use a fixed lock order to prevent deadlocks and serialise the last-seat race (§3.2.4).
 
 Write transactions run at PostgreSQL's default READ COMMITTED with `SELECT … FOR UPDATE` row locks; read-only views that combine several queries use REPEATABLE READ for one snapshot. Most mutable aggregates also use their `version` column for optimistic locking on ordinary updates.
 
@@ -447,7 +447,7 @@ The design rule is that Valkey is never the lock of record or the only copy of a
   caption: [Version 1 payloads of the three published events; every field is required, and the payloads carry IDs only, no names or email addresses; user IDs remain personal data. Source: the records in `blocbuy-client` (`com.blocbuy.events.contract`).],
 ) <tbl-event-payloads>
 
-*Queues.* SNS delivers raw messages to SQS, and each subscription filters on the `eventType` attribute. The notification queue receives `TeamSucceeded`, `TeamExpired` and `PaymentSucceeded`; the audit queue receives every event whose type starts with `Team`. Each queue has a 60 s visibility timeout, 20 s long polling and 4-day retention; after five failed receives a message moves to the queue's DLQ, which keeps it for 14 days.
+*Queues.* SNS delivers raw messages to SQS, and each subscription filters on the `eventType` attribute. The notification queue receives `TeamSucceeded`, `TeamExpired` and `PaymentSucceeded`; the audit queue receives every event whose type starts with `Team`. Each queue has a 60 s visibility timeout (a received message that is not deleted reappears after 60 s), 20 s long polling and 4-day retention; after five failed receives a message moves to the queue's DLQ, which keeps it for 14 days.
 
 ==== Data classification
 

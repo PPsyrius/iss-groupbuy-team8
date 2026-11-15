@@ -9,13 +9,13 @@ BlocBuy is a community group-buying platform: buyers form a team at a team price
 
 *Starting point.* On 29 September 2026 BlocBuy was one Java 21 and Spring Boot 4 application in the Alibaba COLA (Clean Object-Oriented and Layered Architecture) layering, with six bounded contexts in one deployable unit. It ran under Docker Compose on one Amazon EC2 host with PostgreSQL 18 and Redis 8, and the SWE5006 deployment still runs that way (#src("docs/swe5001/microservice-refactoring-plan.md")[refactoring plan, §1]).
 
-*What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They ran on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchanged events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. Terraform created the runtime for each working session and destroyed it afterwards.
+*What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They ran on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchanged events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. The outbox saves each event in the same transaction as the change it reports, so a crash cannot lose it. Terraform created the runtime for each working session and destroyed it afterwards.
 
 Times are Singapore time (SGT, UTC+8).
 
 == Business Needs
 
-Group buying works only if enough people join before the deadline. Today that coordination happens in chat groups and spreadsheets, so it is slow, opaque and manual for everyone involved (@tbl-pain-points).
+Group buying works only if enough people join before the deadline. Today that coordination happens in chat groups and spreadsheets: an organiser collects each payment, chases members who have not paid and refunds them by hand when the team fails to fill (@tbl-pain-points).
 
 #figure(
   table(
@@ -37,7 +37,7 @@ These properties give the architecture its drivers. @tbl-drivers lists them in p
   table(
     columns: (0.9fr, 2.3fr, 2fr, 1fr),
     table.header([Driver], [What it demands], [Target], [Evidence in]),
-    [Consistency], [A successful settlement records the payment, the admission and the order in one transaction; a paid admission that is refused records a refund obligation instead, and an expiry records its refund obligations in the same transaction], [Exactly one outcome per verified payment: seat and order, or refund obligation], [§3.1.4, §3.2.3, §3.2.4],
+    [Consistency], [A successful settlement records the payment, the admission and the order in one transaction. A refused paid admission records a refund obligation instead. An expiry records its refund obligations in the same transaction], [Exactly one outcome per verified payment: seat and order, or refund obligation], [§3.1.4, §3.2.3, §3.2.4],
     [Security], [Least privilege and a data tier unreachable from outside], [Data tier unreachable from outside (NFR-70); no stored cloud keys in the pipeline (AD-17, AISS-17)], [§3.2, §4.3],
     [Cost], [A demonstration-scale budget], [The runtime exists only while it is used], [§3.2.1 (AD-12), §6.3],
     [Scalability], [Browsing and payment or event bursts scale independently of each other], [200 req/s at p95 below 500 ms (V2); 80% of linear scaling from one to four tasks (V3, verification plan); commerce scales one to six tasks (NFR-64)], [§3.2, §4.1 (Performance)],
@@ -71,7 +71,7 @@ The project was self-initiated and has no company sponsor. Its stakeholders are 
   caption: [Business and IT stakeholders.],
 ) <tbl-stakeholders>
 
-The briefing's first success criterion asks for the seed, the producers and the consumers of the platform. @tbl-platform-roles names them, and @fig-d1-context places the run-time users and external systems around BlocBuy.
+The briefing's first success criterion asks for the seed, the producers and the consumers of the platform. @tbl-platform-roles names them, and @fig-d1-context places the run-time users and external systems around BlocBuy. Sellers do not appear in it, because they reach buyers only through the platform administrator.
 
 #figure(
   table(
@@ -153,7 +153,7 @@ The proposal excluded six items (#src("docs/swe5001/project-proposal.typ")[propo
 
 During the project we also left out email and push notifications; notifications are in-app only.
 
-Seller self-service is out of scope as well. SWE5006 excluded a merchant self-service interface (#src("docs/swe5006/report/sections/01-introduction.md")[SWE5006 report, §1.4.2]), and SWE5001 kept that exclusion. The code defines only the `buyer` and `admin` roles (#src("backend/blocbuy-bootstrap/src/main/resources/db/migration/V3__identity.sql")[`V3__identity.sql`]), so the platform administrator publishes every listing on sellers' behalf (UC9). No seller role or merchant console was designed for SWE5001; the architecture options study only notes the gap (#src("docs/swe5001/architecture-options-study/06-eventstorming-ddd.md")[study, hotspot HS-9]).
+Seller self-service is out of scope, as it was in SWE5006 (#src("docs/swe5006/report/sections/01-introduction.md")[SWE5006 report, §1.4.2]). The code defines only the `buyer` and `admin` roles (#src("backend/blocbuy-bootstrap/src/main/resources/db/migration/V3__identity.sql")[`V3__identity.sql`]), so the platform administrator publishes every listing on sellers' behalf (UC9). We designed no seller role or merchant console; the architecture options study notes the gap (#src("docs/swe5001/architecture-options-study/06-eventstorming-ddd.md")[study, hotspot HS-9]).
 
 *Architected but not built.* Some designs exist only on paper; @tbl-not-built lists them so that none is mistaken for running code.
 

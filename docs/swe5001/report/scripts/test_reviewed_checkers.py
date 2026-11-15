@@ -204,7 +204,7 @@ class ReviewedCheckerTests(unittest.TestCase):
             read_revision.assert_called_with('show', revision + ':' + path)
 
     def test_report_ci_billing_qualification_cannot_be_removed_or_reversed(self):
-        for old, new in (('list-price equivalent', 'billed charge'),
+        for old, new in (('would have cost', 'was billed at'),
                          ('free in this public repository', 'not free in this public repository'),
                          ('free in this public repository', 'free in this private repository')):
             with self.subTest(change=new), self.assertRaises(AssertionError):
