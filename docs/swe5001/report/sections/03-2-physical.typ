@@ -16,7 +16,7 @@
 
 == Physical Architecture & Design
 
-The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the VPC hold the data stores (AD-15, @fig-d6-network). Runtime is disposable; the permanent edge and foundation stacks remain between sessions (AD-12).
+The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the VPC hold the data stores (AD-15, @fig-d6-network). Runtime is disposable; by design the edge and foundation stacks stay between sessions (AD-12); we destroyed them after the final campaign on 15 November (§5.3).
 
 @tbl-logical-physical maps each logical element of @tbl-logical-elements (§3.1.3) to the product that implements it. The last three rows have no logical counterpart: they exist only because of where the system runs.
 
@@ -143,7 +143,7 @@ The physical decisions buy isolation and a small bill rather than always-on capa
       *Context:* One HTTPS entry point for the website and the API, with the load balancer not usable directly. \
       *Options considered:* (a) a public ALB with its own certificate, rejected because it needs a custom domain and leaves the ALB open to direct calls; (b) API Gateway with a VPC link, rejected because it adds a hop and a per-request charge; (c) CloudFront → ALB. \
       *Choice:* (c): CloudFront → ALB on HTTP port 80; the ALB security group admits only CloudFront's origin-facing prefix list, and an ALB rule rejects requests without the `X-Origin-Secret` header. \
-      *Trade-off:* One domain and no certificate to manage for the ALB; but the hop from CloudFront to the ALB is not encrypted (AISS-08) and the secret sits in Terraform state (AISS-09). \
+      *Trade-off:* One domain and no certificate to manage for the ALB; but the hops from CloudFront to the ALB and from the ALB to the tasks are not encrypted, so the origin secret travels in clear (AISS-08) and the secret sits in Terraform state (AISS-09). \
       *Consequence:* Requests that bypass CloudFront are refused; there is no per-client rate limiting (no WAF). \
       *Record:* No ADR; options study `02-proposed-architecture.md`.
     ]),
@@ -173,7 +173,7 @@ The physical decisions buy isolation and a small bill rather than always-on capa
       *Context:* An always-on runtime would cost about US\$125 a month (estimated in the project proposal) for a system used a few hours a week. \
       *Options considered:* (a) always on, rejected for that cost; (b) scale to zero, rejected because the database, the cache, the ALB and the NAT instance still bill while idle; (c) destroy and rebuild. \
       *Choice:* (c): the `edge` stack (CloudFront, S3) is permanent; the `runtime` stack is created for each session or release and destroyed afterwards. \
-      *Trade-off:* Estimated US\$0.17 to US\$0.20 an hour while up (`impl-aws-infrastructure.md` §9); but a full up job took 31 min 37 s on 17 October (@tbl-delivery-timings, AISS-06), and no data survives a session. \
+      *Trade-off:* Estimated US\$0.17 to US\$0.20 an hour while up (`impl-aws-infrastructure.md` §9); but a full up job took 31 min 37 s on 17 October and 29 min 54 s in V8 R4 on 14 November, run by hand (@tbl-delivery-timings, AISS-06), and no data survives a session. \
       *Consequence:* Every release is also a rebuild-from-nothing test; backups are deliberately off. \
       *Record:* No ADR; project proposal.
     ]),
@@ -214,7 +214,7 @@ The physical decisions buy isolation and a small bill rather than always-on capa
       *Options considered:* (a) target tracking on CPU, rejected because CPU lags a request burst; (b) step scaling on alarms, rejected because it needs tuned alarm thresholds; (c) target tracking on `ALBRequestCountPerTarget`. \
       *Choice:* (c), at 12,000 requests per target per minute (calculated: 200 req/s × 60 s), two to six tasks (one to six in baseline sessions), cooldowns of 60 s out and 180 s in. `notification-svc` tracks its queue backlog per task (target 50 messages, one to four tasks). \
       *Trade-off:* The request count follows the burst itself and needs no tuned thresholds; but the target comes from the 16 October baseline runs, and one-minute metrics let a fast burst outrun it (AISS-12). An opt-in CPU step guard exists and is off by default (`commerce_cpu_scale_out_enabled`). \
-      *Consequence:* The 12,000 value is the GitHub environment setting, and the Terraform fallback is 200. On 11 November on AWS, with a session-only target of 6,000, the policy scaled commerce from one to six tasks under the V3 r4 workload, and every k6 gate passed; the analyser gave no verdict, and linearity is unproven (§4.1). Since #pr(807) (on `dev` since 14 November) new commerce targets also get a 120 s ALB slow start by default; V3 r3 and r4 on 11 November used it as a session setting. \
+      *Consequence:* The 12,000 value is the GitHub environment setting, and the Terraform fallback is 200. On 11 November on AWS, with a session-only target of 6,000, the policy scaled commerce from one to six tasks under the V3 r4 workload, and every k6 gate passed; the analyser gave no verdict, and linearity is unproven (§4.1). Since #pr(807) (on `dev` since 14 November) new commerce targets also get a 120 s ALB slow start by default; V3 r3 and r4 on 11 November used it as a session setting. On 14 November on AWS, with an experimental expiry configuration, the backlog policy grew `notification-svc` from one to four tasks on its own (V4 R5, §4.1). Calculated: a run that does not pass the 12,000 setting uses the fallback of 200 requests per target per minute, about 3.3 req/s per task; the workflows pass 12,000, and the session script defaults to 200 unless the variable is exported. \
       *Record:* No ADR; #src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October policy record].
     ]),
   ),

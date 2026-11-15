@@ -10,22 +10,22 @@ classDiagram
         <<interface, repository, Pers, Conc>>
         +lockDeal(dealId: UUID): Optional~GroupDeal~
         +currentTime(): Instant
-        +dueForExpiry(now, limit): List~UUID~
-        +expire(before, after, now): void
+        +dueForExpiry(now: Instant, limit: int): List~UUID~
+        +expire(before: GroupDeal, after: GroupDeal, now: Instant): void
     }
     class GroupDealExpirySweeper {
         <<application service, Sched>>
         ~RETRY_DELAY: Duration = PT5M
-        +sweep(limit, leaseValid): GroupDealExpirySweeper.Result
+        +sweep(limit: int, leaseValid: BooleanSupplier): GroupDealExpirySweeper.Result
     }
     class TeamExpirySweepJob {
         <<scheduled job, Sched>>
         +run(): void
-        -sweepOnce(leaseValid): void
+        -sweepOnce(leaseValid: BooleanSupplier): void
     }
     class LeasedJobRunner {
         <<utility, Sched, Conc>>
-        +run(job, lease, work): void
+        +run(job: String, lease: Duration, work: LeaseAwareWork): void
     }
     class ApplicationEventPublisher {
         <<interface, Evt>>
@@ -46,11 +46,11 @@ classDiagram
     class RefundWorkerJob {
         <<scheduled job, Sched>>
         +run(): void
-        -attemptOne(leaseValid): void
+        -attemptOne(leaseValid: BooleanSupplier): void
     }
     class OrderRepository {
         <<interface, repository, Pers>>
-        +cancelByDealId(dealId, canceledAt): int
+        +cancelByDealId(dealId: UUID, canceledAt: Instant): int
     }
     class OrderLifecycleSubscriber {
         <<subscriber, Evt>>
@@ -63,7 +63,7 @@ classDiagram
     class RefundRepository {
         <<interface, repository, Pers, Conc>>
         +claimNext(): RefundWork
-        +finish(work, providerId, status, result): void
+        +finish(work: RefundWork, providerId: String, status: String, result: String): void
     }
     class RefundService {
         <<application service, Ext, Conc>>
@@ -72,7 +72,7 @@ classDiagram
     }
     class CheckoutPaymentRepository {
         <<interface, repository, Pers, Conc>>
-        +requireRefundsForExpiredTeam(dealId, reason, eventId): void
+        +requireRefundsForExpiredTeam(dealId: UUID, reason: String, eventId: String): void
     }
     class TeamExpiryRefundService {
         <<application service, Conc>>

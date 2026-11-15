@@ -35,8 +35,8 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
     table.cell(rowspan: 4)[S3 Distribution (Dist)],
     [Impacted], [`JoinTeamControl`, `Account`, `Product`],
     [Static], [Payment owns `PaymentBusinessPort`, implemented by `OrderFulfilmentAdapter` in the order module; port `UserAppService` with adapter `RemoteUserAppService`; module interface `CatalogPurchaseSupport`],
-    [Dynamic], [`fulfil` crosses the port inside the settlement transaction (@fig-d12b-two-buyers-join)],
-    [Justification], [Payment never depends on order code, and the only synchronous call between services is commerce to identity (AD-02, AD-06)],
+    [Dynamic], [`fulfil` crosses the port inside the settlement transaction],
+    [Justification], [Payment never depends on order code, and the only synchronous call between services is commerce to identity (AD-02, AD-06). The identity check runs inside the settlement transaction, after the team and intent rows are locked, so a slow `identity-svc` holds them for up to about 2 s (500 ms connect and 1,500 ms read timeouts, no retry) and delays competing settlements and the expiry of that team. We accepted this because admission must see the buyer's status at the moment of admission, and the timeouts bound the wait (AD-06)],
     table.cell(rowspan: 4)[S4 Persistence (Pers)],
     [Impacted], [`Team`, `PurchaseIntent`, `Payment`, `Order`, `Refund`],
     [Static], [One repository port per aggregate: `PaidGroupDealRepository`, `PurchaseIntentRepository`, `CheckoutPaymentRepository`, `OrderRepository`, `RefundRepository`, each with a MyBatis adapter],
@@ -45,12 +45,12 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
     table.cell(rowspan: 4)[S5 External interface (Ext)],
     [Impacted], [`PaymentGateway` (@fig-uc4-analysis, @fig-uc6-analysis), `PayUpfrontControl`, `RefundMembersControl` (pay)],
     [Static], [Ports with provider-free records, each implemented by the only adapter that imports the Stripe SDK: `CheckoutGateway` by `StripeCheckoutGateway`, `RefundGateway` by `StripeRefundGateway`; inbound `StripeWebhookController`; the refund's idempotency key `RefundWork.providerKey`],
-    [Dynamic], [`StripeCheckoutService.handleWebhook` refuses to run inside a transaction, verifies the signature (`verifyCheckoutWebhook`) and reads the session back (`retrieveCheckoutSession`) before the settlement transaction opens (@fig-d12b-two-buyers-join); the refund worker claims, calls Stripe outside any transaction, then records the answer with `finish` (@fig-d14b-refund-retry)],
+    [Dynamic], [`StripeCheckoutService.handleWebhook` refuses to run inside a transaction, verifies the signature (`verifyCheckoutWebhook`) and reads the session back (`retrieveCheckoutSession`) before the settlement transaction opens; the refund worker claims, calls Stripe outside any transaction, then records the answer with `finish` (@fig-d14b-refund-retry)],
     [Justification], [A rollback cannot undo a payment or a refund, so no Stripe call holds a row lock, and a repeated call is safe: the event ID is claimed once, and the refund key is reused inside Stripe's 24-hour window (ADRs 0001, 0004, 0005)],
     table.cell(rowspan: 4)[S6 Security (Sec)],
     [Impacted], [`JoinTeamUI`, `JoinTeamControl` (before payment), `PaymentGateway`, `ReceiptUI`, `ReviewUI`],
     [Static], [`StripeCheckoutController` takes the buyer from the Sa-Token session (`StpUtil.checkLogin`), never from the request, and requires the `X-BlocBuy-Request` header; `PaymentBrowserService` applies `RateLimitGateway` (60 join intents a minute per buyer and team) and returns a receipt only to its own buyer; the webhook carries the `Stripe-Signature` header; `reconcile` has no endpoint],
-    [Dynamic], [`intent` and `checkout` check the session and the header before any business read; `handleWebhook(rawBody, signature)` rejects an event with a bad signature or from live mode before any database work (@fig-d12b-two-buyers-join)],
+    [Dynamic], [`intent` and `checkout` check the session and the header before any business read; `handleWebhook(rawBody, signature)` rejects an event with a bad signature or from live mode before any database work],
     [Justification], [`commerce-svc` and `notification-svc` authorise from the shared session (`SessionStpInterface`) without a call to identity, which checks its own database (`StpInterfaceImpl`), and an attacker cannot settle or read another buyer's payment (AD-05, AD-09)],
     table.cell(rowspan: 4)[S7 Scheduling (Sched)],
     [Impacted], [`SchedulerTrigger`, `ResolveTeamControl`, `RefundMembersControl`],
@@ -87,11 +87,12 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
     [5], [It locks the team (lock 1), the purchase intent (lock 2) and the payment (lock 3)], [`OrderFulfilmentAdapter.lockForSettlement`, `CheckoutPaymentRepository.lock`],
     [6], [After lock 3, the system locks this payment's participation receipt; the team then admits the buyer as a paid member], [`PaidGroupDealService.joinConfirmed`, `reserveAndLock`, `GroupDeal.joinPaid`],
     [7], [The system saves the order, marks the intent fulfilled, consumes one unit of stock and records the payment outcome], [`OrderFulfilmentAdapter.fulfil`, `recordOutcome`],
-    [8], [When the payment fills the last seat, the team succeeds and every pending order is confirmed before commit. Stripe receives HTTP 200], [`TeamSucceeded`, `OrderLifecycleSubscriber` (@fig-d12b-two-buyers-join)],
+    [8], [When the payment fills the last seat, the team succeeds and every pending order is confirmed before commit. Stripe receives HTTP 200], [`TeamSucceeded`, `OrderLifecycleSubscriber` (the same `BEFORE_COMMIT` mechanism is drawn for expiry in @fig-d14a-team-expiry)],
     [4a], [The event ID is already claimed: nothing changes], [`claimEvent` returns false],
     [6a], [The team is full or closed: no order is created, and the payment is owed a refund], [`requireRefund`, outcome `REFUND_REQUIRED` (@fig-race-last-seat)],
     [6b], [The quote expired before settlement: no fulfilment, and the payment is owed a refund], [refund reason `BUSINESS_EXPIRED`, outcome `REFUND_REQUIRED`],
-    [7a], [A technical error rolls back the whole transaction, the claim included; a Stripe redelivery settles the payment later], [`TransactionTemplate` in `StripeCheckoutService`],
+    [6c], [The buyer is no longer active, or the product is off sale: no order is created and the payment is owed a refund], [outcome `BUYER_INACTIVE` or `PRODUCT_UNAVAILABLE`],
+    [7a], [`identity-svc` cannot be reached, or another technical error occurs: `IdentityUnavailableException` or the error rolls back the whole transaction, the claim included; a Stripe redelivery settles the payment later], [`TransactionTemplate` in `StripeCheckoutService`],
   ),
   kind: table,
   caption: [Flow of events for UC4 with UC10: basic flow (1–8) and alternatives (4a–7a, numbered by the step they branch from). Source: code.],
@@ -116,7 +117,7 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
     [`PurchaseIntent`], [entity], [Aggregate root `PurchaseIntent`, port `PurchaseIntentRepository` (domain)], [S4, S8],
     [`Payment`], [entity], [Aggregate root `CheckoutPayment`, port `CheckoutPaymentRepository` (domain); `CheckoutPaymentRepositoryImpl` (infrastructure)], [S4, S8],
     [`Order`], [entity], [Aggregate root `Order`, port `OrderRepository` (domain)], [S4, S9],
-    [`Refund`], [entity], [Created by `CheckoutPaymentRepository.requireRefund`; its lifecycle is UC6's], [S4],
+    [`Refund`], [entity], [Created by `CheckoutPaymentRepository.requireRefund`; its lifecycle is UC6’s], [S4],
     [`Invitation`], [entity], [Aggregate root `ShareInvite`, port `ShareInviteRepository`; after commit `ShareCreditSubscriber`], [S4, S9],
     [(none)], [—], [Added by a strategy: `PaymentBusinessPort`, `PaymentIntentPort`, `GroupDealSettlementSupport` (S3); `RateLimitGateway` (S6); `PaymentSucceeded`, `MemberJoined`, `TeamSucceeded`, `IntegrationOutboxWriter` (S9)], [S3, S6, S9],
   ),
@@ -157,7 +158,7 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
 
 @fig-race-last-seat shows two payments racing for the last seat. Both webhooks reach settlement at once, but the team lock admits one transaction at a time: the first commits the join and fills the team, and the second, granted the lock only after that commit, finds the team closed and records a refund obligation instead of an order.
 
-#afig("a-uc04-ds-race", lbl: <fig-race-last-seat>, [Last-seat race interaction view (UML sequence diagram). The team lock serialises the two settlements, so the second payment finds the team full and commits a refund obligation, not an order.])
+#afig("a-uc04-ds-race", lbl: <fig-race-last-seat>, [Last-seat race interaction view (UML sequence diagram). The team lock serialises the two settlements, so the second payment finds the team full and commits a refund obligation, not an order. txA and txB are the two webhook threads running the one `StripeCheckoutService` bean; each lifeline shows one thread's transaction.])
 
 ==== Team expiry and refunds
 
@@ -225,13 +226,13 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
 
 #afig("d14b-refund-retry", [Refund worker interaction view (UML sequence diagram). After the expiry commits, the leased refund worker claims an obligation, calls Stripe and records the answer; no Stripe call runs inside a database transaction.])
 
-*Paying the buyer back.* @fig-d14b-refund-retry traces what runs after the expiry commits. The refund worker claims an obligation in one short transaction, calls Stripe outside any transaction and records the answer in another. It derives the provider key from the refund ID (#src("backend/blocbuy-domain/src/main/java/com/blocbuy/payment/model/RefundWork.java")[`RefundWork`]). If it knows the provider refund ID, it retrieves that refund instead of creating one. From 23 hours after the first attempt it only looks the refund up and sends an uncertain outcome for review. A pending answer or a transient failure makes the obligation due again after a fixed 30 s, so it is retried until Stripe gives a final answer; a permanent refusal goes to review instead and is not retried. Beside the worker, the outbox relay publishes the expiry through SNS (@fig-d14c-outbox-relay), which delivers it asynchronously to the notification queue; notification can lag or retry independently of repayment. Tested locally, not on AWS: #src("backend/blocbuy-bootstrap/src/test/java/com/blocbuy/bootstrap/TeamExpirySchedulingIT.java")[`TeamExpirySchedulingIT`] covers the rollback, the retry and the reused provider key.
+*Paying the buyer back.* @fig-d14b-refund-retry traces what runs after the expiry commits. The refund worker claims an obligation in one short transaction, calls Stripe outside any transaction and records the answer in another. It derives the provider key from the refund ID (#src("backend/blocbuy-domain/src/main/java/com/blocbuy/payment/model/RefundWork.java")[`RefundWork`]). If it knows the provider refund ID, it retrieves that refund instead of creating one. From 23 hours after the first attempt it only looks the refund up and sends an uncertain outcome for review. A pending answer or a transient failure makes the obligation due again after a fixed 30 s, so it is retried until Stripe gives a final answer; a permanent refusal goes to review instead and is not retried. Beside the worker, the outbox relay publishes the expiry through SNS (@fig-d14c-outbox-relay), which delivers it asynchronously to the notification queue; notification can lag or retry independently of repayment. Tested locally, not on AWS: #src("backend/blocbuy-bootstrap/src/test/java/com/blocbuy/bootstrap/TeamExpirySchedulingIT.java")[`TeamExpirySchedulingIT`] covers the rollback, the retry and the reused provider key. On 14 November on AWS, V4 R5 ran this expiry and relay path for 80,000 teams with an experimental expiry configuration; every expiry produced one outbox event, one published event and its notifications (§4.1). On 15 November one unfilled test team expired at 1 of 2 and its S\$22 refund succeeded (@tbl-followup-15nov); we did not test the retry or review paths on AWS.
 
 #afig("d14c-outbox-relay", [Outbox relay interaction view (UML sequence diagram). The leased relay runs apart from the refund worker and publishes the committed expiry to SNS; no SNS call runs inside a database transaction.])
 
 ==== Patterns in the two flows
 
-@tbl-patterns-324 lists the patterns in the two flows in a structured form: the problem, the roles and the classes that play them, the consequence and the variable aspect, the part that may change without changing the rest. Only Observer is a GoF pattern in these two flows; the other three are architectural or integration patterns. Factory Method (GoF) appears in UC3, where the team is created: `PaidGroupDealCreator.initiate` is final and calls the abstract `createGroupDeal`, which `StandardPaidGroupDealCreator` overrides (so `initiate` is also a Template Method). There is one product today; the variable aspect is the team type.
+@tbl-patterns-324 lists the patterns in the two flows in a structured form: the problem, the roles and the classes that play them, the consequence and the variable aspect, the part that may change without changing the rest. Observer is the only GoF pattern in @tbl-patterns-324; the other three are architectural or integration patterns. Factory Method (GoF) appears in UC3, the start step of the first flow, where the team is created: `PaidGroupDealCreator.initiate` is final and calls the abstract `createGroupDeal`, which `StandardPaidGroupDealCreator` overrides (so `initiate` is also a Template Method). There is one product today; the variable aspect is the team type.
 
 We rejected two candidates. `DealStatus` is not the State pattern: it has one transition rule and no behaviour that differs by state. A saga is not needed while team, order and payment share one settlement transaction (AD-02); AISS-02 records when that changes.
 

@@ -18,10 +18,13 @@ Only `describe`, `get`, `list`, `lookup-events`, Cost Explorer and STS reads wer
 | `05-nat.json` | `aws ec2 describe-nat-gateways` |
 | `06-ec2.json` | `aws ec2 describe-instances` |
 | `07-ebs.json` | `aws ec2 describe-volumes` |
+| `08-s3.json` | `aws s3api list-buckets` (17:19 SGT) |
+| `10-rds-snapshots.json` | `aws rds describe-db-snapshots` (17:19 SGT) |
 | `14-ecr.json` | `aws ecr describe-repositories` |
 | `20-ct-stopinstances.json` | `aws cloudtrail lookup-events` for `StopInstances`, 10–15 Nov |
 | `21-ct-terminateinstances.json` | `aws cloudtrail lookup-events` for `TerminateInstances`, 10–15 Nov |
 | `36-ce-monthly.json` | `aws ce get-cost-and-usage`, monthly by service, 1 Oct – 15 Nov |
+| `39-ebs-snapshots.json` | `aws ec2 describe-snapshots --owner-ids self` (17:20 SGT) |
 | `38-ce-daily-total.json` | `aws ce get-cost-and-usage`, daily totals, 1 Sep – 15 Nov |
 | `41-cloudfront.json` | `aws cloudfront list-distributions` |
 | `42-ct-15nov-pan.json` | `aws cloudtrail lookup-events` for user `pan`, 15 Nov 15:20–17:30 SGT, at most 50 events |
@@ -74,6 +77,12 @@ Only `describe`, `get`, `list`, `lookup-events`, Cost Explorer and STS reads wer
 - `A9-ec2-t3a2xl.json`: no `t3a.2xlarge` instance (the generator type).
 - `41-cloudfront.json`: two distributions, both SWE5006; no SWE5001 distribution.
 - `C1-iam-roles-swe5001.json`: no role under the `/swe5001/` path.
+
+**What remains (read 17:19–17:20 SGT).**
+- `08-s3.json`: four buckets: the SWE5006 frontend and media buckets, the SWE5001 generator evidence bucket `blocbuy-swe5001-generator-20261111-402178232802` and the Terraform state bucket `blocbuy-tfstate-402178232802`.
+- `39-ebs-snapshots.json`: one snapshot, `snap-08d8687ce2487f63e` (40 GiB, encrypted, 12 November), of the 11 November generator disk.
+- `10-rds-snapshots.json`: no database snapshot.
+- SSM Parameter Store was not listed, so the parameters seeded outside Terraform under `/blocbuy/swe5001/` are not covered by this readback.
 
 **Governance.**
 - `81-scp-list.json` to `87-tgt-sandbox.json`, `98-parents-project.json`, `99-ou-root.json`: `Org-Baseline` and `Region-Pin` are attached at the root and `Sandbox-Guardrails` at the Sandbox unit, which holds the project account; the policy text of each.

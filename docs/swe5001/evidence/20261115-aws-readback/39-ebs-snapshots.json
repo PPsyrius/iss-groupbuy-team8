@@ -1,0 +1,38 @@
+{
+  "Snapshots": [
+    {
+      "Tags": [
+        {
+          "Key": "Purpose",
+          "Value": "generator-disk-evidence-archive"
+        },
+        {
+          "Key": "Course",
+          "Value": "swe5001"
+        },
+        {
+          "Key": "Stack",
+          "Value": "evidence-archive"
+        },
+        {
+          "Key": "Name",
+          "Value": "blocbuy-swe5001-generator-20261111-disk-archive-20261112"
+        }
+      ],
+      "StorageTier": "standard",
+      "TransferType": "standard",
+      "CompletionTime": "2026-11-12T04:05:16.071000+00:00",
+      "FullSnapshotSizeInBytes": 4994367488,
+      "SnapshotId": "snap-08d8687ce2487f63e",
+      "VolumeId": "vol-00095b74cd6a21d22",
+      "State": "completed",
+      "StartTime": "2026-11-12T04:00:26.255000+00:00",
+      "Progress": "100%",
+      "OwnerId": "402178232802",
+      "Description": "Retained encrypted SWE5001 generator evidence before approved retirement 2026-11-12",
+      "VolumeSize": 40,
+      "Encrypted": true,
+      "KmsKeyId": "arn:aws:kms:ap-southeast-1:402178232802:key/573e0731-1a16-46a6-bfac-f5e18432270b"
+    }
+  ]
+}
