@@ -7,7 +7,7 @@
 
 The architecture's main limits are single points in the data tier (AISS-01, AISS-05, AISS-10), unproven capacity (AISS-12), incomplete AWS failure validation (AISS-13) and alert coverage (AISS-16). @tbl-aiss separates accepted exceptions from proposed production work and identifies the owner of each limitation.
 
-*Roadmap.* Each open item is assigned to one phase (@tbl-roadmap). R0 supplied placement evidence, rebuilds and load reruns; unresolved verification and startup work carries into R1. R1 and R2 apply only if the platform continues after the course; their dates assume a December 2026 go-live decision.
+*Roadmap.* Each open item is assigned to one phase (@tbl-roadmap). R0 supplied placement evidence, rebuilds and load reruns; unresolved verification and startup work carries into R1. R1 and R2 apply only if the platform continues after the course; their dates assume a December 2026 go-live decision. Their assignments and dates are proposals, not confirmed owner commitments.
 
 #figure(
   table(

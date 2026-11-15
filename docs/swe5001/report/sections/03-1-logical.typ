@@ -183,9 +183,9 @@ Five developers worked in parallel, so 19 automated architecture checks (@tbl-ar
 
 #afig("d5b-logical-deployment", [Logical deployment view (UML deployment diagram). Tiers map to node types without products: each service is one service package in a language runtime on its own application server node, and all three use the session store and the database server; @tbl-logical-physical names the products.])
 
-#afig("d3-logical-view", [Logical view, request path (UML component diagram; red fill = core subdomain, blue = web client). Producers and consumers reach the subsystems only through the edge gateway, and the one synchronous call between subsystems is `commerce-svc` requiring `UserAppService`.])
+#afig("d3-logical-view", [Logical view, request path (UML component diagram; pink = core subdomain, blue = web client, beige = other elements). Producers and consumers reach the subsystems only through the edge gateway, and the one synchronous call between subsystems is `commerce-svc` requiring `UserAppService`.])
 
-#afig("d3b-logical-events-data", [Logical view, events and data (UML component diagram; red fill = holds the core subdomains, amber = messaging). `commerce-svc` publishes PublishedEvents V1 once and the message broker fans it out to one queue per consumer; the audit queue has no consumer, so a new subscriber needs only a new queue. Each subsystem owns its data store, and all three use the shared session store (the line from the tier frame).])
+#afig("d3b-logical-events-data", [Logical view, events and data (UML component diagram; pink = holds the core subdomains, amber = messaging, beige = other elements). `commerce-svc` publishes PublishedEvents V1 once and the message broker fans it out to one queue per consumer; the audit queue has no consumer, so a new subscriber needs only a new queue. Each subsystem owns its data store, and all three use the shared session store (the line from the tier frame).])
 
 ==== Subsystem and solution element catalogue
 

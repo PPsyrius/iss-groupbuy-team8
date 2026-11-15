@@ -48,7 +48,7 @@ The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`)
     [— (monitoring)], [Amazon CloudWatch], [Logs under `/blocbuy/swe5001/*` (7 days), one dashboard, two alarms on the notification queue (DLQ not empty, oldest-message age)],
   ),
   kind: table,
-  caption: [Logical elements of @fig-d3-logical-view and @fig-d3b-logical-events-data and the products that implement them. Source: `infra/swe5001` and `backend` at released revision `3a893036`.],
+  caption: [Logical elements of @fig-d3-logical-view and @fig-d3b-logical-events-data and the products that implement them. Source: `infra/swe5001` and `backend`.],
 ) <tbl-logical-physical>
 
 #afig("d5-physical-deployment", lbl: <fig-d5-deployment>, [Physical deployment view (UML deployment diagram). Each availability zone holds a public, a private application and a data subnet. Each service's image is deployable in either zone's Fargate environment; the note gives the task count per service over both zones, so `identity-svc`, with one task, is not zone-redundant. RDS and Valkey each run in one data subnet that AWS chooses; the figure draws them where they ran on 10 November, and each subnet group spans both data subnets.])
@@ -245,7 +245,7 @@ The solution uses managed AWS services wherever one exists, so we run no servers
     [Infrastructure as code], [Terraform 1.16, AWS provider 5.100; three stacks: `foundation`, `edge` and `runtime`], [The SWE5006 environment already used Terraform; `terraform test` runs offline in CI (§5.2). Stack split by lifetime: `foundation` and `edge` are permanent, `runtime` is disposable],
   ),
   kind: table,
-  caption: [Technology and services with versions and sizes. Source: `backend/pom.xml`, `backend/Dockerfile` and `infra/swe5001`, checked on 11 November 2026.],
+  caption: [Technology and services with versions and sizes. Source: `backend/pom.xml`, `backend/Dockerfile` and `infra/swe5001`; session-only sizes are identified separately.],
 ) <tbl-tech>
 
 *Encryption and secrets.* Configured, not tested: the data stores, the domain-event topic (`alias/aws/sns`), the queues, ECR and the state bucket are encrypted at rest; the alarm topic `blocbuy-swe5001-alerts` is not. The CloudFront → ALB hop is plain HTTP (AISS-08), and the Valkey AUTH token and the origin secret are in Terraform state (AISS-09). Database passwords are generated as ephemeral values and written with write-only arguments, so they never reach Terraform state. @tbl-security-boundaries gives each boundary, its control and its limit (§4.3).
@@ -275,7 +275,7 @@ In code, every aggregate reaches its tables the same way: a repository interface
 
 ==== Data stores and table ownership
 
-Every service database runs the same Flyway migration stream (`V1` to `V28` at released revision `3a893036`), so each database contains all 29 tables. Ownership is enforced by grants, not by which tables exist: after every Flyway run (each service start), `afterMigrate__service_grants.sql` gives the service's app role `SELECT, INSERT, UPDATE, DELETE` on the tables it owns and revokes everything on the others (@tbl-ownership). The owner role runs migrations; the app role used at runtime cannot change the schema.
+Every service database runs the same Flyway migration stream (`V1` to `V28`), so each database contains all 29 tables. Ownership is enforced by grants, not by which tables exist: after every Flyway run (each service start), `afterMigrate__service_grants.sql` gives the service's app role `SELECT, INSERT, UPDATE, DELETE` on the tables it owns and revokes everything on the others (@tbl-ownership). The owner role runs migrations; the app role used at runtime cannot change the schema.
 
 #figure(
   table(

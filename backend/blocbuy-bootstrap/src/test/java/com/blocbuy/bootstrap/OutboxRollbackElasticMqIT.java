@@ -2,14 +2,20 @@ package com.blocbuy.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.verify;
 
 import com.blocbuy.common.repository.OutboxRelayRepository;
 import com.blocbuy.common.service.OutboxRelayService;
 import com.blocbuy.groupbuy.service.GroupDealExpiryService;
+import com.blocbuy.integration.outbox.IntegrationOutboxWriter;
 import com.blocbuy.integration.outbox.SqsOutboxEventTransport;
 import java.net.URI;
 import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.GenericContainer;
@@ -68,6 +75,7 @@ class OutboxRollbackElasticMqIT {
     @Autowired private PlatformTransactionManager transactions;
     @Autowired private GroupDealExpiryService expiry;
     @Autowired private OutboxRelayRepository outbox;
+    @MockitoSpyBean private IntegrationOutboxWriter writer;
 
     @Test
     void rolledBackTeamExpiryPublishesNothingToElasticMqButCommittedRetryDoes() {
@@ -118,7 +126,7 @@ class OutboxRollbackElasticMqIT {
                     .hasMessage("force business rollback");
 
             assertThat(teamStatus(deal)).isEqualTo("open");
-            assertThat(jdbc.queryForObject("SELECT count(*) FROM sys_outbox", Long.class)).isZero();
+            assertThat(outboxRows(deal)).isZero();
             assertThat(outbox.findDue(100)).isEmpty();
             assertThat(relay.relayBatch()).isZero();
             assertThat(
@@ -148,6 +156,113 @@ class OutboxRollbackElasticMqIT {
                                     .contains(deal.toString()));
             assertThat(outbox.findDue(100)).isEmpty();
         }
+    }
+
+    @Test
+    void failureAfterOutboxInsertRollsBackTeamAndEventBeforeCommittedRetryDelivers() {
+        UUID deal = UUID.randomUUID();
+        jdbc.update(
+                """
+                INSERT INTO biz_group_deal
+                    (id,deal_no,product_id,leader_user_id,deal_price,currency,target_size,
+                     current_size,status,start_time,expire_time)
+                VALUES (?, ?, ?, ?, 10, 'sgd', 2, 0, 'open',
+                        CURRENT_TIMESTAMP - INTERVAL '2 hours',
+                        CURRENT_TIMESTAMP - INTERVAL '1 hour')
+                """,
+                deal,
+                deal.toString(),
+                UUID.randomUUID(),
+                UUID.randomUUID());
+        var transaction = new TransactionTemplate(transactions);
+        transaction.setTimeout(10);
+        var insertObserved = new AtomicBoolean();
+        var failure = new IllegalStateException("force rollback after outbox insert");
+        // The writer already has LOWEST_PRECEDENCE. Hook its return instead of tying listener
+        // order.
+        doAnswer(
+                        invocation -> {
+                            invocation.callRealMethod();
+                            assertThat(teamStatus(deal)).isEqualTo("expired");
+                            assertThat(outboxRows(deal)).isEqualTo(1);
+                            insertObserved.set(true);
+                            throw failure;
+                        })
+                .when(writer)
+                .onTeamExpired(argThat(event -> event.dealId().equals(deal)));
+        String endpoint =
+                "http://%s:%d".formatted(ELASTICMQ.getHost(), ELASTICMQ.getMappedPort(9324));
+        try (SqsClient sqs =
+                SqsClient.builder()
+                        .region(Region.US_EAST_1)
+                        .credentialsProvider(
+                                StaticCredentialsProvider.create(
+                                        AwsBasicCredentials.create("test", "test")))
+                        .endpointOverride(URI.create(endpoint))
+                        .overrideConfiguration(
+                                ClientOverrideConfiguration.builder()
+                                        .apiCallAttemptTimeout(Duration.ofSeconds(2))
+                                        .apiCallTimeout(Duration.ofSeconds(3))
+                                        .build())
+                        .build()) {
+            String queueUrl =
+                    sqs.createQueue(request -> request.queueName("post-insert-" + deal)).queueUrl();
+            var relay =
+                    new OutboxRelayService(
+                            outbox,
+                            new SqsOutboxEventTransport(
+                                    sqs, queueUrl, JsonMapper.builder().build()));
+
+            // Return normally: the failure must come from the real BEFORE_COMMIT writer.
+            assertThatThrownBy(() ->
+                            transaction.executeWithoutResult(status -> {
+                                assertThat(expiry.expireOne(deal)).isTrue();
+                                assertThat(teamStatus(deal)).isEqualTo("expired");
+                            }))
+                    .isSameAs(failure);
+            assertThat(insertObserved).isTrue();
+            verify(writer).onTeamExpired(argThat(event -> event.dealId().equals(deal)));
+            assertThat(teamStatus(deal)).isEqualTo("open");
+            assertThat(outboxRows(deal)).isZero();
+            assertThat(outbox.findDue(100)).isEmpty();
+            assertThat(relay.relayBatch()).isZero();
+            assertThat(
+                            sqs.receiveMessage(request ->
+                                            request.queueUrl(queueUrl).waitTimeSeconds(1))
+                                    .messages())
+                    .isEmpty();
+
+            doCallRealMethod()
+                    .when(writer)
+                    .onTeamExpired(argThat(event -> event.dealId().equals(deal)));
+            assertThat(expiry.expireOne(deal)).isTrue();
+            assertThat(teamStatus(deal)).isEqualTo("expired");
+            assertThat(outboxRows(deal)).isEqualTo(1);
+            assertThat(outbox.findDue(100))
+                    .singleElement()
+                    .satisfies(event -> {
+                        assertThat(event.aggregateId()).isEqualTo(deal);
+                        assertThat(event.eventType()).isEqualTo("TeamExpired");
+                    });
+            assertThat(relay.relayBatch()).isEqualTo(1);
+            assertThat(
+                            sqs.receiveMessage(request ->
+                                            request.queueUrl(queueUrl).waitTimeSeconds(1))
+                                    .messages())
+                    .singleElement()
+                    .satisfies(message ->
+                            assertThat(message.body())
+                                    .contains("\"eventType\":\"TeamExpired\"")
+                                    .contains(deal.toString()));
+            assertThat(outbox.findDue(100)).isEmpty();
+        }
+    }
+
+    private long outboxRows(UUID deal) {
+        return jdbc.queryForObject(
+                "SELECT count(*) FROM sys_outbox WHERE aggregate_id=? AND event_type='TeamExpired'",
+                Long.class,
+                deal);
     }
 
     private String teamStatus(UUID deal) {

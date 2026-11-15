@@ -22,7 +22,7 @@ Selected-commit gates, scan scope, Sonar new-code coverage, source-marker dispos
 
 ## PR validation convention — 2026-10-21
 
-[Required PR checks](../ci/backend-pipeline.md#required-pr-checks) own GitHub-hosted quality, Sonar, security and workflow verification; linked records identify the observed revision and environment. This convention does not turn an unobserved run into a pass. Application, deployment, provider, platform, benchmark and billing results retain their local/live qualifications, known failures and accepted-risk conditions.
+[Required PR checks](../ci/backend-pipeline.md#required-pr-checks) cover quality, Sonar and the Gitleaks secret scan. Trivy and workflow-lint jobs run on applicable PRs but are not required contexts. Linked records identify the observed revision and environment; an unobserved run is not a pass. Application, deployment, provider, platform, benchmark and billing results retain their local/live qualifications, known failures and accepted-risk conditions.
 
 ## SWE5001 validation — 2026-11-14
 

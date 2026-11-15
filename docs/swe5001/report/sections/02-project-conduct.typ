@@ -118,21 +118,21 @@ Most delivery milestones were met on time or early. Three slipped: the monolith 
 
 === Effort per member
 
-Estimated: SWE5001 comes to about 71.5 person-days in total, about 43% above the briefing's guideline of about 50 (ten for each of the five members; briefing Q8). The overrun is phase D (22 October to 16 November): about 21.5 person-days, agreed on 12 November and including the work still planned up to submission. The plan allowed 2.5 person-days for this report (WBS 7, @tbl-wbs) but nothing for answering the remarks, and those answers needed new AWS sessions, load-test reruns and a rewrite of the report. Up to the presentation we were within the guideline: about 50 person-days to 19 October, which all five members agreed and declared in the presentation (@tbl-effort); Liu Jin (12.5) and Pan (11.5) were above ten.
+Estimated effort is 77.5 person-days: about 50 through the presentation and 27.5 for the subsequent validation and report work. This is 55% above the briefing's guideline of about ten person-days per member (briefing Q8). The original plan allowed 2.5 person-days for the report but did not budget for the additional AWS sessions, load-test reruns and design work needed to answer the presentation feedback.
 
 #figure(
   table(
     columns: (1.3fr, 0.55fr, 0.55fr, 0.5fr, 2.6fr),
     table.header([Member], [To 19 Oct (pd)], [Phase D (pd)], [Total (pd)], [Main SWE5001 contributions]),
     [Liu Jin], [12.5], [4], [16.5], [AWS stacks and the release pipeline; the service split; physical design (§3.2); report framework],
-    [Panpakorn Siripanich (Pan)], [11.5], [8], [19.5], [Messaging infrastructure, auto-scaling and the dashboard; shared login session; load tests; in phase D the data subnets, the AWS sessions and the V3 reruns],
+    [Panpakorn Siripanich (Pan)], [11.5], [12], [23.5], [Messaging infrastructure, auto-scaling and the dashboard; shared login session; load tests; in phase D the data subnets, AWS validation and V3 reruns, acceptance evidence and report review],
     [Yu Qianshuo (Yorick)], [9], [1.5], [10.5], [Outbox and relay; failure drills; detailed design (§3.2.4)],
-    [Lim Jiechao], [8.5], [5], [13.5], [Team lead; AWS Organization, SCP guardrails and Identity Center; architecture options study and proof of concept; presentation; report editor],
+    [Lim Jiechao], [8.5], [7], [15.5], [Team lead; AWS Organization, SCP guardrails and Identity Center; architecture options study and proof of concept; presentation; report editor],
     [Wang Ziang (Eric)], [8.5], [3], [11.5], [Notification consumer and dead-letter redrive; demonstration lead; logical design and Domain-Driven Design (DDD) models (§3.1)],
-    [*Total*], [*≈ 50*], [*≈ 21.5*], [*≈ 71.5*], [],
+    [*Total*], [*≈ 50*], [*≈ 27.5*], [*≈ 77.5*], [],
   ),
   kind: table,
-  caption: [Effort per member in person-days (pd). Source: the split to 19 October, agreed by all members on 19 October 2026, is on #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6]\; the phase D figures are the team's November agreement, put to members for confirmation on 12 November (#iss(790), #iss(791), #iss(792)).],
+  caption: [Estimated effort by member and phase, in person-days (pd). Sources: #src("docs/swe5001/presentation/src/slides-main.js")[presentation slide 6] and the team's work estimates.],
 ) <tbl-effort>
 
-*How the figures were obtained.* Nobody logged hours, although the plan asked each pull request to record them. We therefore summed the planned hours of the issues each member delivered and agreed the split from that sum. The figures are an agreed estimate, not a measurement; the range of 8.5–12.5 person-days reflects that Liu Jin carried phase A and Pan most of the messaging and scaling work of phase B. The phase D figures were agreed in November from the days each member worked on SWE5001 (pull requests, reviews and workflow runs). Pan carries the largest share because the AWS deployment and load-test sessions behind the data subnets and the V3 reruns run for hours.
+We estimated effort by work package, using six working hours per person-day (#src("docs/agile/sprint-04/plan.md")[Sprint 4 plan, §5]). The #src("docs/swe5001/evidence/20261112-issue-789/effort-estimate.md", rev: "ae3a32a3943b7952abdf71e5c85ffd27a24bf704")[reconstruction method] avoids counting the same work twice or treating unattended automation as human effort.
