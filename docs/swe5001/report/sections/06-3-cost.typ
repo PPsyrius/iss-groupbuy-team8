@@ -23,7 +23,7 @@ Estimated (one term from list prices): the SWE5001 runtime cost about US\$11.6 f
 
 The figure is an estimate because the shared account cannot split its bill by course. We read the bill from AWS Cost Explorer on 8, 11 and 12 November (#src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[8 November record], #src("docs/swe5001/evidence/20261111-cost-explorer/README.md")[11 November record]). For each October session day, the SWE5001 share is that day's total minus the SWE5006 baseline of the period. That method fails for 9 November: the SWE5006 `t3.large` was stopped on 7 November and restarted on 9 November (US\$1.92 that day), and the baseline of about US\$1.5 a day holds only while it is stopped. So we summed the SWE5001 share of 9 November from its own services.
 
-Two later periods are not in the figure. The 11 November session (larger commerce tasks, `db.t4g.small` and a `t3a.2xlarge` load generator) had not been billed at the read; estimated from list prices, it adds about US\$6–7 to the end of that UTC day, of which about US\$0.54 is the load generator (@tbl-cost). Each further hour the runtime stayed up added about US\$0.27, until its destroy on 12 November (§5.3). The validation sessions of 13–15 November were not yet in Cost Explorer on 15 November and are not costed.
+Two later periods are not in the figure. The 11 November session (larger commerce tasks, `db.t4g.small` and a `t3a.2xlarge` load generator) had not been billed at the read; estimated from list prices, it adds about US\$6–7 to the end of that UTC day, of which about US\$0.54 is the load generator (@tbl-cost). Each further hour the runtime stayed up added about US\$0.27, until its destroy on 12 November (§5.3). The validation sessions of 13–15 November were not yet in Cost Explorer on 15 November and are not costed. On 15 November Cost Explorer showed US\$56.18 for the whole account from 1 to 15 November, an open-month estimate that includes SWE5006 and is incomplete for 13–15 November; we attribute none of it to SWE5001.
 
 #figure(
   table(
@@ -32,6 +32,7 @@ Two later periods are not in the figure. The 11 November session (larger commerc
     [Whole account, September 2026 (SWE5006 and SWE5001)], [78.51], [Measured],
     [Whole account, October 2026 (SWE5006 and SWE5001)], [139.08], [Measured],
     [Whole account, 1–11 Nov 2026 (SWE5006 and SWE5001; read on 12 Nov, open month)], [36.79], [Measured (Cost Explorer estimate for an open month)],
+    [Whole account, 1–15 Nov 2026 (SWE5006 and SWE5001; read on 15 Nov, open month, 13–15 Nov incomplete)], [56.18], [Measured (Cost Explorer estimate for an open month)],
     [ECS, RDS and ElastiCache, which exist only in the SWE5001 runtime, October 2026], [7.11], [Measured],
     [Whole SWE5001 runtime, including its share of the load balancer, NAT instance and public addresses, 6–21 Oct], [≈ 10.15], [Calculated],
     [SWE5001 sessions billed on 9 Nov (UTC billing day: the promotions of 9 and 10 Nov and the placement session)], [≈ 1.4], [Estimated: the SWE5001 services of that day (ECS 0.60, RDS 0.21, ElastiCache 0.15, NAT 0.04) plus the load balancer and address increase over 8 Nov (about 0.40)],
