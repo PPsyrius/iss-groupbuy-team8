@@ -244,6 +244,8 @@ Tested locally, not on AWS: #src("backend/blocbuy-bootstrap/src/test/java/com/bl
 
 Each pattern in @tbl-patterns-324 answers a problem the two flows share. One team outcome must change several modules, notification-svc must hear of it only after commit, Stripe and SQS deliver at least once, and payment must not know teams, orders or Stripe's SDK. For each, the table gives the classes that play its roles, its consequence and liability, and its variable aspect, the part that may change without changing the rest. Observer is the only GoF pattern in @tbl-patterns-324; the other three are architectural or integration patterns. Factory Method (GoF) appears in UC3, the start step of the first flow, where the team is created: `PaidGroupDealCreator.initiate` is final and calls the abstract `createGroupDeal`, which `StandardPaidGroupDealCreator` overrides (so `initiate` is also a Template Method). There is one team type today; a second would be a new subclass of `PaidGroupDealCreator`, and `initiate` would not change. The variable aspect is the team type.
 
+The expiry flow also uses GoF Command: each scheduled job hands `LeasedJobRunner` its work as a `LeaseAwareWork`, so the runner owns the lease, metrics and trace handling, and a new job supplies only its work (AD-16).
+
 We rejected two candidates. `DealStatus` is not the State pattern: it has one transition rule and no behaviour that differs by state. A saga is not needed while team, order and payment share one settlement transaction (AD-02); AISS-02 records when that changes.
 
 #figure(

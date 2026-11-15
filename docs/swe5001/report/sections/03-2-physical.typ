@@ -16,7 +16,7 @@
 
 == Physical Architecture & Design
 
-The physical design answers one question: how do we run three isolated services on AWS for a system used a few hours a week, when an always-on runtime would cost about US\$125 a month (AD-12)? We buy isolation and a small bill rather than always-on capacity. The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the VPC hold the data stores (AD-15, @fig-d6-network). We create the runtime for each session and destroy it afterwards. By design the edge and foundation stacks stay between sessions (AD-12); we destroyed them too after the final campaign on 15 November (§5.3).
+The physical design answers one question: how do we run three isolated services on AWS for a system used a few hours a week, when an always-on runtime would cost about US\$125 a month (AD-12)? We buy isolation and a small bill rather than always-on capacity. The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the VPC hold the data stores (AD-15, @fig-d6-network). We create the runtime for each session and destroy it afterwards. By design the edge and foundation stacks stay between sessions (AD-12); we destroyed them too after the final validation session on 15 November (§5.3).
 
 @tbl-logical-physical maps each logical element of @tbl-logical-elements (§3.1.3) to the product that implements it. The last three rows have no logical counterpart: they exist only because of where the system runs.
 
@@ -104,6 +104,8 @@ The VPC (`10.50.0.0/16`) spans two availability zones and has three subnet tiers
 
 + *Routing.* A data subnet has no route out of the VPC, so a compromised or misconfigured data store cannot reach the internet, even through the NAT instance.
 + *Security groups.* RDS accepts TCP 5432 only from the service group and the `db-init` group. Valkey accepts TCP 6379 only from the service group. Neither group allows outbound traffic. Full rules: @tbl-security-groups.
+
+Configured, not tested: the subnets keep the VPC's default network ACL, which allows all traffic, so we rely on the route table and the security groups only; we configured no VPC Flow Logs, so no record shows which flows were accepted or refused.
 
 #d6-sg-table()
 

@@ -19,7 +19,7 @@ Briefing Q6 asks whether the cloud-native design was worth it. Our runtime exist
   caption: [Value of the cloud-native design and its evidence. Sources: §2.2, §4.1, §6.3, §6.4.],
 ) <tbl-cloud-value>
 
-Calculated (one term estimated): the SWE5001 runtime cost about US\$11.6 from its first session to 10 November 2026 (billed to 10 November, read on 11 and 12 November). For comparison, our #src("docs/swe5001/project-proposal.typ")[proposal] estimated about US\$125 a month for running the runtime continuously; it gives the figure without a sizing (AD-12, §3.2.1). Estimated: while it is up at the release sizing of 11 November (every task 0.5 vCPU, 1 GiB), the runtime costs about US\$0.17–0.20 an hour (#src("docs/swe5001/impl-aws-infrastructure.md")[infrastructure design], section 9); at the larger sizing of the 11 November session it cost about US\$0.27 an hour at list prices. The permanent layer cost under US\$1 a month until we destroyed it after the final campaign on 15 November (§5.3).
+Calculated (one term estimated): the SWE5001 runtime cost about US\$11.6 from its first session to 10 November 2026 (billed to 10 November, read on 11 and 12 November). For comparison, our #src("docs/swe5001/project-proposal.typ")[proposal] estimated about US\$125 a month for running the runtime continuously; it gives the figure without a sizing (AD-12, §3.2.1). Estimated: while it is up at the release sizing of 11 November (every task 0.5 vCPU, 1 GiB), the runtime costs about US\$0.17–0.20 an hour (#src("docs/swe5001/impl-aws-infrastructure.md")[infrastructure design], section 9); at the larger sizing of the 11 November session it cost about US\$0.27 an hour at list prices. The permanent layer cost under US\$1 a month until we destroyed it after the final validation session on 15 November (§5.3).
 
 The figure is an estimate because the shared account cannot split its bill by course. For the US\$11.6, we read the bill from AWS Cost Explorer on 8, 11 and 12 November (#src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[8 November record], #src("docs/swe5001/evidence/20261111-cost-explorer/README.md")[11 November record]), and again on 15 November (`docs/swe5001/evidence/20261115-aws-readback/`). For each October session day, the SWE5001 share is that day's total minus the SWE5006 baseline of the period.
 
@@ -33,14 +33,14 @@ Two later periods are not in the figure. The 11 November session (larger commerc
     table.header([Item], [USD], [Kind]),
     [Whole account, September 2026 (SWE5006 and SWE5001)], [78.51], [Measured],
     [Whole account, October 2026 (SWE5006 and SWE5001)], [139.08], [Measured],
-    [Whole account, 1–11 Nov 2026 (SWE5006 and SWE5001; read on 12 Nov, open month)], [36.79], [Measured (Cost Explorer estimate for an open month)],
+    [Whole account, 1–11 Nov 2026 (SWE5006 and SWE5001; read on 12 Nov, open month: 10 Nov partial and 11 Nov not yet billed, so not comparable with the 15 Nov reading)], [36.79], [Measured (Cost Explorer estimate for an open month)],
     [Whole account, 1–15 Nov 2026 (SWE5006 and SWE5001; read on 15 Nov, open month, 13–15 Nov incomplete)], [56.18], [Measured (Cost Explorer estimate for an open month)],
     [ECS, RDS and ElastiCache, which exist only in the SWE5001 runtime, October 2026], [7.11], [Measured],
     [Whole SWE5001 runtime, including its share of the load balancer, NAT instance and public addresses, 6–21 Oct], [≈ 10.15], [Calculated],
     [SWE5001 sessions billed on 9 Nov (UTC billing day: the promotions of 9 and 10 Nov and the placement session)], [≈ 1.4], [Estimated: the SWE5001 services of that day (ECS 0.60, RDS 0.21, ElastiCache 0.15, NAT 0.04) plus the load balancer and address increase over 8 Nov (about 0.40)],
     [*Whole SWE5001 runtime to 10 Nov*], [*≈ 11.6*], [Calculated: 10.15 + 1.4 (estimated)],
     [SWE5001 session of 11 Nov (UTC billing day), estimated on 12 Nov from list prices, before it was billed: runtime from 13:35 SGT at about 0.27 an hour to 08:00 SGT on 12 Nov (≈ 5.0), scale-outs and the monolith session before it (≈ 0.6) and the load generator, 1.43 h at 0.3776 (≈ 0.54)], [≈ 6–7], [Estimated from list prices (12 Nov)],
-    [Permanent SWE5001 layer until 15 Nov (ECR images, the web bucket, an idle CloudFront distribution; destroyed after the final campaign, §5.3)], [< 1 a month], [Calculated: about 5.1 GB of images at US\$0.10 per GB-month ≈ 0.51],
+    [Permanent SWE5001 layer until 15 Nov (ECR images, the web bucket, an idle CloudFront distribution; destroyed after the final validation session, §5.3)], [< 1 a month], [Calculated: about 5.1 GB of images at US\$0.10 per GB-month ≈ 0.51],
   ),
   kind: table,
   caption: [Cost of the SWE5001 platform; the method is in the text above. Source: AWS Cost Explorer, read on 8, 11, 12 and 15 November.],

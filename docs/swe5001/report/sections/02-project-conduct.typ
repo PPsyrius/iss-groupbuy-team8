@@ -47,7 +47,7 @@ The scoped platform was built and deployed, with AWS evidence for routing, load-
   table(
     columns: (2fr, 1fr, 2.3fr),
     table.header([Capability], [Status], [Evidence and section]),
-    [Permanent stacks: `foundation` (Amazon Elastic Container Registry (ECR) repositories, OpenID Connect (OIDC) roles) and `edge` (CloudFront, S3)], [Verified on AWS], [Applied 5–6 October: the plan, apply and deploy roles and the four `swe5001/*` ECR repositories were created at 22:35 on 5 October and the web bucket at 10:11 on 6 October (read on AWS); present on 8 November (#src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[8 November record]); destroyed after the final campaign on 15 November (§5.3)],
+    [Permanent stacks: `foundation` (Amazon Elastic Container Registry (ECR) repositories, OpenID Connect (OIDC) roles) and `edge` (CloudFront, S3)], [Verified on AWS], [Applied 5–6 October: the plan, apply and deploy roles and the four `swe5001/*` ECR repositories were created at 22:35 on 5 October and the web bucket at 10:11 on 6 October (read on AWS); present on 8 November (#src("docs/swe5001/evidence/20261108-cost-explorer/README.md")[8 November record]); destroyed after the final validation session on 15 November (§5.3)],
     [Unchanged monolith on ECS Fargate (strangler step 0)], [Verified on AWS], [First green promotion, 6 October, #run("37470479078")[run 37470479078]],
     [Promotion pipeline: build, scan, create, smoke, release, destroy], [Verified on AWS], [Six successful promotions from 6 October to 11 November; the failed 9 November promotion also destroyed its runtime (§5.3, @tbl-delivery-runs). Smoke covers nine read-only assertions over five unauthenticated GET requests: health, catalogue, session refusals, internal-route isolation and trace headers (#src("perf/smoke/smoke.sh")[`smoke.sh`])],
     [Three services running on ECS (`distributed` topology)], [Verified on AWS], [First distributed promotion on 17 October; later promotions and sessions in @tbl-delivery-runs (§5.3), placement evidence in §3.2 and load results in §4.1],
@@ -83,7 +83,7 @@ The scoped platform was built and deployed, with AWS evidence for routing, load-
   caption: [Verification scenarios V1–V8. Source: #src("docs/swe5001/impl-verification-observability.md")[verification plan] and the results in §4.1–§4.2 and §5.3.],
 ) <tbl-verification-scenarios>
 
-*Outstanding issues.* Each open item has an owner and a proposed date in @tbl-aiss and @tbl-roadmap (§3.4). The principal verification gaps are capacity (AISS-12) and the remaining availability scenarios (AISS-13); the interrupted start-up defect is still open (AISS-14). Progress report 2 has no record (#iss(462)).
+*Outstanding issues.* Each open item has an owner and a proposed date in @tbl-aiss and @tbl-roadmap (§3.4). The principal verification gaps are capacity (AISS-12) and the remaining availability scenarios (AISS-13); the interrupted start-up defect is still open (AISS-14).
 
 == Project Metrics
 
