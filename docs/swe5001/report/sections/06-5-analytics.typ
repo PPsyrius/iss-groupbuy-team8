@@ -7,9 +7,9 @@ The platform measures how it runs today, and stores the data to measure how the 
 
 *Operational analytics, in use.* On 16 October on AWS, the CloudWatch dashboard showed the edge, the services and the messaging in three rows of charts (#src("docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md")[16 October record]); an organisation SCP first denied its CloudFront chart, and we fixed that the same day (@tbl-findings). The load results of that day set the committed auto-scaling target; V3 r4 ran with a session-only target (§4.1).
 
-*Alarm coverage.* Two CloudWatch alarms, `blocbuy-swe5001-notification-dlq-not-empty` and `blocbuy-swe5001-notification-queue-age`, notify an SNS topic. Every promotion that reached readiness through 11 November found at least one unconfirmed recipient; #run("42947289936")[the 11 November run] found only one of three confirmed. Both up workflows default `SWE5001_ALLOW_UNCONFIRMED_ALERTS` to `true`, allowing deployment despite this gap. An unconfirmed recipient receives no alarm (AISS-16).
+*Alarm coverage.* Two CloudWatch alarms, `blocbuy-swe5001-notification-dlq-not-empty` and `blocbuy-swe5001-notification-queue-age`, notify an SNS topic. Every promotion that reached readiness through 11 November found at least one unconfirmed recipient: one of three confirmed on 17 October, two of three on 19 and 20 October, none on 9 and 10 November and one of three on 11 November (#run("42947289936")[11 November run]). Both up workflows default `SWE5001_ALLOW_UNCONFIRMED_ALERTS` to `true`, allowing deployment despite this gap. An unconfirmed recipient receives no alarm (AISS-16).
 
-*Alarm delivery.* V7 R4 verified a real DLQ alarm, one matching human email receipt and alarm reset on AWS on 14 November. This demonstrates the path from queue failure to an operator, rather than only a configured alarm. Timing and recipient-coverage limits are in §4.2 and AISS-16.
+*Alarm delivery.* V7 R4 fired a real DLQ alarm on AWS on 14 November; one of us received its email, and the alarm reset. So the path from a failed message to a person works, not only the configured alarm. Timing and recipient coverage are limited (§4.2, AISS-16).
 
 *Business analytics, designed.* The data needed for four business measures is already stored, but nothing reports on it yet (@tbl-analytics).
 
