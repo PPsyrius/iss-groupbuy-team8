@@ -5,7 +5,7 @@ Read-only readback of both AWS accounts on 15 November 2026, 17:19–17:30 SGT, 
 - Project account 402178232802 (profile `blocbuy`, region `ap-southeast-1`; Cost Explorer and IAM are global).
 - Management account 592877955899 (profile `blocbuy-mgmt`).
 
-Only `describe`, `get`, `list`, `lookup-events`, Cost Explorer and STS reads were used. Every file below is the JSON output of one command, sanitised before publication: access keys, session tokens, source IP addresses, user-agent strings, request ids, event ids and email fields were removed. Account ids and resource names that the report already names are kept. Times in CloudTrail records are as AWS returned them (UTC, or SGT where the field carries `+08:00`).
+Only `describe`, `get`, `list`, `lookup-events`, Cost Explorer and STS reads were used. Every file below is the JSON output of one command, sanitised before publication: access keys, session tokens, source IP addresses, user-agent strings, request ids, event ids and email fields were removed, and the CloudFront custom origin header value is replaced by `[redacted]`. Account ids and resource names that the report already names are kept. Times in CloudTrail records are as AWS returned them (UTC, or SGT where the field carries `+08:00`).
 
 ## Commands
 
@@ -69,7 +69,7 @@ Only `describe`, `get`, `list`, `lookup-events`, Cost Explorer and STS reads wer
 
 **Scale-in after V3 r4 on 11 November.**
 - `68-ct-updateservice-11nov.json`: commerce desired counts 2, 3, 4 and 6 from 22:30:49 to 22:37:49 SGT, the bounds restored at 22:52:50 SGT, then 5, 4, 3 and 2.
-- `A8-ct-updateservice-scalein.json`: the scale-in from six tasks to two at 23:09:13, 23:13:13, 23:17:13 and 23:21:13 SGT, each invoked by `ecs.application-autoscaling.amazonaws.com`.
+- `A8-ct-updateservice-scalein.json`: the desired count lowered from six to two at 23:09:13, 23:13:13, 23:17:13 and 23:21:13 SGT, each invoked by `ecs.application-autoscaling.amazonaws.com`; three tasks were still running at 23:21:13.
 
 **What no longer exists (read 17:19–17:24 SGT).**
 - `01-ecs-clusters.json`, `03-rds.json`, `04-elasticache.json`, `05-nat.json`: no ECS cluster, database instance, cache cluster or NAT gateway.
@@ -89,7 +89,7 @@ Only `describe`, `get`, `list`, `lookup-events`, Cost Explorer and STS reads wer
 - `90-mgmt-ct-deletepolicy.json`: four `DeletePolicy` calls at 08:37 SGT on 12 November.
 - `95-sso-permsets.json`, `96-ps-*.json`, `97-mgmt-ct-updateps.json`: three permission sets, each with a one-hour session (`PT1H`); no `UpdatePermissionSet` event since 18 August.
 - `A0-` to `A3-proj-*.json`: no CloudTrail trail, GuardDuty detector, Config recorder or IAM Access Analyzer in the project account in `ap-southeast-1`.
-- `93-mgmt-trails.json`, `A5-mgmt-orgtrails.json`, `A6-mgmt-guardduty.json`: no trail and no GuardDuty detector in the management account.
+- `93-mgmt-trails.json`, `A5-mgmt-orgtrails.json`, `A6-mgmt-guardduty.json`: no trail in `ap-southeast-1` or `us-east-1`, and no GuardDuty detector in the management account.
 - `A4-proj-ct-useast1.txt`: `cloudtrail:LookupEvents` in `us-east-1` is denied by `Region-Pin`.
 
 **Cost.**
