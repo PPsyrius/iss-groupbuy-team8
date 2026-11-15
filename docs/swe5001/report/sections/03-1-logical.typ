@@ -143,7 +143,9 @@ We organise the logical elements along two dimensions: four system tiers (@tbl-t
   caption: [System tiers and their responsibilities. Source: code.],
 ) <tbl-tiers>
 
-The logical deployment view (@fig-d5b-logical-deployment) maps the tiers to node types without products.
+The logical deployment view (@fig-d5b-logical-deployment) maps the tiers to node types without products: each service runs on its own application-server node, and all three share the session store and the database server (@tbl-logical-physical names the products).
+
+#afig("d5b-logical-deployment", [Logical deployment view (UML deployment diagram). Tiers map to node types without products: each service is one service package in a language runtime on its own application server node, and all three use the session store and the database server; @tbl-logical-physical names the products.])
 
 ==== Service layering and automated guardrails
 
@@ -152,7 +154,7 @@ Inside the backend reactor, every bounded context (`identity`, `catalog`, `group
 1. *Adapter layer* (`blocbuy-adapter`, `..web..` and `..web.internal..`). It holds the `@Validated @RestController` classes (`ProductController`, `GroupDealController`, `StripeWebhookController`, `NotificationController`, `InternalUserController`). Adapters bind HTTP, validate parameters and check Sa-Token permissions, then call application services. They never import persistence classes or MyBatis mappers.
 2. *Application layer* (`blocbuy-application`, `..command..`, `..query..`, `..service..`, `..assembler..`). It runs the use cases, owns the `@Transactional` boundaries, publishes and handles in-process events (`OrderLifecycleSubscriber`, `TeamExpiryRefundSubscriber`, `ShareCreditSubscriber`) and turns domain objects into views. It depends only on `blocbuy-domain` ports and `blocbuy-client` contracts.
 3. *Domain layer* (`blocbuy-domain`, `..model..`, `..pricing..`, `..event..`, `..repository..`, `..gateway..`, `..exception..`). It holds aggregate roots, entities, value objects, domain services (`DualPricingStrategy`), domain event records and the repository and gateway ports. `blocbuy-domain` depends only on the JDK and Lombok (its `pom.xml`). In CI, `domain_is_framework_free` checks that its model, repository, pricing, event and exception packages import no Spring, MyBatis, Jackson, Jakarta Validation or Sa-Token class.
-4. *Infrastructure layer* (`blocbuy-infrastructure`, `..persistence..`, `..messaging..`, `..outbox..`). It implements the repository and gateway ports with MyBatis-Plus data objects (`*DO`), mappers (`*Mapper`), converters (`*Converter`), Valkey templates, Stripe adapters and AWS SDK transports (`SnsOutboxEventTransport`, `SqsNotificationEventConsumer`).
+4. *Infrastructure layer* (`blocbuy-infrastructure`, `..persistence..`, `..messaging..`, `..outbox..`). It implements the repository and gateway ports with MyBatis data objects (`*DO`), mappers (`*Mapper`), converters (`*Converter`), Valkey templates, Stripe adapters and AWS SDK transports (`SnsOutboxEventTransport`, `SqsNotificationEventConsumer`).
 5. *Contract and assembly modules* (`blocbuy-client`, `blocbuy-bootstrap`, `blocbuy-platform`, `services/*`). `blocbuy-client` holds the versioned integration event contracts (`IntegrationEventEnvelope`, `TeamSucceededV1`, `TeamExpiredV1`, `PaymentSucceededV1`). `blocbuy-bootstrap` and the three `services/*` modules wire the Spring Boot configuration and the scheduled jobs (`LeasedJobRunner`). `blocbuy-platform` holds the per-service database grants (`db/swe5001/afterMigrate__service_grants.sql`).
 
 Five developers worked in parallel, so 19 automated architecture checks (@tbl-arch-rules) enforce these layer and service boundaries on applicable backend pull requests: 17 `@ArchTest` rules in `ArchitectureTest.java` and two plain tests for what ArchUnit cannot see.
@@ -180,8 +182,6 @@ Five developers worked in parallel, so 19 automated architecture checks (@tbl-ar
 === Nodes and Subsystems
 
 @fig-d3-logical-view shows the request path: who calls which interface, and the external systems. @fig-d3b-logical-events-data shows the published events and the data stores. Both use UML component notation with role names only; @tbl-logical-physical maps each element to its product.
-
-#afig("d5b-logical-deployment", [Logical deployment view (UML deployment diagram). Tiers map to node types without products: each service is one service package in a language runtime on its own application server node, and all three use the session store and the database server; @tbl-logical-physical names the products.])
 
 #afig("d3-logical-view", [Logical view, request path (UML component diagram; pink = core subdomain, blue = web client, beige = other elements). Producers and consumers reach the subsystems only through the edge gateway, and the one synchronous call between subsystems is `commerce-svc` requiring `UserAppService`.])
 
@@ -271,15 +271,15 @@ Six bounded contexts map onto three services: only `catalog`, `groupbuy`, `order
 
 ==== EventStorming method and decision traceability
 
-We ran EventStorming as a desk study, not as a live workshop: two concurrent part-time modules left no time for one. The simulated study is dated 25 September in its header (#src("docs/swe5001/architecture-options-study/06-eventstorming-ddd.md")[study record]) and follows Alberto Brandolini's three levels (big picture, process level, software design). The study modelled code that already existed. Its inputs were six repository artefacts: the business proposal (UC1–UC9), the `blocbuy-domain` models and events, the `blocbuy-application` services and subscribers, backend ADR 0001 and ADR 0002 (22 September), the Flyway migrations `V1`–`V17` (later extended to `V28`) and the 23 HTTP operations the study counted in `contracts/openapi.json` (31 on 8 November, §3.1.4.6).
+We ran EventStorming as a desk study, not as a live workshop: two concurrent part-time modules left no time for one. We dated the simulated study record 25 September (#src("docs/swe5001/architecture-options-study/06-eventstorming-ddd.md")[study record]). It follows Alberto Brandolini's three levels (big picture, process level, software design). The study modelled code that already existed. Its inputs were six repository artefacts: the business proposal (UC1–UC9), the `blocbuy-domain` models and events, the `blocbuy-application` services and subscribers, backend ADR 0001 and ADR 0002 (22 September), the Flyway migrations `V1`–`V17` (later extended to `V28`) and the 23 HTTP operations the study counted in `contracts/openapi.json` (31 on 8 November, §3.1.4.6).
 
 1. *Big picture and hot spots.* We placed 34 domain events in time order across six phases (listing, access and discovery, pay-first team formation, team resolution, refund, growth). Four events divide the life of a team into acts: Product Published (supply exists), `PaymentSucceeded` (the buyer's money is committed), Team Started (an open team's join window begins), and `TeamSucceeded` or `TeamExpired` (the team's fate is fixed). Annotating the timeline exposed ten concurrency and consistency hot spots, HS-1 to HS-10. Examples are HS-1 (20 buyers paying for the last seat at once), HS-2 (duplicate or out-of-order Stripe webhooks), HS-4 (the expiry sweep racing a settling webhook on the same team) and HS-8 (order confirmation and refund recording running `BEFORE_COMMIT` inside the team's transaction). The others, as found at study time: HS-3 (a payment arriving after the team expired), HS-5 (the last stock unit taken by another team during settlement), HS-6 (Stripe's 24 h refund idempotency window), HS-7 (scheduling switched off by default), HS-9 (no API for team terms) and HS-10 (a reserved `deal_id` left on unpaid START intents). The two big-picture boards are in the study (#src("docs/swe5001/architecture-options-study/diagrams/eventstorming-big-picture.svg")[board 1: listing to paid membership], #src("docs/swe5001/architecture-options-study/diagrams/eventstorming-big-picture-2.svg")[board 2: resolution, refund and growth]), with all ten hot spots in its §2.3.
-2. *Process level for UC3–UC6.* For each core flow we traced the causal chain read model, actor or time trigger, command, aggregate, domain event, policy (`BEFORE_COMMIT`, `AFTER_COMMIT` or outbox) and next command (@tbl-d4a-eventstorming).
+2. *Process level for UC3–UC6.* For each core flow we traced the causal chain read model, actor or time trigger, command, aggregate, domain event, policy (`BEFORE_COMMIT`, `AFTER_COMMIT` or outbox) and next command (@tbl-d4a-eventstorming). We rechecked this timeline against the code on 11 November.
 3. *Software design and grouping test.* We grouped aggregates and policies around the hot spots and tested whether `groupbuy` and `order` could be separate services. HS-1 and HS-8 showed that they share one consistency boundary.
 
 #figure(
   d4a(),
-  caption: [EventStorming process-level timeline for UC3–UC6: actor, command, domain event, policy and hot spot per act, each row in its sticky colour. Only the four events in code font are Java records; the others are workshop concepts. Source: architecture options study 06 (25 Sep 2026), checked against the code on 11 Nov 2026.],
+  caption: [EventStorming process-level timeline for UC3–UC6: actor, command, domain event, policy and hot spot per act, each row in its sticky colour. Only the four events in code font are Java records; the others are workshop concepts. Source: architecture options study 06 (25 Sep 2026).],
   kind: table,
 ) <tbl-d4a-eventstorming>
 
@@ -297,7 +297,7 @@ We ran EventStorming as a desk study, not as a live workshop: two concurrent par
 
     [HS-1 (last-seat race) and HS-4 (`TeamExpirySweepJob` versus webhook race)],
     [Concurrent webhooks and the one-minute expiry job contend for the same `GroupDeal` row.],
-    [Global lock order (§3.1.4.4) and status-guarded updates.],
+    [Global lock order (§3.2.4) and status-guarded updates.],
     [ADR 0001; `OrderFulfilmentAdapter.lockForSettlement`, `StripeCheckoutService.settle`],
     [Existing (ADR 0001), explained],
 
@@ -411,7 +411,7 @@ The study recommended one Team Purchase context for `groupbuy` and `order` (§4.
 1. *Language test.* A "quote" in `catalog` (`TeamPriceQuote`) is an exploratory price for a browsing buyer; it holds no stock and lapses without side effects. In `payment` (`CheckoutQuote`), a "quote" is a frozen financial commitment bound to a `PurchaseIntent` and a Stripe session. Likewise, `GroupDeal` in `groupbuy` models the team's size and window rules, while `Order` in `order` models one buyer's receipt and product snapshot.
 2. *Upstream and downstream test.* For every pair of collaborating contexts and external providers, we decided which side sets the contract (upstream, U) and which side adapts (downstream, D), and chose the DDD pattern in @fig-d4-context-map and @tbl-context-map.
 
-Arrows in @fig-d4-context-map point from the downstream context to the upstream one; @tbl-context-map lists each pair upstream first. The map capitalises the context names; the table uses the Java package names. Shaded contexts are the core subdomains. One edge uses a label from outside the standard context-map set: `order` depends on the ports that `payment` declares, as a downstream context does, but at run time `payment` calls `order` through them. Customer–Supplier or Conformist would name the dependency and hide that inversion, so the map labels the edge with Fowler's Separated Interface.
+Arrows in @fig-d4-context-map point from the downstream context to the upstream one; @tbl-context-map lists each pair upstream first. The map capitalises the context names; the table uses the Java package names. Shaded contexts are the core subdomains. One edge uses a label from outside the standard context-map set: `order` depends on the ports that `payment` declares, as a downstream context does, but at run time `payment` calls `order` through them. Customer–Supplier or Conformist would name the dependency and hide that inversion, so we labelled the edge with Fowler's Separated Interface.
 
 #figure(
   table(
@@ -495,7 +495,7 @@ Arrows in @fig-d4-context-map point from the downstream context to the upstream 
 1. *Find the commands and the business invariant.* We listed every command that changes state in the process-level timeline and asked which rule must hold when the transaction commits, even under concurrent requests. For example, a `GroupDeal` must never exceed `targetSize`, must never admit the same buyer twice and must become `SUCCEEDED` in the transaction that fills the last seat.
 2. *Draw the smallest consistency boundary.* Objects that must change together to protect that invariant, such as the `PaidMember` (`biz_group_member`) and `ParticipationReceipt` (`biz_group_participation_receipt`) records of a team, stay inside one boundary: `PaidGroupDealRepository` writes them under the team lock, although the `GroupDeal` class holds no collection of them. `ShareInvite` and `ShareCredit` instead have their own repositories and refer to the team by `dealId`; they are not part of `GroupDeal`. Minting an invite takes no team lock, and `ShareCreditSubscriber` writes the sharer's credit `AFTER_COMMIT` in a separate `REQUIRES_NEW` transaction, so a credit failure cannot roll back a paid admission (#src("backend/docs/adr/0003-share-credit-post-commit-subscriber.md")[ADR 0003]).
 3. *Refer to other aggregates by id.* No aggregate holds an object reference to another root. `GroupDeal` refers to `Product` by `productId`; `Order` refers to `GroupDeal` by `dealId` and to `CheckoutPayment` by `paymentId`; `RefundWork` refers to `CheckoutPayment` by `paymentId`. By our DDL convention, the PostgreSQL tables have no foreign keys and no `CHECK` constraints; application services and unique indexes keep references consistent (§3.2.3).
-4. *Govern the shared settlement transaction.* Strict DDD changes one aggregate per transaction. Hot spot HS-8 showed that splitting paid admission into separate transactions would leave buyers paid without a seat, or seated without stock. We therefore recorded a bounded exception (AD-02, #src("backend/docs/adr/0001-payment-business-integration.md")[ADR 0001]): `StripeCheckoutService.settle` and `OrderFulfilmentAdapter.fulfil` change `CheckoutPayment`, `GroupDeal`, `PurchaseIntent`, `Order` and `Product` stock in one local PostgreSQL transaction. A fixed lock order protects this boundary against competing webhooks and expiry; §3.2.4 gives the complete order and its START/JOIN differences.
+4. *Govern the shared settlement transaction.* DDD's rule is to change one aggregate per transaction. Hot spot HS-8 showed that splitting paid admission into separate transactions would leave buyers paid without a seat, or seated without stock. We therefore recorded a bounded exception (AD-02, #src("backend/docs/adr/0001-payment-business-integration.md")[ADR 0001]): `StripeCheckoutService.settle` and `OrderFulfilmentAdapter.fulfil` change `CheckoutPayment`, `GroupDeal`, `PurchaseIntent`, `Order` and `Product` stock in one local PostgreSQL transaction. A fixed lock order protects this boundary against competing webhooks and expiry; §3.2.4 gives the complete order and its START/JOIN differences.
 
 Three further transactions write more than one aggregate for the same reasons: team expiry (ADR 0002), listing terms with their price policy (UC9) and first sign-in (UC2).
 
@@ -696,7 +696,7 @@ Two design principles shape this event pipeline:
 
 ==== Platform interaction for producers and consumers, and governance
 
-BlocBuy serves two sides of participants and a growing set of consumer services:
+BlocBuy serves producers and consumers, and other services can consume its events:
 
 - *Producers.* The platform administrator publishes product listings on sellers' behalf, configures `TeamPricePolicy` and sets `ProductTeamTerms` (UC9). Team leaders and sharers act as demand producers: by paying first to open a team (UC3), sharing an invite link (`ShareInvite`, UC7) and being credited for it (UC12), they bring buyers from outside chat groups to the platform.
 - *Consumers.* Members (UC1, UC4, UC8) browse dual-priced listings, join open teams with automatic refund protection and read in-app notifications. On the technical side, `notification-svc` consumes `commerce-svc` facts as events, and the `audit` queue is ready for the next consumer.
@@ -708,7 +708,7 @@ Settlement is a reusable module inside `commerce-svc`: `payment` drives it throu
 - *Workload-isolated batch path.* Designed but not implemented: heavy batch jobs, such as end-of-day settlement reconciliation, seller payout aggregation or retraining a recommendation model, would read the `audit` queue and run as ECS scheduled tasks or AWS Batch jobs outside `commerce-svc` tasks. They would not compete for its CPU, but they would still share the RDS server, so database isolation is a separate requirement (AD-07, AD-16, AISS-05; @tbl-workload-compute, §3.2.2).
 
 *How the API contract is governed.*
-- *Built.* One OpenAPI 3.1 specification (`contracts/openapi.json`, 31 operations in 27 paths under `/api/v1`) is the contract for all three services. The web client's TypeScript client is generated from it. Tested in CI: a pull request fails when controller mappings drift from the committed specification or expose `/internal/*` (`InternalPathsContractTest`). At run time, the edge routes only public `/api/v1/*` paths, while `/internal/users/*` is reachable only inside the virtual private cloud (VPC) through ECS Service Connect (AD-06, AD-09).
+- *Built.* One OpenAPI 3.1 specification (`contracts/openapi.json`, §4.4) is the contract for all three services. The web client's TypeScript client is generated from it. Tested in CI: a pull request fails when controller mappings drift from the committed specification or expose `/internal/*` (`InternalPathsContractTest`). At run time, the edge routes only public `/api/v1/*` paths, while `/internal/users/*` is reachable only inside the virtual private cloud (VPC) through ECS Service Connect (AD-06, AD-09).
 - *Designed for partners.* Designed but not implemented: when third-party merchants or partner apps call BlocBuy directly, an API gateway tier in front of the load balancer will enforce per-partner API keys, usage plans, quotas and rate limits (AISS-04, @tbl-not-built).
 
 ==== Ubiquitous language glossary
@@ -769,9 +769,9 @@ Settlement is a reusable module inside `commerce-svc`: `payment` drives it throu
     [A deterministic refusal after payment that commits a refund obligation (`GROUP_REJECTED`, `BUSINESS_EXPIRED`, `BUYER_INACTIVE`, `PRODUCT_UNAVAILABLE`, `INTENT_EXPIRED`, `INTENT_ALREADY_FULFILLED`).],
     [`PaymentBusinessPort.Outcome`, `biz_refund`],
 
-    [Refund records],
+    [Refund obligation and attempts],
     [`payment`],
-    [A refund owed to a buyer and its attempts; not an aggregate root.],
+    [A refund obligation is a durable debt to return one payment (at most one per payment); attempts record each provider call. Not an aggregate root.],
     [`biz_refund` (`RefundWork` claim snapshot), `log_refund_attempt`],
 
     [Review case],

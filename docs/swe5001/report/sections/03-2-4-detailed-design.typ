@@ -4,7 +4,7 @@
 
 === Detailed Design
 
-This section shows, at class and object level, the two flows that move money under concurrency. The first is UC4 Join an existing team by paying, with UC3 Start a team and UC10 Pay upfront. The second is UC5 Resolve a team with UC6 Refund members of an expired team. They are critical because only in these flows do two actions race for the same money (HS-1, HS-4 and HS-8, §3.1.4). In both, the team's row lock decides the race, and a refused payment becomes a recorded refund obligation, never a lost payment.
+We designed two flows at class and object level because they move money under concurrency. The first is UC4 Join an existing team by paying, with UC3 Start a team and UC10 Pay upfront. The second is UC5 Resolve a team with UC6 Refund members of an expired team. They are critical because only in these flows do two actions race for the same money (HS-1, HS-4 and HS-8, §3.1.4). In both, the team's row lock decides the race, and a refused payment becomes a recorded refund obligation, never a lost payment.
 
 *From analysis to design.* We first modelled each use case as an analysis model with boundary, control and entity (BCE) objects only, and wrote its flow of events. Each analysis object then became design classes through one or more of nine transition strategies (@tbl-strategies-324). A strategy names a design concern, the decisions it follows and what it adds to the model. Its tag is the short name that each design class carries as a stereotype in @fig-d11-uc4-design-classes and @fig-d13-expiry-design-classes, so every class shows the strategies that produced it. @tbl-strategy-detail gives the seven strategies whose tags the drawn classes carry, in the four-part form: impacted analysis elements, resultant static design, resultant dynamic design and justification. S1 and S2 stay as summary rows, because they tag no drawn class.
 
@@ -116,7 +116,7 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
     [`PurchaseIntent`], [entity], [Aggregate root `PurchaseIntent`, port `PurchaseIntentRepository` (domain)], [S4, S8],
     [`Payment`], [entity], [Aggregate root `CheckoutPayment`, port `CheckoutPaymentRepository` (domain); `CheckoutPaymentRepositoryImpl` (infrastructure)], [S4, S8],
     [`Order`], [entity], [Aggregate root `Order`, port `OrderRepository` (domain)], [S4, S9],
-    [`Refund`], [entity], [Created by `CheckoutPaymentRepository.requireRefund`; its lifecycle is UC6’s], [S4],
+    [`Refund`], [entity], [Created by `CheckoutPaymentRepository.requireRefund`; its lifecycle is UC6's], [S4],
     [`Invitation`], [entity], [Aggregate root `ShareInvite`, port `ShareInviteRepository`; after commit `ShareCreditSubscriber`], [S4, S9],
     [(none)], [—], [Added by a strategy: `PaymentBusinessPort`, `PaymentIntentPort`, `GroupDealSettlementSupport` (S3); `RateLimitGateway` (S6); `PaymentSucceeded`, `MemberJoined`, `TeamSucceeded`, `IntegrationOutboxWriter` (S9)], [S3, S6, S9],
   ),
@@ -132,7 +132,7 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
 
 ==== Two buyers, one team
 
-@fig-d12a-two-buyers-start and @fig-d12b-two-buyers-join follow two buyers through UC3 START and UC4 JOIN. The leader pays for a two-seat listing and shares the invite link; the second buyer's payment fills the team. Each buyer sees their own order, while the team status is shared. @tbl-two-buyer-walkthrough records the 24 October SWE5006 monolith demonstration; @tbl-followup-15nov (§4.2) records the 15 November distributed normal-path test.
+@fig-d12a-two-buyers-start and @fig-d12b-two-buyers-join follow two buyers through UC3 START and UC4 JOIN. The leader pays for a two-seat listing and shares the invite link; the second buyer's payment fills the team. Each buyer sees their own order, while the team status is shared. @tbl-two-buyer-walkthrough records what we saw in the UI during the 24 October SWE5006 monolith demonstration; we did not inspect the database; @tbl-followup-15nov (§4.2) records the 15 November distributed normal-path test.
 
 #figure(
   table(
@@ -144,7 +144,7 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
     [Own views], [Sees only their own orders and teams], [Sees only their own orders and teams], [The team's status is shared; neither buyer sees the other's payment or order],
   ),
   kind: table,
-  caption: [Two-buyer walkthrough recorded on 24 October on the SWE5006 monolith on EC2 (recorded UI observations, not a database audit). Source: \#590, \#657.],
+  caption: [Two-buyer walkthrough on the SWE5006 monolith on EC2, 24 October. Source: \#590, \#657.],
 ) <tbl-two-buyer-walkthrough>
 
 #afig("d12a-two-buyers-start", [Two-buyer interaction view, part 1 (UML sequence diagram). One settlement transaction opens the team with the leader as its first paid member; the leader then shares the invite link, and the Stripe webhook is a synchronous HTTP call.])
