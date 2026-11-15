@@ -5,11 +5,11 @@
 
 == Background
 
-BlocBuy is a community group-buying platform: buyers form a team at a team price, pay to start or join it, and the platform settles the payments and either completes the team or refunds every member when it expires. We built these functions (use cases UC1–UC9) for SWE5006 as a modular monolith. For SWE5001 we re-architected the same code into a platform of three services on Amazon Web Services (AWS), and kept the monolith as a fallback topology (AD-01, §3.1.1).
+BlocBuy is a community group-buying platform: buyers form a team at a team price, pay to start or join it, and the platform settles the payments and either completes the team or refunds every member when it expires. We built these functions (use cases UC1–UC9) for SWE5006 as a modular monolith. For SWE5001 we re-architected the same code into a platform of three services on Amazon Web Services (AWS), and kept the monolith as a fallback topology (AD-01, §3.1.1). The question we had to answer was where to cut: a payment must never be separated from the seat it buys, while sign-in and notifications should scale and fail apart from checkout.
 
 *Starting point.* On 29 September 2026 BlocBuy was one Java 21 and Spring Boot 4 application in the Alibaba COLA (Clean Object-Oriented and Layered Architecture) layering, with six bounded contexts in one deployable unit. It ran under Docker Compose on one Amazon EC2 host with PostgreSQL 18 and Redis 8, and the SWE5006 deployment still runs that way (#src("docs/swe5001/microservice-refactoring-plan.md")[refactoring plan, §1]).
 
-*What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They run on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchange events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. Terraform creates the runtime for each working session and destroys it afterwards. The logical design is in §3.1 and the physical design in §3.2.
+*What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They run on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchange events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. Terraform creates the runtime for each working session and destroys it afterwards.
 
 Times are Singapore time (SGT, UTC+8).
 
@@ -31,7 +31,7 @@ Group buying works only if enough people join before the deadline. Today that co
 
 The case for a platform rather than one application rests on three properties. First, the team price, which is lower than the solo price, holds only if the team reaches its target size before the deadline, so every member wants others to join and demand arrives in bursts as deadlines approach. Second, consumers also produce: the buyer who starts a team, or shares an invite link, brings in the next buyers. Third, identity, payment settlement and notification are needed by any future group-buying vertical, not only by this one.
 
-These properties give the architecture its drivers. @tbl-drivers lists them in priority order. When consistency and independent scaling conflict, consistency wins: settlement stays in one transaction (AD-02) and commerce scales as one unit (AISS-02).
+These properties give the architecture its drivers. @tbl-drivers lists them in priority order. The first driver comes from a race. When two buyers pay for the last seat of a team at the same moment, exactly one may take the seat, and the other must be left with a refund obligation, never charged for nothing. We can decide that safely only inside one database transaction that checks the payment, admits the buyer and creates the order together; we call this settlement. So when consistency and independent scaling conflict, consistency wins: settlement stays in one transaction (AD-02), and commerce scales as one unit even when only browsing is busy (AISS-02).
 
 #figure(
   table(
@@ -71,7 +71,7 @@ The project was self-initiated and has no company sponsor. Its stakeholders are 
   caption: [Business and IT stakeholders.],
 ) <tbl-stakeholders>
 
-The briefing's first success criterion asks for the seed, the producers and the consumers of the platform. @tbl-platform-roles names them, and @fig-d1-context places the run-time users and external systems around BlocBuy. Where BlocBuy runs is in the deployment view (@fig-d5-deployment, §3.2), and how releases reach it is in §5.
+The briefing's first success criterion asks for the seed, the producers and the consumers of the platform. @tbl-platform-roles names them, and @fig-d1-context places the run-time users and external systems around BlocBuy.
 
 #figure(
   table(

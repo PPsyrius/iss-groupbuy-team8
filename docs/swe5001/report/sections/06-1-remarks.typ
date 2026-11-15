@@ -3,7 +3,7 @@
 
 == Assessor Remarks and Where They Are Answered
 
-Every remark from the presentation of 21 October 2026 is answered in the report, and @tbl-remarks shows where. The assessors gave twelve written remarks (F1–F11 and F13); we added F12, on the logical diagram, which the assessors gave orally. @tbl-remarks quotes each remark and shows where we answer it.
+Every remark from the presentation of 21 October 2026 is answered in the report. The assessors gave twelve written remarks (F1–F11 and F13); we added F12, on the logical diagram, which they gave orally. @tbl-remarks quotes each remark and shows where we answer it.
 
 #figure(
   table(

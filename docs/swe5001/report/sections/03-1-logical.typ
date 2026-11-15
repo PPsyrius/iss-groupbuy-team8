@@ -10,7 +10,7 @@
   ..rows.pos().map(((id, d)) => ([#id], [#d])).flatten(),
 )
 
-BlocBuy is one codebase that runs as three services on AWS. The split follows transaction boundaries (§3.1); the AWS design favours cost and isolation over always-on capacity (§3.2); four further decisions govern how it runs and changes (§3.3); and §3.4 lists what these choices cost. @tbl-views lists the views that describe it.
+BlocBuy is one codebase that runs as three services on AWS. @tbl-views lists the views that describe it.
 
 #figure(
   table(
@@ -40,13 +40,13 @@ BlocBuy is one codebase that runs as three services on AWS. The split follows tr
 
 == Logical Architecture & Design
 
-BlocBuy runs as three services: `identity-svc` and `notification-svc` are reusable platform services, and `commerce-svc` holds the business. They talk through one synchronous call and an event bus. We split only where no transaction crosses the boundary (AD-02). Code boundaries keep the six DDD bounded contexts apart, so a context can be extracted later (AD-01, AD-18); database permissions separate only the three services, because the four contexts in `commerce-svc` share one runtime role (AD-03, @tbl-ownership).
+When a member's payment fills the last seat of a team, one transaction must check the payment, lock the team, admit the buyer, create the order and take one unit of stock. If those steps lived in different services, a crash between them could leave a buyer paid without a seat, or seated without stock. So we split only where no transaction crosses the boundary (AD-02). BlocBuy runs as three services: `identity-svc` and `notification-svc` are reusable platform services, and `commerce-svc` holds the business. They talk through one synchronous call and an event bus. Code boundaries keep the six DDD bounded contexts apart, so a context can be extracted later (AD-01, AD-18). Database permissions separate only the three services, because the four contexts in `commerce-svc` share one runtime role (AD-03, @tbl-ownership).
 
 The logical elements, interfaces and interactions in §3.1 are roles, not products; §3.2 maps them to AWS products and network placement.
 
 === Key Architectural Decisions
 
-The logical design rests on one rule: split services only where no database transaction crosses the boundary (AD-02). The other five decisions keep that split safe: one codebase with two topologies (AD-01), a database per service (AD-03), events through an outbox (AD-04), a shared session (AD-05) and one fail-closed synchronous call (AD-06). @tbl-ad-logical states each with its driver, the options we rejected and the trade-off.
+Five further decisions keep that split safe: one codebase with two topologies (AD-01), a database per service (AD-03), events through an outbox (AD-04), a shared session (AD-05) and one fail-closed synchronous call (AD-06). @tbl-ad-logical states each with its driver, the options we rejected and the trade-off.
 
 #figure(
   ad-table(
@@ -63,9 +63,9 @@ The logical design rests on one rule: split services only where no database tran
       *Split services along transaction boundaries, not domain nouns: `identity-svc`, `commerce-svc` and `notification-svc`* (#src("backend/docs/adr/0001-payment-business-integration.md")[ADR 0001], #src("backend/docs/adr/0002-team-lifecycle-events.md")[ADR 0002], #src("backend/docs/adr/0008-dual-deployment-topology.md")[ADR 0008]). \
       *Driver:* Consistency over scalability (@tbl-drivers). \
       *Context:* The SWE5006 code has six bounded contexts (`identity`, `catalog`, `groupbuy`, `order`, `payment`, `notification`); the EventStorming study tested which of them must share one transaction (§3.1.4.1). Settling a member's paid admission (`StripeCheckoutService.settle`, then `OrderFulfilmentAdapter.fulfil`) checks the payment, locks the `GroupDeal` and admits the buyer, creates the `Order`, marks the `PurchaseIntent` fulfilled and decrements `Product` stock. When the last seat fills, `BEFORE_COMMIT` listeners also confirm all the team's orders. \
-      *Options considered:* (a) five or six services, one per bounded context, coordinated by a saga orchestrator: rejected, because we estimated 50–55 person-days (all of our capacity) to build and test compensations, such as releasing stock and refunding through Stripe, across the network; (b) separate services for `groupbuy` and `order`: rejected, because the team's transition decides an order's lifecycle (`PENDING` to `CONFIRMED` or `CANCELLED`) in the same transaction; (c) keep the four contexts that share the transaction (`catalog`, `groupbuy`, `order`, `payment`) in `commerce-svc`, and extract `identity-svc` and `notification-svc`, which no transaction crosses. \
+      *Options considered:* (a) five or six services, one per bounded context, coordinated by a saga orchestrator: rejected. With payment and the team in different services, a buyer could be charged by one service and refused a seat by the other, and the system would have to undo the charge across the network. We estimated 50–55 person-days (all of our capacity) to build and test such compensations, such as releasing stock and refunding through Stripe; (b) separate services for `groupbuy` and `order`: rejected, because the team's transition decides an order's lifecycle (`PENDING` to `CONFIRMED` or `CANCELLED`) in the same transaction; (c) keep the four contexts that share the transaction (`catalog`, `groupbuy`, `order`, `payment`) in `commerce-svc`, and extract `identity-svc` and `notification-svc`, which no transaction crosses. \
       *Choice:* (c). \
-      *Trade-off:* `commerce-svc` is a coarser unit of scaling and deployment (AISS-02, with a planned extraction path for `payment`). \
+      *Trade-off:* `commerce-svc` is a coarser unit of scaling and deployment: a browsing burst adds whole `commerce-svc` tasks, payment code included, and a fix to `payment` redeploys the catalogue too (AISS-02, with a planned extraction path for `payment`). \
       *Consequence:* Tested locally, not on AWS: `StripeLocalIntegrationTest` admits exactly one of 20 concurrent buyers for the last seat and commits 19 refund obligations. By design, one local PostgreSQL transaction settles payment, seat, order and stock together. On 15 November on AWS, two buyers paid and the team succeeded at 2 of 2 in the distributed topology (@tbl-followup-15nov); the last-seat race was not run on AWS.
     ]),
     ("AD-03", [
@@ -267,7 +267,7 @@ Five developers worked in parallel, so 19 automated architecture checks (@tbl-ar
 
 === Platform Design
 
-Six bounded contexts map onto three services: only `catalog`, `groupbuy`, `order` and `payment` must share the settlement transaction, so they stay together in `commerce-svc` (AD-02). We modelled the domain in four steps: a simulated EventStorming study of all use cases (§3.1.4.1); subdomains and bounded contexts linked by context-map patterns (§3.1.4.2 and §3.1.4.3); transaction boundaries that map six contexts onto three services (§3.1.4.3); and aggregates, state machines and integration events (§3.1.4.4 and §3.1.4.5). The result lets a new producer or consumer join without a change to the existing core (§3.1.4.6).
+Six bounded contexts map onto three services: only `catalog`, `groupbuy`, `order` and `payment` must share the settlement transaction, so they stay together in `commerce-svc` (AD-02). We modelled the domain in four steps: a simulated EventStorming study of all use cases (§3.1.4.1), subdomains (§3.1.4.2), context mapping with the transaction boundaries that put six contexts into three services (§3.1.4.3), and aggregates, state machines and integration events (§3.1.4.4 and §3.1.4.5). The result lets a new producer or consumer join without a change to the existing core (§3.1.4.6).
 
 ==== EventStorming method and decision traceability
 
@@ -275,7 +275,7 @@ We ran EventStorming as a desk study, not as a live workshop: two concurrent par
 
 1. *Big picture and hot spots.* We placed 34 domain events in time order across six phases (listing, access and discovery, pay-first team formation, team resolution, refund, growth). Four events divide the life of a team into acts: Product Published (supply exists), `PaymentSucceeded` (the buyer's money is committed), Team Started (an open team's join window begins), and `TeamSucceeded` or `TeamExpired` (the team's fate is fixed). Annotating the timeline exposed ten concurrency and consistency hot spots, HS-1 to HS-10. Examples are HS-1 (20 buyers paying for the last seat at once), HS-2 (duplicate or out-of-order Stripe webhooks), HS-4 (the expiry sweep racing a settling webhook on the same team) and HS-8 (order confirmation and refund recording running `BEFORE_COMMIT` inside the team's transaction). The others, as found at study time: HS-3 (a payment arriving after the team expired), HS-5 (the last stock unit taken by another team during settlement), HS-6 (Stripe's 24 h refund idempotency window), HS-7 (scheduling switched off by default), HS-9 (no API for team terms) and HS-10 (a reserved `deal_id` left on unpaid START intents). The two big-picture boards are in the study (#src("docs/swe5001/architecture-options-study/diagrams/eventstorming-big-picture.svg")[board 1: listing to paid membership], #src("docs/swe5001/architecture-options-study/diagrams/eventstorming-big-picture-2.svg")[board 2: resolution, refund and growth]), with all ten hot spots in its §2.3.
 2. *Process level for UC3–UC6.* For each core flow we traced the causal chain read model, actor or time trigger, command, aggregate, domain event, policy (`BEFORE_COMMIT`, `AFTER_COMMIT` or outbox) and next command (@tbl-d4a-eventstorming). We rechecked this timeline against the code on 11 November.
-3. *Software design and grouping test.* We grouped aggregates and policies around the hot spots and tested whether `groupbuy` and `order` could be separate services. HS-1 and HS-8 showed that they share one consistency boundary.
+3. *Software design and grouping test.* We grouped aggregates and policies around the hot spots and tested whether `groupbuy` and `order` could be separate services. HS-1 and HS-8 showed that they cannot be: the webhook that admits the last of 20 competing buyers must, in the same transaction, create that buyer's order and confirm every other order of the team (`BEFORE_COMMIT`). In two services, a seat and its order could commit apart, so the two contexts share one consistency boundary.
 
 #figure(
   d4a(),
@@ -387,7 +387,7 @@ We classified BlocBuy's business capabilities as core, supporting or generic sub
 
 ==== Context mapping and service decomposition
 
-We mapped events to contexts in four steps, each recorded in the study: the big-picture timeline and hot spots (§2), the subdomains (§4.2), the bounded contexts with their language (§4.3) and the test of whether `order` is separate from `groupbuy` (§4.4); the context map (§4.5) follows. @tbl-es-to-context shows the path from the events to the services.
+We mapped events to contexts in four steps, each recorded in the study: the big-picture timeline and hot spots (study §2), the subdomains (study §4.2), the bounded contexts with their language (study §4.3) and the test of whether `order` is separate from `groupbuy` (study §4.4); the context map (study §4.5) follows. @tbl-es-to-context shows the path from the events to the services.
 
 #figure(
   table(
@@ -405,7 +405,7 @@ We mapped events to contexts in four steps, each recorded in the study: the big-
   caption: [From EventStorming findings to subdomains, bounded contexts and services. Source: EventStorming study §2–§4.],
 ) <tbl-es-to-context>
 
-The study recommended one Team Purchase context for `groupbuy` and `order` (§4.4); the code keeps them as two packages with separate aggregates inside one service, which is the same consistency boundary.
+The study recommended one Team Purchase context for `groupbuy` and `order` (study §4.4); the code keeps them as two packages with separate aggregates inside one service, which is the same consistency boundary.
 
 *How we mapped the contexts.* We drew a boundary where a term changed meaning, where data ownership could be separated without foreign keys and where an external model needed translation:
 1. *Language test.* A "quote" in `catalog` (`TeamPriceQuote`) is an exploratory price for a browsing buyer; it holds no stock and lapses without side effects. In `payment` (`CheckoutQuote`), a "quote" is a frozen financial commitment bound to a `PurchaseIntent` and a Stripe session. Likewise, `GroupDeal` in `groupbuy` models the team's size and window rules, while `Order` in `order` models one buyer's receipt and product snapshot.
@@ -601,7 +601,7 @@ Three further transactions write more than one aggregate for the same reasons: t
 
 #afig("d7d-aggregates", [Aggregate view of order (UML class diagram). The order is a third root: its placement terms refer to the checkout payment of @fig-d7c-aggregates only by `paymentId`.])
 
-Three lifecycles carry the money rules, so we draw them: the team (@fig-st-team), the purchase intent (@fig-st-intent) and the checkout payment (@fig-st-payment). @tbl-lifecycles lists the simpler lifecycles of the order, the listing and the refund obligation. `GroupDeal` checks every transition with `DealStatus.canTransitionTo`: only `OPEN` moves to a final state (`SUCCEEDED` when `currentSize` reaches `targetSize`, `EXPIRED` when the database clock passes `expireTime`), and a final state never changes. The enum also allows `OPEN` to `FAILED` and `OPEN` to `CANCELED` for a future administrative cancellation; no code path uses them in this release. The purchase intent has no state field: its state is derived from `fulfilledPaymentId` and `expiredAt`.
+Three lifecycles carry the money rules, so we draw them: the team (@fig-st-team), the purchase intent (@fig-st-intent) and the checkout payment (@fig-st-payment). @tbl-lifecycles lists the simpler lifecycles of the order, the listing and the refund obligation. `GroupDeal` checks every transition with `DealStatus.canTransitionTo`: only `OPEN` moves to a final state (`SUCCEEDED` when `currentSize` reaches `targetSize`, `EXPIRED` when the database clock passes `expireTime`), and a final state never changes. The enum also allows `OPEN` to `FAILED` and `OPEN` to `CANCELED` for a future administrative cancellation; no code path uses them in this release.
 
 #afig("a-uc05-st-deal", lbl: <fig-st-team>, [Team lifecycle view (UML state machine diagram). Only an open team admits a paid join; the join that fills the last seat makes the team succeed, and a paid join that cannot be admitted is refunded. `FAILED` and `CANCELED` exist in `DealStatus` but have no incoming transition.])
 
@@ -631,7 +631,7 @@ Three lifecycles carry the money rules, so we draw them: the team (@fig-st-team)
 
 ==== Domain events, event enrichment and broker choreography
 
-Our event design (AD-04, #src("backend/docs/adr/0007-cross-service-events-sns-sqs.md")[ADR 0007]) separates in-process domain events from versioned integration events between services. It combines local coordination inside one transaction with broker choreography for fan-out to other services (@fig-d8-domain-events, @fig-d8b-integration-events); @tbl-domain-events lists each event with its publisher, payload and subscribers.
+When a team succeeds, three things follow, and they need different guarantees. The team's orders must be confirmed in the same transaction. Buyers must be told, but a notification outage must not roll back the team. The open-team cache must be refreshed, but only after the commit. So our event design (AD-04, #src("backend/docs/adr/0007-cross-service-events-sns-sqs.md")[ADR 0007]) uses two kinds of event. In-process domain events coordinate work inside one transaction: `OrderLifecycleSubscriber` confirms the orders `BEFORE_COMMIT`. Versioned integration events, written to the outbox in that same transaction, reach other services through broker choreography (@fig-d8-domain-events, @fig-d8b-integration-events). @tbl-domain-events lists each event with its publisher, payload and subscribers.
 
 #afig("d8-domain-events", [In-process domain event view of `commerce-svc` (UML component diagram). Every dependency points at the event bus: three application services publish four domain events to it, and five subscribers listen to it before or after the commit, in the order shown. No publisher depends on a subscriber, so a subscriber is added without changing any publisher. The shaded box is the messaging element.])
 
@@ -687,7 +687,7 @@ Our event design (AD-04, #src("backend/docs/adr/0007-cross-service-events-sns-sq
   caption: [Internal domain events and published integration events with their publisher, payload and subscribers; V1 is the `version` field of `IntegrationEventEnvelope`. Source: @fig-d8-domain-events, @fig-d8b-integration-events and the code.],
 ) <tbl-domain-events>
 
-The SNS topic is `blocbuy-swe5001-domain-events`; its queues are `blocbuy-swe5001-notification` and `blocbuy-swe5001-audit`, each with a `-dlq` dead-letter queue (`infra/swe5001/modules/messaging/main.tf`).
+
 
 Two design principles shape this event pipeline:
 

@@ -16,7 +16,7 @@
 
 == Physical Architecture & Design
 
-The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the VPC hold the data stores (AD-15, @fig-d6-network). Runtime is disposable; by design the edge and foundation stacks stay between sessions (AD-12); we destroyed them after the final campaign on 15 November (§5.3).
+The physical design answers one question: how do we run three isolated services on AWS for a system used a few hours a week, when an always-on runtime would cost about US\$125 a month (AD-12)? We buy isolation and a small bill rather than always-on capacity. The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`): three containers on ECS Fargate behind CloudFront and one Application Load Balancer (ALB), with one PostgreSQL server, one Valkey node and one domain-event SNS topic with SQS queues. Only the ALB and the NAT instance sit in public subnets; ECS uses private application subnets. Separate data subnets with no route out of the VPC hold the data stores (AD-15, @fig-d6-network). Runtime is disposable; by design the edge and foundation stacks stay between sessions (AD-12); we destroyed them after the final campaign on 15 November (§5.3).
 
 @tbl-logical-physical maps each logical element of @tbl-logical-elements (§3.1.3) to the product that implements it. The last three rows have no logical counterpart: they exist only because of where the system runs.
 
@@ -38,7 +38,7 @@ The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`)
     [PublishedEvents V1], [`IntegrationEventEnvelope` JSON in `sys_outbox`], [`TeamSucceededV1`, `TeamExpiredV1` and `PaymentSucceededV1`; `OutboxRelayService` publishes them through `SnsOutboxEventTransport` (AD-04)],
     [Message broker], [Amazon SNS], [Topic `blocbuy-swe5001-domain-events`],
     [Event queue (notification)], [Amazon SQS], [Queue `blocbuy-swe5001-notification` with the DLQ `blocbuy-swe5001-notification-dlq`; read by `SqsNotificationEventConsumer`],
-    [Event queue (audit)], [Amazon SQS], [Queue `blocbuy-swe5001-audit` with a DLQ; the subscription takes event types that start with `Team`; no consumer (it demonstrates fan-out, ADR 0007)],
+    [Event queue (audit)], [Amazon SQS], [Queue `blocbuy-swe5001-audit` with a DLQ; the subscription takes event types that start with `Team`; no consumer],
     [Identity, commerce and notification data stores], [Amazon RDS for PostgreSQL 18], [`db.t4g.micro`, 20 GiB gp3, one zone; three databases (`identity`, `commerce`, `notification`) on one server],
     [Session store], [Amazon ElastiCache for Valkey 8.0], [`cache.t4g.micro`, one node, TLS and an AUTH token; Sa-Token sessions and the role snapshot, read through `SessionStpInterface`],
     [Identity provider], [Google Sign-In (external)], [Called from identity through fck-nat],
@@ -61,7 +61,7 @@ The paths in @fig-d5a-communication-paths work as follows:
 
 - *Browser traffic* reaches CloudFront over HTTPS. CloudFront serves the single-page application from S3 and forwards `/api/*` to the ALB. Stripe's webhook enters the same way.
 - *The ALB* picks the service by path. Identity takes `/api/v1/auth/*` and `/api/v1/users/*`, notification takes `/api/v1/notifications*`, and commerce takes the rest of `/api/*`. A high-priority rule (priority 5; the ALB evaluates lower numbers first) returns 404 for `/internal/*` and `/api/internal/*` before any routing rule matches, so internal endpoints are only reachable inside the VPC.
-- *Services* make one synchronous call between them: commerce calls identity through Service Connect (AD-06). Everything else between services goes through events: commerce writes them to its outbox, a relay publishes them to SNS, and SNS delivers copies to two SQS queues (AD-04): `notification-svc` reads the notification queue, and the audit queue has no consumer (it demonstrates fan-out, ADR 0007).
+- *Services* make one synchronous call between them: commerce calls identity through Service Connect (AD-06). Everything else between services goes through events: commerce writes them to its outbox, a relay publishes them to SNS, and SNS delivers copies to two SQS queues (AD-04): `notification-svc` reads the notification queue, and the audit queue has no consumer (§3.1.4.6).
 - *Every task* reads its secrets (database, Valkey, OAuth and Stripe) from SSM Parameter Store when it starts; host, port and URL are plain environment variables. Database passwords never pass through Terraform state (§3.2.2).
 - *All three services* read the shared login session from Valkey over TLS with an AUTH token (AD-05).
 - *Outbound calls* leave through fck-nat: identity exchanges the Google sign-in code, commerce calls the Stripe API and publishes to SNS, and `notification-svc` long-polls SQS. The same path carries the tasks' other calls to AWS APIs; S3 traffic uses the gateway endpoint instead.
@@ -113,7 +113,7 @@ Tested locally, not on AWS: module validation rejects reused data CIDRs, and `te
 
 === Key Architectural Decisions
 
-The physical decisions buy isolation and a small bill rather than always-on capacity: managed containers on ARM (AD-07, AD-08), one guarded entry point (AD-09), single shared data and egress nodes (AD-10, AD-11), a runtime that exists only while used (AD-12), no Kubernetes (AD-13), a tag-fenced stack in the shared team account (AD-14), data subnets with no route out (AD-15) and scaling on requests per task (AD-20); @tbl-ad-physical states each one. Prices are on-demand list prices for `ap-southeast-1` from our cost estimate of 25 September 2026 (`04-aws-cost-estimate.md`), unless the row names another source.
+The physical decisions are managed containers on ARM (AD-07, AD-08), one guarded entry point (AD-09), single shared data and egress nodes (AD-10, AD-11), a runtime that exists only while used (AD-12), no Kubernetes (AD-13), a tag-fenced stack in the shared team account (AD-14), data subnets with no route out (AD-15) and scaling on requests per task (AD-20); @tbl-ad-physical states each one. Prices are on-demand list prices for `ap-southeast-1` from our cost estimate of 25 September 2026 (`04-aws-cost-estimate.md`), unless the row names another source.
 
 #figure(
   ad-table(

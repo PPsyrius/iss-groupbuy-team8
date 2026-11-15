@@ -22,7 +22,7 @@ The architecture's main limits are single points in the data tier (AISS-01, AISS
   caption: [Roadmap phases for open limitations. Proposed: R1 and R2 dates set on 5 November 2026, assuming a go-live decision in December 2026.],
 ) <tbl-roadmap>
 
-@tbl-aiss lists each limitation with the decision that accepted it, its resolution and its owner.
+
 
 #figure(
   table(

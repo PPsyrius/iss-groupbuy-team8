@@ -36,7 +36,7 @@ Three choices kept the plan inside the guideline. The split stopped at three ser
     [Phase D, from 22 Oct], [Separate data subnets (AD-15); promotions of 10 and 11 November; load reruns; V4 R5, V5 R3 and V7 R4 passed on AWS within the limits in §4.1–§4.2], [AD-15],
   ),
   kind: table,
-  caption: [Architecture changes per period, with the main decisions of each period only; AD-05, AD-07 to AD-11, AD-13, AD-14 and AD-16 are not placed in a period. Source: @tbl-milestones and the AD tables (§3.1.1, §3.2.1, §3.3).],
+  caption: [Architecture changes per period, with the main decisions of each period only; The other ADs are not placed in a period. Source: @tbl-milestones and the AD tables (§3.1.1, §3.2.1, §3.3).],
 ) <tbl-sprint-architecture>
 
 == Project Status
@@ -83,7 +83,7 @@ The scoped platform is built and deployed, with AWS evidence for routing, load-d
   caption: [Verification scenarios V1–V8. Source: #src("docs/swe5001/impl-verification-observability.md")[verification plan] and the results in §4.1–§4.2 and §5.3.],
 ) <tbl-verification-scenarios>
 
-*Outstanding issues.* Each open item has an owner and a proposed date in @tbl-aiss and @tbl-roadmap (§3.4). The principal verification gaps are capacity (AISS-12) and the remaining availability scenarios (AISS-13); the interrupted start-up defect is still open (AISS-14). Progress report 2 has no record (#iss(462)); §2.3 gives the milestone and effort figures.
+*Outstanding issues.* Each open item has an owner and a proposed date in @tbl-aiss and @tbl-roadmap (§3.4). The principal verification gaps are capacity (AISS-12) and the remaining availability scenarios (AISS-13); the interrupted start-up defect is still open (AISS-14). Progress report 2 has no record (#iss(462)).
 
 == Project Metrics
 
