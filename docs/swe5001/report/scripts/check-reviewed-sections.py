@@ -100,7 +100,11 @@ def check_published_validation(sections):
         assert '"' + prefix + '"' in lib
     targets = set()
     for content in sections.values():
-        assert not re.search(r'working[- ](?:tree|copy|draft) (?:evidence|records|sources)|evidence awaiting publication|working-draft publication boundary', content, re.I), 'Stale validation-publication wording'
+        # The 13–14 Nov packages are published; the explicitly dated 15 Nov
+        # follow-up is still local. Do not prohibit its honest local provenance.
+        for paragraph in content.split('\n\n'):
+            if re.search(r'working[- ](?:tree|copy|draft) (?:evidence|records|sources)|evidence awaiting publication|working-draft publication boundary', paragraph, re.I):
+                assert '15 Nov' in paragraph or '15 November' in paragraph, 'Undated local publication wording'
         for path in re.findall(r'#published-evidence\("([^"]+)"\)', content):
             assert path.startswith(VALIDATION_PACKAGES) and '..' not in path, path
             git('cat-file', '-e', 'HEAD:docs/swe5001/evidence/' + path.split('#')[0])
@@ -108,6 +112,11 @@ def check_published_validation(sections):
     assert len(targets) >= 9, 'Missing published validation records or receipts'
     status = sections['02-project-conduct.typ']
     assert 'mutable' in status and 'unmerged' in status and 'not frozen submission citations' in status
+    assert 'Publication amendment, 15 November 2026' in status and '479d3409' in status
+    assert 'LOCAL WORKING-TREE, not pushed' in status
+    availability = sections['04-2-availability.typ']
+    for required in ('<tbl-followup-15nov>', '167.578 s', '9 → 9 → 10', 'COMMON_500_001', 'COMMON_200_000', 'No R11 card confirmation'):
+        assert required in availability, required
     return len(targets)
 
 

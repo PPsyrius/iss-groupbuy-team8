@@ -132,7 +132,7 @@ S8 fixes one lock order for every path that settles money. In the sequence diagr
 
 ==== Two buyers, one team
 
-@fig-d12a-two-buyers-start and @fig-d12b-two-buyers-join follow two buyers through UC3 START and UC4 JOIN. The leader pays for a two-seat listing and shares the invite link. After the leader's payment the team has one paid member. The second buyer, the joiner, opens the invite link and pays; that payment fills the second seat. Each buyer sees their own order; the team's status is shared. We recorded this flow on 24 October on the SWE5006 monolith on EC2 (same code, `monolith` topology; §6.6). It has not been run on the three-service runtime (§2.2). @tbl-two-buyer-walkthrough lists the recorded steps.
+@fig-d12a-two-buyers-start and @fig-d12b-two-buyers-join follow two buyers through UC3 START and UC4 JOIN. The leader pays for a two-seat listing and shares the invite link. After the leader's payment the team has one paid member. The second buyer, the joiner, opens the invite link and pays; that payment fills the second seat. Each buyer sees their own order; the team's status is shared. We recorded this flow on 24 October on the SWE5006 monolith on EC2 (same code, `monolith` topology; §6.6). @tbl-two-buyer-walkthrough retains that historical recording; the new 15 November qualified three-service normal-path result is separately recorded in @tbl-followup-15nov (§4.2), not a rewrite of the recording or full topology-parity claim.
 
 #figure(
   table(
