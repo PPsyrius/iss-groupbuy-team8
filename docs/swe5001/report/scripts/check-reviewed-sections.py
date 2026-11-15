@@ -152,7 +152,7 @@ def main():
     checks['v2-plateau-rows'] = len(rows)
     assert all(s in perf for s in ('725,999', '726,000', '360,000'))
     assert 'No record covers scale-in' not in perf
-    assert all(s in perf for s in ('75 of 181', '130 of 181'))
+    assert '75 and 130 of 181' in perf and '181 connections' in perf
     assert re.search(r'(?:not|unproven|incomplete|missing)[^.\n]*(?:acceptance|observations|analyser)|(?:acceptance|observations|analyser)[^.\n]*(?:not|unproven|incomplete|missing)', perf, re.I)
     checks['reviewed-performance-boundaries'] = True
 
