@@ -100,6 +100,9 @@
   // An AWS region or zone name (`ap-southeast-1`, `ap-southeast-1a`) never breaks at its hyphens.
   show raw.where(block: false): it => if it.text.starts-with("ap-southeast-1") { box(it) } else { it }
   show table: it => {
+    // Report-local minimum for inline code in dense tables; do not inherit
+    // compounded relative reductions from the shared template.
+    show raw.where(block: false): set text(size: 8pt)
     show raw.where(block: false): r => {
       show regex("[_./(,]"): m => m.text + sym.zws
       show regex("[a-z][A-Z]"): m => m.text.at(0) + sym.zws + m.text.at(1)

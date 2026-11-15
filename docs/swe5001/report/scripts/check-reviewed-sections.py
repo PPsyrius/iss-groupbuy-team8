@@ -100,23 +100,23 @@ def check_published_validation(sections):
         assert '"' + prefix + '"' in lib
     targets = set()
     for content in sections.values():
-        # The 13–14 Nov packages are published; the explicitly dated 15 Nov
-        # follow-up is still local. Do not prohibit its honest local provenance.
-        for paragraph in content.split('\n\n'):
-            if re.search(r'working[- ](?:tree|copy|draft) (?:evidence|records|sources)|evidence awaiting publication|working-draft publication boundary', paragraph, re.I):
-                assert '15 Nov' in paragraph or '15 November' in paragraph, 'Undated local publication wording'
         for path in re.findall(r'#published-evidence\("([^"]+)"\)', content):
             assert path.startswith(VALIDATION_PACKAGES) and '..' not in path, path
             git('cat-file', '-e', 'HEAD:docs/swe5001/evidence/' + path.split('#')[0])
             targets.add(path)
     assert len(targets) >= 9, 'Missing published validation records or receipts'
-    status = sections['02-project-conduct.typ']
-    assert 'mutable' in status and 'unmerged' in status and 'not frozen submission citations' in status
-    assert 'Publication amendment, 15 November 2026' in status and '479d3409' in status
-    assert 'LOCAL WORKING-TREE, not pushed' in status
     availability = sections['04-2-availability.typ']
-    for required in ('<tbl-followup-15nov>', '167.578 s', '9 → 9 → 10', 'COMMON_500_001', 'COMMON_200_000', 'No R11 card confirmation'):
+    # Keep provenance and scope at the result, rather than requiring a rendered
+    # editorial publication changelog in the project-status narrative.
+    source_note = next(p for p in availability.split('\n\n') if p.startswith('*Sources.*'))
+    for required in ('71b06b5', '20261115-acceptance-followup/', 'local, not published online', 'mutable', 'tested application revision'):
+        assert required in source_note, required
+    assert re.search(r'\bare mutable\b', source_note)
+    assert not re.search(r'\bimmutable\b|\bfrozen submission citations\b', source_note)
+    assert not re.search(r'https://github\.com/\S+/blob/71b06b5', '\n'.join(sections.values()))
+    for required in ('<tbl-followup-15nov>', '167.578 s', '9 → 9 → 10', 'COMMON_500_001', 'COMMON_200_000', 'not card confirmation, signed-webhook failure/redelivery or replay', 'for buyer B/product P in the failed-request window', 'scoped to that intent/reserved team'):
         assert required in availability, required
+    assert '@tbl-followup-15nov' in sections['02-project-conduct.typ']
     return len(targets)
 
 

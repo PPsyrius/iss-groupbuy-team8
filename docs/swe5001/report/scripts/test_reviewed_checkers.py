@@ -126,10 +126,11 @@ class ReviewedCheckerTests(unittest.TestCase):
             self.assertEqual(reviewed.snapshot('docs/swe5001/evidence/' + path,
                                                '05-devops.typ', None), reviewed.EVIDENCE)
 
-    def test_stale_validation_publication_claim_is_rejected(self):
-        with self.assertRaisesRegex(AssertionError, 'Stale validation-publication'):
-            self.run_report(lambda name, content: content + '\nWorking-tree evidence awaiting publication.'
-                            if name == 'sections/02-project-conduct.typ' else content)
+    def test_local_validation_cannot_claim_online_publication(self):
+        with self.assertRaises(AssertionError):
+            self.run_report(lambda name, content: content.replace(
+                'local, not published online', 'published online')
+                if name == 'sections/04-2-availability.typ' else content)
 
     def test_published_validation_rejects_unrelated_or_traversal_paths(self):
         for path in ('20261114-v8-r4-live/../private.json', 'unrelated/README.md'):
@@ -138,9 +139,10 @@ class ReviewedCheckerTests(unittest.TestCase):
                                 if name == 'sections/02-project-conduct.typ' else content)
 
     def test_publication_must_not_claim_frozen_submission_citations(self):
-        with self.assertRaises(AssertionError):
-            self.run_report(lambda name, content: content.replace('not frozen submission citations', 'frozen submission citations')
-                            if name == 'sections/02-project-conduct.typ' else content)
+        for replacement in ('are immutable', 'are frozen submission citations'):
+            with self.subTest(replacement=replacement), self.assertRaises(AssertionError):
+                self.run_report(lambda name, content: content.replace('are mutable', replacement)
+                                if name == 'sections/04-2-availability.typ' else content)
 
     def test_changed_calibration_table_is_rejected(self):
         # Change the first completed-count cell independent of table formatting.
@@ -224,14 +226,14 @@ class ReviewedCheckerTests(unittest.TestCase):
     def test_reversed_account_read_boundary_is_rejected(self):
         with self.assertRaises(AssertionError):
             self.run_report(lambda name, content: content.replace(
-                'No output is retained to verify that observation.',
+                'No command output is retained.',
                 'AWS output independently verifies that observation.')
                 if name.endswith('04-3-security.typ') else content)
 
     def test_missing_account_read_boundary_is_rejected_despite_other_qualifiers(self):
         with self.assertRaises(AssertionError):
             self.run_report(lambda name, content: content.replace(
-                'No output is retained to verify that observation.', '')
+                'No command output is retained.', '')
                 if name.endswith('04-3-security.typ') else content)
 
     def test_governance_requires_missing_output_boundary(self):
