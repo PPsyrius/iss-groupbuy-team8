@@ -72,7 +72,7 @@ The scoped platform was built and deployed, with AWS evidence for routing, load-
     table.header([ID], [Scenario], [Status and section]),
     [V1], [Smoke suite through CloudFront after each start-up (topology parity)], [Passed in every green promotion (§5.3)],
     [V2], [Monolith load baseline: ten 60 s plateaus up to 200 req/s], [Passed on AWS, 11 Nov (baseline) and 16 Oct (§4.1)],
-    [V3], [HTTP auto-scaling: ramp to 600 req/s while commerce scales out], [V3 r4 met the k6 gates on AWS, 11 Nov, with session-only settings (@tbl-perf-configs); no analyser verdict, and V3 r1–r3 failed (§4.1, AISS-12)],
+    [V3], [HTTP auto-scaling: ramp to 600 req/s while commerce scales out], [V3 r4 met the k6 gates on AWS, 11 Nov, with the session settings in @tbl-perf-configs; no analyser verdict, and V3 r1–r3 failed (§4.1, AISS-12)],
     [V4], [Queue-driven scaling: an expiry burst of about 2,000 teams grows the notification backlog and its tasks], [R5 passed on AWS, 14 Nov, with an experimental expiry configuration; not a release or capacity test (§4.1, AISS-13)],
     [V5], [Self-healing: a task stopped under steady load], [R3 passed on AWS, 13 Nov, after the size and warm-up correction; R1 was interrupted and R2 failed (§4.2, AISS-13)],
     [V6], [Safe deployment: a broken image rolled back by the circuit breaker], [Cut on 11 Oct (§4.2, AISS-13)],

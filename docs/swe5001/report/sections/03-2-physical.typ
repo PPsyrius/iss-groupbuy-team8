@@ -175,7 +175,7 @@ Compute is managed containers on ARM (AD-07, AD-08) behind one guarded entry poi
       *Context:* An always-on runtime would cost about US\$125 a month (estimated in the project proposal) for a system used a few hours a week. \
       *Options considered:* (a) always on, rejected for that cost; (b) scale to zero, rejected because the database, the cache, the ALB and the NAT instance still bill while idle; (c) destroy and rebuild. \
       *Choice:* (c): the `edge` stack (CloudFront, S3) is permanent; the `runtime` stack is created for each session or release and destroyed afterwards. \
-      *Trade-off:* Estimated US\$0.17 to US\$0.20 an hour while up at the release sizing of 11 November, every task 0.5 vCPU and 1 GiB (`impl-aws-infrastructure.md` §9); the larger sizing of the 11 November session cost about US\$0.27 an hour (§6.3); but a full up job took 31 min 37 s on 17 October and 29 min 54 s in V8 R4 on 14 November, run by hand (@tbl-delivery-timings, AISS-06), and no data survives a session. \
+      *Trade-off:* Estimated US\$0.17 to US\$0.20 an hour while up at the release sizing of 11 November, every task 0.5 vCPU and 1 GiB (`impl-aws-infrastructure.md` §9); the larger sizing of the 11 November session was estimated from list prices at about US\$0.27 an hour (§6.3); but a full up job took 31 min 37 s on 17 October and 29 min 54 s in V8 R4 on 14 November, run by hand (@tbl-delivery-timings, AISS-06), and no data survives a session. \
       *Consequence:* A release into a fresh runtime also tests rebuilding from nothing; backups are deliberately off. \
       *Record:* No ADR; project proposal.
     ]),

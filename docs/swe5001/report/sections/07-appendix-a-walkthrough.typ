@@ -32,7 +32,7 @@ This appendix walks through the journey of §3.2.4 one screen at a time: a leade
 
 == How to read this appendix
 
-The screens come from a recording of 24 October 2026 (#iss(657)). Both payments ran in Stripe test mode, so no real money moved, and the two test accounts' names are blurred.
+The screens come from a recording of 24 October 2026 (#iss(657)). Both payments ran in Stripe test mode, so no real money moved; the leader's name is blurred and the member's is cropped out.
 
 Each caption names the buyer and the use-case step. UC4 steps are those of #xref(<tbl-uc4-flow>)[the UC4 flow-of-events table in §3.2.4]\; other steps (B1, B2 and so on) are from the detailed design source book. @tbl-a-journey also gives each screen's row of the two-buyer table (#xref(<tbl-two-buyer-walkthrough>)[the two-buyer walkthrough table], §3.2.4) and marks steps the recording does not show as "Not recorded".
 
@@ -66,7 +66,7 @@ The leader's part of the Start row (UC3) shows only its result. The leader's sig
 #figure(
   kind: image,
   shot("a01-listing.png", "BlocBuy listing page for the Universal Travel Adapter: the team price S$22.00 next to S$29.00 struck through, 2 seats per bloc, a Start a bloc button and one open team with 1 of 2 joined and 1 seat left."),
-  caption: [The listing page while the leader's team was open, seen by the member before signing in. The team price "S\$22.00" sits against "S\$29.00" struck through, with "2 seats per bloc", "Start a bloc" and the open team's "1 of 2 joined" and "1 seat left".],
+  caption: [The listing page while the leader's team was open (UC3 B10), seen by the member before signing in. The team price "S\$22.00" sits against "S\$29.00" struck through, with "2 seats per bloc", "Start a bloc" and the open team's "1 of 2 joined" and "1 seat left".],
 ) <fig-a-listing>
 
 #figure(
