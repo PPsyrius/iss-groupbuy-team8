@@ -119,7 +119,7 @@ Most delivery milestones were met on time or early. Four slipped: the monolith o
 
 === Effort per member
 
-Estimated effort is 77.5 person-days: about 50 through the presentation and 27.5 for the subsequent validation and report work. This is 55% above the briefing's guideline of about ten person-days per member (briefing Q8). The original plan allowed 2.5 person-days for the report but did not budget for the additional AWS sessions, load-test reruns and design work needed to answer the presentation feedback.
+Estimated effort is 77.5 person-days: about 50 to 19 October, as shown in our presentation, and 27.5 in Phase D, from 22 October, for validation and report work. This is 55% above the briefing's guideline of about ten person-days per member (briefing Q8). The original plan allowed 2.5 person-days for the report but did not budget for the additional AWS sessions, load-test reruns and design work needed to answer the presentation feedback.
 
 #figure(
   table(

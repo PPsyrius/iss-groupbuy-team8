@@ -107,6 +107,8 @@
 
 #heading(numbering: none, outlined: true)[Abbreviations]
 
+BlocBuy's domain terms are defined in the ubiquitous language glossary (§3.1.4.7, @tbl-ubiquitous-language).
+
 #figure(
   table(
     columns: (0.9fr, 3fr),

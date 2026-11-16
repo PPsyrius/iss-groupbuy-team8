@@ -51,11 +51,11 @@ The physical design answers one question: how do we run three isolated services 
   caption: [Logical elements of @fig-d3-logical-view and @fig-d3b-logical-events-data and the products that implement them. Source: `infra/swe5001` and `backend`.],
 ) <tbl-logical-physical>
 
+*Deployment view.* Two UML deployment diagrams show the physical layout. @fig-d5-deployment places each artefact in its region, VPC, availability zone and subnet; @fig-d5a-communication-paths shows the paths between the nodes.
+
 #afig("d5-physical-deployment", lbl: <fig-d5-deployment>, [Physical deployment view (UML deployment diagram). Each availability zone holds a public, a private application and a data subnet. Each service's image is deployable in either zone's Fargate environment; the note gives the task count per service over both zones, so `identity-svc`, with one task, is not zone-redundant. RDS and Valkey each run in one data subnet that AWS chooses; the figure draws them where they ran on 10 November, and each subnet group spans both data subnets. Commerce runs at 1 vCPU and 2 GiB on `dev` since #pr(807) (14 Nov); the release of 11 Nov (`3a893036`) ran it at 0.5 vCPU and 1 GiB.])
 
 #afig("d5a-communication-paths", [Communication path view (UML deployment diagram). Each service runs as a Fargate task, an execution environment that holds the service's artefact of @fig-d5-deployment; the paths join these nodes. Only CloudFront reaches the load balancer, all three services reach Valkey and PostgreSQL, and every outbound call leaves through fck-nat on HTTPS 443: to Stripe and Google, to publish to the SNS topic, and to long-poll the notification queue.])
-
-*Deployment view.* Two UML deployment diagrams show the physical layout. @fig-d5-deployment places each artefact in its region, VPC, availability zone and subnet; @fig-d5a-communication-paths shows the paths between the nodes.
 
 The paths in @fig-d5a-communication-paths work as follows:
 
@@ -176,7 +176,7 @@ Compute is managed containers on ARM (AD-07, AD-08) behind one guarded entry poi
       *Options considered:* (a) always on, rejected for that cost; (b) scale to zero, rejected because the database, the cache, the ALB and the NAT instance still bill while idle; (c) destroy and rebuild. \
       *Choice:* (c): the `edge` stack (CloudFront, S3) is permanent; the `runtime` stack is created for each session or release and destroyed afterwards. \
       *Trade-off:* Estimated US\$0.17 to US\$0.20 an hour while up at the release sizing of 11 November, every task 0.5 vCPU and 1 GiB (`impl-aws-infrastructure.md` §9); the larger sizing of the 11 November session cost about US\$0.27 an hour (§6.3); but a full up job took 31 min 37 s on 17 October and 29 min 54 s in V8 R4 on 14 November, run by hand (@tbl-delivery-timings, AISS-06), and no data survives a session. \
-      *Consequence:* Every release is also a rebuild-from-nothing test; backups are deliberately off. \
+      *Consequence:* A release into a fresh runtime also tests rebuilding from nothing; backups are deliberately off. \
       *Record:* No ADR; project proposal.
     ]),
     ("AD-13", [
@@ -193,9 +193,9 @@ Compute is managed containers on ARM (AD-07, AD-08) behind one guarded entry poi
       *Our own SWE5001 stack in the shared team account, fenced by tags.* \
       *Driver:* Security (isolation between the two environments). \
       *Context:* The SWE5006 environment and the SWE5001 runtime share the project member account in an AWS Organization; neither must be able to damage the other. \
-      *Options considered:* (a) a separate member account (`swe5001-poc`, since closed); (b) the shared account with no fence, rejected because either project could change the other's resources; (c) the shared account with the SWE5001 apply role fenced to its own resources. \
+      *Options considered:* (a) a separate member account: on 1 October on AWS, `swe5001-poc` ran our proof of concept (#src("docs/swe5001/architecture-options-study/poc.md")[proof-of-concept record]), and we closed it on 16 October; the SWE5001 runtime instead reuses the project account's Identity Center sign-in, GitHub OIDC provider and SCPs; (b) the shared account with no fence, rejected because either project could change the other's resources; (c) the shared account with the SWE5001 apply role fenced to its own resources. \
       *Choice:* (c). The SWE5001 apply role denies changes to resources without the SWE5001 tags or name prefix (#src("infra/swe5001/foundation/github-oidc.tf")[`github-oidc.tf`], "Guardrail for the shared account"), except its CloudWatch alarm, dashboard and metric access (AISS-15); SCPs and Identity Center govern the whole account, and an account administrator cannot lift an SCP. \
-      *Trade-off:* One account, one set of short-lived logins and one bill shared by both projects (§6.3); the fence is an IAM policy that an administrator can change, weaker than an account boundary. An SCP can also block legitimate calls, as a CloudFront metric read was on 16 October (§4.3, @tbl-findings). \
+      *Trade-off:* One account, one set of short-lived logins and one bill shared by both projects (§6.3); the `Sandbox-Guardrails` SCP denies costly services and limits EC2 and RDS instance classes, but sets no spending limit (§4.3); the fence is an IAM policy that an administrator can change, weaker than an account boundary. An SCP can also block legitimate calls, as a CloudFront metric read was on 16 October (§4.3, @tbl-findings). \
       *Consequence:* Access details are in §4.3. \
       *Record:* No ADR; `docs/deploy/aws-account-governance/README.md`.
     ]),
@@ -297,7 +297,7 @@ The trade-off: one migration stream is simple to build and test, and the grants 
 
 The schema follows our PostgreSQL DDL conventions:
 
-- *Keys.* Native `uuid` primary keys generated as UUIDv7 (`DEFAULT uuidv7()`, PostgreSQL 18). UUIDv7 is time-ordered, so new rows mostly append to the index and split fewer pages, and the database assigns it at insert, so the outbox row ID serves as the event ID. Two exceptions: `biz_payment_review_case` names its key `case_id`, and `sys_consumed_message` has the composite key (`event_id`, `consumer`).
+- *Keys.* Native `uuid` primary keys generated as UUIDv7 (`DEFAULT uuidv7()`, PostgreSQL 18). UUIDv7 is time-ordered, so new rows mostly append to the index and split fewer pages. The database assigns the key at insert, so the outbox row ID serves as the event ID. Two exceptions: `biz_payment_review_case` names its key `case_id`, and `sys_consumed_message` has the composite key (`event_id`, `consumer`).
 - *Prefixes.* `sys_` for platform and technical tables, `biz_` for business entities, `rel_` for many-to-many links, `log_` for append-only records.
 - *Audit and soft delete.* Ordinary business tables carry `create_time`, `create_by`, `update_time`, `update_by` and `deleted`; most mutable aggregates also carry `version` for optimistic locking (exceptions under the figures). A soft-deleted row must not block a new one, so most active-row uniqueness rules are partial indexes `WHERE deleted = false`. Two exceptions: `uq_biz_team_price_policy_product_version` (V6) is a plain index, and `uq_biz_refund_provider_id` (V11) is partial on `provider_refund_id IS NOT NULL`. Rules that must hold for every row ever written use plain unique indexes: one member, order, refund or review case per payment; one webhook event; one notification per event and recipient.
 - *No foreign keys or CHECK constraints.* Relationships are logical, kept by the application inside its transactions. This lets a table move to another service's database without unpicking constraints, and keeps validation in one place (the domain model). The cost is that the database does not catch an orphaned row; the unique indexes below catch the errors that matter most.

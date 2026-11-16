@@ -44,7 +44,7 @@ Expiry takes lock 1, cancels the team's orders with a status-guarded update, the
     table.cell(rowspan: 4)[S4 Persistence (Pers)],
     [Impacted], [`Team`, `PurchaseIntent`, `Payment`, `Order`, `Refund`],
     [Static], [One repository port per aggregate: `PaidGroupDealRepository`, `PurchaseIntentRepository`, `CheckoutPaymentRepository`, `OrderRepository`, `RefundRepository`, each with a MyBatis adapter],
-    [Dynamic], [Every repository write runs in its own transaction: a `critical` fragment in @fig-d12b-two-buyers-join and @fig-d14a-team-expiry, and the short claim and `finish` transactions of @fig-d14b-refund-retry. The sweep's reads (`currentTime`, `dueForExpiry`) run outside any transaction (@fig-d14a-team-expiry)],
+    [Dynamic], [Repository writes run inside the transactions these figures mark, and one transaction may hold several writes: a `critical` fragment in @fig-d12b-two-buyers-join and @fig-d14a-team-expiry, and the short claim and `finish` transactions of @fig-d14b-refund-retry. The sweep's reads (`currentTime`, `dueForExpiry`) run outside any transaction (@fig-d14a-team-expiry)],
     [Justification], [One owning module per table keeps the later split into services open (AD-03, AD-11)],
     table.cell(rowspan: 4)[S5 External interface (Ext)],
     [Impacted], [`PaymentGateway` (@fig-uc4-analysis, @fig-uc6-analysis), `PayUpfrontControl`, `RefundMembersControl` (pay)],
@@ -79,6 +79,8 @@ Expiry takes lock 1, cancels the team's orders with a status-guarded update, the
 ==== Joining a team by paying
 
 @fig-uc4-analysis is the analysis model of UC4 with UC10. `JoinTeamControl` realises the join, and `PayUpfrontControl`, the control of the included payment, hands it the confirmed payment. @tbl-uc4-flow is the flow of events; each step names the design element that performs it.
+
+#afig("a-uc04-ac", lbl: <fig-uc4-analysis>, [UC4 analysis view (UML class diagram, «boundary», «control» and «entity»). The buyer enters through `JoinTeamUI` and Stripe through the `PaymentGateway` boundary of UC10; actors are not drawn. `PayUpfrontControl` uses only the `Payment` entity, and `JoinTeamControl` uses the others; each object is traced to its design classes in @tbl-uc4-map-summary.])
 
 #figure(
   table(
@@ -128,8 +130,6 @@ Expiry takes lock 1, cancels the team's orders with a status-guarded update, the
   kind: table,
   caption: [UC4 analysis objects and the design classes that realise them, with the transition strategy that produced each. Source: code; strategies in @tbl-strategies-324.],
 ) <tbl-uc4-map-summary>
-
-#afig("a-uc04-ac", lbl: <fig-uc4-analysis>, [UC4 analysis view (UML class diagram, «boundary», «control» and «entity»). The buyer enters through `JoinTeamUI` and Stripe through the `PaymentGateway` boundary of UC10; actors are not drawn. `PayUpfrontControl` uses only the `Payment` entity, and `JoinTeamControl` uses the others; each object is traced to its design classes in @tbl-uc4-map-summary.])
 
 #afig("d11-uc4-design-classes", [UC4 design view (UML class diagram). Layers run from top to bottom: adapter and application, domain, infrastructure; the first column steps down one layer, from the webhook controller to its application interface and the `CheckoutPayment` record. No dependency leaves the domain, and payment reaches the order module only through `PaymentBusinessPort`. The purchase intent and order roots (@tbl-uc4-map-summary) sit behind that port and are not drawn.])
 
