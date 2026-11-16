@@ -168,7 +168,7 @@ Seller self-service is out of scope, as it was in SWE5006 (#src("docs/swe5006/re
     [Stock reservation], [Designed in the options study (study AD-04), not built], [—],
     [Distributed tracing with AWS Distro for OpenTelemetry and X-Ray], [Designed in the options study (study AD-11), not built; only a trace-ID header is propagated], [§4.4],
     [Analytics pipeline (SNS → Firehose → S3 → Athena)], [Studied, not designed; operational analytics only], [§6.5],
-    [AWS WAF (web application firewall) on the SWE5001 distribution], [Cut on 11 October to stay within the effort guideline], [§4.3],
+    [AWS WAF (web application firewall) on the SWE5001 distribution], [Cut on 11 October: neither course's grading rewarded it, so we spent the time on graded work], [§4.3],
   ),
   kind: table,
   caption: [Architected but not built. Sources: #src("docs/swe5001/report/registers.md")[AD and AISS registers]\; #src("docs/swe5001/architecture-options-study/README.md")[architecture options study].],
