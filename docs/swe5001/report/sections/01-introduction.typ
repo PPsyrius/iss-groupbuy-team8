@@ -5,6 +5,10 @@
 
 == Background
 
+// The BlocBuy brand mark, as in the SWE5006 report: 7 cm wide, flush left, no frame, caption or number.
+#align(left, image("/docs/swe5006/report/figures/blocbuy-logo.svg", width: 7cm,
+  alt: "BlocBuy logo: a striped shopping bag beside the wordmark BLOCBUY and the tagline ONE FOR ALL • ALL FOR ONE"))
+
 BlocBuy is a community group-buying platform: buyers form a team at a team price, pay to start or join it, and the platform settles the payments and either completes the team or refunds every member when it expires. We built these functions (use cases UC1–UC9) for SWE5006 as a modular monolith. For SWE5001 we re-architected the same code into a platform of three services on Amazon Web Services (AWS), and kept the monolith as a fallback topology (AD-01, §3.1.1). The question we had to answer was where to cut: a payment must never be separated from the seat it buys, while sign-in and notifications should scale apart from checkout, and a notification failure should never stop it.
 
 *Starting point.* On 29 September 2026 BlocBuy was one Java 21 and Spring Boot 4 application in the Alibaba COLA (Clean Object-Oriented and Layered Architecture) layering, with six bounded contexts in one deployable unit. It ran under Docker Compose on one Amazon EC2 host with PostgreSQL 18 and Redis 8, and the SWE5006 deployment still runs that way (#src("docs/swe5001/microservice-refactoring-plan.md")[refactoring plan, §1]).
