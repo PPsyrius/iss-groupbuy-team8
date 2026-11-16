@@ -5,9 +5,8 @@
 // heading, this one included.
 #import "../lib.typ": *
 
-// A cross-reference to a label elsewhere in the report. The appendix preview
-// (appendix-preview.typ) builds this file alone, where those labels do not exist, so it prints
-// the fallback text there; in the full report it is an ordinary reference.
+// A cross-reference to a label elsewhere in the report. If this file is ever built alone, those
+// labels do not exist and the fallback text prints; in the full report it is an ordinary reference.
 #let xref(target, fallback) = context {
   if query(target).len() > 0 { ref(target) } else { fallback }
 }

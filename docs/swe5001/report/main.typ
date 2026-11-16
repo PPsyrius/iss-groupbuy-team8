@@ -181,4 +181,5 @@ BlocBuy's domain terms are defined in the ubiquitous language glossary (§3.1.4.
 #include "sections/04-quality-attributes.typ"
 #include "sections/05-devops.typ"
 #include "sections/06-highlights.typ"
+#include "sections/07-appendix-a-walkthrough.typ"
 // The detailed design source book (sections/source-book.typ) is the team's design reference, not part of the report.

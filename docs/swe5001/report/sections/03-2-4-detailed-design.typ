@@ -137,7 +137,7 @@ Expiry takes lock 1, cancels the team's orders with a status-guarded update, the
 
 ==== Two buyers, one team
 
-@fig-d12a-two-buyers-start and @fig-d12b-two-buyers-join follow two buyers through UC3 START and UC4 JOIN. The leader pays for a two-seat listing and shares the invite link; the second buyer's payment fills the team. Each buyer sees their own order, while the team status is shared. @tbl-two-buyer-walkthrough records what we saw in the UI during the 24 October SWE5006 monolith demonstration. We did not inspect the database. @tbl-followup-15nov (§4.2) records the 15 November distributed normal-path test.
+@fig-d12a-two-buyers-start and @fig-d12b-two-buyers-join follow two buyers through UC3 START and UC4 JOIN. The leader pays for a two-seat listing and shares the invite link; the second buyer's payment fills the team. Each buyer sees their own order, while the team status is shared. @tbl-two-buyer-walkthrough records what we saw in the UI during the 24 October SWE5006 monolith demonstration. We did not inspect the database. Appendix A shows the same journey screen by screen. @tbl-followup-15nov (§4.2) records the 15 November distributed normal-path test.
 
 #figure(
   table(
