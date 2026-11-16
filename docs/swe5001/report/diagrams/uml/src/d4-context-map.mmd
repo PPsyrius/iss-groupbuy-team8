@@ -15,7 +15,7 @@ componentDiagram
         component Notification["Notification"] <<bounded context>> : generic subdomain
     }
     component Stripe["Stripe"] <<external system>>
-    component Common["common"] <<shared kernel>>
+    component Common["common"] <<library>>
     Identity "D · ACL" ..> "U" Google
     Catalog "D · ACL" ..> "U" Ranker : fail-open
     Payment "D · ACL" ..> "U" Stripe
@@ -24,11 +24,11 @@ componentDiagram
     Order "D" ..> "U" Catalog : Customer–Supplier
     GroupBuy -- Order : Partnership
     Order "D" ..> "U" Payment : Separated Interface
-    Payment "D" ..> "U" GroupBuy : Domain event
+    Payment "D" ..> "U" GroupBuy : Customer–Supplier
     NtSvc "D" ..> "U · OHS" CoSvc : Published Language
-    Common -- IdSvc : Shared Kernel
-    Common -- CoSvc : Shared Kernel
-    Common -- NtSvc : Shared Kernel
+    Common -- IdSvc : shared library
+    Common -- CoSvc : shared library
+    Common -- NtSvc : shared library
 %% route ortho
 %% route GroupBuy Order straight
 %% route NtSvc CoSvc hv

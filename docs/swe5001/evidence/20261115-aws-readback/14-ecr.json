@@ -1,0 +1,18 @@
+{
+  "repositories": [
+    {
+      "repositoryArn": "arn:aws:ecr:ap-southeast-1:402178232802:repository/dev/blocbuy",
+      "registryId": "402178232802",
+      "repositoryName": "dev/blocbuy",
+      "repositoryUri": "402178232802.dkr.ecr.ap-southeast-1.amazonaws.com/dev/blocbuy",
+      "createdAt": "2026-09-04T16:48:28.863000+08:00",
+      "imageTagMutability": "IMMUTABLE",
+      "imageScanningConfiguration": {
+        "scanOnPush": true
+      },
+      "encryptionConfiguration": {
+        "encryptionType": "AES256"
+      }
+    }
+  ]
+}

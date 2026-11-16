@@ -1,0 +1,3123 @@
+{
+  "Events": [
+    {
+      "EventName": "DescribeVolumes",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:57:15+08:00",
+      "EventSource": "ec2.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:57:15Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "DescribeVolumes",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "volumeSet": {},
+          "filterSet": {
+            "items": [
+              {
+                "name": "tag:Course",
+                "valueSet": {
+                  "items": [
+                    {
+                      "value": "swe5001"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ec2.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeInstances",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:57:15+08:00",
+      "EventSource": "ec2.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:57:15Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "DescribeInstances",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "instancesSet": {},
+          "filterSet": {
+            "items": [
+              {
+                "name": "tag:Course",
+                "valueSet": {
+                  "items": [
+                    {
+                      "value": "swe5001"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ec2.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeClusters",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:22+08:00",
+      "EventSource": "ecs.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:22Z",
+        "eventSource": "ecs.amazonaws.com",
+        "eventName": "DescribeClusters",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "clusters": [
+            "blocbuy-swe5001"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ecs.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "ListDashboards",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:22+08:00",
+      "EventSource": "monitoring.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:22Z",
+        "eventSource": "monitoring.amazonaws.com",
+        "eventName": "ListDashboards",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "dashboardNamePrefix": "blocbuy-swe5001"
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "resources": [
+          {
+            "type": "AWS::CloudWatch::Metric"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "monitoring.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeServices",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:21+08:00",
+      "EventSource": "ecs.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:21Z",
+        "eventSource": "ecs.amazonaws.com",
+        "eventName": "DescribeServices",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "cluster": "blocbuy-swe5001",
+          "services": [
+            "notification-svc"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ecs.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "AssumeRoleWithSAML",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:20+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "SAMLUser",
+          "principalId": "u2fdhXgZ+4PPpRT8P78F2gXeUsU=:pan",
+          "userName": "pan",
+          "identityProvider": "u2fdhXgZ+4PPpRT8P78F2gXeUsU="
+        },
+        "eventTime": "2026-11-15T07:56:20Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "AssumeRoleWithSAML",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "roleSessionName": "pan",
+          "roleArn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+          "principalArn": "arn:aws:iam::402178232802:saml-provider/AWSSSO_3492700004ce569f_DO_NOT_DELETE",
+          "durationSeconds": 3600
+        },
+        "responseElements": {
+          "credentials": {
+            "expiration": "2026-11-15T08:56:19Z"
+          },
+          "assumedRoleUser": {
+            "assumedRoleId": "AROAV3I5Q2HRKOV56JE35:pan",
+            "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan"
+          },
+          "packedPolicySize": 19,
+          "issuer": "https://portal.sso.ap-southeast-1.amazonaws.com/saml/assertion/NTkyODc3OTU1ODk5X2lucy04MjEwY2EyYzBiYmRlZThi",
+          "audience": "https://signin.aws.amazon.com/saml",
+          "sessionTokenUtilization": 19,
+          "sessionTokenSize": 792
+        },
+        "additionalEventData": {
+          "RequestDetails": {
+            "endpointType": "regional",
+            "awsServingRegion": "ap-southeast-1"
+          }
+        },
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::IAM::Role",
+            "ARN": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+          },
+          {
+            "accountId": "402178232802",
+            "type": "AWS::IAM::SAMLProvider",
+            "ARN": "arn:aws:iam::402178232802:saml-provider/AWSSSO_3492700004ce569f_DO_NOT_DELETE"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "secp256r1"
+        }
+      }
+    },
+    {
+      "EventName": "GetCallerIdentity",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:20+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:56:20Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:20Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "GetCallerIdentity",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": null,
+        "additionalEventData": {
+          "RequestDetails": {
+            "endpointType": "regional",
+            "awsServingRegion": "ap-southeast-1"
+          }
+        },
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "X25519MLKEM768"
+        }
+      }
+    },
+    {
+      "EventName": "GetCallerIdentity",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:20+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:56:20Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:20Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "GetCallerIdentity",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": null,
+        "additionalEventData": {
+          "RequestDetails": {
+            "endpointType": "regional",
+            "awsServingRegion": "ap-southeast-1"
+          }
+        },
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "X25519MLKEM768"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeServices",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:20+08:00",
+      "EventSource": "ecs.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:20Z",
+        "eventSource": "ecs.amazonaws.com",
+        "eventName": "DescribeServices",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "cluster": "blocbuy-swe5001",
+          "services": [
+            "commerce-svc"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ecs.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeClusters",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:20+08:00",
+      "EventSource": "ecs.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:20Z",
+        "eventSource": "ecs.amazonaws.com",
+        "eventName": "DescribeClusters",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "clusters": [
+            "arn:aws:ecs:ap-southeast-1:402178232802:cluster/blocbuy-swe5001"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ecs.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeInstances",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:19+08:00",
+      "EventSource": "ec2.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:19Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "DescribeInstances",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "instancesSet": {
+            "items": [
+              {
+                "instanceId": "i-0f9c33b80dc46ee90"
+              }
+            ]
+          },
+          "filterSet": {}
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ec2.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeSecurityGroupRules",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:18+08:00",
+      "EventSource": "ec2.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:18Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "DescribeSecurityGroupRules",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "Client.InvalidSecurityGroupRuleId.NotFound",
+        "errorMessage": "The security group rule ID 'sgr-0dfbeb3a88f068fa4' does not exist",
+        "requestParameters": {
+          "DescribeSecurityGroupRulesRequest": {
+            "SecurityGroupRuleId": {
+              "tag": 1,
+              "content": "sgr-0dfbeb3a88f068fa4"
+            }
+          }
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ec2.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeServices",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:18+08:00",
+      "EventSource": "ecs.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:18Z",
+        "eventSource": "ecs.amazonaws.com",
+        "eventName": "DescribeServices",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "cluster": "blocbuy-swe5001",
+          "services": [
+            "identity-svc"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ecs.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeSecurityGroupRules",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:17+08:00",
+      "EventSource": "ec2.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:17Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "DescribeSecurityGroupRules",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "Client.InvalidSecurityGroupRuleId.NotFound",
+        "errorMessage": "The security group rule ID 'sgr-0aead909662d17c1b' does not exist",
+        "requestParameters": {
+          "DescribeSecurityGroupRulesRequest": {
+            "SecurityGroupRuleId": {
+              "tag": 1,
+              "content": "sgr-0aead909662d17c1b"
+            }
+          }
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ec2.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeVpcEndpoints",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:17+08:00",
+      "EventSource": "ec2.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:17Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "DescribeVpcEndpoints",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "Client.InvalidVpcEndpointId.NotFound",
+        "errorMessage": "The Vpc Endpoint Id 'vpce-0a75750c036ff65bf' does not exist",
+        "requestParameters": {
+          "DescribeVpcEndpointsRequest": {
+            "VpcEndpointId": {
+              "tag": 1,
+              "content": "vpce-0a75750c036ff65bf"
+            }
+          }
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "ec2.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "GetResources",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:16+08:00",
+      "EventSource": "tagging.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          }
+        },
+        "eventTime": "2026-11-15T07:56:16Z",
+        "eventSource": "tagging.amazonaws.com",
+        "eventName": "GetResources",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "paginationToken": "",
+          "tagFilters": [
+            {
+              "key": "Course",
+              "values": [
+                "swe5001"
+              ]
+            },
+            {
+              "key": "Stack",
+              "values": [
+                "runtime"
+              ]
+            }
+          ],
+          "resourcesPerPage": 50
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "clientProvidedHostHeader": "tagging.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "GetResources",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:16+08:00",
+      "EventSource": "tagging.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          }
+        },
+        "eventTime": "2026-11-15T07:56:16Z",
+        "eventSource": "tagging.amazonaws.com",
+        "eventName": "GetResources",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "paginationToken": "JSRBVWEFcqeO8SGcqoaVON9yYOLI9A2GJT5kCa32zwdPhaExSrH+rV9PRCbYVTDttO3UqPDT/gsmpOhYhUZwYWHMAXP0P9S15abk0/o3dH1ryXFb5U4k+pm/wjKhKFRcWI30FWFuntrRJoI/Z5/xTqaVsAvBPSDh3sZvvrKvLoogBgbO7sShbmnnV0k6niillE/Tef4vW0CVkAXEayZKdCuLK7Oekt4IYxAC5jTuU2s5n1KS1c9673HM3chQMqwGKGbU+3cDM3AWchdQQoxKDADTh4vbP9Zv+iYzog==",
+          "tagFilters": [
+            {
+              "key": "Course",
+              "values": [
+                "swe5001"
+              ]
+            },
+            {
+              "key": "Stack",
+              "values": [
+                "runtime"
+              ]
+            }
+          ],
+          "resourcesPerPage": 50
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "clientProvidedHostHeader": "tagging.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "GetResources",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:16+08:00",
+      "EventSource": "tagging.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          }
+        },
+        "eventTime": "2026-11-15T07:56:16Z",
+        "eventSource": "tagging.amazonaws.com",
+        "eventName": "GetResources",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "paginationToken": "JSRBVWFX2QA/LYryNw1wP7xyYKvEO/timNOVRGdThO+x2zvKQAy6SImDBoscz60g/uItVSn3ea/aWko6uUwapsJQ3Fs7Kkh1IMahCsLn6w+pFtrAM89HqNzZa9krR5YYH3oX/GnuL5cUqE4SSoBy5N4kocBCaffb80QiIrQ+Lj0v+qX+u+MtuL1j6CqjlPcDSPM0t0Szy96aCda6KWNRBKxOf+o49FUjrFNz1WO0UtsPnIqrto5z9UaMIjpOgj+Mx5WlYHnfWtnhC9oFg9IA730fSllVv8u7Jt0sOQ==",
+          "tagFilters": [
+            {
+              "key": "Course",
+              "values": [
+                "swe5001"
+              ]
+            },
+            {
+              "key": "Stack",
+              "values": [
+                "runtime"
+              ]
+            }
+          ],
+          "resourcesPerPage": 50
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "clientProvidedHostHeader": "tagging.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "GetResources",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:16+08:00",
+      "EventSource": "tagging.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          }
+        },
+        "eventTime": "2026-11-15T07:56:16Z",
+        "eventSource": "tagging.amazonaws.com",
+        "eventName": "GetResources",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "paginationToken": "JSRBVWGTpRGPrYGRLQNIGSFyYOVosXjNtValCj3oRsnViOBl8l5V1klcVg0ifp37wB88pHBVLHMarDfROr4nV7EPBEpWuln7wgMhLiWjZ2qOL476WPpQMMtQ8abyuax9nxH+HGOWb1s+zttWRm4SOgbXl12Y+VV9QZSoObTEIB3PW1a4itlXB97q59ZqwiK3lXiPdlAChy45cleN1X1sl4gYpcUq77RXO1uUyVpEYzwOi8+sSuhtJ4zjvcJy6id85i9km/IaUagvquNppppX9FVsVX8ruAU1z7Ji",
+          "tagFilters": [
+            {
+              "key": "Course",
+              "values": [
+                "swe5001"
+              ]
+            },
+            {
+              "key": "Stack",
+              "values": [
+                "runtime"
+              ]
+            }
+          ],
+          "resourcesPerPage": 50
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "clientProvidedHostHeader": "tagging.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "GetCallerIdentity",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:15+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:15Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "GetCallerIdentity",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": null,
+        "additionalEventData": {
+          "RequestDetails": {
+            "endpointType": "regional",
+            "awsServingRegion": "ap-southeast-1"
+          }
+        },
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "X25519MLKEM768"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeRepositories",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:14+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:14Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DescribeRepositories",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "RepositoryNotFoundException",
+        "errorMessage": "The repository with name 'swe5001/notification-svc' does not exist in the registry with id '402178232802'",
+        "requestParameters": {
+          "repositoryNames": [
+            "swe5001/notification-svc"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/notification-svc"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeRepositories",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:13+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:13Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DescribeRepositories",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "RepositoryNotFoundException",
+        "errorMessage": "The repository with name 'swe5001/identity-svc' does not exist in the registry with id '402178232802'",
+        "requestParameters": {
+          "repositoryNames": [
+            "swe5001/identity-svc"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/identity-svc"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeRepositories",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:13+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:13Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DescribeRepositories",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "RepositoryNotFoundException",
+        "errorMessage": "The repository with name 'swe5001/monolith' does not exist in the registry with id '402178232802'",
+        "requestParameters": {
+          "repositoryNames": [
+            "swe5001/monolith"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/monolith"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeRepositories",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:56:12+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:36:46Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:56:12Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DescribeRepositories",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "RepositoryNotFoundException",
+        "errorMessage": "The repository with name 'swe5001/commerce-svc' does not exist in the registry with id '402178232802'",
+        "requestParameters": {
+          "repositoryNames": [
+            "swe5001/commerce-svc"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/commerce-svc"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "GetCallerIdentity",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:55:29+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:55:29Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:55:29Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "GetCallerIdentity",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": null,
+        "additionalEventData": {
+          "RequestDetails": {
+            "awsServingRegion": "ap-southeast-1",
+            "endpointType": "regional"
+          }
+        },
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "X25519MLKEM768"
+        }
+      }
+    },
+    {
+      "EventName": "GetCallerIdentity",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:55:29+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:55:29Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:55:29Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "GetCallerIdentity",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": null,
+        "additionalEventData": {
+          "RequestDetails": {
+            "awsServingRegion": "ap-southeast-1",
+            "endpointType": "regional"
+          }
+        },
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "X25519MLKEM768"
+        }
+      }
+    },
+    {
+      "EventName": "AssumeRoleWithSAML",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:55:29+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "SAMLUser",
+          "principalId": "u2fdhXgZ+4PPpRT8P78F2gXeUsU=:pan",
+          "userName": "pan",
+          "identityProvider": "u2fdhXgZ+4PPpRT8P78F2gXeUsU="
+        },
+        "eventTime": "2026-11-15T07:55:29Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "AssumeRoleWithSAML",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "roleSessionName": "pan",
+          "roleArn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+          "principalArn": "arn:aws:iam::402178232802:saml-provider/AWSSSO_3492700004ce569f_DO_NOT_DELETE",
+          "durationSeconds": 3600
+        },
+        "responseElements": {
+          "credentials": {
+            "expiration": "2026-11-15T08:55:28Z"
+          },
+          "assumedRoleUser": {
+            "assumedRoleId": "AROAV3I5Q2HRKOV56JE35:pan",
+            "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan"
+          },
+          "packedPolicySize": 19,
+          "issuer": "https://portal.sso.ap-southeast-1.amazonaws.com/saml/assertion/NTkyODc3OTU1ODk5X2lucy04MjEwY2EyYzBiYmRlZThi",
+          "audience": "https://signin.aws.amazon.com/saml",
+          "sessionTokenUtilization": 19,
+          "sessionTokenSize": 792
+        },
+        "additionalEventData": {
+          "RequestDetails": {
+            "awsServingRegion": "ap-southeast-1",
+            "endpointType": "regional"
+          }
+        },
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::IAM::Role",
+            "ARN": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+          },
+          {
+            "accountId": "402178232802",
+            "type": "AWS::IAM::SAMLProvider",
+            "ARN": "arn:aws:iam::402178232802:saml-provider/AWSSSO_3492700004ce569f_DO_NOT_DELETE"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "secp256r1"
+        }
+      }
+    },
+    {
+      "EventName": "RetireGrant",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "kms.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::KMS::Key",
+          "ResourceName": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "invokedBy": "ecr.amazonaws.com",
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "kms.amazonaws.com",
+        "eventName": "RetireGrant",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": {
+          "keyId": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        },
+        "additionalEventData": {
+          "grantId": "71c6dc999173be6355165e42e548162a308002ffbfcebbb716a2448e5e7e3e1c"
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::KMS::Key",
+            "ARN": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management"
+      }
+    },
+    {
+      "EventName": "RetireGrant",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "kms.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::KMS::Key",
+          "ResourceName": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "invokedBy": "ecr.amazonaws.com",
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "kms.amazonaws.com",
+        "eventName": "RetireGrant",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": {
+          "keyId": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        },
+        "additionalEventData": {
+          "grantId": "628e4765c298fe9048a60aef9176807673bb391897e855aceb4dd8ca556a151b"
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::KMS::Key",
+            "ARN": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management"
+      }
+    },
+    {
+      "EventName": "DeleteRepository",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::ECR::Repository",
+          "ResourceName": "swe5001/notification-svc"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DeleteRepository",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "registryId": "402178232802",
+          "repositoryName": "swe5001/notification-svc",
+          "force": false
+        },
+        "responseElements": {
+          "repository": {
+            "repositoryArn": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/notification-svc",
+            "registryId": "402178232802",
+            "repositoryName": "swe5001/notification-svc",
+            "repositoryUri": "402178232802.dkr.ecr.ap-southeast-1.amazonaws.com/swe5001/notification-svc",
+            "createdAt": "2026-10-05T14:35:11Z",
+            "imageTagMutability": "IMMUTABLE"
+          }
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/notification-svc"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "RetireGrant",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "kms.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::KMS::Key",
+          "ResourceName": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "invokedBy": "ecr.amazonaws.com",
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "kms.amazonaws.com",
+        "eventName": "RetireGrant",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": {
+          "keyId": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        },
+        "additionalEventData": {
+          "grantId": "1d052d63cdf2ba7bb76dcc84c29efb17a31eadaf84bffb629cd485b88ca8a792"
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::KMS::Key",
+            "ARN": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management"
+      }
+    },
+    {
+      "EventName": "DescribeRepositories",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DescribeRepositories",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "RepositoryNotFoundException",
+        "errorMessage": "The repository with name 'swe5001/notification-svc' does not exist in the registry with id '402178232802'",
+        "requestParameters": {
+          "repositoryNames": [
+            "swe5001/notification-svc"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/notification-svc"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "RetireGrant",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "kms.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::KMS::Key",
+          "ResourceName": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "invokedBy": "ecr.amazonaws.com",
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "kms.amazonaws.com",
+        "eventName": "RetireGrant",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": {
+          "keyId": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        },
+        "additionalEventData": {
+          "grantId": "1d9cd660b6b5e52ba58fa6472e796ea1695b3b3dccd0ae0ebae471e81e2a89a0"
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::KMS::Key",
+            "ARN": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management"
+      }
+    },
+    {
+      "EventName": "RetireGrant",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "kms.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::KMS::Key",
+          "ResourceName": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "invokedBy": "ecr.amazonaws.com",
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "kms.amazonaws.com",
+        "eventName": "RetireGrant",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": {
+          "keyId": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        },
+        "additionalEventData": {
+          "grantId": "026f26675aa70a91b71b9095d08421bf82fa47aa7720cdb5541a3e9f6d970c5d"
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::KMS::Key",
+            "ARN": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management"
+      }
+    },
+    {
+      "EventName": "DeleteRepository",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::ECR::Repository",
+          "ResourceName": "swe5001/commerce-svc"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DeleteRepository",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "registryId": "402178232802",
+          "repositoryName": "swe5001/commerce-svc",
+          "force": false
+        },
+        "responseElements": {
+          "repository": {
+            "repositoryArn": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/commerce-svc",
+            "registryId": "402178232802",
+            "repositoryName": "swe5001/commerce-svc",
+            "repositoryUri": "402178232802.dkr.ecr.ap-southeast-1.amazonaws.com/swe5001/commerce-svc",
+            "createdAt": "2026-10-05T14:35:11Z",
+            "imageTagMutability": "IMMUTABLE"
+          }
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/commerce-svc"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DeleteRepository",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::ECR::Repository",
+          "ResourceName": "swe5001/monolith"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DeleteRepository",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "registryId": "402178232802",
+          "repositoryName": "swe5001/monolith",
+          "force": false
+        },
+        "responseElements": {
+          "repository": {
+            "repositoryArn": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/monolith",
+            "registryId": "402178232802",
+            "repositoryName": "swe5001/monolith",
+            "repositoryUri": "402178232802.dkr.ecr.ap-southeast-1.amazonaws.com/swe5001/monolith",
+            "createdAt": "2026-10-05T14:35:11Z",
+            "imageTagMutability": "IMMUTABLE"
+          }
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/monolith"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "RetireGrant",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "kms.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::KMS::Key",
+          "ResourceName": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "invokedBy": "ecr.amazonaws.com",
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "kms.amazonaws.com",
+        "eventName": "RetireGrant",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": {
+          "keyId": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        },
+        "additionalEventData": {
+          "grantId": "4bc054d3339686455ec08e187d6c0fb1f633b56bdc3ce374c2ee9d9fa5d23a25"
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::KMS::Key",
+            "ARN": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management"
+      }
+    },
+    {
+      "EventName": "DescribeRepositories",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DescribeRepositories",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "RepositoryNotFoundException",
+        "errorMessage": "The repository with name 'swe5001/monolith' does not exist in the registry with id '402178232802'",
+        "requestParameters": {
+          "repositoryNames": [
+            "swe5001/monolith"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/monolith"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DescribeRepositories",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DescribeRepositories",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "RepositoryNotFoundException",
+        "errorMessage": "The repository with name 'swe5001/identity-svc' does not exist in the registry with id '402178232802'",
+        "requestParameters": {
+          "repositoryNames": [
+            "swe5001/identity-svc"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/identity-svc"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DeleteRepository",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::ECR::Repository",
+          "ResourceName": "swe5001/identity-svc"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DeleteRepository",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "registryId": "402178232802",
+          "repositoryName": "swe5001/identity-svc",
+          "force": false
+        },
+        "responseElements": {
+          "repository": {
+            "repositoryArn": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/identity-svc",
+            "registryId": "402178232802",
+            "repositoryName": "swe5001/identity-svc",
+            "repositoryUri": "402178232802.dkr.ecr.ap-southeast-1.amazonaws.com/swe5001/identity-svc",
+            "createdAt": "2026-10-05T14:35:11Z",
+            "imageTagMutability": "IMMUTABLE"
+          }
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/identity-svc"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "RetireGrant",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "kms.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::KMS::Key",
+          "ResourceName": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "invokedBy": "ecr.amazonaws.com",
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "kms.amazonaws.com",
+        "eventName": "RetireGrant",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": {
+          "keyId": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        },
+        "additionalEventData": {
+          "grantId": "be5de3ef035a6be051196c1ba3c75f1c3bc2b6e3d9d88e21a6ebefbd2f751c18"
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::KMS::Key",
+            "ARN": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management"
+      }
+    },
+    {
+      "EventName": "DescribeRepositories",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DescribeRepositories",
+        "awsRegion": "ap-southeast-1",
+        "errorCode": "RepositoryNotFoundException",
+        "errorMessage": "The repository with name 'swe5001/commerce-svc' does not exist in the registry with id '402178232802'",
+        "requestParameters": {
+          "repositoryNames": [
+            "swe5001/commerce-svc"
+          ]
+        },
+        "responseElements": null,
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "ARN": "arn:aws:ecr:ap-southeast-1:402178232802:repository/swe5001/commerce-svc"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "RetireGrant",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:52+08:00",
+      "EventSource": "kms.amazonaws.com",
+      "Username": "pan",
+      "Resources": [
+        {
+          "ResourceType": "AWS::KMS::Key",
+          "ResourceName": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        }
+      ],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "invokedBy": "ecr.amazonaws.com",
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:52Z",
+        "eventSource": "kms.amazonaws.com",
+        "eventName": "RetireGrant",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": {
+          "keyId": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+        },
+        "additionalEventData": {
+          "grantId": "b02ce4f2d139607d7a950cabdb2b2b70bdbec6b007b062e78477fe12cc215592"
+        },
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::KMS::Key",
+            "ARN": "arn:aws:kms:ap-southeast-1:402178232802:key/e0211c4e-2bbb-4642-aeec-632861a8f42a"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management"
+      }
+    },
+    {
+      "EventName": "DeleteLifecyclePolicy",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:51+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:51Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DeleteLifecyclePolicy",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "repositoryName": "swe5001/notification-svc"
+        },
+        "responseElements": {
+          "registryId": "402178232802",
+          "repositoryName": "swe5001/notification-svc",
+          "lifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Retain the newest 10 images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":10},\"action\":{\"type\":\"expire\"}}]}",
+          "lastEvaluatedAt": "2026-11-14T17:03:29Z"
+        },
+        "readOnly": false,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DeleteLifecyclePolicy",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:50+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:50Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DeleteLifecyclePolicy",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "repositoryName": "swe5001/identity-svc"
+        },
+        "responseElements": {
+          "registryId": "402178232802",
+          "repositoryName": "swe5001/identity-svc",
+          "lifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Retain the newest 10 images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":10},\"action\":{\"type\":\"expire\"}}]}",
+          "lastEvaluatedAt": "2026-11-14T17:04:27Z"
+        },
+        "readOnly": false,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DeleteLifecyclePolicy",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:50+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:50Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DeleteLifecyclePolicy",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "repositoryName": "swe5001/commerce-svc"
+        },
+        "responseElements": {
+          "registryId": "402178232802",
+          "repositoryName": "swe5001/commerce-svc",
+          "lifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Retain the newest 10 images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":10},\"action\":{\"type\":\"expire\"}}]}",
+          "lastEvaluatedAt": "2026-11-14T23:04:03Z"
+        },
+        "readOnly": false,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DeleteLifecyclePolicy",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-15T15:54:50+08:00",
+      "EventSource": "ecr.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:50Z",
+        "eventSource": "ecr.amazonaws.com",
+        "eventName": "DeleteLifecyclePolicy",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "repositoryName": "swe5001/monolith"
+        },
+        "responseElements": {
+          "registryId": "402178232802",
+          "repositoryName": "swe5001/monolith",
+          "lifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Retain the newest 10 images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":10},\"action\":{\"type\":\"expire\"}}]}",
+          "lastEvaluatedAt": "2026-11-15T07:02:48Z"
+        },
+        "readOnly": false,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "api.ecr.ap-southeast-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "AssumeRoleWithSAML",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:54:49+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "SAMLUser",
+          "principalId": "u2fdhXgZ+4PPpRT8P78F2gXeUsU=:pan",
+          "userName": "pan",
+          "identityProvider": "u2fdhXgZ+4PPpRT8P78F2gXeUsU="
+        },
+        "eventTime": "2026-11-15T07:54:49Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "AssumeRoleWithSAML",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": {
+          "roleSessionName": "pan",
+          "roleArn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+          "principalArn": "arn:aws:iam::402178232802:saml-provider/AWSSSO_3492700004ce569f_DO_NOT_DELETE",
+          "durationSeconds": 3600
+        },
+        "responseElements": {
+          "credentials": {
+            "expiration": "2026-11-15T08:54:48Z"
+          },
+          "assumedRoleUser": {
+            "assumedRoleId": "AROAV3I5Q2HRKOV56JE35:pan",
+            "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan"
+          },
+          "packedPolicySize": 19,
+          "issuer": "https://portal.sso.ap-southeast-1.amazonaws.com/saml/assertion/NTkyODc3OTU1ODk5X2lucy04MjEwY2EyYzBiYmRlZThi",
+          "audience": "https://signin.aws.amazon.com/saml",
+          "sessionTokenUtilization": 19,
+          "sessionTokenSize": 792
+        },
+        "additionalEventData": {
+          "RequestDetails": {
+            "awsServingRegion": "ap-southeast-1",
+            "endpointType": "regional"
+          }
+        },
+        "readOnly": true,
+        "resources": [
+          {
+            "accountId": "402178232802",
+            "type": "AWS::IAM::Role",
+            "ARN": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+          },
+          {
+            "accountId": "402178232802",
+            "type": "AWS::IAM::SAMLProvider",
+            "ARN": "arn:aws:iam::402178232802:saml-provider/AWSSSO_3492700004ce569f_DO_NOT_DELETE"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "secp256r1"
+        }
+      }
+    },
+    {
+      "EventName": "GetCallerIdentity",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:54:49+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:49Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:49Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "GetCallerIdentity",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": null,
+        "additionalEventData": {
+          "RequestDetails": {
+            "endpointType": "regional",
+            "awsServingRegion": "ap-southeast-1"
+          }
+        },
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "secp256r1"
+        }
+      }
+    },
+    {
+      "EventName": "GetCallerIdentity",
+      "ReadOnly": "true",
+      "EventTime": "2026-11-15T15:54:43+08:00",
+      "EventSource": "sts.amazonaws.com",
+      "Username": "pan",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAV3I5Q2HRKOV56JE35:pan",
+          "arn": "arn:aws:sts::402178232802:assumed-role/AWSReservedSSO_AdministratorAccess_812936a0f564ea53/pan",
+          "accountId": "402178232802",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAV3I5Q2HRKOV56JE35",
+              "arn": "arn:aws:iam::402178232802:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_812936a0f564ea53",
+              "accountId": "402178232802",
+              "userName": "AWSReservedSSO_AdministratorAccess_812936a0f564ea53"
+            },
+            "attributes": {
+              "creationDate": "2026-11-15T07:54:43Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "d9da456c-8011-7070-902e-84a3c08928a6",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-15T07:54:43Z",
+        "eventSource": "sts.amazonaws.com",
+        "eventName": "GetCallerIdentity",
+        "awsRegion": "ap-southeast-1",
+        "requestParameters": null,
+        "responseElements": null,
+        "additionalEventData": {
+          "RequestDetails": {
+            "endpointType": "regional",
+            "awsServingRegion": "ap-southeast-1"
+          }
+        },
+        "readOnly": true,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "402178232802",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "sts.ap-southeast-1.amazonaws.com",
+          "keyExchange": "X25519MLKEM768"
+        }
+      }
+    }
+  ],
+  "NextToken": "QX+ZC+fu3Qx5vBmH/52hWsEMDzdW2ENS0Hs/lu8fZBg+P4vQEmaWJqVADk76ddS7"
+}

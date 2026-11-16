@@ -1,0 +1,8 @@
+{
+  "PermissionSet": {
+    "Name": "AdministratorAccess",
+    "PermissionSetArn": "arn:aws:sso:::permissionSet/ssoins-8210b0c8e54ef88f/ps-8210965c322027ac",
+    "CreatedDate": "2026-08-25T16:37:36.864000+08:00",
+    "SessionDuration": "PT1H"
+  }
+}

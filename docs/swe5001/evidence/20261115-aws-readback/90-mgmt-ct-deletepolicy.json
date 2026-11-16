@@ -1,0 +1,244 @@
+{
+  "Events": [
+    {
+      "EventName": "DeletePolicy",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-12T08:37:26+08:00",
+      "EventSource": "organizations.amazonaws.com",
+      "Username": "jiechao",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAYUCSHVM57URHEZFAS:jiechao",
+          "arn": "arn:aws:sts::592877955899:assumed-role/AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc/jiechao",
+          "accountId": "592877955899",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAYUCSHVM57URHEZFAS",
+              "arn": "arn:aws:iam::592877955899:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc",
+              "accountId": "592877955899",
+              "userName": "AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc"
+            },
+            "attributes": {
+              "creationDate": "2026-11-12T00:35:59Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "b90af50c-3011-70ff-6efa-601a15dfd68c",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-12T00:37:26Z",
+        "eventSource": "organizations.amazonaws.com",
+        "eventName": "DeletePolicy",
+        "awsRegion": "us-east-1",
+        "requestParameters": {
+          "policyId": "p-v98stib2"
+        },
+        "responseElements": null,
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "592877955899",
+            "type": "AWS::Organizations::Policy",
+            "ARN": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-v98stib2"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "592877955899",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "organizations.us-east-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DeletePolicy",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-12T08:37:25+08:00",
+      "EventSource": "organizations.amazonaws.com",
+      "Username": "jiechao",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAYUCSHVM57URHEZFAS:jiechao",
+          "arn": "arn:aws:sts::592877955899:assumed-role/AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc/jiechao",
+          "accountId": "592877955899",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAYUCSHVM57URHEZFAS",
+              "arn": "arn:aws:iam::592877955899:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc",
+              "accountId": "592877955899",
+              "userName": "AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc"
+            },
+            "attributes": {
+              "creationDate": "2026-11-12T00:35:59Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "b90af50c-3011-70ff-6efa-601a15dfd68c",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-12T00:37:25Z",
+        "eventSource": "organizations.amazonaws.com",
+        "eventName": "DeletePolicy",
+        "awsRegion": "us-east-1",
+        "requestParameters": {
+          "policyId": "p-rhmnt2ps"
+        },
+        "responseElements": null,
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "592877955899",
+            "type": "AWS::Organizations::Policy",
+            "ARN": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-rhmnt2ps"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "592877955899",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "organizations.us-east-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DeletePolicy",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-12T08:37:23+08:00",
+      "EventSource": "organizations.amazonaws.com",
+      "Username": "jiechao",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAYUCSHVM57URHEZFAS:jiechao",
+          "arn": "arn:aws:sts::592877955899:assumed-role/AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc/jiechao",
+          "accountId": "592877955899",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAYUCSHVM57URHEZFAS",
+              "arn": "arn:aws:iam::592877955899:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc",
+              "accountId": "592877955899",
+              "userName": "AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc"
+            },
+            "attributes": {
+              "creationDate": "2026-11-12T00:35:59Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "b90af50c-3011-70ff-6efa-601a15dfd68c",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-12T00:37:23Z",
+        "eventSource": "organizations.amazonaws.com",
+        "eventName": "DeletePolicy",
+        "awsRegion": "us-east-1",
+        "requestParameters": {
+          "policyId": "p-oyvru9pr"
+        },
+        "responseElements": null,
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "592877955899",
+            "type": "AWS::Organizations::Policy",
+            "ARN": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-oyvru9pr"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "592877955899",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "organizations.us-east-1.amazonaws.com"
+        }
+      }
+    },
+    {
+      "EventName": "DeletePolicy",
+      "ReadOnly": "false",
+      "EventTime": "2026-11-12T08:37:09+08:00",
+      "EventSource": "organizations.amazonaws.com",
+      "Username": "jiechao",
+      "Resources": [],
+      "CloudTrailEvent": {
+        "eventVersion": "1.11",
+        "userIdentity": {
+          "type": "AssumedRole",
+          "principalId": "AROAYUCSHVM57URHEZFAS:jiechao",
+          "arn": "arn:aws:sts::592877955899:assumed-role/AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc/jiechao",
+          "accountId": "592877955899",
+          "sessionContext": {
+            "sessionIssuer": {
+              "type": "Role",
+              "principalId": "AROAYUCSHVM57URHEZFAS",
+              "arn": "arn:aws:iam::592877955899:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc",
+              "accountId": "592877955899",
+              "userName": "AWSReservedSSO_AdministratorAccess_9edee3c048ac2fcc"
+            },
+            "attributes": {
+              "creationDate": "2026-11-12T00:35:59Z",
+              "mfaAuthenticated": "false"
+            }
+          },
+          "onBehalfOf": {
+            "userId": "b90af50c-3011-70ff-6efa-601a15dfd68c",
+            "identityStoreArn": "arn:aws:identitystore::592877955899:identitystore/d-9667ae579e",
+            "identityCenterInstanceArn": "arn:aws:sso:::instance/ssoins-8210b0c8e54ef88f"
+          }
+        },
+        "eventTime": "2026-11-12T00:37:09Z",
+        "eventSource": "organizations.amazonaws.com",
+        "eventName": "DeletePolicy",
+        "awsRegion": "us-east-1",
+        "requestParameters": {
+          "policyId": "p-50xf4zdy"
+        },
+        "responseElements": null,
+        "readOnly": false,
+        "resources": [
+          {
+            "accountId": "592877955899",
+            "type": "AWS::Organizations::Policy",
+            "ARN": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-50xf4zdy"
+          }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "592877955899",
+        "eventCategory": "Management",
+        "tlsDetails": {
+          "tlsVersion": "TLSv1.3",
+          "cipherSuite": "TLS_AES_128_GCM_SHA256",
+          "clientProvidedHostHeader": "organizations.us-east-1.amazonaws.com"
+        }
+      }
+    }
+  ]
+}

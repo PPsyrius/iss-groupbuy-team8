@@ -1,0 +1,75 @@
+{
+ "readAt": "2026-11-16 (read-only CloudTrail LookupEvents)",
+ "account": "402178232802",
+ "queries": [
+  {
+   "region": "ap-southeast-1",
+   "eventName": "CreateRepository",
+   "window": "2026-10-05 12:00 to 16:00 UTC (20:00-24:00 SGT)",
+   "count": 4,
+   "events": [
+    {
+     "eventName": "CreateRepository",
+     "eventTimeSgt": "2026-10-05T22:35:11+08:00",
+     "resourceName": "swe5001/commerce-svc"
+    },
+    {
+     "eventName": "CreateRepository",
+     "eventTimeSgt": "2026-10-05T22:35:11+08:00",
+     "resourceName": "swe5001/monolith"
+    },
+    {
+     "eventName": "CreateRepository",
+     "eventTimeSgt": "2026-10-05T22:35:11+08:00",
+     "resourceName": "swe5001/notification-svc"
+    },
+    {
+     "eventName": "CreateRepository",
+     "eventTimeSgt": "2026-10-05T22:35:11+08:00",
+     "resourceName": "swe5001/identity-svc"
+    }
+   ]
+  },
+  {
+   "region": "ap-southeast-1",
+   "resourceName": "blocbuy-swe5001-spa-402178232802",
+   "window": "2026-10-06 02:00 to 02:30 UTC (10:00-10:30 SGT)",
+   "note": "Write events on the web bucket only. One CreateBucket in 2026-10-06 00:00 to 04:00 UTC (08:00-12:00 SGT).",
+   "events": [
+    {
+     "eventName": "CreateBucket",
+     "eventTimeSgt": "2026-10-06T10:09:16+08:00",
+     "resourceName": "blocbuy-swe5001-spa-402178232802"
+    },
+    {
+     "eventName": "PutBucketTagging",
+     "eventTimeSgt": "2026-10-06T10:09:16+08:00",
+     "resourceName": "blocbuy-swe5001-spa-402178232802"
+    },
+    {
+     "eventName": "PutBucketEncryption",
+     "eventTimeSgt": "2026-10-06T10:09:17+08:00",
+     "resourceName": "blocbuy-swe5001-spa-402178232802"
+    },
+    {
+     "eventName": "PutBucketPublicAccessBlock",
+     "eventTimeSgt": "2026-10-06T10:09:17+08:00",
+     "resourceName": "blocbuy-swe5001-spa-402178232802"
+    },
+    {
+     "eventName": "PutBucketPolicy",
+     "eventTimeSgt": "2026-10-06T10:11:58+08:00",
+     "resourceName": "blocbuy-swe5001-spa-402178232802"
+    }
+   ]
+  },
+  {
+   "region": "us-east-1",
+   "eventName": "CreateRole",
+   "window": "2026-10-05 12:00 to 16:00 UTC (20:00-24:00 SGT)",
+   "count": null,
+   "note": "Not readable: cloudtrail:LookupEvents in us-east-1 is denied by the Region-Pin service control policy (as in A4-proj-ct-useast1.txt). The management account has no trail in us-east-1 or ap-southeast-1 (describe-trails empty, as in A5-mgmt-orgtrails.json), and the roles no longer exist (iam list-roles), so their creation time cannot be read."
+  }
+ ],
+ "note": "Event times only, converted to SGT from the offset-carrying CLI value; no identities, request parameters or values were kept. The four swe5001/* repositories were created at 22:35:11 SGT on 5 October. The web bucket was created at 10:09:16 SGT on 6 October; its bucket policy was put at 10:11:58 SGT."
+}

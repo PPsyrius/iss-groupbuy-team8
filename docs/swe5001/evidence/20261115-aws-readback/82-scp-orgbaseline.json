@@ -1,0 +1,13 @@
+{
+  "Policy": {
+    "PolicySummary": {
+      "Id": "p-tveef62a",
+      "Arn": "arn:aws:organizations::592877955899:policy/o-37mek1w37u/service_control_policy/p-tveef62a",
+      "Name": "Org-Baseline",
+      "Description": "Org-wide denies: leave/close account, member Identity Center instances, changes to AWSReservedSSO roles",
+      "Type": "SERVICE_CONTROL_POLICY",
+      "AwsManaged": false
+    },
+    "Content": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Sid\": \"DenyLeaveAndCloseAccount\",\n      \"Effect\": \"Deny\",\n      \"Action\": [\n        \"organizations:LeaveOrganization\",\n        \"account:CloseAccount\"\n      ],\n      \"Resource\": \"*\"\n    },\n    {\n      \"Sid\": \"DenyMemberAccountInstances\",\n      \"Effect\": \"Deny\",\n      \"Action\": [\n        \"sso:CreateInstance\"\n      ],\n      \"Resource\": \"*\"\n    },\n    {\n      \"Sid\": \"ProtectIdentityCenterRoles\",\n      \"Effect\": \"Deny\",\n      \"Action\": [\n        \"iam:CreateRole\",\n        \"iam:DeleteRole\",\n        \"iam:UpdateRole\",\n        \"iam:UpdateRoleDescription\",\n        \"iam:UpdateAssumeRolePolicy\",\n        \"iam:AttachRolePolicy\",\n        \"iam:DetachRolePolicy\",\n        \"iam:PutRolePolicy\",\n        \"iam:DeleteRolePolicy\",\n        \"iam:PutRolePermissionsBoundary\",\n        \"iam:DeleteRolePermissionsBoundary\",\n        \"iam:TagRole\",\n        \"iam:UntagRole\"\n      ],\n      \"Resource\": \"arn:aws:iam::*:role/aws-reserved/sso.amazonaws.com/*\"\n    }\n  ]\n}"
+  }
+}

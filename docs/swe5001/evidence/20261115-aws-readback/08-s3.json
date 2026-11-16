@@ -1,0 +1,25 @@
+{
+  "Buckets": [
+    {
+      "Name": "blocbuy-dev-frontend-402178232802",
+      "CreationDate": "2026-09-05T14:57:56+00:00",
+      "BucketArn": "arn:aws:s3:::blocbuy-dev-frontend-402178232802"
+    },
+    {
+      "Name": "blocbuy-media-dev-402178232802",
+      "CreationDate": "2026-10-13T12:54:21+00:00",
+      "BucketArn": "arn:aws:s3:::blocbuy-media-dev-402178232802"
+    },
+    {
+      "Name": "blocbuy-swe5001-generator-20261111-402178232802",
+      "CreationDate": "2026-11-11T13:16:29+00:00",
+      "BucketArn": "arn:aws:s3:::blocbuy-swe5001-generator-20261111-402178232802"
+    },
+    {
+      "Name": "blocbuy-tfstate-402178232802",
+      "CreationDate": "2026-09-07T03:16:24+00:00",
+      "BucketArn": "arn:aws:s3:::blocbuy-tfstate-402178232802"
+    }
+  ],
+  "Prefix": null
+}

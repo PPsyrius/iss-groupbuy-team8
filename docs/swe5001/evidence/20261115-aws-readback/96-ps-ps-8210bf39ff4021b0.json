@@ -1,0 +1,8 @@
+{
+  "PermissionSet": {
+    "Name": "PrivilegedRootActions",
+    "PermissionSetArn": "arn:aws:sso:::permissionSet/ssoins-8210b0c8e54ef88f/ps-8210bf39ff4021b0",
+    "CreatedDate": "2026-08-25T23:03:34.917000+08:00",
+    "SessionDuration": "PT1H"
+  }
+}
