@@ -8,13 +8,14 @@ or wrong wordings) and ``must_appear`` patterns (the canonical statement).
 Run from the repository root; exit status 1 lists every mismatch.
 """
 import json
+import os
 from pathlib import Path
 import re
 import sys
 
 
 ROOT = Path(__file__).resolve().parents[4]
-REPORT = ROOT / 'docs/swe5001/report'
+REPORT = Path(os.environ.get('FACT_REGISTER_REPORT', ROOT / 'docs/swe5001/report'))
 FACTS = Path(__file__).resolve().with_name('facts.json')
 DEFAULT_FILES = ('sections/*.typ', 'registers.md')
 
@@ -49,6 +50,10 @@ def check(facts, sources):
         for probe in fact.get('probes', []):
             accept = {a.strip() for a in probe['accept']}
             regex = re.compile(probe['pattern'])
+            if set(regex.groupindex) != {'v'}:
+                failures.append(f"{fid}: probe {probe['pattern']!r} must have exactly one "
+                                f"named group, v (has {sorted(regex.groupindex)})")
+                continue
             for name, body in select(sources, probe.get('files')).items():
                 for match in regex.finditer(body):
                     value = (match.group('v') or '').strip()

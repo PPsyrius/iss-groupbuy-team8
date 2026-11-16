@@ -69,8 +69,8 @@ class FactRegisterTests(unittest.TestCase):
                 planted = 'X' + match.group('v') + '9'
                 mutated = dict(self.sources)
                 mutated[name] = body[:match.start('v')] + planted + body[match.end('v'):]
-                if regex.search(mutated[name]) is None:
-                    continue  # the plant broke the anchor; nothing to assert
+                if not any(m.start('v') == match.start('v') for m in regex.finditer(mutated[name])):
+                    continue  # the plant broke the anchor at this echo; nothing to assert
                 with self.subTest(fact=fact['id']):
                     self.assertTrue(register.check([fact], mutated))
 
