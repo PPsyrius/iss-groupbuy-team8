@@ -13,7 +13,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[4]
 REPORT = ROOT / 'docs/swe5001/report'
-BASE = 'ae3a32a3943b7952abdf71e5c85ffd27a24bf704'
+BASE = '4d9af4b78c7a0bf76f1fe7e10065f3efa30c5ff1'
 APP = '3a893036d70d028b29ae13ebf820283571c1ae00'
 EVIDENCE = '27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6'
 INSPECTED = 'b80debcd8b8cdeb1272219758789e1a9927b9d7d'
@@ -38,7 +38,8 @@ def snapshot(path, section, override):
     # wrappers. Keep their historical pins; lib.typ alone is not the caller.
     if override:
         return APP if override == 'freeze' else override.strip('"')
-    if path.startswith('docs/swe5001/evidence/20261111-cost-explorer/'):
+    if path.startswith(('docs/swe5001/evidence/20261111-cost-explorer/',
+                        'docs/swe5001/evidence/20261115-')):
         return BASE
     if path.startswith('docs/swe5001/evidence/'):
         return EVIDENCE
@@ -190,7 +191,7 @@ def main():
     for name in ('peer-report.patch', 'peer-base.json', 'facts.json', 'cleanup.json', 'verification.json'):
         assert not git('diff', '--name-only', BASE, '--', 'docs/swe5001/evidence/20261112-issue-789/' + name).strip()
     checks['scoped-historical-closure-receipts-preserved'] = True
-    print(json.dumps({'scope': 'Current split report targeting dev after merged #802; offline source/target/data regression, not PDF or acceptance', 'base': BASE, 'checks': checks}, indent=2))
+    print(json.dumps({'scope': 'Current split report targeting dev after merged #809; offline source/target/data regression, not PDF or acceptance', 'base': BASE, 'checks': checks}, indent=2))
 
 
 if __name__ == '__main__':
