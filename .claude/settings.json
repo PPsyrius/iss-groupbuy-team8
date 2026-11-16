@@ -22,6 +22,7 @@
       "Bash(pnpm exec oxlint --type-aware)",
       "Bash(pnpm exec oxfmt --check)",
       "Bash(pnpm dlx @tanstack/intent@0.4.0 list --json)",
+      "Bash(env -i HOME=\"$HOME\" PATH=\"$PATH\" pnpm dlx @tanstack/intent@0.4.0 list --json)",
       "Bash(pnpm dlx @tanstack/intent@0.4.0 install)",
       "Bash(pnpm dlx @tanstack/intent@0.4.0 install --map)",
       "Bash(corepack enable)",

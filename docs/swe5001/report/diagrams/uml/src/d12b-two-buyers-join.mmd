@@ -6,8 +6,8 @@ sequenceDiagram
     participant Wh as wh : StripeWebhookController
     participant App as app : StripePaymentAppService
     participant Svc as svc : StripeCheckoutService
-    participant Pay as payments : CheckoutPaymentRepository
-    participant Ofa as adapter : OrderFulfilmentAdapter
+    participant Pay as :CheckoutPaymentRepository
+    participant Ofa as :OrderFulfilmentAdapter
     participant Grp as groups : PaidGroupDealService
     participant Deal as deal : GroupDeal
 

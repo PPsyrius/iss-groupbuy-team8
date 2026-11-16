@@ -17,7 +17,7 @@ BASE = 'ae3a32a3943b7952abdf71e5c85ffd27a24bf704'
 APP = '3a893036d70d028b29ae13ebf820283571c1ae00'
 EVIDENCE = '27530a4dac0b2f574ee5bef6a80c5b5bbdffeca6'
 INSPECTED = 'b80debcd8b8cdeb1272219758789e1a9927b9d7d'
-VALIDATION_BRANCH = 'test/459-aws-session-preparation'
+VALIDATION = '479d3409ba6992a7991953ae3544f559ca614dea'  # PR #807 merge commit on dev
 VALIDATION_PACKAGES = (
     '20261113-aws-validation/', '20261114-v4-r5-live/',
     '20261114-v7-r4-live/', '20261114-v8-r4-live/',
@@ -74,7 +74,7 @@ def check_ci_baseline(ops):
     assert amount and Decimal(amount[1].replace(',', '')) == cost
     assert rate and Decimal(rate[1]) == Decimal(str(receipt['summary']['linux_usd_per_minute']))
     assert not re.search(r'successful (?:backend )?deliver', paragraph, re.I)
-    assert re.search(r'list[- ]price equivalent', paragraph, re.I), 'CI estimate is a list-price equivalent, not a charge'
+    assert re.search(r'list[- ]price equivalent|would have cost', paragraph, re.I), 'CI estimate is a list-price equivalent, not a charge'
     billing = [sentence for sentence in re.split(r'(?<=[.!;])\s+', paragraph)
                if re.search(r'public', sentence, re.I) and re.search(r'standard', sentence, re.I)]
     assert any(re.search(r'\bfree\b|\bno (?:runner )?charge\b|\bzero (?:runner )?charge\b', sentence, re.I)
@@ -83,31 +83,41 @@ def check_ci_baseline(ops):
 
 
 def check_account_read_boundary(security):
-    """Protect the specific account-read qualification, not words elsewhere."""
-    paragraph = next(p for p in security.split('\n\n') if re.search(
-        r'Lim reports[^.\n]*11 November[^.\n]*CloudTrail', p))
-    assert re.search(r'(?:no|without)[^.\n]*output[^.\n]*(?:retained|verify)', paragraph, re.I)
-    assert not re.search(r'(?:AWS|command) output[^.\n]*independently verif', paragraph, re.I)
+    """The 15 Nov readback is dated, published and read-only, not a control test."""
+    paragraph = next((p for p in security.split('\n\n') if p.startswith('*What we checked in November.*')), None)
+    assert paragraph, 'Governance readback paragraph is missing'
+    assert '20261115-aws-readback/' in paragraph and '15 November' in paragraph
+    assert 'not a test of these controls' in paragraph
+    assert re.search(r'management account has no trail', paragraph, re.I)
+    assert not re.search(r'Lim reports|independently verif', paragraph, re.I)
 
 
 def check_published_validation(sections):
     """Check explicit PR links without promoting them to historical freeze pins."""
     lib = text('lib.typ')
-    assert '#let validation-ref = "' + VALIDATION_BRANCH + '"' in lib
+    assert '#let validation-ref = "' + VALIDATION + '"' in lib
     assert 'link(repo + "/blob/" + validation-ref + "/docs/swe5001/evidence/" + path, body)' in lib
     assert 'not path.contains("..")' in lib
     for prefix in VALIDATION_PACKAGES:
         assert '"' + prefix + '"' in lib
     targets = set()
     for content in sections.values():
-        assert not re.search(r'working[- ](?:tree|copy|draft) (?:evidence|records|sources)|evidence awaiting publication|working-draft publication boundary', content, re.I), 'Stale validation-publication wording'
         for path in re.findall(r'#published-evidence\("([^"]+)"\)', content):
             assert path.startswith(VALIDATION_PACKAGES) and '..' not in path, path
-            git('cat-file', '-e', 'HEAD:docs/swe5001/evidence/' + path.split('#')[0])
+            # Resolve at the pinned commit, not HEAD, so a dead link target fails.
+            git('cat-file', '-e', VALIDATION + ':docs/swe5001/evidence/' + path.split('#')[0])
             targets.add(path)
     assert len(targets) >= 9, 'Missing published validation records or receipts'
-    status = sections['02-project-conduct.typ']
-    assert 'mutable' in status and 'unmerged' in status and 'not frozen submission citations' in status
+    availability = sections['04-2-availability.typ']
+    # The 15 Nov records are cited by folder in the table caption until the
+    # post-merge freeze pins them; the unreachable 71b06b5 is never named.
+    caption = next(line for line in availability.splitlines() if 'Follow-up verification of 15 November 2026' in line)
+    for required in ('20261115-acceptance-followup/', 'added by #pr(808)'):
+        assert required in caption, required
+    assert '71b06b5' not in '\n'.join(sections.values())
+    for required in ('<tbl-followup-15nov>', '167.578 s', 'went from 9 to 9 and then to 10', 'COMMON_500_001', 'COMMON_200_000', 'card confirmation, signed-webhook failure and redelivery, and replay remain untested on AWS', 'deleted rows included', 'for that intent or its reserved team'):
+        assert required in availability, required
+    assert '@tbl-followup-15nov' in sections['02-project-conduct.typ']
     return len(targets)
 
 
@@ -142,17 +152,16 @@ def main():
     checks['v2-plateau-rows'] = len(rows)
     assert all(s in perf for s in ('725,999', '726,000', '360,000'))
     assert 'No record covers scale-in' not in perf
-    assert all(s in perf for s in ('75/181', '130/181'))
+    assert '75 and 130 of 181' in perf and '181 connections' in perf
     assert re.search(r'(?:not|unproven|incomplete|missing)[^.\n]*(?:acceptance|observations|analyser)|(?:acceptance|observations|analyser)[^.\n]*(?:not|unproven|incomplete|missing)', perf, re.I)
     checks['reviewed-performance-boundaries'] = True
 
     security = text('sections/04-3-security.typ')
     # Governance prose commits are not retained AWS command output. Do not
     # require links to them or treat ancestry as proof of the claimed controls.
-    assert 'Service Control Policies (SCPs)' in security
-    assert re.search(r'organisation[^.\n]*(?:unknown|unverified|not independently)', security, re.I)
+    assert '[SCP], [Service control policy]' in text('main.typ')
     assert re.search(r'90.day[^.\n]*event history|event history[^.\n]*90.day', security, re.I)
-    assert re.search(r'(?:governance|readback|command output|AWS output)[^.\n]*(?:not retained|unverified|unavailable|not independently)|(?:not retained|unverified|unavailable|not independently)[^.\n]*(?:governance|readback|command output|AWS output)', security, re.I)
+    assert re.search(r'readback[^.\n]*(?:configuration only|not a test)', security, re.I)
     checks['governance-evidence-boundaries'] = True
     check_account_read_boundary(security)
     limits = text('sections/03-4-limitations.typ') + text('registers.md') + security
@@ -168,7 +177,7 @@ def main():
     check_ci_baseline(ops)
     checks['reported-ci-baseline-matches-recorded-jobs'] = True
     audit_row = next(line for line in security.splitlines() if '[Auditability:' in line)
-    assert 'Singapore' in audit_row and re.search(r'unknown|unverified|unproven', audit_row, re.I)
+    assert '15 November readback' in audit_row and 'management account' in audit_row
     assert 'non-delivery-gating Sonar' in ops and 'Trivy image-scan step' in ops
     delivery = text('diagrams/uml/src/d10b-delivery.mmd')
     assert 'SourceOk --> FG : [passed]' in delivery and 'SourceOk --> SourceFailed : [failed]' in delivery

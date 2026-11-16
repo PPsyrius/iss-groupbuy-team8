@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "receiptDateSgt": "2026-11-15",
+  "scope": "Retained operator cleanup and selected-evidence preservation receipts; no new cloud operation by this local consolidation",
+  "focusedPaymentInitiationProofComplete": true,
+  "downPaymentInitiationStatus": 500,
+  "upPaymentInitiationStatus": 200,
+  "originalBroaderWebhookCriterionProven": false,
+  "canonicalRuntimeDownCompletedAtUtc": "2026-11-15T06:14:51.757319+00:00",
+  "canonicalRuntimeDownCompletedAtSgt": "2026-11-15T14:14:51.757319+08:00",
+  "canonicalDestroyedResourceCounts": [118],
+  "independentAbsencePassed": true,
+  "managedRuntimeResourceCount": 0,
+  "lockAbsent": {
+    "runtime": true,
+    "edge": true,
+    "foundation": true
+  },
+  "protectedStateAndReleaseCandidatePointersUnchanged": true,
+  "generatorStoppedAtUtc": "2026-11-15T06:19:39.784326+00:00",
+  "generatorStoppedAtSgt": "2026-11-15T14:19:39.784326+08:00",
+  "generatorState": "stopped",
+  "generatorTerminated": false,
+  "encryptedGeneratorDiskRetained": true,
+  "selectedEvidenceArchive": {
+    "verificationRecordedAtUtc": "2026-11-15T06:21:09.908871+00:00",
+    "sha256": "d7c5719486d8dd592571e9e490cbe5e592e9c73d971a056e05a92b6c574eb3df",
+    "bytes": 138373,
+    "manifestMembersReadbackVerified": 129,
+    "readbackVerified": true,
+    "remoteEncryption": "AES256",
+    "completeRawBackup": false,
+    "localTarCopiesEncrypted": false,
+    "rawLocalOriginalsPreserved": true
+  },
+  "retainedStorageAndProtectedInfrastructureRemainChargeable": true,
+  "allAwsResourcesGoneClaimed": false,
+  "zeroCostClaimed": false,
+  "sourceProvenance": {
+    "C01": {
+      "description": "Operator final public cleanup metadata; eight linked source hashes independently checked offline",
+      "sha256": "55bd505c742a0a3855e20f6e5170c7323131e130f933fa1890c93a449b10dc4e"
+    },
+    "C02": {
+      "description": "Final after-generator-stop selected-archive preservation/readback receipt",
+      "sha256": "090d8d36b6ddbd7474eec70a67d8a954fff1093915e19073d6efb28c1c84c326"
+    }
+  },
+  "localBookkeepingOnly": true,
+  "newTestsCiRunOrRemoteWritePerformedByThisConsolidation": false
+}

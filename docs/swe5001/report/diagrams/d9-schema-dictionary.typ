@@ -1,3 +1,4 @@
+// Not included; superseded by D9a–D9d, tbl-invariant-indexes and tbl-aggregate-tables (12 Nov audit follow-up).
 // Bounded supporting dictionary for D9; definitions are read from released V1-V28.
 #let migration-root = "https://github.com/PPsyrius/iss-groupbuy-team8/blob/3a893036d70d028b29ae13ebf820283571c1ae00/backend/blocbuy-bootstrap/src/main/resources/db/migration/"
 #let migrations = (

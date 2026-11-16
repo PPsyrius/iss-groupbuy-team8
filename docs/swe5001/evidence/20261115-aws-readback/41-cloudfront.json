@@ -1,0 +1,299 @@
+{
+  "DistributionList": {
+    "Items": [
+      {
+        "Id": "E3U5W7UWDL8LRV",
+        "ARN": "arn:aws:cloudfront::402178232802:distribution/E3U5W7UWDL8LRV",
+        "ETag": "E1VC38T7YXB528",
+        "Status": "Deployed",
+        "LastModifiedTime": "2026-09-25T15:16:04.891000+00:00",
+        "DomainName": "d1b3np88z657cp.cloudfront.net",
+        "Aliases": {
+          "Quantity": 0
+        },
+        "Origins": {
+          "Quantity": 2,
+          "Items": [
+            {
+              "Id": "alb-backend",
+              "DomainName": "blocbuy-dev-backend-1247042341.ap-southeast-1.elb.amazonaws.com",
+              "OriginPath": "",
+              "CustomHeaders": {
+                "Quantity": 1,
+                "Items": [
+                  {
+                    "HeaderName": "X-Origin-Secret",
+                    "HeaderValue": "[redacted]"
+                  }
+                ]
+              },
+              "CustomOriginConfig": {
+                "HTTPPort": 80,
+                "HTTPSPort": 443,
+                "OriginProtocolPolicy": "http-only",
+                "OriginSslProtocols": {
+                  "Quantity": 1,
+                  "Items": [
+                    "TLSv1.2"
+                  ]
+                },
+                "OriginReadTimeout": 30,
+                "OriginKeepaliveTimeout": 5
+              },
+              "ConnectionAttempts": 3,
+              "ConnectionTimeout": 10,
+              "OriginShield": {
+                "Enabled": false
+              },
+              "OriginAccessControlId": ""
+            },
+            {
+              "Id": "s3-frontend",
+              "DomainName": "blocbuy-dev-frontend-402178232802.s3.ap-southeast-1.amazonaws.com",
+              "OriginPath": "",
+              "CustomHeaders": {
+                "Quantity": 0
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": "",
+                "OriginReadTimeout": 30
+              },
+              "ConnectionAttempts": 3,
+              "ConnectionTimeout": 10,
+              "OriginShield": {
+                "Enabled": false
+              },
+              "OriginAccessControlId": "E2WEBPIBHXOW90"
+            }
+          ]
+        },
+        "OriginGroups": {
+          "Quantity": 0
+        },
+        "DefaultCacheBehavior": {
+          "TargetOriginId": "s3-frontend",
+          "TrustedSigners": {
+            "Enabled": false,
+            "Quantity": 0
+          },
+          "TrustedKeyGroups": {
+            "Enabled": false,
+            "Quantity": 0
+          },
+          "ViewerProtocolPolicy": "redirect-to-https",
+          "AllowedMethods": {
+            "Quantity": 2,
+            "Items": [
+              "HEAD",
+              "GET"
+            ],
+            "CachedMethods": {
+              "Quantity": 2,
+              "Items": [
+                "HEAD",
+                "GET"
+              ]
+            }
+          },
+          "SmoothStreaming": false,
+          "Compress": true,
+          "LambdaFunctionAssociations": {
+            "Quantity": 0
+          },
+          "FunctionAssociations": {
+            "Quantity": 1,
+            "Items": [
+              {
+                "FunctionARN": "arn:aws:cloudfront::402178232802:function/blocbuy-dev-spa-fallback",
+                "EventType": "viewer-request"
+              }
+            ]
+          },
+          "FieldLevelEncryptionId": "",
+          "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+          "ResponseHeadersPolicyId": "3c91a2c1-f130-42e8-b9cc-fec6a682c838",
+          "GrpcConfig": {
+            "Enabled": false
+          }
+        },
+        "CacheBehaviors": {
+          "Quantity": 1,
+          "Items": [
+            {
+              "PathPattern": "/api/*",
+              "TargetOriginId": "alb-backend",
+              "TrustedSigners": {
+                "Enabled": false,
+                "Quantity": 0
+              },
+              "TrustedKeyGroups": {
+                "Enabled": false,
+                "Quantity": 0
+              },
+              "ViewerProtocolPolicy": "redirect-to-https",
+              "AllowedMethods": {
+                "Quantity": 7,
+                "Items": [
+                  "HEAD",
+                  "DELETE",
+                  "POST",
+                  "GET",
+                  "OPTIONS",
+                  "PUT",
+                  "PATCH"
+                ],
+                "CachedMethods": {
+                  "Quantity": 2,
+                  "Items": [
+                    "HEAD",
+                    "GET"
+                  ]
+                }
+              },
+              "SmoothStreaming": false,
+              "Compress": true,
+              "LambdaFunctionAssociations": {
+                "Quantity": 0
+              },
+              "FunctionAssociations": {
+                "Quantity": 0
+              },
+              "FieldLevelEncryptionId": "",
+              "CachePolicyId": "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+              "OriginRequestPolicyId": "b689b0a8-53d0-40ab-baf2-68738e2966ac",
+              "ResponseHeadersPolicyId": "3c91a2c1-f130-42e8-b9cc-fec6a682c838",
+              "GrpcConfig": {
+                "Enabled": false
+              }
+            }
+          ]
+        },
+        "CustomErrorResponses": {
+          "Quantity": 0
+        },
+        "Comment": "BlocBuy dev - frontend S3 + backend ALB (/api)",
+        "PriceClass": "PriceClass_All",
+        "Enabled": true,
+        "ViewerCertificate": {
+          "CloudFrontDefaultCertificate": true,
+          "SSLSupportMethod": "vip",
+          "MinimumProtocolVersion": "TLSv1",
+          "CertificateSource": "cloudfront"
+        },
+        "Restrictions": {
+          "GeoRestriction": {
+            "RestrictionType": "none",
+            "Quantity": 0
+          }
+        },
+        "WebACLId": "",
+        "HttpVersion": "HTTP2",
+        "IsIPV6Enabled": true,
+        "Staging": false,
+        "ConnectionMode": "direct"
+      },
+      {
+        "Id": "E1YAIACR5BUHP2",
+        "ARN": "arn:aws:cloudfront::402178232802:distribution/E1YAIACR5BUHP2",
+        "ETag": "E23ZP02F085DFQ",
+        "Status": "Deployed",
+        "LastModifiedTime": "2026-10-13T12:38:55.525000+00:00",
+        "DomainName": "dcsjrkmummxi7.cloudfront.net",
+        "Aliases": {
+          "Quantity": 0
+        },
+        "Origins": {
+          "Quantity": 1,
+          "Items": [
+            {
+              "Id": "blocbuy-media-dev-402178232802.s3.ap-southeast-1.amazonaws.com-mv6o2my031f",
+              "DomainName": "blocbuy-media-dev-402178232802.s3.ap-southeast-1.amazonaws.com",
+              "OriginPath": "",
+              "CustomHeaders": {
+                "Quantity": 0
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": "",
+                "OriginReadTimeout": 30
+              },
+              "ConnectionAttempts": 3,
+              "ConnectionTimeout": 10,
+              "OriginShield": {
+                "Enabled": false
+              },
+              "OriginAccessControlId": "E2HI2285KRRGDA"
+            }
+          ]
+        },
+        "OriginGroups": {
+          "Quantity": 0
+        },
+        "DefaultCacheBehavior": {
+          "TargetOriginId": "blocbuy-media-dev-402178232802.s3.ap-southeast-1.amazonaws.com-mv6o2my031f",
+          "TrustedSigners": {
+            "Enabled": false,
+            "Quantity": 0
+          },
+          "TrustedKeyGroups": {
+            "Enabled": false,
+            "Quantity": 0
+          },
+          "ViewerProtocolPolicy": "redirect-to-https",
+          "AllowedMethods": {
+            "Quantity": 2,
+            "Items": [
+              "HEAD",
+              "GET"
+            ],
+            "CachedMethods": {
+              "Quantity": 2,
+              "Items": [
+                "HEAD",
+                "GET"
+              ]
+            }
+          },
+          "SmoothStreaming": false,
+          "Compress": true,
+          "LambdaFunctionAssociations": {
+            "Quantity": 0
+          },
+          "FunctionAssociations": {
+            "Quantity": 0
+          },
+          "FieldLevelEncryptionId": "",
+          "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+          "GrpcConfig": {
+            "Enabled": false
+          }
+        },
+        "CacheBehaviors": {
+          "Quantity": 0
+        },
+        "CustomErrorResponses": {
+          "Quantity": 0
+        },
+        "Comment": "",
+        "PriceClass": "PriceClass_All",
+        "Enabled": true,
+        "ViewerCertificate": {
+          "CloudFrontDefaultCertificate": true,
+          "SSLSupportMethod": "vip",
+          "MinimumProtocolVersion": "TLSv1",
+          "CertificateSource": "cloudfront"
+        },
+        "Restrictions": {
+          "GeoRestriction": {
+            "RestrictionType": "none",
+            "Quantity": 0
+          }
+        },
+        "WebACLId": "arn:aws:wafv2:us-east-1:402178232802:global/webacl/CreatedByCloudFront-7ed5b35e/5b1127a8-2380-4e97-ab1d-6f33787c3b3c",
+        "HttpVersion": "HTTP2",
+        "IsIPV6Enabled": true,
+        "Staging": false,
+        "ConnectionMode": "direct"
+      }
+    ]
+  }
+}

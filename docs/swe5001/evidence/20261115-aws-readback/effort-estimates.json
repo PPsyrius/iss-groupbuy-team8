@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "asOf": "2026-11-15",
+  "kind": "Reconciled effort estimates, not measured timesheets",
+  "source": "Pan's instructions during the final report review",
+  "hoursPerIdealDay": 6,
+  "members": [
+    {
+      "name": "Liu Jin",
+      "beforePhaseDPersonDays": 12.5,
+      "phaseDPersonDays": 4,
+      "totalPersonDays": 16.5
+    },
+    {
+      "name": "Panpakorn Siripanich (Pan)",
+      "beforePhaseDPersonDays": 11.5,
+      "phaseDPersonDays": 12,
+      "totalPersonDays": 23.5,
+      "basis": "Reconciliation of omitted Phase D work against the earlier eight-day estimate; the four-day adjustment is not assigned specifically to 13-15 November."
+    },
+    {
+      "name": "Yu Qianshuo (Yorick)",
+      "beforePhaseDPersonDays": 9,
+      "phaseDPersonDays": 1.5,
+      "totalPersonDays": 10.5
+    },
+    {
+      "name": "Lim Jiechao",
+      "beforePhaseDPersonDays": 8.5,
+      "phaseDPersonDays": 7,
+      "totalPersonDays": 15.5,
+      "basis": "Includes two additional Phase D person-days for report editing."
+    },
+    {
+      "name": "Wang Ziang (Eric)",
+      "beforePhaseDPersonDays": 8.5,
+      "phaseDPersonDays": 3,
+      "totalPersonDays": 11.5
+    }
+  ],
+  "totals": {
+    "beforePhaseDPersonDays": 50,
+    "phaseDPersonDays": 27.5,
+    "personDays": 77.5,
+    "guidelinePersonDays": 50,
+    "aboveGuidelinePercent": 55
+  },
+  "participationScoresChanged": false,
+  "unattendedAutomationCountedAsHumanEffort": false,
+  "historicalEstimatesRewritten": false
+}

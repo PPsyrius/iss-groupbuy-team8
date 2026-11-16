@@ -126,10 +126,11 @@ class ReviewedCheckerTests(unittest.TestCase):
             self.assertEqual(reviewed.snapshot('docs/swe5001/evidence/' + path,
                                                '05-devops.typ', None), reviewed.EVIDENCE)
 
-    def test_stale_validation_publication_claim_is_rejected(self):
-        with self.assertRaisesRegex(AssertionError, 'Stale validation-publication'):
-            self.run_report(lambda name, content: content + '\nWorking-tree evidence awaiting publication.'
-                            if name == 'sections/02-project-conduct.typ' else content)
+    def test_unreachable_snapshot_cannot_be_cited(self):
+        with self.assertRaises(AssertionError):
+            self.run_report(lambda name, content: content.replace(
+                'added by #pr(808)', 'in snapshot `71b06b5`')
+                if name == 'sections/04-2-availability.typ' else content)
 
     def test_published_validation_rejects_unrelated_or_traversal_paths(self):
         for path in ('20261114-v8-r4-live/../private.json', 'unrelated/README.md'):
@@ -137,10 +138,11 @@ class ReviewedCheckerTests(unittest.TestCase):
                 self.run_report(lambda name, content: content + '\n#published-evidence("' + path + '")[invalid]'
                                 if name == 'sections/02-project-conduct.typ' else content)
 
-    def test_publication_must_not_claim_frozen_submission_citations(self):
+    def test_validation_links_must_use_the_merge_pin(self):
         with self.assertRaises(AssertionError):
-            self.run_report(lambda name, content: content.replace('not frozen submission citations', 'frozen submission citations')
-                            if name == 'sections/02-project-conduct.typ' else content)
+            self.run_report(lambda name, content: content.replace(
+                reviewed.VALIDATION, 'test/459-aws-session-preparation')
+                if name == 'lib.typ' else content)
 
     def test_changed_calibration_table_is_rejected(self):
         # Change the first completed-count cell independent of table formatting.
@@ -202,7 +204,7 @@ class ReviewedCheckerTests(unittest.TestCase):
             read_revision.assert_called_with('show', revision + ':' + path)
 
     def test_report_ci_billing_qualification_cannot_be_removed_or_reversed(self):
-        for old, new in (('list-price equivalent', 'billed charge'),
+        for old, new in (('would have cost', 'was billed at'),
                          ('free in this public repository', 'not free in this public repository'),
                          ('free in this public repository', 'free in this private repository')):
             with self.subTest(change=new), self.assertRaises(AssertionError):
@@ -224,21 +226,20 @@ class ReviewedCheckerTests(unittest.TestCase):
     def test_reversed_account_read_boundary_is_rejected(self):
         with self.assertRaises(AssertionError):
             self.run_report(lambda name, content: content.replace(
-                'No output is retained to verify that observation.',
-                'AWS output independently verifies that observation.')
+                'it is not a test of these controls.',
+                'it independently verifies these controls.')
                 if name.endswith('04-3-security.typ') else content)
 
     def test_missing_account_read_boundary_is_rejected_despite_other_qualifiers(self):
         with self.assertRaises(AssertionError):
             self.run_report(lambda name, content: content.replace(
-                'No output is retained to verify that observation.', '')
+                ' The readback shows configuration only; it is not a test of these controls.', '')
                 if name.endswith('04-3-security.typ') else content)
 
-    def test_governance_requires_missing_output_boundary(self):
+    def test_governance_requires_dated_readback(self):
         def change(name, content):
             if name.endswith('04-3-security.typ'):
-                return '\n'.join(line for line in content.splitlines() if not reviewed.re.search(
-                    r'not retained|unverified|unavailable|not independently', line, reviewed.re.I))
+                return '\n'.join(line for line in content.splitlines() if '20261115-aws-readback' not in line)
             return content
 
         with self.assertRaises(AssertionError):

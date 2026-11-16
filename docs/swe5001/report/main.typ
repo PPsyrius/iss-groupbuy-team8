@@ -48,9 +48,10 @@
 
 // Front matter: Contents, List of figures, List of tables, each titled in the face of the
 // SWE5006 Contents title (template.typ `report`: 16 pt bold heading ink, 12 pt above, 18 pt
-// below; a plain block, not a heading, so it has no number, no contents entry and no running
-// head), entries 9 pt apart with dot leaders. Contents: level 1 in capitals, indent 0.5 cm a
-// level, depth 3, as the template.
+// below). The Contents title is a plain block, not a heading, so it has no number, no contents
+// entry and no running head; the two lists use unnumbered, outlined headings drawn in the same
+// face, so they appear in the Contents beside Abbreviations. Entries 9 pt apart with dot
+// leaders. Contents: level 1 in capitals, indent 0.5 cm a level, depth 3, as the template.
 #let front-title(body) = block(above: 12pt, below: 18pt, text(size: 16pt, weight: "bold", fill: tpl.heading-ink, body))
 #{
   front-title[Contents]
@@ -92,14 +93,20 @@
   link(el.location(), { set text(fill: ink); it.indented(it.prefix(), [#body#sym.wj~#sym.wj#leader#sym.wj~#it.page()]) })
 }
 #{
-  front-title[List of figures]
+  // A real, unnumbered heading so the list appears in the Contents and the PDF bookmarks,
+  // like Abbreviations; drawn in the front-title face so the page looks unchanged.
+  show heading: it => front-title(it.body)
+  heading(numbering: none, outlined: true)[List of figures]
   show outline.entry: set block(spacing: 9pt)
   show outline.entry: short-entry
   outline(title: none, target: figure.where(kind: image))
 }
 #pagebreak()
 #{
-  front-title[List of tables]
+  // A real, unnumbered heading so the list appears in the Contents and the PDF bookmarks,
+  // like Abbreviations; drawn in the front-title face so the page looks unchanged.
+  show heading: it => front-title(it.body)
+  heading(numbering: none, outlined: true)[List of tables]
   show outline.entry: set block(spacing: 9pt)
   show outline.entry: short-entry
   outline(title: none, target: figure.where(kind: table))
@@ -107,29 +114,36 @@
 
 #heading(numbering: none, outlined: true)[Abbreviations]
 
+BlocBuy's domain terms are defined in the ubiquitous language glossary (§3.1.4.7, @tbl-ubiquitous-language).
+
 #figure(
   table(
     columns: (0.9fr, 3fr),
     table.header([Term], [Meaning]),
     [AD-nn], [Architectural decision nn (§3.1.1, §3.2.1 and §3.3)],
+    [ADR], [Architecture decision record],
     [AISS-nn], [Architectural limitation nn (§3.4)],
     [ALB], [Application Load Balancer],
+    [API], [Application programming interface],
     [ARN], [Amazon Resource Name],
     [AZ], [Availability Zone],
     [CI], [Continuous integration],
     [CIDR], [Classless inter-domain routing (an IP address range)],
     [COLA], [Clean Object-Oriented and Layered Architecture (Alibaba)],
     [COTS], [Commercial off-the-shelf],
+    [CPU], [Central processing unit],
     [DDD], [Domain-driven design],
     [DLQ], [Dead-letter queue],
     [ECR], [Amazon Elastic Container Registry],
     [ECS], [Amazon Elastic Container Service],
     [ENI], [Elastic network interface],
     [F1–F13], [Assessor remarks on the presentation (§6.1)],
+    [GoF], [Gang of Four design patterns],
     [HS-n], [EventStorming hot spot n (§3.1.4.1)],
     [IaC], [Infrastructure as code],
     [IAM], [AWS Identity and Access Management],
     [KV], [Key–value (store)],
+    [MFA], [Multi-factor authentication],
     [NAT], [Network address translation],
     [NFR-nn], [Quality requirement nn in the #src("docs/quality/nfr-register.md")[NFR register]],
     [OIDC], [OpenID Connect],
@@ -145,6 +159,7 @@
     [SNS], [Amazon Simple Notification Service],
     [SPA], [Single-page application],
     [SQS], [Amazon Simple Queue Service],
+    [SSO], [Single sign-on],
     [SSM], [AWS Systems Manager],
     [TLS], [Transport Layer Security],
     [TTL], [Time to live],
@@ -166,4 +181,5 @@
 #include "sections/04-quality-attributes.typ"
 #include "sections/05-devops.typ"
 #include "sections/06-highlights.typ"
+#include "sections/07-appendix-a-walkthrough.typ"
 // The detailed design source book (sections/source-book.typ) is the team's design reference, not part of the report.

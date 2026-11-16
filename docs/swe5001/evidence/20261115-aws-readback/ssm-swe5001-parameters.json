@@ -1,0 +1,73 @@
+{
+    "readAt": "2026-11-15T23:10+08:00",
+    "account": 402178232802,
+    "region": "ap-southeast-1",
+    "note": "Names, types and last-modified dates only; no values were read.",
+    "parameters": [
+        {
+            "name": "/blocbuy/swe5001/candidate/commerce-svc",
+            "type": "String",
+            "lastModified": "2026-11-11T10:42:35.531000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/candidate/identity-svc",
+            "type": "String",
+            "lastModified": "2026-11-11T10:42:13.561000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/candidate/monolith",
+            "type": "String",
+            "lastModified": "2026-11-11T10:41:52.289000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/candidate/notification-svc",
+            "type": "String",
+            "lastModified": "2026-11-11T10:42:56.839000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/commerce/STRIPE_API_KEY",
+            "type": "SecureString",
+            "lastModified": "2026-10-06T19:45:45.778000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/commerce/STRIPE_WEBHOOK_SECRET",
+            "type": "SecureString",
+            "lastModified": "2026-10-21T11:26:22.092000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/identity/GOOGLE_CLIENT_ID",
+            "type": "SecureString",
+            "lastModified": "2026-10-06T19:45:22.414000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/identity/GOOGLE_CLIENT_SECRET",
+            "type": "SecureString",
+            "lastModified": "2026-10-06T19:45:31.633000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/release/identity-svc",
+            "type": "String",
+            "lastModified": "2026-11-11T11:17:47.316000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/release/monolith",
+            "type": "String",
+            "lastModified": "2026-11-11T11:17:46.096000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/release/commerce-svc",
+            "type": "String",
+            "lastModified": "2026-11-11T11:17:48.665000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/release/notification-svc",
+            "type": "String",
+            "lastModified": "2026-11-11T11:17:49.911000+08:00"
+        },
+        {
+            "name": "/blocbuy/swe5001/shared/ORIGIN_SECRET",
+            "type": "SecureString",
+            "lastModified": "2026-10-06T10:07:40.769000+08:00"
+        }
+    ]
+}

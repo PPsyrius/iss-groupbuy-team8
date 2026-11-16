@@ -47,6 +47,8 @@
   // "Figure n:" (report-figure); a table caption is plain "Table n: ..." (table-caption).
   show figure.caption: it => context {
     set text(size: 9pt)
+    // Report-local: caption inline code at an absolute 8 pt, not the template's compounded em.
+    show raw.where(block: false): set text(size: 8pt)
     set par(justify: false)
     set align(left)
     if it.numbering == none { it.body } else {
@@ -100,6 +102,9 @@
   // An AWS region or zone name (`ap-southeast-1`, `ap-southeast-1a`) never breaks at its hyphens.
   show raw.where(block: false): it => if it.text.starts-with("ap-southeast-1") { box(it) } else { it }
   show table: it => {
+    // Report-local minimum for inline code in dense tables; do not inherit
+    // compounded relative reductions from the shared template.
+    show raw.where(block: false): set text(size: 8pt)
     show raw.where(block: false): r => {
       show regex("[_./(,]"): m => m.text + sym.zws
       show regex("[a-z][A-Z]"): m => m.text.at(0) + sym.zws + m.text.at(1)
@@ -174,10 +179,9 @@
 #let pr(n) = link(repo + "/pull/" + str(n))[\##n]
 #let run(id, body) = link(repo + "/actions/runs/" + str(id), body)
 
-// Later validation records are published in PR #807, not in the historical
-// evidence freeze. This explicit branch reference is mutable, not a merge pin.
-#let validation-ref = "test/459-aws-session-preparation"
+// Validation records published by PR #807, pinned to its merge commit on dev.
+#let validation-ref = "479d3409ba6992a7991953ae3544f559ca614dea"
 #let published-evidence(path, body) = {
-  assert(("20261113-aws-validation/", "20261114-v4-r5-live/", "20261114-v7-r4-live/", "20261114-v8-r4-live/").any(prefix => path.starts-with(prefix)) and not path.contains(".."), message: "Expected a published PR #807 validation record")
+  assert(("20261113-aws-validation/", "20261114-v4-r5-live/", "20261114-v7-r4-live/", "20261114-v8-r4-live/").any(prefix => path.starts-with(prefix)) and not path.contains(".."), message: "Expected a PR #807 validation record")
   link(repo + "/blob/" + validation-ref + "/docs/swe5001/evidence/" + path, body)
 }

@@ -1,0 +1,34 @@
+{
+  "LoadBalancers": [
+    {
+      "LoadBalancerArn": "arn:aws:elasticloadbalancing:ap-southeast-1:402178232802:loadbalancer/app/blocbuy-dev-backend/5d68efa3062f2021",
+      "DNSName": "blocbuy-dev-backend-1247042341.ap-southeast-1.elb.amazonaws.com",
+      "CanonicalHostedZoneId": "Z1LMS91P8CMLE5",
+      "CreatedTime": "2026-09-05T14:14:24.231000+00:00",
+      "LoadBalancerName": "blocbuy-dev-backend",
+      "Scheme": "internet-facing",
+      "VpcId": "vpc-02681842f187e8677",
+      "State": {
+        "Code": "active"
+      },
+      "Type": "application",
+      "AvailabilityZones": [
+        {
+          "ZoneName": "ap-southeast-1b",
+          "SubnetId": "subnet-04a488b09a0a111c5",
+          "LoadBalancerAddresses": []
+        },
+        {
+          "ZoneName": "ap-southeast-1a",
+          "SubnetId": "subnet-04a63a9b0e40f1491",
+          "LoadBalancerAddresses": []
+        }
+      ],
+      "SecurityGroups": [
+        "sg-0d2742ea5f7eaccbd"
+      ],
+      "IpAddressType": "ipv4",
+      "EnablePrefixForIpv6SourceNat": "off"
+    }
+  ]
+}

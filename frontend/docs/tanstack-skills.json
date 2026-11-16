@@ -35,7 +35,7 @@
       "use": "@tanstack/router-plugin#router-plugin",
       "packageName": "@tanstack/router-plugin",
       "packageRoot": "node_modules/@tanstack/router-plugin",
-      "packageVersion": "1.168.48",
+      "packageVersion": "1.169.0",
       "packageSource": "local",
       "skillName": "router-plugin",
       "description": "TanStack Router bundler plugin for route generation and automatic code splitting. Supports Vite, Webpack, Rspack, and esbuild. Configures autoCodeSplitting, routesDirectory, target framework, and code split groupings.",
@@ -162,7 +162,7 @@
     },
     {
       "name": "@tanstack/router-plugin",
-      "version": "1.168.48",
+      "version": "1.169.0",
       "source": "local",
       "packageRoot": "node_modules/@tanstack/router-plugin",
       "skillCount": 1

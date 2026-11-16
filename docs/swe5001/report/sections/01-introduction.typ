@@ -5,17 +5,21 @@
 
 == Background
 
-BlocBuy is a community group-buying platform: buyers form a team at a team price, pay to start or join it, and the platform settles the payments and either completes the team or refunds every member when it expires. We built these functions (use cases UC1–UC9) for SWE5006 as a modular monolith. For SWE5001 we re-architected the same code into a platform of three services on Amazon Web Services (AWS), and kept the monolith as a fallback topology (AD-01, §3.1.1).
+// The BlocBuy brand mark, as in the SWE5006 report: 7 cm wide, flush left, no frame, caption or number.
+#align(left, image("/docs/swe5006/report/figures/blocbuy-logo.svg", width: 7cm,
+  alt: "BlocBuy logo: a striped shopping bag beside the wordmark BLOCBUY and the tagline ONE FOR ALL • ALL FOR ONE"))
+
+BlocBuy is a community group-buying platform: buyers form a team at a team price, pay to start or join it, and the platform settles the payments and either completes the team or refunds every member when it expires. We built these functions (use cases UC1–UC9) for SWE5006 as a modular monolith. For SWE5001 we re-architected the same code into a platform of three services on Amazon Web Services (AWS), and kept the monolith as a fallback topology (AD-01, §3.1.1). The question we had to answer was where to cut: a payment must never be separated from the seat it buys, while sign-in and notifications should scale apart from checkout, and a notification failure should never stop it.
 
 *Starting point.* On 29 September 2026 BlocBuy was one Java 21 and Spring Boot 4 application in the Alibaba COLA (Clean Object-Oriented and Layered Architecture) layering, with six bounded contexts in one deployable unit. It ran under Docker Compose on one Amazon EC2 host with PostgreSQL 18 and Redis 8, and the SWE5006 deployment still runs that way (#src("docs/swe5001/microservice-refactoring-plan.md")[refactoring plan, §1]).
 
-*What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They run on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchange events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. Terraform creates the runtime for each working session and destroys it afterwards. The logical design is in §3.1 and the physical design in §3.2.
+*What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They ran on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchanged events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. The outbox saves each event in the same transaction as the change it reports, so a crash cannot lose it. Terraform created the runtime for each working session and destroyed it afterwards.
 
-*Status on 14 November 2026.* The three-service release runs on AWS only during sessions: promotions built it from zero and passed the smoke test on 17 October and on 10 and 11 November, and on 10 November we verified the separate data subnets (AD-15, §3.2). On 11 November the load test V3 r4 delivered the whole schedule up to 600 requests per second (req/s) with no errors while commerce scaled from one to six tasks. Its k6 gates passed, but canonical analyser acceptance remained incomplete; maximum capacity and linear scaling remain unproven (§4.1, AISS-12). Subsequent AWS sessions verified queue-driven notification scaling (V4 R5), controlled task replacement (V5 R3) and poison-message isolation with real alarm/email delivery (V7 R4), under the explicitly bounded experimental or session configurations described in §4.1–§4.2. The AWS identity-outage attempt failed and payment/webhook recovery remains untested (AISS-13); these results do not establish whole-campaign acceptance. §2.2 gives the evidence status of each capability, §6.6 the dated runs, §6.1 the answer to each of the assessors' remarks and §3.4 the remaining limitations. Times in this report are Singapore time (SGT, UTC+8). Historical citations retain their inspected revisions; §2.2 separately links the published 13–14 November evidence in PR #807 and explains its unmerged, mutable-branch status.
+Times are Singapore time (SGT, UTC+8).
 
 == Business Needs
 
-Group buying works only if enough people join before the deadline. Today that coordination happens in chat groups and spreadsheets, so it is slow, opaque and manual for everyone involved (@tbl-pain-points).
+Group buying works only if enough people join before the deadline. Today that coordination happens in chat groups and spreadsheets: an organiser collects each payment, chases members who have not paid and refunds them by hand when the team fails to fill (@tbl-pain-points).
 
 #figure(
   table(
@@ -31,16 +35,16 @@ Group buying works only if enough people join before the deadline. Today that co
 
 The case for a platform rather than one application rests on three properties. First, the team price, which is lower than the solo price, holds only if the team reaches its target size before the deadline, so every member wants others to join and demand arrives in bursts as deadlines approach. Second, consumers also produce: the buyer who starts a team, or shares an invite link, brings in the next buyers. Third, identity, payment settlement and notification are needed by any future group-buying vertical, not only by this one.
 
-These properties give the architecture its drivers. @tbl-drivers lists them in priority order. When consistency and independent scaling conflict, consistency wins: settlement stays in one transaction (AD-02) and commerce scales as one unit (AISS-02).
+These properties give the architecture its drivers. @tbl-drivers lists them in priority order. The first driver comes from a race. When two buyers pay for the last seat of a team at the same moment, exactly one may take the seat, and the other must be left with a refund obligation, never charged for nothing. We can decide that safely only inside one database transaction that checks the payment, admits the buyer and creates the order together; we call this settlement. So when consistency and independent scaling conflict, consistency wins: settlement stays in one transaction (AD-02), and commerce scales as one unit even when only browsing is busy (AISS-02).
 
 #figure(
   table(
     columns: (0.9fr, 2.3fr, 2fr, 1fr),
     table.header([Driver], [What it demands], [Target], [Evidence in]),
-    [Consistency], [A successful settlement records the payment, the admission and the order in one transaction; a paid admission that is refused records a refund obligation instead, and an expiry records its refund obligations in the same transaction], [Exactly one outcome per verified payment: seat and order, or refund obligation], [§3.1.4, §3.2.3, §3.2.4],
+    [Consistency], [A successful settlement records the payment, the admission and the order in one transaction. A refused paid admission records a refund obligation instead. An expiry records its refund obligations in the same transaction], [Exactly one outcome per verified payment: seat and order, or refund obligation], [§3.1.4, §3.2.3, §3.2.4],
     [Security], [Least privilege and a data tier unreachable from outside], [Data tier unreachable from outside (NFR-70); no stored cloud keys in the pipeline (AD-17, AISS-17)], [§3.2, §4.3],
     [Cost], [A demonstration-scale budget], [The runtime exists only while it is used], [§3.2.1 (AD-12), §6.3],
-    [Scalability], [Browsing and payment or event bursts scale independently of each other], [200 req/s at p95 below 500 ms (V2); 80% of linear scaling from one to four tasks (V3, NFR-64)], [§3.2, §4.1 (Performance)],
+    [Scalability], [Browsing and payment or event bursts scale independently of each other], [200 req/s at p95 below 500 ms (V2); 80% of linear scaling from one to four tasks (V3, verification plan); commerce scales one to six tasks (NFR-64)], [§3.2, §4.1 (Performance)],
     [Availability], [A failed task or a broker outage loses no committed payment or event], [Rebuild in under 30 min (V8); no lost committed event], [§4.2],
     [Modifiability], [A new service, consumer or seed reuses the platform instead of starting again], [A new event consumer is added without changing a producer], [§4.4],
   ),
@@ -71,7 +75,7 @@ The project was self-initiated and has no company sponsor. Its stakeholders are 
   caption: [Business and IT stakeholders.],
 ) <tbl-stakeholders>
 
-The briefing's first success criterion asks for the seed, the producers and the consumers of the platform. @tbl-platform-roles names them, and @fig-d1-context places the run-time users and external systems around BlocBuy. Where BlocBuy runs is in the deployment view (@fig-d5-deployment, §3.2), and how releases reach it is in §5.
+The briefing's first success criterion asks for the seed, the producers and the consumers of the platform. @tbl-platform-roles names them, and @fig-d1-context places the run-time users and external systems around BlocBuy. Sellers do not appear in it, because they reach buyers only through the platform administrator.
 
 #figure(
   table(
@@ -92,7 +96,7 @@ The briefing's first success criterion asks for the seed, the producers and the 
 
 == Project Scope
 
-SWE5001 changed how BlocBuy is built and run, not what it does. The business functions UC1–UC9 already existed. The project made them run in a second, distributed topology, added event-driven notifications, and built the cloud platform, the pipeline and the evidence around them. The work ran in five phases (@tbl-phases); their dates are in §2.3.
+SWE5001 changed how BlocBuy is built and run, not what it does. The business functions UC1–UC9 already existed. We made them run in a second, distributed topology, added event-driven notifications and built the cloud platform, the pipeline and the evidence around them. The work ran in five phases (@tbl-phases); their dates are in §2.3.
 
 #figure(
   table(
@@ -110,7 +114,7 @@ SWE5001 changed how BlocBuy is built and run, not what it does. The business fun
 
 === Functionality in scope
 
-Every use case keeps its SWE5006 behaviour in the monolith and has one owning service in the distributed topology (@tbl-scope-uc, @fig-d2-use-cases). UC3–UC6 form the group-buying core. Its critical flows, joining a team by paying (UC4 with UC10) and team expiry with refunds (UC5, UC6), are designed in §3.2.4. The numbering follows the #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], with two changes: the proposal left notification unnumbered and put referral credit inside UC7, so this report numbers every use case in @fig-d2-use-cases and splits the credit into UC12. UC10 to UC12 are numbered for this report; the #src("docs/sprint2-progress-report.typ")[Sprint 2 progress report] used UC10 for the payment and order system of record, which this UC10 covers from the buyer's side.
+Every use case keeps its SWE5006 behaviour in the monolith and has one owning service in the distributed topology (@tbl-scope-uc, @fig-d2-use-cases). UC3–UC6 form the group-buying core. UC10 handles upfront payment, UC11 receives event notifications and UC12 credits a referred join. The critical flows, joining a team by paying (UC4 with UC10) and team expiry with refunds (UC5, UC6), are designed in §3.2.4.
 
 #figure(
   table(
@@ -130,7 +134,7 @@ Every use case keeps its SWE5006 behaviour in the monolith and has one owning se
     [UC12], [Credit the sharer of a referred join (extends UC4)], [commerce], [Unchanged; stays an in-process subscriber after the join commits],
   ),
   kind: table,
-  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], renumbered as described above.],
+  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], with payment, notification and referral-credit operations distinguished as UC10–UC12.],
 ) <tbl-scope-uc>
 
 #afig("d2-use-cases", lbl: <fig-d2-use-cases>, float: true, [Use case view (UML use case diagram). UC3 and UC4 always include UC10; UC6 extends UC5 when the team expired, and UC12 extends UC4 when the join used an invite link.])
@@ -138,7 +142,7 @@ Every use case keeps its SWE5006 behaviour in the monolith and has one owning se
 Besides the use cases, the scope covered the platform itself:
 
 - *Platform capabilities:* the three service assemblies, the shared modules and the golden-path `ecs-service` Terraform module (§4.4); the outbox and messaging (§3.2.3); three Terraform stacks (§3.2.2); the promotion pipeline (§5).
-- *Four scripted demonstrations* promised in the proposal: HTTP auto-scaling, queue-driven scaling, self-healing and safe deployment rollback. §2.2 states which of them ran on AWS, which ran locally, and which did not run.
+- *Four scripted demonstrations* promised in the proposal: HTTP auto-scaling, queue-driven scaling, self-healing and safe deployment rollback. §2.2 states which of them ran on AWS, which ran locally and which did not run.
 
 === Functionality out of scope
 
@@ -153,9 +157,9 @@ The proposal excluded six items (#src("docs/swe5001/project-proposal.typ")[propo
 
 During the project we also left out email and push notifications; notifications are in-app only.
 
-Seller self-service is out of scope as well. SWE5006 excluded a merchant self-service interface (#src("docs/swe5006/report/sections/01-introduction.md")[SWE5006 report, §1.4.2]), and SWE5001 kept that exclusion. The code defines only the `buyer` and `admin` roles (#src("backend/blocbuy-bootstrap/src/main/resources/db/migration/V3__identity.sql")[`V3__identity.sql`]), so the platform administrator publishes every listing on sellers' behalf (UC9). No seller role or merchant console was designed for SWE5001; the architecture options study only notes the gap (#src("docs/swe5001/architecture-options-study/06-eventstorming-ddd.md")[study, hotspot HS-9]).
+Seller self-service is out of scope, as it was in SWE5006 (#src("docs/swe5006/report/sections/01-introduction.md")[SWE5006 report, §1.4.2]). The code defines only the `buyer` and `admin` roles (#src("backend/blocbuy-bootstrap/src/main/resources/db/migration/V3__identity.sql")[`V3__identity.sql`]), so the platform administrator publishes every listing on sellers' behalf (UC9). We designed no seller role or merchant console; the architecture options study notes the gap (#src("docs/swe5001/architecture-options-study/06-eventstorming-ddd.md")[study, hotspot HS-9]).
 
-*Architected but not built.* Some designs exist only on paper. @tbl-not-built lists them, so that no later section is read as a claim that they run.
+*Architected but not built.* Some designs exist only on paper; @tbl-not-built lists them so that none is mistaken for running code.
 
 #figure(
   table(
@@ -168,7 +172,7 @@ Seller self-service is out of scope as well. SWE5006 excluded a merchant self-se
     [Stock reservation], [Designed in the options study (study AD-04), not built], [—],
     [Distributed tracing with AWS Distro for OpenTelemetry and X-Ray], [Designed in the options study (study AD-11), not built; only a trace-ID header is propagated], [§4.4],
     [Analytics pipeline (SNS → Firehose → S3 → Athena)], [Studied, not designed; operational analytics only], [§6.5],
-    [AWS WAF (web application firewall) on the SWE5001 distribution], [Cut on 11 October to stay within the effort guideline], [§4.3],
+    [AWS WAF (web application firewall) on the SWE5001 distribution], [Cut on 11 October: neither course's grading rewarded it, so we spent the time on graded work], [§4.3],
   ),
   kind: table,
   caption: [Architected but not built. Sources: #src("docs/swe5001/report/registers.md")[AD and AISS registers]\; #src("docs/swe5001/architecture-options-study/README.md")[architecture options study].],
