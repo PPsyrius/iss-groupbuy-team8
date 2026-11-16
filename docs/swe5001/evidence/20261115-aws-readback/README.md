@@ -101,6 +101,7 @@ These are projections of operator receipts and report-review inputs, not outputs
 - `A0-` to `A3-proj-*.json`: no CloudTrail trail, GuardDuty detector, Config recorder or IAM Access Analyzer in the project account in `ap-southeast-1`.
 - `93-mgmt-trails.json`, `A5-mgmt-orgtrails.json`, `A6-mgmt-guardduty.json`: no trail in `ap-southeast-1` or `us-east-1`, and no GuardDuty detector in the management account.
 - `A4-proj-ct-useast1.txt`: `cloudtrail:LookupEvents` in `us-east-1` is denied by `Region-Pin`.
+- `ct-registerscalabletarget-20261016.json` (read 16 November): event times only for `RegisterScalableTarget` on 16 October in `ap-southeast-1`; ten calls between 21:28 and 22:14 SGT and ten earlier between 02:50 and 04:40 SGT (AISS-14).
 
 **Cost.**
 - `36-ce-monthly.json`, `38-ce-daily-total.json`, `A7-ce-oct-nov-daily.json`: monthly and daily unblended cost. October is final; November figures are estimates for an open month.
