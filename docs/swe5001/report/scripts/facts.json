@@ -13710,9 +13710,9 @@
     "canonical_home": "sections/06-5-analytics.typ",
     "probes": [
       {
-        "pattern": "queried with Athena, costs about US\\\\\\$(?P<v>[\\d.]+) a (?:month|year)",
+        "pattern": "queried with Athena, costs about US\\\\\\$(?P<v>[\\d.]+ a (?:month|year))",
         "accept": [
-          "0.20"
+          "0.20 a month"
         ]
       }
     ],

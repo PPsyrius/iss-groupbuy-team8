@@ -53,7 +53,7 @@ Each caption names the buyer and the use-case step. UC4 steps are those of #xref
     [11], [Member], [Sees "Payment received", paid at 19:17 SGT, with the same "Bloc reference" as step 4], [UC4 steps 3–8], [Join], [@fig-a-member-paid],
     [12], [Member], [Sees the team "2 of 2 joined", "Filled" and their own order "Confirmed"], [UC4 step 8, UC8 B4], [Join, Own views], [@fig-a-member-my-blocs],
     [13], [Leader], [Sees the team "2 of 2 joined" under Completed and their own order "Confirmed" (watching it fill was not recorded)], [UC4 step 8, UC8 B4], [Join, Own views], [@fig-a-leader-my-blocs; the fill itself: not recorded],
-    [14], [Leader], [Two other teams, closed unfilled on 23 Oct: the Refunded tab and a "Refund sent" receipt from the same account], [UC5 B7–B9, UC6 B9, UC8 B4], [None], [@fig-a-refunded-tab, @fig-a-refund-sent],
+    [14], [Leader], [The Refunded tab shows two other teams that closed unfilled on 23 Oct\; the same account holds a "Refund sent" receipt], [UC5 B7–B9, UC6 B9, UC8 B4], [None], [@fig-a-refunded-tab, @fig-a-refund-sent],
   ),
   kind: table,
   caption: [Steps of the two-buyer journey with their use-case steps, §3.2.4 rows and screens. Source: the 24 October recording (\#657); use-case steps from the detailed design source book and the UC4 flow-of-events table.],
@@ -129,7 +129,7 @@ The member's payment filled the last seat (UC4 step 8), and each buyer's "My blo
   caption: [The leader's "My blocs" page on the Completed tab (UC4 step 8, UC8 B4). The team marked "Filled 24 Oct, 7.17 pm" reads "2 of 2 joined", and the leader's own order, paid at 19:10 SGT, reads "Confirmed".],
 ) <fig-a-leader-my-blocs>
 
-Both pages show the team's shared status, "2 of 2 joined", and each buyer's own order "Confirmed". Neither "My orders" list shows the other buyer's order: the member's carries order BB202610240563C8F61150 and the leader's BB2026102489EBCD2C4819. These screens support the two claims of the two-buyer table that rested on the UI: both orders are confirmed (row Join), and neither buyer's page shows the other's order (row Own views).
+Both pages show the team's shared status, "2 of 2 joined", and each buyer's own order "Confirmed". In the order rows the screens show, neither buyer's list carries the other's order: the member's carries order BB202610240563C8F61150 and the leader's BB2026102489EBCD2C4819. These screens support the two claims of the two-buyer table that rested on the UI: both orders are confirmed (row Join), and neither buyer's visible order rows show the other's order (row Own views).
 
 == When a team does not fill
 

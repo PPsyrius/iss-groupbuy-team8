@@ -44,7 +44,7 @@ $FF -nostdin -y -ss "$t" -i "$SRC" -frames:v 1 -filter_complex "$fc" -compressio
 | `a08-member-my-blocs.png` | 155 | Member's My blocs, Completed tab (a screenshot shown in an image viewer): two regions of the same frame stacked, split by a 16 px grey band | top 730,316,1046,440 (title, tabs, Universal Travel Adapter team card); bottom 730,1322,1046,218 ("My orders" and its first row) | none (the header, browser sidebar and bookmarks are outside both crops) | see the a08 command below |
 | `a09-leader-my-blocs-completed.png` | 190 | Leader's My blocs, Completed tab | 238,334,1514,948 | none (the header is outside the crop) | `make.sh a09-leader-my-blocs-completed 190 1514:948:238:334` |
 | `a10-refunded-tab.png` | 220 | Leader's My blocs, Refunded tab (teams closed on 23 October) | 238,405,1514,1133 | none (the header is outside the crop) | `make.sh a10-refunded-tab 220 1514:1133:238:405` |
-| `a11-refund-sent.png` | 256 | "Refund sent" card (a team closed on 23 October) | 885,431,1237,907 | none (the header is outside the crop) | `make.sh a11-refund-sent 256 1237:907:885:431` |
+| `a11-refund-sent.png` | 256 | "Refund sent" card (the screen does not show which team it belongs to) | 885,431,1237,907 | none (the header is outside the crop) | `make.sh a11-refund-sent 256 1237:907:885:431` |
 
 The a08 command (the two Sunscreen team cards between the regions are left out; the grey band marks the cut):
 

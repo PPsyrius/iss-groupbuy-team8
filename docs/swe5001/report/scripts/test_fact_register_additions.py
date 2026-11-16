@@ -193,6 +193,17 @@ class FactRegisterAdditionsTests(unittest.TestCase):
         self.assertTrue(all(f.startswith('AISS14-scalabletarget-window:') for f in failures))
         self.assertTrue(any("forbidden wording 'between 21:28 and 22:14 SGT'" in f for f in failures))
 
+    def test_analytics_cost_period_is_checked_with_the_amount(self):
+        fact = next(f for f in self.facts if f['id'] == 'analytics-pipeline-cost')
+        name = 'sections/06-5-analytics.typ'
+        body = self.sources[name]
+        self.assertIn('costs about US\\$0.20 a month', body)
+        bad = dict(self.sources, **{name: body.replace('costs about US\\$0.20 a month',
+                                                       'costs about US\\$0.20 a year')})
+        failures = register.check([fact], bad)
+        self.assertEqual(len(failures), 1)
+        self.assertIn('0.20 a year', failures[0])
+
     def test_wording_guards_fail_on_the_old_text(self):
         old = {
             'DA-v3r4-session-only-label': ('sections/02-project-conduct.typ',
