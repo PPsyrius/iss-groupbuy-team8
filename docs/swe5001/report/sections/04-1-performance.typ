@@ -136,7 +136,7 @@ Target tracking on requests made all four scaling changes (@tbl-performance-r4-s
 
 Even complete analyser coverage would not establish all remaining V3 checks or one-to-four linearity (#src("perf/k6/scaling.mjs", rev: "b911ea63795c5ddb7db1f7918f7f7af03a2745ff")[acceptance checks]). Linear scaling needs a controlled one-task and four-task pair: calculated efficiency is $T_4 / (4 T_1) >= 0.8$, where $T_1$ and $T_4$ are accepted throughputs. For example, if one task accepts 100 req/s, four tasks must accept at least 320 req/s. A ramp supplies neither the pair nor the ratio. That pair of fixed-size runs is our next measurement (AISS-12).
 
-Afterwards, Application Auto Scaling lowered the desired commerce count from six to two at 23:09–23:21 SGT, with three tasks still running at 23:21; CloudTrail shows the four steps (read on 15 November, `docs/swe5001/evidence/20261115-aws-readback/`). Lim also read a Spot interruption after the workload from the ECS events; we did not export those events, and neither was a controlled recovery test (#src("docs/swe5001/evidence/20261112-issue-789/README.md")[post-run account]).
+Afterwards, Application Auto Scaling lowered the desired commerce count from six to two at 23:09–23:21 SGT, with three tasks still running at 23:21; CloudTrail shows the four steps (read on 15 November, #src("docs/swe5001/evidence/20261115-aws-readback/")[`docs/swe5001/evidence/20261115-aws-readback/`]). Lim also read a Spot interruption after the workload from the ECS events; we did not export those events, and neither was a controlled recovery test (#src("docs/swe5001/evidence/20261112-issue-789/README.md")[post-run account]).
 
 === Configured optimisations and capacity limits
 
