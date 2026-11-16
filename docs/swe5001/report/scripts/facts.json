@@ -109,19 +109,19 @@
     ],
     "probes": [
       {
-        "pattern": "tested (?P<v>\\d[\\d,]*\\d|\\d) req/s",
+        "pattern": "tested (?P<v>\\d[\\d,.]*\\d|\\d) req/s",
         "accept": [
           "600"
         ]
       },
       {
-        "pattern": "V3 r4[^.;]{0,60}?(?:served|up to|at) (?:the tested )?(?P<v>\\d[\\d,]*\\d|\\d) req/s",
+        "pattern": "V3 r4[^.;]{0,60}?(?:served|up to|at) (?:the tested )?(?P<v>\\d[\\d,.]*\\d|\\d) req/s",
         "accept": [
           "600"
         ]
       },
       {
-        "pattern": "about (?P<v>\\d[\\d,]*\\d|\\d) catalogue reads a minute",
+        "pattern": "about (?P<v>\\d[\\d,.]*\\d|\\d) catalogue reads a minute",
         "accept": [
           "36,000"
         ]
@@ -189,25 +189,25 @@
         ]
       },
       {
-        "pattern": "\\((?P<v>\\d[\\d,]*\\d|\\d) list, [\\d,]+ detail\\)",
+        "pattern": "\\((?P<v>\\d[\\d,.]*\\d|\\d) list, [\\d,]+ detail\\)",
         "accept": [
           "508,200"
         ]
       },
       {
-        "pattern": "list, (?P<v>\\d[\\d,]*\\d|\\d) detail\\)",
+        "pattern": "list, (?P<v>\\d[\\d,.]*\\d|\\d) detail\\)",
         "accept": [
           "217,799"
         ]
       },
       {
-        "pattern": "V3 r4 completed (?P<v>\\d[\\d,]*\\d|\\d) of them",
+        "pattern": "V3 r4 completed (?P<v>\\d[\\d,.]*\\d|\\d) of them",
         "accept": [
           "725,999"
         ]
       },
       {
-        "pattern": "\\], \\[(?P<v>\\d[\\d,]*\\d|\\d) and 0\\], \\[0; 12 ms\\]",
+        "pattern": "\\], \\[(?P<v>\\d[\\d,.]*\\d|\\d) and 0\\], \\[0; 12 ms\\]",
         "accept": [
           "726,000"
         ]
@@ -242,31 +242,31 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "offers (?P<v>\\d[\\d,]*\\d|\\d) \\(ramp to 200",
+        "pattern": "offers (?P<v>\\d[\\d,.]*\\d|\\d) \\(ramp to 200",
         "accept": [
           "36,000"
         ]
       },
       {
-        "pattern": "\\+ (?P<v>\\d[\\d,]*\\d|\\d) \\(ramp to 600",
+        "pattern": "\\+ (?P<v>\\d[\\d,.]*\\d|\\d) \\(ramp to 600",
         "accept": [
           "240,000"
         ]
       },
       {
-        "pattern": "\\+ (?P<v>\\d[\\d,]*\\d|\\d) \\(10 min hold\\)",
+        "pattern": "\\+ (?P<v>\\d[\\d,.]*\\d|\\d) \\(10 min hold\\)",
         "accept": [
           "360,000"
         ]
       },
       {
-        "pattern": "\\+ (?P<v>\\d[\\d,]*\\d|\\d) \\(ramp down\\)",
+        "pattern": "\\+ (?P<v>\\d[\\d,.]*\\d|\\d) \\(ramp down\\)",
         "accept": [
           "90,000"
         ]
       },
       {
-        "pattern": "= (?P<v>\\d[\\d,]*\\d|\\d) browse arrivals",
+        "pattern": "= (?P<v>\\d[\\d,.]*\\d|\\d) browse arrivals",
         "accept": [
           "726,000"
         ]
@@ -434,7 +434,7 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d) browse completions, about 600 req/s",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d) browse completions, about 600 req/s",
         "accept": [
           "360,000"
         ]
@@ -477,19 +477,19 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "The (?P<v>\\d[\\d,]*\\d|\\d) virtual users \\(VUs\\) were preallocated",
+        "pattern": "The (?P<v>\\d[\\d,.]*\\d|\\d) virtual users \\(VUs\\) were preallocated",
         "accept": [
           "1,000"
         ]
       },
       {
-        "pattern": "active-VU gauge peaked at (?P<v>\\d[\\d,]*\\d|\\d)",
+        "pattern": "active-VU gauge peaked at (?P<v>\\d[\\d,.]*\\d|\\d)",
         "accept": [
           "100"
         ]
       },
       {
-        "pattern": "Docker \\(8 vCPUs, 8 GiB\\); (?P<v>\\d[\\d,]*\\d|\\d) VUs",
+        "pattern": "Docker \\(8 vCPUs, 8 GiB\\); (?P<v>\\d[\\d,.]*\\d|\\d) VUs",
         "accept": [
           "1,000"
         ]
@@ -539,7 +539,7 @@
         ]
       },
       {
-        "pattern": "used at most (?P<v>\\d[\\d,]*\\d|\\d) MiB",
+        "pattern": "used at most (?P<v>\\d[\\d,.]*\\d|\\d) MiB",
         "accept": [
           "796"
         ]
@@ -778,13 +778,13 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "ALB counted about (?P<v>\\d[\\d,]*\\d|\\d) requests a minute",
+        "pattern": "ALB counted about (?P<v>\\d[\\d,.]*\\d|\\d) requests a minute",
         "accept": [
           "36,000"
         ]
       },
       {
-        "pattern": "about (?P<v>\\d[\\d,]*\\d|\\d) per target with six tasks",
+        "pattern": "about (?P<v>\\d[\\d,.]*\\d|\\d) per target with six tasks",
         "accept": [
           "6,000"
         ]
@@ -976,7 +976,7 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "\\[11 Nov: V2\\][^|]*?\\[(?P<v>\\d[\\d,]*\\d|\\d) and 0\\]",
+        "pattern": "\\[11 Nov: V2\\][^|]*?\\[(?P<v>\\d[\\d,.]*\\d|\\d) and 0\\]",
         "accept": [
           "57,600"
         ]
@@ -1199,7 +1199,7 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "\\[16 Oct: V2, two runs\\][^|]*?\\[(?P<v>\\d[\\d,]*\\d|\\d) and 0 each\\]",
+        "pattern": "\\[16 Oct: V2, two runs\\][^|]*?\\[(?P<v>\\d[\\d,.]*\\d|\\d) and 0 each\\]",
         "accept": [
           "57,600"
         ]
@@ -1223,7 +1223,7 @@
         ]
       },
       {
-        "pattern": "each completed (?P<v>\\d[\\d,]*\\d|\\d) requests with no errors",
+        "pattern": "each completed (?P<v>\\d[\\d,.]*\\d|\\d) requests with no errors",
         "accept": [
           "57,600"
         ]
@@ -1267,25 +1267,25 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d) and 2 \\(0\\.0004%\\)\\]",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d) and 2 \\(0\\.0004%\\)\\]",
         "accept": [
           "570,445"
         ]
       },
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d); 1,671 ms\\]",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d); 1,671 ms\\]",
         "accept": [
           "155,554"
         ]
       },
       {
-        "pattern": "\\[155,554; (?P<v>\\d[\\d,]*\\d|\\d) ms\\]",
+        "pattern": "\\[155,554; (?P<v>\\d[\\d,.]*\\d|\\d) ms\\]",
         "accept": [
           "1,671"
         ]
       },
       {
-        "pattern": "k6 dropped (?P<v>\\d[\\d,]*\\d|\\d) iterations yet recorded only",
+        "pattern": "k6 dropped (?P<v>\\d[\\d,.]*\\d|\\d) iterations yet recorded only",
         "accept": [
           "155,554"
         ]
@@ -1434,19 +1434,19 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d) and 15,423 \\(2\\.42%\\)\\]",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d) and 15,423 \\(2\\.42%\\)\\]",
         "accept": [
           "636,824"
         ]
       },
       {
-        "pattern": "\\[636,824 and (?P<v>\\d[\\d,]*\\d|\\d) \\(",
+        "pattern": "\\[636,824 and (?P<v>\\d[\\d,.]*\\d|\\d) \\(",
         "accept": [
           "15,423"
         ]
       },
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d); 4,191 ms\\]",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d); 4,191 ms\\]",
         "accept": [
           "89,175"
         ]
@@ -1514,7 +1514,7 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d) and 11,841",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d) and 11,841",
         "accept": [
           "687,083"
         ]
@@ -1526,7 +1526,7 @@
         ]
       },
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d); 3,957 ms\\]",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d); 3,957 ms\\]",
         "accept": [
           "38,916"
         ]
@@ -1564,7 +1564,7 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d) and 4,561",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d) and 4,561",
         "accept": [
           "720,141"
         ]
@@ -1576,7 +1576,7 @@
         ]
       },
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d); 851 ms\\]",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d); 851 ms\\]",
         "accept": [
           "5,858"
         ]
@@ -1632,7 +1632,7 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d) and 8,429",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d) and 8,429",
         "accept": [
           "725,924"
         ]
@@ -1644,13 +1644,13 @@
         ]
       },
       {
-        "pattern": "\\[(?P<v>\\d[\\d,]*\\d|\\d); 450 ms\\]",
+        "pattern": "\\[(?P<v>\\d[\\d,.]*\\d|\\d); 450 ms\\]",
         "accept": [
           "75"
         ]
       },
       {
-        "pattern": "ALB logged (?P<v>\\d[\\d,]*\\d|\\d) requests",
+        "pattern": "ALB logged (?P<v>\\d[\\d,.]*\\d|\\d) requests",
         "accept": [
           "725,898"
         ]
@@ -1668,7 +1668,7 @@
         ]
       },
       {
-        "pattern": "(?P<v>\\d[\\d,]*\\d|\\d) of k6’s 8,429 errors were timeouts",
+        "pattern": "(?P<v>\\d[\\d,.]*\\d|\\d) of k6’s 8,429 errors were timeouts",
         "accept": [
           "8,417"
         ]
@@ -1780,7 +1780,7 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "served (?P<v>\\d[\\d,]*\\d|\\d) catalogue requests up to",
+        "pattern": "served (?P<v>\\d[\\d,.]*\\d|\\d) catalogue requests up to",
         "accept": [
           "48,754"
         ]
@@ -1948,19 +1948,19 @@
     "canonical_home": "sections/03-2-physical.typ",
     "probes": [
       {
-        "pattern": "at (?P<v>\\d[\\d,]*\\d|\\d) requests per target per minute \\(calculated",
+        "pattern": "at (?P<v>\\d[\\d,.]*\\d|\\d) requests per target per minute \\(calculated",
         "accept": [
           "12,000"
         ]
       },
       {
-        "pattern": "`ALBRequestCountPerTarget` at (?P<v>\\d[\\d,]*\\d|\\d) requests per target per minute",
+        "pattern": "`ALBRequestCountPerTarget` at (?P<v>\\d[\\d,.]*\\d|\\d) requests per target per minute",
         "accept": [
           "12,000"
         ]
       },
       {
-        "pattern": "Calculated: 200 req/s × 60 s = (?P<v>\\d[\\d,]*\\d|\\d)",
+        "pattern": "Calculated: 200 req/s × 60 s = (?P<v>\\d[\\d,.]*\\d|\\d)",
         "accept": [
           "12,000"
         ]
@@ -1978,7 +1978,7 @@
         ]
       },
       {
-        "pattern": "auto-scaling target of (?P<v>\\d[\\d,]*\\d|\\d) requests per target",
+        "pattern": "auto-scaling target of (?P<v>\\d[\\d,.]*\\d|\\d) requests per target",
         "accept": [
           "12,000"
         ]
@@ -2021,13 +2021,13 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "(?:session(?:-only)? (?:target|value) (?:of )?|(?<!scaling )target of )(?P<v>\\d[\\d,]*\\d|\\d)(?: requests per target per minute)?",
+        "pattern": "(?:session(?:-only)? (?:target|value) (?:of )?|(?<!scaling )target of )(?P<v>\\d[\\d,.]*\\d|\\d)(?: requests per target per minute)?",
         "accept": [
           "6,000"
         ]
       },
       {
-        "pattern": "plus (?P<v>\\d[\\d,]*\\d|\\d) requests per target per minute and a 120 s",
+        "pattern": "plus (?P<v>\\d[\\d,.]*\\d|\\d) requests per target per minute and a 120 s",
         "accept": [
           "6,000"
         ]
@@ -2045,7 +2045,7 @@
         ]
       },
       {
-        "pattern": "\\[Request target \\(requests per target per minute\\)\\], \\[[\\d,]+\\], \\[[\\d,]+\\], \\[(?P<v>\\d[\\d,]*\\d|\\d)\\]",
+        "pattern": "\\[Request target \\(requests per target per minute\\)\\], \\[[\\d,]+\\], \\[[\\d,]+\\], \\[(?P<v>\\d[\\d,.]*\\d|\\d)\\]",
         "accept": [
           "6,000"
         ]
@@ -2236,13 +2236,13 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "6 tasks × 100 req/s = (?P<v>\\d[\\d,]*\\d|\\d) req/s",
+        "pattern": "6 tasks × 100 req/s = (?P<v>\\d[\\d,.]*\\d|\\d) req/s",
         "accept": [
           "600"
         ]
       },
       {
-        "pattern": "6 × 200 = (?P<v>\\d[\\d,]*\\d|\\d) req/s",
+        "pattern": "6 × 200 = (?P<v>\\d[\\d,.]*\\d|\\d) req/s",
         "accept": [
           "1,200"
         ]
@@ -2406,7 +2406,7 @@
         ]
       },
       {
-        "pattern": "using (?P<v>\\d[\\d,]*\\d|\\d) teams, 40 times",
+        "pattern": "using (?P<v>\\d[\\d,.]*\\d|\\d) teams, 40 times",
         "accept": [
           "80,000"
         ]
@@ -2418,7 +2418,7 @@
         ]
       },
       {
-        "pattern": "all six counts matched at (?P<v>\\d[\\d,]*\\d|\\d)",
+        "pattern": "all six counts matched at (?P<v>\\d[\\d,.]*\\d|\\d)",
         "accept": [
           "80,000"
         ]
@@ -2612,7 +2612,7 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "backlog peaked at (?P<v>\\d[\\d,]*\\d|\\d) messages",
+        "pattern": "backlog peaked at (?P<v>\\d[\\d,.]*\\d|\\d) messages",
         "accept": [
           "32,936"
         ]
@@ -2678,13 +2678,13 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "with (?P<v>\\d[\\d,]*\\d|\\d) teams \\(R1\\)",
+        "pattern": "with (?P<v>\\d[\\d,.]*\\d|\\d) teams \\(R1\\)",
         "accept": [
           "2,000"
         ]
       },
       {
-        "pattern": "and (?P<v>\\d[\\d,]*\\d|\\d) teams \\(R2\\)",
+        "pattern": "and (?P<v>\\d[\\d,.]*\\d|\\d) teams \\(R2\\)",
         "accept": [
           "20,000"
         ]
@@ -2809,7 +2809,7 @@
         ]
       },
       {
-        "pattern": "All (?P<v>\\d[\\d,]*\\d|\\d) workload GETs",
+        "pattern": "All (?P<v>\\d[\\d,.]*\\d|\\d) workload GETs",
         "accept": [
           "60,000"
         ]

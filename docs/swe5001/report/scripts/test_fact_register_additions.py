@@ -204,6 +204,16 @@ class FactRegisterAdditionsTests(unittest.TestCase):
         self.assertEqual(len(failures), 1)
         self.assertIn('0.20 a year', failures[0])
 
+    def test_decimal_throughput_drift_is_reported_not_skipped(self):
+        fact = next(f for f in self.facts if f['id'] == 'V3r4-peak-rps')
+        name = 'sections/04-1-performance.typ'
+        body = self.sources[name]
+        self.assertIn('tested 600 req/s', body)
+        bad = dict(self.sources, **{name: body.replace('tested 600 req/s', 'tested 6.00 req/s', 1)})
+        failures = register.check([fact], bad)
+        self.assertTrue(failures)
+        self.assertTrue(any('6.00' in f for f in failures))
+
     def test_wording_guards_fail_on_the_old_text(self):
         old = {
             'DA-v3r4-session-only-label': ('sections/02-project-conduct.typ',
