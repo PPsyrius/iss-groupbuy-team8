@@ -311,7 +311,7 @@ We ran EventStorming as a desk study, not as a live workshop: two concurrent par
     [Notification and analytics need team outcomes without coupling to the checkout transaction.],
     [Write enriched V1 events to `sys_outbox` at `BEFORE_COMMIT` (lowest precedence) and relay them through the broker (AD-04).],
     [ADR 0007; `IntegrationOutboxWriter`, `OutboxRelayService`],
-    [Proposed by the study (HS-8: "There is no outbox"), decided in ADR 0007 (11 Oct)],
+    [Proposed by the study (HS-8: "There is no outbox"), decided in ADR 0007 (proposed 11 Oct, accepted 6 Nov)],
 
     [`MemberJoined` and UC12 (credit the sharer)],
     [Crediting a sharer is not financial; a credit failure must never roll back a paid seat.],

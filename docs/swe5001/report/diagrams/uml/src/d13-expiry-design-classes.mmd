@@ -21,7 +21,7 @@ classDiagram
     class TeamExpirySweepJob {
         <<scheduled job, Sched>>
         +run(): void
-        -sweepOnce(leaseValid: BooleanSupplier): void
+        -sweepOnce(shardIndex: int, leaseValid: BooleanSupplier): void
     }
     class LeasedJobRunner {
         <<utility, Sched, Conc>>
