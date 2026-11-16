@@ -47,6 +47,8 @@ These are projections of operator receipts and report-review inputs, not outputs
 | `B4-ct-deletestack-edge.json` | `aws cloudtrail lookup-events` for `DeleteTable`, 15 Nov |
 | `C1-iam-roles-swe5001.json` | `aws iam list-roles` |
 | `C3-ct-deleterole.json` | `aws cloudtrail lookup-events` for `DeleteRole`, 15 Nov |
+| `ct-foundation-create-20261005.json` | `aws cloudtrail lookup-events` for `CreateRepository` (5 Oct), the web bucket's write events (6 Oct) and `CreateRole` (us-east-1, denied), 16 Nov |
+| `ct-v3r4-session-start-20261111.json` | `aws cloudtrail lookup-events` for `RunInstances`, `StartInstances`, `RegisterScalableTarget` and `UpdateService`, 11 Nov 20:00–23:00 SGT, 16 Nov |
 | `A7-ce-oct-nov-daily.json` | `aws ce get-cost-and-usage`, daily by service, 1 Oct – 15 Nov |
 | `81-scp-list.json` | `aws organizations list-policies --filter SERVICE_CONTROL_POLICY` |
 | `82-`, `83-`, `84-scp-*.json` | `aws organizations describe-policy` for `Org-Baseline`, `Region-Pin`, `Sandbox-Guardrails` |
@@ -102,6 +104,8 @@ These are projections of operator receipts and report-review inputs, not outputs
 - `93-mgmt-trails.json`, `A5-mgmt-orgtrails.json`, `A6-mgmt-guardduty.json`: no trail in `ap-southeast-1` or `us-east-1`, and no GuardDuty detector in the management account.
 - `A4-proj-ct-useast1.txt`: `cloudtrail:LookupEvents` in `us-east-1` is denied by `Region-Pin`.
 - `ct-registerscalabletarget-20261016.json` (read 16 November): event times only for `RegisterScalableTarget` on 16 October in `ap-southeast-1`; ten calls between 13:28 and 14:14 SGT and ten later between 18:50 and 20:40 SGT (AISS-14).
+- `ct-foundation-create-20261005.json` (read 16 November): the four `swe5001/*` ECR repositories were created at 22:35:11 SGT on 5 October; the web bucket at 10:09:16 SGT on 6 October, with its bucket policy at 10:11:58. The role creation time cannot be read: `us-east-1` lookups are denied by `Region-Pin`, the management account has no trail and the roles are deleted.
+- `ct-v3r4-session-start-20261111.json` (read 16 November): the `t3a.2xlarge` load generator launched at 21:28:26 SGT on 11 November, after two refused launches at 21:18 and 21:19; scalable-target registrations at 22:08:15 and 22:52:50.
 
 **Cost.**
 - `36-ce-monthly.json`, `38-ce-daily-total.json`, `A7-ce-oct-nov-daily.json`: monthly and daily unblended cost. October is final; November figures are estimates for an open month.

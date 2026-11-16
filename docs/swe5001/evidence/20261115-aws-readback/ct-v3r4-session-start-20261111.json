@@ -1,0 +1,93 @@
+{
+ "readAt": "2026-11-16 (read-only CloudTrail LookupEvents)",
+ "account": "402178232802",
+ "region": "ap-southeast-1",
+ "window": "2026-11-11 12:00 to 15:00 UTC (20:00-23:00 SGT)",
+ "queries": [
+  {
+   "eventName": "RunInstances",
+   "count": 4,
+   "events": [
+    {
+     "eventName": "RunInstances",
+     "eventTimeSgt": "2026-11-11T21:18:14+08:00"
+    },
+    {
+     "eventName": "RunInstances",
+     "eventTimeSgt": "2026-11-11T21:19:19+08:00"
+    },
+    {
+     "eventName": "RunInstances",
+     "eventTimeSgt": "2026-11-11T21:28:25+08:00"
+    },
+    {
+     "eventName": "RunInstances",
+     "eventTimeSgt": "2026-11-11T21:28:26+08:00"
+    }
+   ],
+   "note": "21:18:14 and 21:19:19: refused (UnauthorizedOperation, another instance family). 21:28:25: dry run of the t3a.2xlarge launch. 21:28:26: the t3a.2xlarge load generator launched; the only successful RunInstances in the window."
+  },
+  {
+   "eventName": "StartInstances",
+   "count": 0,
+   "events": []
+  },
+  {
+   "eventName": "RegisterScalableTarget",
+   "count": 2,
+   "events": [
+    {
+     "eventName": "RegisterScalableTarget",
+     "eventTimeSgt": "2026-11-11T22:08:15+08:00"
+    },
+    {
+     "eventName": "RegisterScalableTarget",
+     "eventTimeSgt": "2026-11-11T22:52:50+08:00"
+    }
+   ]
+  },
+  {
+   "eventName": "UpdateService",
+   "count": 7,
+   "events": [
+    {
+     "eventName": "UpdateService",
+     "eventTimeSgt": "2026-11-11T22:08:15+08:00",
+     "resourceName": "commerce-svc"
+    },
+    {
+     "eventName": "UpdateService",
+     "eventTimeSgt": "2026-11-11T22:08:17+08:00",
+     "resourceName": "commerce-svc"
+    },
+    {
+     "eventName": "UpdateService",
+     "eventTimeSgt": "2026-11-11T22:30:49+08:00",
+     "resourceName": "commerce-svc"
+    },
+    {
+     "eventName": "UpdateService",
+     "eventTimeSgt": "2026-11-11T22:32:49+08:00",
+     "resourceName": "commerce-svc"
+    },
+    {
+     "eventName": "UpdateService",
+     "eventTimeSgt": "2026-11-11T22:34:48+08:00",
+     "resourceName": "commerce-svc"
+    },
+    {
+     "eventName": "UpdateService",
+     "eventTimeSgt": "2026-11-11T22:37:49+08:00",
+     "resourceName": "commerce-svc"
+    },
+    {
+     "eventName": "UpdateService",
+     "eventTimeSgt": "2026-11-11T22:52:50+08:00",
+     "resourceName": "commerce-svc"
+    }
+   ],
+   "note": "22:08:15 and 22:52:50: rejected calls (InvalidParameterException). 22:08:17 is the first successful UpdateService; 22:30:49-22:37:49 are the scale-out calls."
+  }
+ ],
+ "note": "Event times only, converted to SGT from the offset-carrying CLI value; no identities, request parameters or values were kept. The 21:28 start of the V3 r4 session row is the launch of the AWS load generator at 21:28:26 SGT."
+}
