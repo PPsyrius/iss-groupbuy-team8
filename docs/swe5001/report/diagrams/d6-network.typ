@@ -93,7 +93,7 @@
       )
       v(4pt)
       set par(leading: 0.45em, justify: false)
-      text(fill: grey)[ECS places each task in either private application subnet; db-init runs once per session. RDS (one zone) and Valkey (one node) sit in the zone AWS chooses; each subnet group holds both data subnets. Both private route tables point at the one fck-nat in zone a.]
+      text(fill: grey)[ECS places each task in either private application subnet; db-init runs once per session. Data-store placement shown was observed on 10 November 2026, not guaranteed: RDS (one zone) and Valkey (one node) each have a subnet group holding both data subnets. Both private route tables point at the one fck-nat in zone a.]
     }),
   )
 }

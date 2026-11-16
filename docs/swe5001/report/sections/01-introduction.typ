@@ -11,8 +11,6 @@ BlocBuy is a community group-buying platform: buyers form a team at a team price
 
 *What SWE5001 added.* The same commit now also assembles into `identity-svc`, `commerce-svc` and `notification-svc`. They run on Amazon Elastic Container Service (ECS) on Fargate, each with its own database, and exchange events through a transactional outbox, one Amazon Simple Notification Service (SNS) topic and one Amazon Simple Queue Service (SQS) queue per consumer. Terraform creates the runtime for each working session and destroys it afterwards. The logical design is in §3.1 and the physical design in §3.2.
 
-*Status on 14 November 2026.* The three-service release runs on AWS only during sessions: promotions built it from zero and passed the smoke test on 17 October and on 10 and 11 November, and on 10 November we verified the separate data subnets (AD-15, §3.2). On 11 November the load test V3 r4 delivered the whole schedule up to 600 requests per second (req/s) with no errors while commerce scaled from one to six tasks. Its k6 gates passed, but canonical analyser acceptance remained incomplete; maximum capacity and linear scaling remain unproven (§4.1, AISS-12). Subsequent AWS sessions verified queue-driven notification scaling (V4 R5), controlled task replacement (V5 R3) and poison-message isolation with real alarm/email delivery (V7 R4), under the explicitly bounded experimental or session configurations described in §4.1–§4.2. The AWS identity-outage attempt failed and payment/webhook recovery remains untested (AISS-13); these results do not establish whole-campaign acceptance. §2.2 gives the evidence status of each capability, §6.6 the dated runs, §6.1 the answer to each of the assessors' remarks and §3.4 the remaining limitations. Times in this report are Singapore time (SGT, UTC+8). Historical citations retain their inspected revisions; §2.2 separately links the published 13–14 November evidence in PR #807 and explains its unmerged, mutable-branch status.
-
 == Business Needs
 
 Group buying works only if enough people join before the deadline. Today that coordination happens in chat groups and spreadsheets, so it is slow, opaque and manual for everyone involved (@tbl-pain-points).
@@ -110,7 +108,7 @@ SWE5001 changed how BlocBuy is built and run, not what it does. The business fun
 
 === Functionality in scope
 
-Every use case keeps its SWE5006 behaviour in the monolith and has one owning service in the distributed topology (@tbl-scope-uc, @fig-d2-use-cases). UC3–UC6 form the group-buying core. Its critical flows, joining a team by paying (UC4 with UC10) and team expiry with refunds (UC5, UC6), are designed in §3.2.4. The numbering follows the #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], with two changes: the proposal left notification unnumbered and put referral credit inside UC7, so this report numbers every use case in @fig-d2-use-cases and splits the credit into UC12. UC10 to UC12 are numbered for this report; the #src("docs/sprint2-progress-report.typ")[Sprint 2 progress report] used UC10 for the payment and order system of record, which this UC10 covers from the buyer's side.
+Every use case keeps its SWE5006 behaviour in the monolith and has one owning service in the distributed topology (@tbl-scope-uc, @fig-d2-use-cases). UC3–UC6 form the group-buying core. UC10 handles upfront payment, UC11 receives event notifications and UC12 credits a referred join. The critical flows, joining a team by paying (UC4 with UC10) and team expiry with refunds (UC5, UC6), are designed in §3.2.4.
 
 #figure(
   table(
@@ -130,7 +128,7 @@ Every use case keeps its SWE5006 behaviour in the monolith and has one owning se
     [UC12], [Credit the sharer of a referred join (extends UC4)], [commerce], [Unchanged; stays an in-process subscriber after the join commits],
   ),
   kind: table,
-  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], renumbered as described above.],
+  caption: [Use cases in scope and their owning services. Source: #src("docs/swe5001/project-proposal.typ")[proposal, Table 6], with payment, notification and referral-credit operations distinguished as UC10–UC12.],
 ) <tbl-scope-uc>
 
 #afig("d2-use-cases", lbl: <fig-d2-use-cases>, float: true, [Use case view (UML use case diagram). UC3 and UC4 always include UC10; UC6 extends UC5 when the team expired, and UC12 extends UC4 when the join used an invite link.])

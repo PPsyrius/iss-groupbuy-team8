@@ -1,0 +1,160 @@
+{
+  "schema": 1,
+  "publicationDateSgt": "2026-11-15",
+  "issues": [448, 459, 460],
+  "pullRequest": 808,
+  "releasedApplicationSha": "3a893036d70d028b29ae13ebf820283571c1ae00",
+  "executionSourceSha": "479d3409ba6992a7991953ae3544f559ca614dea",
+  "hostedCi": {
+    "run": 43619694588,
+    "headSha": "be5e7c41580ba2bbd0fac97a5978d3951278d4fc",
+    "suites": 241,
+    "tests": 2144,
+    "failures": 0,
+    "errors": 0,
+    "skippedOptInBenchmarks": 2,
+    "laterPublicationHeadVerifiedByThisRun": false
+  },
+  "qualifiedNormalTeamSuccess": {
+    "paidFulfilledPayments": 2,
+    "appliedParticipationReceipts": 2,
+    "paidMembers": 2,
+    "confirmedOrders": 2,
+    "publishedTeamSucceededEvents": 1,
+    "exactRecipientNotifications": 2,
+    "extraOrDeletedRecipientRows": 0,
+    "notificationConsumedMarkers": 1,
+    "bothRecipientsCompleteInitialRepeatApiIdsMatchDb": true,
+    "backendSourceArtifactHashesVerified": 50,
+    "independentApiSourceHashesVerified": 6,
+    "futureFixtureLifetimeSeconds": 7200,
+    "adminProvisioningPerformed": true,
+    "originalFailurePreserved": true,
+    "identityFaultExecuted": false,
+    "wholeIssue460Closed": false
+  },
+  "privateSourceReceiptSha256": {
+    "backendAcceptance": "f64c59cbe41948252df9996252a6527152ccd55d06dff3316e61184082ba5d79",
+    "backendSourceManifest": "388a054d2a36407fbb3f5c812db56f6adddf490a1bb1bec614c370138aeddfa5",
+    "independentParentApi": "cda75ebe0059f573dff5ee8da4e7ae97c6dc3229fc7c5ecb43007cd70efb97bf",
+    "hostedCiReview": "dcad2b581e27cc120b4af4ac53906c2f04b239b2a1b26c66ffcf38258456c20d"
+  },
+  "retainedRuntimeLinkageAmendment": {
+    "dateSgt": "2026-11-15",
+    "interpretationOwner": "Parent technical interpretation, not a quoted issue definition or owner waiver",
+    "sessionInterpretation": "One provisioned ECS environment campaign under the canonical create/destroy runtime lifecycle",
+    "nativeSourceHashesVerified": 28,
+    "lifecycleReceiptHashesVerified": 8,
+    "reviewManifestHashesVerified": 4,
+    "fullServiceRecords": 8,
+    "taskRecords": 54,
+    "matchingNotificationServiceRecords": 6,
+    "notificationNativeCreatedAtUtc": "2026-11-13T03:19:00.599000+00:00",
+    "sameNotificationServiceArnAndBirthAcrossStartupV4V7": true,
+    "deploymentsChanged": true,
+    "uninterruptedTaskUptimeOrFullFoundationImmutabilityProved": false,
+    "historicalUnprovenAssessmentRewritten": false,
+    "privateReceiptSha256": {
+      "L01": "dbcf7f6ecab534ea996ac684f1b1c56acd9efee688d0a5175623b563f9641108",
+      "L02": "78f1188af73f39c1ed8535750e899abb59a4752d82a452558e33aad2c5acebc5",
+      "L03": "ee0d89a323e1ffdd01d58e31fbf163655123c8542a2f8b3ea3dc36344cd280cc",
+      "L04": "1ee1956acfeaad326af9d0fe750b1079de76b1258fce8bce3fc63f21393c8fad"
+    }
+  },
+  "focusedIdentityPaymentR11": {
+    "scopeAmendmentDateSgt": "2026-11-15",
+    "scopeAmendmentState": "Owner-directed local draft; remote issue and PR body not edited",
+    "scope": "Same authenticated actor/product payment initiation returns 500 while identity is unavailable and 200 after restoration",
+    "actualFaultsDocumentedInThisFollowup": 1,
+    "preparationLabelsAreNotExecutedFaultCount": true,
+    "faultBeforeSgt": "2026-11-15T13:34:16.050018+08:00",
+    "oldApplicationShutdownAfterFaultSeconds": 61.433982,
+    "authenticationRecoverySeconds": 167.578134,
+    "authenticationRecoveryIsNotPaymentEndpointRecoveryObservation": true,
+    "downStatus": 500,
+    "downCode": "COMMON_500_001",
+    "downLinuxIssuedAtSgt": "2026-11-15T13:35:24.476270+08:00",
+    "downLinuxConsumedAtSgt": "2026-11-15T13:35:24.711994+08:00",
+    "downActualBrowserStartSgt": "2026-11-15T13:35:24.629+08:00",
+    "downActualBrowserFinishSgt": "2026-11-15T13:35:24.678+08:00",
+    "upStatus": 200,
+    "upCode": "COMMON_200_000",
+    "upActualBrowserStartSgt": "2026-11-15T13:46:48.747+08:00",
+    "upActualBrowserFinishSgt": "2026-11-15T13:46:48.817+08:00",
+    "sameActorProductOperationHeadersAndNormalRuntimeVerified": true,
+    "failedWindowIncludesDeletedRows": true,
+    "failedWindowIntentTeamPaymentOrderCounts": [0, 0, 0, 0],
+    "beforeAfterDownAfterUpIntentCounts": [9, 9, 10],
+    "exactValidUpIntents": 1,
+    "upScopedDownstreamCounts": {
+      "checkoutPayments": 0,
+      "teams": 0,
+      "orders": 0,
+      "refunds": 0,
+      "participations": 0,
+      "relatedOutboxRows": 0
+    },
+    "nativeReadOnlyDbExitCode": 0,
+    "sqlSourceSha256": "a59278bb68c02a94561b7ecd934985a40e7dd59b588c35bba4a9d09b57e2a9c3",
+    "sourceHashesVerified": 22,
+    "rawDbObjectsMatchReconciledState": true,
+    "traceIdentityUnavailableExceptionMatched": true,
+    "separateCompleted500LogMarkerVerified": false,
+    "payNowHandoffOrCardSubmissionPerformed": false,
+    "signedWebhook500RedeliveryDuplicateTestPerformed": false,
+    "originalFullIssue459AcceptanceClaimed": false,
+    "newSyntheticLoadOrLongObserverPassClaimed": false,
+    "privateSourceSha256": {
+      "F01": "18d9bf894b00be0870fc198e1891e153048c97c2995a2e0783b10de80b2564a3",
+      "F02": "96f24e2fcff829e428be6cc9d1046007f47af4049b3d0cfad0931bcbac7ff741",
+      "F03": "d5300db5e93fb314bfdd893037d42df46725ca058619b95f7e6b08c2c13a1522",
+      "F04": "564dcc42af303e7f595028ad47d33b21dd169f4d86f3dcd4d3ec946270512f45",
+      "F05": "94b5444ba4914e1bb3c791604911800ef7b8557422707a3f3445b1f43b7654a6",
+      "F06": "71a034c5aa67422bb33fda6ca98980d5a2272b51331c971fb78c7d0d8562fd3a",
+      "F07": "84d7c9b536938a4c56f5f71f3937846772cf18dcb8745b95ca0f34e0acab5754",
+      "F08": "7eb78c6569e85433ffe840c22d4619581b19f03ad952a65c395eb41d11554f73",
+      "F09": "393aa06713449ff256b94ae1e3819b1e64043ed56d3a6d2c14f067acc5034fa9",
+      "F10": "bd2e6ceb8aa3f0a8d28280420f34759f361762bf4424f88805895ff5d3471e7c",
+      "F11": "692e76495ef6856027cd41afa86c7793e8367a0a9bead326869a71608844dfa6",
+      "F12": "34e2c20cbaeeffabde5361ad18bb35a899a71f4094809a553a93f2d981b68f57",
+      "F13": "a59278bb68c02a94561b7ecd934985a40e7dd59b588c35bba4a9d09b57e2a9c3",
+      "F14": "c8bd10b0668fb430a2802b6a40108f6d4bcbc9a913f4ca3474744273ac28370d",
+      "F15": "9c8746c000efa2c5b71654b1967656dcc8fa720bd2e7ac7c7e9394fdd4bfebf7",
+      "F16": "12a2eaef411b5b2c8aaa2feb4e71f7e0a2d38b41eb50c6ec26f13e9bcaaf34d8",
+      "F17": "59429c30ebde7ef72591d55dc08c9b07129644c81f51cee2d6c9c6b37a910122",
+      "F18": "9f5b73972821885378e78731aa1f5c1353bae62e0eae976c47b2a6d705cefc39",
+      "F19": "e6cad08932bfbefbd2cd667c238abc9da6f70880dc744575aca867baad540f9d",
+      "F20": "9a660da2eae997af9f15191724fb380786f14c0f1b26799b14a8484b10558076",
+      "F21": "b2f780fb8fba3552e0647c067dc49dbf31ec52c55b761d799c96c0d559577f46",
+      "F22": "846898791ee9c8fcd4b590e05302ad2650541536f739d2f25fa8d816b0a9f1f4"
+    }
+  },
+  "files": {
+    "README.md": {
+      "bytes": 5592,
+      "sha256": "85b8399134de8d6c30c3d05f815d7e255e1d160423b5d73ff78bc7a8a20c738a"
+    },
+    "normal-team-success-r2.md": {
+      "bytes": 10554,
+      "sha256": "5e04ce39394c75399eac1b9acda6c723f0bb0cc3eb63b457ff399f120fd94f0e"
+    },
+    "retained-runtime-linkage.md": {
+      "bytes": 7302,
+      "sha256": "03a3e47154e9c1e6dd0eb29a480423c7d2721cdc96e396f2e2abef6aac381308"
+    },
+    "focused-identity-payment-r11.md": {
+      "bytes": 7120,
+      "sha256": "67d937de0366f23d746e053c30c9128c444893f4e12499efd69cf8c9274f6b2c"
+    },
+    "cleanup-receipt.json": {
+      "bytes": 2121,
+      "sha256": "5448dda9db01e503cf1bcd0e8406c40e3df5e2290fe3e248c0dbb81d53bc1858"
+    }
+  },
+  "hashScope": "Exact published UTF-8 LF bytes, excluding this self-referential manifest; private raw sources remain private and are not claimed publicly archived",
+  "acceptanceLimits": [
+    "OAuth redirect-chain and direct Valkey state observations incomplete",
+    "Cross-date smoke reuse and full EC2 manual parity require disposition",
+    "Focused payment-initiation proof does not establish signed webhook/replay or full original #459; separate cleanup receipt is not all-AWS absence or zero cost"
+  ]
+}

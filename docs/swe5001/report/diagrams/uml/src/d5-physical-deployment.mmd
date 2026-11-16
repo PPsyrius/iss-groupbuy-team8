@@ -33,7 +33,11 @@ deploymentDiagram
                     }
                 }
                 zone "Data 10.50.21.0/24" {
-                    node Rds["RDS PostgreSQL 18"] <<database server>> : db.t4g.micro, single zone; databases identity, commerce, notification; placed here on 10 Nov
+                    node Rds["RDS PostgreSQL 18"] <<database server>> : db.t4g.micro, single zone; placed here on 10 Nov {
+                        artifact IdentityDb["identity"] <<database>>
+                        artifact CommerceDb["commerce"] <<database>>
+                        artifact NotificationDb["notification"] <<database>>
+                    }
                 }
             }
         }
@@ -52,7 +56,9 @@ deploymentDiagram
 %% at IdB 1,3
 %% at CoB 1,4
 %% at Cache 0,6
-%% at Rds 1,6
+%% at IdentityDb 1,6
+%% at CommerceDb 1,7
+%% at NotificationDb 1,8
 %% at Tasks 2,6
 %% at Sns 2,2
 %% at QNt 2,3

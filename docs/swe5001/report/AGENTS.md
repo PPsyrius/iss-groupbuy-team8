@@ -75,6 +75,8 @@ Initially checked against the repository on 21 October 2026; the lock-order clar
 
 ## Diagram rules
 
+15 November 2026 amendment to the preceding AWS-drill row: its identity deferral and PR #807 publication status are historical. PR #807 is now merged at `479d3409`; focused R11 payment-initiation failure/recovery is now done, while original identity R1 stays failed and broad AWS webhook/replay/V6 remain unproven. New #448 hosted-CI/campaign-linkage and #460 normal paid-team results retain all configuration, fixture, admin-provisioning and topology-parity limits. Use §4.2 `tbl-followup-15nov` as canonical; its new source paths are LOCAL WORKING-TREE, not pushed, not remote or immutable citations. Do not repin tested application/historical sources or change submitted PDFs. AISS-13 remains partially resolved.
+
 - Use UML or a named notation (C4, DDD context map, crow's foot) and say which in the caption.
 - Each caption names the viewpoint and what the reader should notice: "Figure 3.5: Physical deployment view. Only the ALB and NAT sit in public subnets."
 - Commit the editable source next to the export in `diagrams/`; never commit an image without its source. A Typst diagram is its own source and needs no export.
@@ -100,6 +102,8 @@ The assessors found the presentation's logical diagram non-standard (F12). It mi
 - Every element on a detailed design diagram traces to a class in the code; every element on a DDD diagram traces to a row in the aggregate or context table.
 
 ## IDs and traceability
+
+15 November local retention clarification: the new acceptance sources are in local commit `71b06b5`, not pushed, not uncommitted raw proof. Keep printed local-commit/path citations; no CI on that evidence commit or remote GitHub availability is implied.
 
 | Prefix | Meaning | Register |
 |---|---|---|

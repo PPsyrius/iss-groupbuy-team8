@@ -1,0 +1,28 @@
+# 15 November acceptance follow-up — PR #808
+
+Refs #448/#459/#460. One combined delivery, not an automatic issue closure, new deployment or whole-campaign pass.
+
+- [Qualified normal team-success R2](normal-team-success-r2.md): two real paid settlements and exact production outbox/consumer/recipient effects, with independently reconciled complete initial/repeat buyer APIs. Preserves first failure/refund and actual admin/two-hour-fixture setup; records OAuth/Valkey and cross-date parity limits. Admin provisioning is not a failed #460 acceptance criterion. That normal-path check did not include an identity fault; later R11 is recorded separately below.
+- [Focused #459 R11 payment-initiation result](focused-identity-payment-r11.md): owner-directed **local scope-amendment draft**; actual initiation **500 while identity was unavailable → 200 after restoration**, zero failed-window creations including deleted rows, actor/product intent counts **9 → 9 → 10**, and one valid new intent with no checkout/payment/downstream effects. Authenticated identity recovery **167.578134 s** is distinct from the later payment response. No card submission, signed-webhook-500/redelivery/duplicate test or full original #459 acceptance is claimed.
+- **15 November dated amendment:** [retained #448 runtime linkage](retained-runtime-linkage.md) now binds startup fan-out, V4 R5 and V7 R4 to the same native notification-service birth. Parent interprets “one session” as one provisioned ECS campaign under the canonical environment-session lifecycle, not one browser session or unchanged tasks. Experimental cohort/visibility and original failure limits remain; this does not retroactively prove #460's older-smoke/new-manual session linkage.
+- [Hosted backend CI 43619694588](https://github.com/PPsyrius/iss-groupbuy-team8/actions/runs/43619694588) passed exact code head **be5e7c41580ba2bbd0fac97a5978d3951278d4fc**, before this documentation publication. That result does **not** verify a later head; the publication commit needs its own required checks.
+- Build-quality job **132522374148** ran real hosted JDK 21/Docker-backed Maven verification: downloaded Surefire/Failsafe XML independently totals **241 suites, 2,144 tests, zero failures/errors, two skipped opt-in benchmarks** (2,142 non-skipped tests). Skips are `PerformanceBaselineIT.recordOneHundredUserBaselineAndExpiryLag` and `TeamExpiryShardingBenchmarkIT.recordOriginalSingleFlightAndSixShardSourceThroughput`; do not describe the full run as skip-free.
+- Contract-check, SonarCloud Backend including quality gate, and Docker including smoke/Trivy passed. Deployment jobs were skipped, not live acceptance. No new benchmark, passing cloud-drill rerun or topology restart was performed by this publication.
+- **Final retained cleanup receipt:** [runtime teardown and selected-archive preservation](cleanup-receipt.json) records canonical down complete **15 November 14:14:51.757319 SGT**, **118** resources destroyed, independent **0 managed runtime resources**, absent runtime/edge/foundation locks and unchanged protected state/release-candidate pointers. Generator **stopped, not terminated**, at **14:19:39.784326 SGT** with encrypted disk retained. The **129-member** selected evidence archive has AES256 remote encryption and matching SHA-256 readback; it is **not a complete raw backup**, local TAR copies are unencrypted, and original local evidence remains intact. Retained storage/protected infrastructure remain chargeable: **not all AWS gone or zero cost**. This is local receipt consolidation, not a new cleanup operation or CI run.
+
+## Selected hosted suites
+
+| Suite | Tests | Failures / errors / skips | Downloaded XML SHA-256 |
+| --- | --- | --- | --- |
+| OutboxRollbackElasticMqIT | 1 | 0 / 0 / 0 | `ed670c47ac6be3c0043aae834b32b4522789970417d00ebf04f01c843ca16cae` |
+| NotificationConsumerElasticMqIT | 3 | 0 / 0 / 0 | `e96cf6857e4f248bf02f31ebebc7ae88318547df8d4b32e5b651e21ecc8630bc` |
+| OutboxRelayFlowIT | 1 | 0 / 0 / 0 | `11a16f2a20d4de0dfd3ce4496cdac005bf35027c4d7c79b77800e286e63522c6` |
+| TeamExpirySchedulingIT | 10 | 0 / 0 / 0 | `cb590628b86695674891243a967a443869241f3bf2df689e337e33f65bf0271e` |
+
+Rollback coverage proves a real team-expiry transaction rolls back business/outbox state with no ElasticMQ publication; its committed retry delivers one matching event. Duplicate/poison coverage includes the same event delivered three times and poison dead-lettering after five receives while controls proceed. These selected suites total **15 tests with no skips**; they do not replace the qualified live #460 receipts or the separate focused #459 HTTP/DB evidence.
+
+## Publication and privacy
+
+[Publication manifest](publication-manifest.json) hashes the exact published UTF-8 files, not a claimed private-cloud archive. Raw CI XML and business/API evidence remain retained privately; no cookies, identity/payment/team/event IDs, traces, provider URLs or private paths are published. The private CI review receipt hash is `dcad2b581e27cc120b4af4ac53906c2f04b239b2a1b26c66ffcf38258456c20d`; selected business-receipt hashes are in the R2 record.
+
+Publication checks cover all 50 backend source-artifact hashes, six independent API source hashes, selected/overall CI XML counts, local Markdown links, public byte hashes and sensitive-value screening. These checks are offline evidence validation, not another application test or cloud run. [Same-author daily log](../../../agile/sprint-04/log/2026-11-15.md) and [NFR register](../../../quality/nfr-register.md) retain the work/remaining gates.

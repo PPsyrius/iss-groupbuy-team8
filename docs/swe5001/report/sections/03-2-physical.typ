@@ -48,7 +48,7 @@ The SWE5001 deployment configuration targets AWS in Singapore (`ap-southeast-1`)
     [— (monitoring)], [Amazon CloudWatch], [Logs under `/blocbuy/swe5001/*` (7 days), one dashboard, two alarms on the notification queue (DLQ not empty, oldest-message age)],
   ),
   kind: table,
-  caption: [Logical elements of @fig-d3-logical-view and @fig-d3b-logical-events-data and the products that implement them. Source: `infra/swe5001` and `backend` at the freeze commit (§1.1).],
+  caption: [Logical elements of @fig-d3-logical-view and @fig-d3b-logical-events-data and the products that implement them. Source: `infra/swe5001` and `backend`.],
 ) <tbl-logical-physical>
 
 #afig("d5-physical-deployment", lbl: <fig-d5-deployment>, [Physical deployment view (UML deployment diagram). Each availability zone holds a public, a private application and a data subnet. Each service's image is deployable in either zone's Fargate environment; the note gives the task count per service over both zones, so `identity-svc`, with one task, is not zone-redundant. RDS and Valkey each run in one data subnet that AWS chooses; the figure draws them where they ran on 10 November, and each subnet group spans both data subnets.])
@@ -134,7 +134,7 @@ The physical decisions buy isolation and a small bill rather than always-on capa
       *Options considered:* (a) all on-demand, rejected because burst capacity would pay the full price; (b) all Spot, rejected because a reclaim could take commerce below its floor; (c) a mixed strategy. \
       *Choice:* (c): capacity provider strategy `FARGATE` with base equal to the commerce minimum (two in demonstration sessions) and weight 1, plus `FARGATE_SPOT` with weight 3. \
       *Trade-off:* Spot capacity is cheaper but can be reclaimed with two minutes' notice; the base keeps two tasks on regular Fargate, so a reclaim never takes commerce below its floor. \
-      *Consequence:* Configured, not tested: the 16 and 19 October AWS records show the strategy on the service, but not which provider each task ran on. The cost study of 25 September noted Spot as documented for x86 only, so ARM64 Spot placement is not shown by our evidence. \
+      *Consequence:* The 16 and 19 October records show the configured strategy, not each task's provider. On 11 November, the #src("docs/swe5001/evidence/20261111-v3-r3/diagnosis/aws-review/FINDINGS.md")[AWS review, AWS-06] recorded an ARM64 commerce task on definition 37 with provider `FARGATE_SPOT` and stop code `SpotInterruption`, demonstrating later Spot placement and replacement (§4.2). \
       *Record:* No ADR.
     ]),
     ("AD-09", [
@@ -190,7 +190,7 @@ The physical decisions buy isolation and a small bill rather than always-on capa
     ("AD-14", [
       *Our own SWE5001 stack in the shared team account, fenced by tags.* \
       *Driver:* Security (isolation between the two environments). \
-      *Context:* The SWE5006 environment and the SWE5001 runtime share our member account 402178232802 in an AWS Organization; neither must be able to damage the other. \
+      *Context:* The SWE5006 environment and the SWE5001 runtime share the project member account in an AWS Organization; neither must be able to damage the other. \
       *Options considered:* (a) a separate member account (`swe5001-poc`, since closed); (b) the shared account with no fence, rejected because either project could change the other's resources; (c) the shared account with the SWE5001 apply role fenced to its own resources. \
       *Choice:* (c). The SWE5001 apply role denies changes to resources without the SWE5001 tags or name prefix (#src("infra/swe5001/foundation/github-oidc.tf")[`github-oidc.tf`], "Guardrail for the shared account"), except its CloudWatch alarm, dashboard and metric access (AISS-15); SCPs and Identity Center govern the whole account, and an account administrator cannot lift an SCP. \
       *Trade-off:* One account, one set of short-lived logins and one bill shared by both projects (§6.3); the fence is an IAM policy that an administrator can change, weaker than an account boundary. An SCP can also block legitimate calls, as a CloudFront metric read was on 16 October (§4.3, @tbl-findings). \
@@ -245,12 +245,12 @@ The solution uses managed AWS services wherever one exists, so we run no servers
     [Infrastructure as code], [Terraform 1.16, AWS provider 5.100; three stacks: `foundation`, `edge` and `runtime`], [The SWE5006 environment already used Terraform; `terraform test` runs offline in CI (§5.2). Stack split by lifetime: `foundation` and `edge` are permanent, `runtime` is disposable],
   ),
   kind: table,
-  caption: [Technology and services with versions and sizes. Source: `backend/pom.xml`, `backend/Dockerfile` and `infra/swe5001`, checked on 11 November 2026.],
+  caption: [Technology and services with versions and sizes. Source: `backend/pom.xml`, `backend/Dockerfile` and `infra/swe5001`; session-only sizes are identified separately.],
 ) <tbl-tech>
 
 *Encryption and secrets.* Configured, not tested: the data stores, the domain-event topic (`alias/aws/sns`), the queues, ECR and the state bucket are encrypted at rest; the alarm topic `blocbuy-swe5001-alerts` is not. The CloudFront → ALB hop is plain HTTP (AISS-08), and the Valkey AUTH token and the origin secret are in Terraform state (AISS-09). Database passwords are generated as ephemeral values and written with write-only arguments, so they never reach Terraform state. @tbl-security-boundaries gives each boundary, its control and its limit (§4.3).
 
-*Cost.* Estimated: while it is up, the runtime costs about US\$0.17 to US\$0.20 an hour (AD-12), and nothing for the rest of the week except the permanent edge. Calculated (one term estimated): every session billed to 10 November cost about US\$11.6 in total (read on 11 and 12 November; the 11 November session is not yet billed). §6.3 shows the method.
+*Cost.* The disposable runtime limits idle charges but leaves permanent edge and storage costs. §6.3 separates measured billing, shared-account allocation and list-price estimates.
 
 *Workloads and compute.* @tbl-workload-compute shows which compute runs each kind of workload and what scales it.
 
@@ -275,7 +275,7 @@ In code, every aggregate reaches its tables the same way: a repository interface
 
 ==== Data stores and table ownership
 
-Every service database runs the same Flyway migration stream (`V1` to `V28` at the freeze commit, §1.1), so each database contains all 29 tables. Ownership is enforced by grants, not by which tables exist: after every Flyway run (each service start), `afterMigrate__service_grants.sql` gives the service's app role `SELECT, INSERT, UPDATE, DELETE` on the tables it owns and revokes everything on the others (@tbl-ownership). The owner role runs migrations; the app role used at runtime cannot change the schema.
+Every service database runs the same Flyway migration stream (`V1` to `V28`), so each database contains all 29 tables. Ownership is enforced by grants, not by which tables exist: after every Flyway run (each service start), `afterMigrate__service_grants.sql` gives the service's app role `SELECT, INSERT, UPDATE, DELETE` on the tables it owns and revokes everything on the others (@tbl-ownership). The owner role runs migrations; the app role used at runtime cannot change the schema.
 
 #figure(
   table(
@@ -367,11 +367,9 @@ Several business rules are enforced by unique indexes, so that a race between tw
   caption: [Aggregates and the tables they own, in the order of @tbl-aggregates. Source: `blocbuy-domain` repositories and Flyway migrations V1–V28.],
 ) <tbl-aggregate-tables>
 
-`ShareInvite` and `ShareCredit` are roots of their own: each has its own repository and refers to `GroupDeal` by `dealId`; the credit is written after the team commits, in its own transaction (§3.1.4, ADR 0003).
-
 ==== Transactions and concurrency
 
-One business transaction never spans two databases; this is why payment, team and order stay in one service (AD-02). Within commerce, the riskiest transaction is settlement of a Stripe webhook for a team purchase. `settle` first claims the webhook event (an insert into `log_payment_webhook_event`), then locks team, purchase intent and payment in that order, then, during fulfilment, the participation receipt, and writes the membership, order and payment updates in one transaction (`OrderFulfilmentAdapter.lockForSettlement`, `StripeCheckoutService.settle`; ADR 0001). Expiry takes a subset of these locks in the same order: the team (lock 1), then, through its subscribers, the orders by a status-guarded update (`@Order(10)`) and the paid payments (lock 3, `@Order(20)`); settlement takes team (1), purchase intent (2) and payment (3). The update needs no `SELECT … FOR UPDATE`, but it row-locks the orders it changes until commit, while lock 1 is held. The fixed order prevents deadlocks between concurrent webhooks and the expiry sweep; the team row lock serialises the race for the last seat.
+One business transaction never spans two databases; this is why payment, team and order stay in one service (AD-02). Their settlement and expiry transactions use a fixed lock order to prevent deadlocks and serialise the last-seat race (§3.2.4).
 
 Write transactions run at PostgreSQL's default READ COMMITTED with `SELECT … FOR UPDATE` row locks; read-only views that combine several queries use REPEATABLE READ for one snapshot. Most mutable aggregates also use their `version` column for optimistic locking on ordinary updates. The detailed sequence is in §3.2.4.
 
@@ -413,7 +411,7 @@ Sa-Token is configured with the token name `blocbuy-token`, a random UUID token 
     [`blocbuy:{profile}:common:rate-limit:<scope>:<digest>`], [commerce], [One rate-limit window], [`RedisRateLimitGateway`. Request counter per scope and hashed subject. If Valkey is unreachable the limiter fails open and counts the event in a metric],
   ),
   kind: table,
-  caption: [Valkey key model; PostgreSQL remains the system of record, and no business fact lives only in Valkey. Source: code and configuration, read on 5 November 2026; the two later changes to these classes (#pr(776), #pr(784)) kept the key patterns and TTLs.],
+  caption: [Valkey key model; PostgreSQL remains the system of record, and no business fact lives only in Valkey. Source: code and configuration.],
 ) <tbl-valkey>
 
 The design rule is that Valkey is never the lock of record or the only copy of a business fact: the scheduler lease is in PostgreSQL (`sys_scheduler_lock`), and caches are read-through with short, jittered TTLs so that a lost node costs latency, not correctness. The cost of a lost node is that every user is signed out (AISS-10).
