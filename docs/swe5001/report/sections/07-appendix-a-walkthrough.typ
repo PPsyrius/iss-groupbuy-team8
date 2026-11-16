@@ -33,9 +33,9 @@ This appendix walks through the journey of §3.2.4 one screen at a time: a leade
 
 == How to read this appendix
 
-Recorded monolith walkthrough: the screens come from a recording of 24 October 2026 (#iss(657)) on the SWE5006 monolith on EC2 behind CloudFront (#src("docs/deploy/dev-cloudfront-deployment.md")[dev CloudFront deployment]). The two payments in it were made at 19:10 and 19:17 SGT in Stripe test mode, so no real money moved. Two test accounts took part, and their names and avatars are blurred or cropped out. The member's steps up to the receipt come from an edited clip recorded the same evening and played inside the recording. This is what we saw in the UI; we did not inspect the database or Stripe.
+The screens come from a recording of 24 October 2026 (#iss(657)). Both payments ran in Stripe test mode, so no real money moved, and the two test accounts' names are blurred.
 
-Each caption names the buyer, and @tbl-a-journey ties every screen to its use-case step and to its row of the two-buyer table (#xref(<tbl-two-buyer-walkthrough>)[the two-buyer walkthrough table], §3.2.4). The use cases are UC2 (sign in), UC3 (start a team), UC4 (join a team), UC5 (resolve a team), UC6 (refund an expired team), UC7 (share an invitation) and UC8 (view my orders and teams). Steps of UC3, UC5, UC6, UC7 and UC8 are the basic-flow steps (B1, B2 and so on) of the detailed design source book. UC4 steps are those of #xref(<tbl-uc4-flow>)[the UC4 flow-of-events table in §3.2.4]. A step that the recording does not show is marked "Not recorded" and points to the screen that shows its result or the same page. §3.2.4 gives the design behind these screens, and §6.6 points to the 15 November distributed run.
+Each caption names the buyer and the use-case step. UC4 steps are those of #xref(<tbl-uc4-flow>)[the UC4 flow-of-events table in §3.2.4]\; other steps (B1, B2 and so on) are from the detailed design source book. @tbl-a-journey also gives each screen's row of the two-buyer table (#xref(<tbl-two-buyer-walkthrough>)[the two-buyer walkthrough table], §3.2.4) and marks steps the recording does not show as "Not recorded".
 
 #figure(
   table(
