@@ -2,7 +2,7 @@
 
 = Other Things to Be Highlighted
 
-We answered every assessor remark (§6.1). The runtime cost about US\$11.6 up to 10 November, calculated with one estimated term (§6.3), and the real cloud exposed ten problems that local tests missed (§6.4).
+We answered every assessor remark (§6.1). The runtime cost about US\$11.6 up to 10 November, calculated with one estimated term (§6.3), and the real cloud exposed ten problems that local tests missed (§6.4). Appendix A walks through the two-buyer journey screen by screen, so the system can be followed without a live demonstration (§6.6).
 
 #include "06-1-remarks.typ"
 #include "06-2-success-criteria.typ"

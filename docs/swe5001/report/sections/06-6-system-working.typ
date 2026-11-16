@@ -3,7 +3,7 @@
 
 == Where to See the System Working
 
-We do not keep the system running (AD-12), so these records are where it can be seen (@tbl-demo); the pipeline can rebuild it once foundation and edge exist (§5.3).
+We do not keep the system running (AD-12), so these records are where it can be seen (@tbl-demo); the pipeline can rebuild it once foundation and edge exist (§5.3). Appendix A shows the two-buyer journey from the 24 October recording screen by screen, each screen tied to its use-case step.
 
 #figure(
   table(
