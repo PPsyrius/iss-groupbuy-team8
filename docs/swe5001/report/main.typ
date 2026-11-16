@@ -48,9 +48,10 @@
 
 // Front matter: Contents, List of figures, List of tables, each titled in the face of the
 // SWE5006 Contents title (template.typ `report`: 16 pt bold heading ink, 12 pt above, 18 pt
-// below; a plain block, not a heading, so it has no number, no contents entry and no running
-// head), entries 9 pt apart with dot leaders. Contents: level 1 in capitals, indent 0.5 cm a
-// level, depth 3, as the template.
+// below). The Contents title is a plain block, not a heading, so it has no number, no contents
+// entry and no running head; the two lists use unnumbered, outlined headings drawn in the same
+// face, so they appear in the Contents beside Abbreviations. Entries 9 pt apart with dot
+// leaders. Contents: level 1 in capitals, indent 0.5 cm a level, depth 3, as the template.
 #let front-title(body) = block(above: 12pt, below: 18pt, text(size: 16pt, weight: "bold", fill: tpl.heading-ink, body))
 #{
   front-title[Contents]
@@ -92,14 +93,20 @@
   link(el.location(), { set text(fill: ink); it.indented(it.prefix(), [#body#sym.wj~#sym.wj#leader#sym.wj~#it.page()]) })
 }
 #{
-  front-title[List of figures]
+  // A real, unnumbered heading so the list appears in the Contents and the PDF bookmarks,
+  // like Abbreviations; drawn in the front-title face so the page looks unchanged.
+  show heading: it => front-title(it.body)
+  heading(numbering: none, outlined: true)[List of figures]
   show outline.entry: set block(spacing: 9pt)
   show outline.entry: short-entry
   outline(title: none, target: figure.where(kind: image))
 }
 #pagebreak()
 #{
-  front-title[List of tables]
+  // A real, unnumbered heading so the list appears in the Contents and the PDF bookmarks,
+  // like Abbreviations; drawn in the front-title face so the page looks unchanged.
+  show heading: it => front-title(it.body)
+  heading(numbering: none, outlined: true)[List of tables]
   show outline.entry: set block(spacing: 9pt)
   show outline.entry: short-entry
   outline(title: none, target: figure.where(kind: table))
