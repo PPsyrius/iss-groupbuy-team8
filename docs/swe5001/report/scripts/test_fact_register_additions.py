@@ -49,6 +49,38 @@ def drifts(value):
     yield value + 'x'
 
 
+def strip_value_group(pattern):
+    """Return the pattern with only the balanced (?P<v>...) group removed.
+
+    A greedy r'\(\?P<v>.*\)' would also swallow every literal up to the last ')' in the pattern,
+    hiding a value written after the group. Escapes and character classes are skipped so that
+    '\)' or '[)]' do not close the group.
+    """
+    start = pattern.index('(?P<v>')
+    i, depth, in_class = start, 0, False
+    while i < len(pattern):
+        c = pattern[i]
+        if c == '\\':
+            i += 2
+            continue
+        if in_class:
+            in_class = c != ']'
+        elif c == '[':
+            in_class = True
+            if pattern[i + 1:i + 2] == '^':
+                i += 1
+            if pattern[i + 1:i + 2] == ']':  # a leading ']' is a literal
+                i += 1
+        elif c == '(':
+            depth += 1
+        elif c == ')':
+            depth -= 1
+            if depth == 0:
+                return pattern[:start] + pattern[i + 1:]
+        i += 1
+    raise ValueError(f'unbalanced value group in {pattern!r}')
+
+
 def plant(regex, body, accept):
     """Return a body with the first echo drifted, or None if no drift keeps the anchor."""
     match = regex.search(body)
@@ -100,7 +132,7 @@ class FactRegisterAdditionsTests(unittest.TestCase):
             for probe in fact.get('probes', []):
                 if re.match(r'#run\\\(', probe['pattern']):
                     continue
-                outside = re.sub(r'\(\?P<v>.*\)', '', probe['pattern'])
+                outside = strip_value_group(probe['pattern'])
                 for value in probe['accept']:
                     if len(value) < 3 or not re.search(r'\d', value):
                         continue
@@ -108,6 +140,30 @@ class FactRegisterAdditionsTests(unittest.TestCase):
                     with self.subTest(fact=fact['id'], value=value):
                         self.assertIsNone(re.search(token % re.escape(re.escape(value)), outside))
                         self.assertIsNone(re.search(token % re.escape(value), outside))
+
+    def test_strip_value_group_keeps_literals_after_the_group(self):
+        self.assertEqual(strip_value_group(r'apply (?P<v>\d+) s, 115 resources \(x\)'),
+                         r'apply  s, 115 resources \(x\)')
+        self.assertEqual(strip_value_group(r'\((?P<v>\d+ (?:Oct|Nov))\) and (a)'), r'\(\) and (a)')
+        self.assertEqual(strip_value_group(r'at (?P<v>[)\]]+\)) now'), r'at  now')
+        # The old greedy strip hid the 115 after the group; the balanced strip exposes it.
+        pattern = r'initial apply (?P<v>\d+) s, 115 resources; smoke (\d+) s\)'
+        self.assertNotIn('115', re.sub(r'\(\?P<v>.*\)', '', pattern))
+        self.assertIn('115', strip_value_group(pattern))
+
+    def test_run_link_guards_fire_on_a_label_target_mismatch(self):
+        fact = next(f for f in self.facts if f['id'] == 'run-ids')
+        guards = dict(fact, probes=[], must_appear=[])
+        self.assertEqual(register.check([guards], self.sources), [])
+        cases = {'sections/a.typ': ('see #run("39008208244")[39008208244].',
+                                    'see #run("39008208244")[39008208245].'),
+                 'registers.md': ('[run 39008208244](https://x/actions/runs/39008208244)',
+                                  '[run 39008208244](https://x/actions/runs/39008208245)')}
+        for name, (good, bad) in cases.items():
+            with self.subTest(file=name):
+                self.assertEqual(register.check([guards], {name: good}), [])
+                failures = register.check([guards], {name: bad})
+                self.assertTrue(failures and all('forbidden wording' in f for f in failures))
 
     def test_planted_drift_fails_for_every_probe(self):
         for fact in self.facts:

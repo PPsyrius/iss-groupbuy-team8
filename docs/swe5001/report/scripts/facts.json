@@ -54,17 +54,41 @@
         "accept": [
           "11"
         ]
+      },
+      {
+        "pattern": "dashboard\\], \\[Partly verified on AWS \\((?P<v>\\d+ \\w+)\\)\\]",
+        "accept": [
+          "11 Nov"
+        ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) V3 r4 met",
+        "accept": [
+          "11 November"
+        ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) on AWS, with a session-only target",
+        "accept": [
+          "11 November"
+        ]
+      },
+      {
+        "pattern": "V3 r4 browse workload \\((?P<v>\\d+ \\w+)\\)",
+        "accept": [
+          "11 Nov"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: the 11 Nov date is now captured (A3-M4); previously only the seconds were probed.",
+    "note": "P1 reconciler: the 11 Nov date is now captured (A3-M4); previously only the seconds were probed. R3 A1-A1, A2-c3, A4-W2: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:96"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "V3r4-peak-rps",
@@ -107,11 +131,17 @@
         "accept": [
           "600"
         ]
+      },
+      {
+        "pattern": "For scale, (?P<v>\\d+ req/s is [\\d,]+) catalogue reads",
+        "accept": [
+          "600 req/s is 36,000"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: 02:75 echo (A1-W13).",
+    "note": "P1 reconciler: 02:75 echo (A1-W13). R3 A3-a8: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "registers.md:61",
@@ -123,7 +153,7 @@
       "sections/06-2-success-criteria.typ:31",
       "sections/06-6-system-working.typ:16"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "V3r4-requests",
@@ -258,18 +288,24 @@
         "accept": [
           "10 min and ramps down over 5"
         ]
+      },
+      {
+        "pattern": "V3 ramps from (?P<v>\\d+ to \\d+ req/s over \\d+ min and to \\d+ req/s over \\d+ min)",
+        "accept": [
+          "40 to 200 req/s over 5 min and to 600 req/s over 10 min"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: V3 hold and ramp-down (A3-M3; perf/k6/lib.mjs:69-71).",
+    "note": "P1 reconciler: V3 hold and ramp-down (A3-M3; perf/k6/lib.mjs:69-71). R3 A3-c4: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:11",
       "sections/04-1-performance.typ:55"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "V3r4-errors-drops",
@@ -302,17 +338,23 @@
         "accept": [
           "725,999"
         ]
+      },
+      {
+        "pattern": "\\[k6, monitor and raw stream: (?P<v>\\d, \\d and \\d)\\]",
+        "accept": [
+          "0, 0 and 0"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: body-check count captured (A3-W10).",
+    "note": "P1 reconciler: body-check count captured (A3-W10). R3 A3-a8: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:103"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "V3r4-latency",
@@ -451,18 +493,24 @@
         "accept": [
           "1,000"
         ]
+      },
+      {
+        "pattern": "does not demonstrate (?P<v>[\\d,]+) simultaneous users",
+        "accept": [
+          "1,000"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A3-a8: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:49",
       "sections/04-1-performance.typ:112"
     ],
-    "source_agent": "R1"
+    "source_agent": "R1,R3-P1R"
   },
   {
     "id": "V3r4-generator",
@@ -513,12 +561,24 @@
         "accept": [
           "8"
         ]
+      },
+      {
+        "pattern": "container with (?P<v>\\d+ vCPUs and \\d+ GiB)",
+        "accept": [
+          "8 vCPUs and 8 GiB"
+        ]
+      },
+      {
+        "pattern": "Docker \\(8 vCPUs, (?P<v>\\d+) GiB\\)",
+        "accept": [
+          "8"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A3-a8: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:49",
@@ -527,7 +587,7 @@
       "sections/05-devops.typ:203",
       "sections/06-3-cost.typ:28"
     ],
-    "source_agent": "R1"
+    "source_agent": "R1,R3-P1R"
   },
   {
     "id": "V3r4-scaling-activities",
@@ -612,9 +672,15 @@
         "accept": [
           "one to six"
         ]
+      },
+      {
+        "pattern": "(?P<v>\\w+ to \\w+) commerce tasks under the V3 r4",
+        "accept": [
+          "One to six"
+        ]
       }
     ],
-    "note": "Activity end times rounded to the second from the CSV (22:31:57.766 -> 22:31:58 etc.). | P1 reconciler: whole-row tuples of the scaling table (A3-W2) and the \"one to six\" echoes (A2-c4, A4-W-10).",
+    "note": "Activity end times rounded to the second from the CSV (22:31:57.766 -> 22:31:58 etc.). | P1 reconciler: whole-row tuples of the scaling table (A3-W2) and the \"one to six\" echoes (A2-c4, A4-W-10). R3 A4-W2: probes added. Round-3 P2: value literals in probe anchors generalised and sibling probes added, so a drifted literal no longer silences the register (out/p2/p2-mutate3.py anchor and in-group escapes).",
     "variants": [],
     "forbid": [],
     "must_appear": [],
@@ -626,7 +692,7 @@
       "sections/04-1-performance.typ:122",
       "sections/04-1-performance.typ:123"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "V3r4-commerce-cpu-peak",
@@ -830,40 +896,60 @@
     "canonical_home": "sections/04-1-performance.typ",
     "probes": [
       {
-        "pattern": "from six to two at (?P<v>23:\\d\\d)",
+        "pattern": "from \\w+ to \\w+ at (?P<v>\\d\\d:\\d\\d)",
         "accept": [
           "23:09"
         ]
       },
       {
-        "pattern": "from six to two at 23:\\d\\d–(?P<v>23:\\d\\d)",
+        "pattern": "to two at \\d\\d:\\d\\d–(?P<v>\\d\\d:\\d\\d)",
         "accept": [
           "23:21"
         ]
       },
       {
-        "pattern": "desired count to two at (?P<v>23:\\d\\d)",
+        "pattern": "desired count to \\w+ at (?P<v>\\d\\d:\\d\\d)",
         "accept": [
           "23:09"
         ]
       },
       {
-        "pattern": "(?P<v>\\w+) tasks still running at 23:21",
+        "pattern": "(?P<v>\\w+) tasks still running at \\d\\d:\\d\\d",
         "accept": [
           "three"
         ]
       },
       {
-        "pattern": "from (?P<v>\\w+ to \\w+) at 23:\\d\\d",
+        "pattern": "from (?P<v>\\w+ to \\w+) at \\d\\d:\\d\\d",
         "accept": [
           "six to two"
+        ]
+      },
+      {
+        "pattern": "\\d\\d:\\d\\d(?: SGT)?(?:; we | \\()read (?:this in CloudTrail )?on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "15 Nov",
+          "15 November"
+        ]
+      },
+      {
+        "pattern": "read this in CloudTrail on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "15 Nov",
+          "15 November"
+        ]
+      },
+      {
+        "pattern": "tasks still running at (?P<v>\\d\\d:\\d\\d)",
+        "accept": [
+          "23:21"
         ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: \"six to two\" captured, not literal (A1-W2).",
+    "note": "P1 reconciler: \"six to two\" captured, not literal (A1-W2). R3 A1-A7, A4-W3: probes added. Round-3 P2: value literals in probe anchors generalised and sibling probes added, so a drifted literal no longer silences the register (out/p2/p2-mutate3.py anchor and in-group escapes).",
     "report_matches_evidence": true,
     "occurrences": [
       "registers.md:61",
@@ -872,7 +958,7 @@
       "sections/04-1-performance.typ:139",
       "sections/06-6-system-working.typ:16"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "V2-11nov-result",
@@ -930,12 +1016,30 @@
         "accept": [
           "200"
         ]
+      },
+      {
+        "pattern": "Passed every plateau up to (?P<v>\\d+) req/s",
+        "accept": [
+          "200"
+        ]
+      },
+      {
+        "pattern": "Passed every plateau up to \\d+ req/s on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "11 November"
+        ]
+      },
+      {
+        "pattern": "(?P<v>\\d+) req/s is a tested lower bound",
+        "accept": [
+          "200"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: kneeRps echo (A3-M17).",
+    "note": "P1 reconciler: kneeRps echo (A3-M17). R3 A1-A1: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:7",
@@ -945,7 +1049,7 @@
       "sections/04-quality-attributes.typ:12",
       "sections/06-2-success-criteria.typ:31"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "V2-11nov-plateaus",
@@ -1123,18 +1227,30 @@
         "accept": [
           "57,600"
         ]
+      },
+      {
+        "pattern": "(?P<v>\\w+) runs on 16 October corroborate",
+        "accept": [
+          "two"
+        ]
+      },
+      {
+        "pattern": "\\w+ runs on (?P<v>\\d+ \\w+) corroborate",
+        "accept": [
+          "16 October"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A1-A1: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:42",
       "sections/04-1-performance.typ:80"
     ],
-    "source_agent": "R1"
+    "source_agent": "R1,R3-P1R"
   },
   {
     "id": "V3-19oct-result",
@@ -1741,18 +1857,24 @@
         "accept": [
           "(6 + 4 + 1) × 10"
         ]
+      },
+      {
+        "pattern": "more than the (?P<v>\\d+) available",
+        "accept": [
+          "74"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: arithmetic captured whole (A3-W5).",
+    "note": "P1 reconciler: arithmetic captured whole (A3-W5). R3 A3-a8: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:88",
       "sections/05-devops.typ:213"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "db-budget-small",
@@ -2007,12 +2129,30 @@
         "accept": [
           "one"
         ]
+      },
+      {
+        "pattern": "commerce scales (?P<v>\\w+ to \\w+) tasks \\(NFR-64\\)",
+        "accept": [
+          "one to six"
+        ]
+      },
+      {
+        "pattern": "target \\w+, (?P<v>\\w+ to \\w+) tasks",
+        "accept": [
+          "one to four"
+        ]
+      },
+      {
+        "pattern": "— \\((?P<v>\\d+ \\w+) policy record\\)",
+        "accept": [
+          "16 October"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: registers AD-20 word form (A1-W9).",
+    "note": "P1 reconciler: registers AD-20 word form (A1-W9). R3 A1-A5, A1-c2, A1-c5: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "registers.md:40",
@@ -2021,7 +2161,7 @@
       "sections/04-1-performance.typ:165",
       "sections/04-2-availability.typ:10"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "commerce-task-size",
@@ -2106,17 +2246,23 @@
         "accept": [
           "1,200"
         ]
+      },
+      {
+        "pattern": "the environment's (?P<v>[\\d,]+) gives",
+        "accept": [
+          "12,000"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A3-a8: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:171"
     ],
-    "source_agent": "R1"
+    "source_agent": "R1,R3-P1R"
   },
   {
     "id": "gates",
@@ -2211,12 +2357,24 @@
         "accept": [
           "800"
         ]
+      },
+      {
+        "pattern": "under the (?P<v>\\d+) ms gate",
+        "accept": [
+          "800"
+        ]
+      },
+      {
+        "pattern": "logged request within (?P<v>\\d+) ms",
+        "accept": [
+          "800"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: added the 01 driver echo (A1-M8) and the quality-table V3 targets (A3-M18).",
+    "note": "P1 reconciler: added the 01 driver echo (A1-M8) and the quality-table V3 targets (A3-M18). R3 A3-a8: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-1-performance.typ:15",
@@ -2224,7 +2382,7 @@
       "sections/04-1-performance.typ:36",
       "sections/04-1-performance.typ:106"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "V4-R5-pass",
@@ -2318,12 +2476,60 @@
         "accept": [
           "four"
         ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) on AWS, V4 R5 (?:carried|ran)",
+        "accept": [
+          "14 November"
+        ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) on AWS, with an experimental expiry configuration, the backlog",
+        "accept": [
+          "14 November"
+        ]
+      },
+      {
+        "pattern": "events \\((?P<v>\\d+ \\w+), experimental configuration\\)",
+        "accept": [
+          "14 Nov"
+        ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+), V4 R5",
+        "accept": [
+          "14 Nov"
+        ]
+      },
+      {
+        "pattern": "V4 R5 \\((?P<v>\\d+ \\w+)\\)",
+        "accept": [
+          "14 Nov"
+        ]
+      },
+      {
+        "pattern": "experimental expiry workload \\((?P<v>\\d+ \\w+),",
+        "accept": [
+          "14 Nov"
+        ]
+      },
+      {
+        "pattern": "V4 used the experimental (?P<v>[\\d,]+)-team",
+        "accept": [
+          "80,000"
+        ]
+      },
+      {
+        "pattern": "The (?P<v>[\\d,]+) teams expired at",
+        "accept": [
+          "80,000"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: 14 Nov date echoes (A1-W5, A3-M5), the ~2,000-team scenario (A1-W4, A3-M5) and the 02/03-2 \"four tasks\" echoes (A1-W4, A2-c5).",
+    "note": "P1 reconciler: 14 Nov date echoes (A1-W5, A3-M5), the ~2,000-team scenario (A1-W4, A3-M5) and the 02/03-2 \"four tasks\" echoes (A1-W4, A2-c5). R3 A2-c2, A4-W1, A3-a9: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "registers.md:60",
@@ -2333,7 +2539,7 @@
       "sections/03-4-limitations.typ:41",
       "sections/04-1-performance.typ:165"
     ],
-    "source_agent": "R1+P1R"
+    "source_agent": "R1+P1R,R3-P1R"
   },
   {
     "id": "V4-R5-timing",
@@ -2637,12 +2843,30 @@
         "accept": [
           "13"
         ]
+      },
+      {
+        "pattern": "for R3 we gave commerce (?P<v>[\\d.]+ vCPU and \\d+ GiB) and a \\d+ s warm-up",
+        "accept": [
+          "1 vCPU and 2 GiB"
+        ]
+      },
+      {
+        "pattern": "and a (?P<v>\\d+) s warm-up; R3 tested",
+        "accept": [
+          "120"
+        ]
+      },
+      {
+        "pattern": "two-to-six policy and (?P<v>[\\d,]+) target",
+        "accept": [
+          "12,000"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": " | Merged AVAIL-v5-r3 (R4): same fact, same values; 6 probes added, 3 redundant dropped. | Reconciler: 2 probe(s) covered by V5-R2 dropped (values agree). | P1 reconciler: registers AISS-13 date echo (A1-W5).",
+    "note": " | Merged AVAIL-v5-r3 (R4): same fact, same values; 6 probes added, 3 redundant dropped. | Reconciler: 2 probe(s) covered by V5-R2 dropped (values agree). | P1 reconciler: registers AISS-13 date echo (A1-W5). R3 A3-a9: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-2-availability.typ:10",
@@ -2651,7 +2875,7 @@
       "sections/02-project-conduct.typ:77",
       "sections/04-2-availability.typ:12"
     ],
-    "source_agent": "R1+P1R",
+    "source_agent": "R1+P1R,R3-P1R",
     "merged_from": [
       "AVAIL-v5-r3 (R4)"
     ]
@@ -2681,17 +2905,23 @@
         "accept": [
           "120"
         ]
+      },
+      {
+        "pattern": "R2 ran commerce at (?P<v>[\\d.]+ vCPU and \\d+ GiB) with no slow start",
+        "accept": [
+          "0.5 vCPU and 1 GiB"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A3-a9: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-2-availability.typ:12"
     ],
-    "source_agent": "R1"
+    "source_agent": "R1,R3-P1R"
   },
   {
     "id": "V7-R4",
@@ -2816,12 +3046,42 @@
         "accept": [
           "14"
         ]
+      },
+      {
+        "pattern": "In V7 R4 on (?P<v>\\d+ \\w+) one recipient",
+        "accept": [
+          "14 Nov"
+        ]
+      },
+      {
+        "pattern": "In V7 R4 on \\d+ \\w+ (?P<v>\\w+) recipients? received",
+        "accept": [
+          "one"
+        ]
+      },
+      {
+        "pattern": "the source queue stayed at (?P<v>\\d+) s",
+        "accept": [
+          "60"
+        ]
+      },
+      {
+        "pattern": "restored the (?P<v>\\d+) s setting",
+        "accept": [
+          "60"
+        ]
+      },
+      {
+        "pattern": "production (?P<v>\\d+) s setting",
+        "accept": [
+          "60"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": " | Merged AVAIL-v7-r4 (R4): same fact, same values; 2 probes added, 7 redundant dropped. | P1 reconciler: 300 s limit echoes (A3-W12, A2-c8) and 14 Nov date echoes (A1-W5, A4-W-08).",
+    "note": " | Merged AVAIL-v7-r4 (R4): same fact, same values; 2 probes added, 7 redundant dropped. | P1 reconciler: 300 s limit echoes (A3-W12, A2-c8) and 14 Nov date echoes (A1-W5, A4-W-08). R3 A1-A4, A3-a9: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "registers.md:62",
@@ -2831,7 +3091,7 @@
       "sections/04-2-availability.typ:36",
       "sections/06-5-analytics.typ:12"
     ],
-    "source_agent": "R1+P1R",
+    "source_agent": "R1+P1R,R3-P1R",
     "merged_from": [
       "AVAIL-v7-r4 (R4)"
     ]
@@ -2945,9 +3205,28 @@
         "accept": [
           "29 min 54 s"
         ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) on AWS, \\[?V8 R4",
+        "accept": [
+          "14 Nov",
+          "14 November"
+        ]
+      },
+      {
+        "pattern": "V8 R4 \\((?P<v>\\d+ \\w+)(?:; run by hand, not a promotion)?\\)\\]",
+        "accept": [
+          "14 Nov"
+        ]
+      },
+      {
+        "pattern": "a margin of about (?P<v>[\\d.]+)%",
+        "accept": [
+          "0.3"
+        ]
       }
     ],
-    "note": "Shared with R4 (devops). Destroy duration 772.510 s = 12 min 52.5 s, rounded to 12 min 53 s. | Merged DEVOPS-v8-r4 (R4): same fact, same values; 4 probes added, 4 redundant dropped. | Reconciler: probe 0 (\"V8 R4 ... N min N s\", accepts start-up or destroy) kept as a catch-all; anchored start-up and destroy probes from R4 pin each echo to one value. | P1 reconciler: dropped the catch-all probe that accepted either 29 min 54 s or 12 min 53 s (a swap would pass, A3-W9); the anchored start-up and destroy probes remain. Added 14 Nov date echoes (A1-W5, A3-M6).",
+    "note": "Shared with R4 (devops). Destroy duration 772.510 s = 12 min 52.5 s, rounded to 12 min 53 s. | Merged DEVOPS-v8-r4 (R4): same fact, same values; 4 probes added, 4 redundant dropped. | Reconciler: probe 0 (\"V8 R4 ... N min N s\", accepts start-up or destroy) kept as a catch-all; anchored start-up and destroy probes from R4 pin each echo to one value. | P1 reconciler: dropped the catch-all probe that accepted either 29 min 54 s or 12 min 53 s (a swap would pass, A3-W9); the anchored start-up and destroy probes remain. Added 14 Nov date echoes (A1-W5, A3-M6). R3 A1-A4, A2-c8, A3-a12: probes added.",
     "variants": [],
     "forbid": [],
     "must_appear": [],
@@ -2962,7 +3241,7 @@
       "sections/03-2-physical.typ:178",
       "sections/05-devops.typ:171"
     ],
-    "source_agent": "R1+P1R",
+    "source_agent": "R1+P1R,R3-P1R",
     "merged_from": [
       "DEVOPS-v8-r4 (R4)"
     ]
@@ -3044,12 +3323,36 @@
         "accept": [
           "13"
         ]
+      },
+      {
+        "pattern": "On AWS the (?P<v>\\d+ \\w+) attempt failed",
+        "accept": [
+          "13 November"
+        ]
+      },
+      {
+        "pattern": "The (?P<v>\\d+ \\w+) attempt failed",
+        "accept": [
+          "13 Nov"
+        ]
+      },
+      {
+        "pattern": "instead of the expected (?P<v>\\d+)",
+        "accept": [
+          "500"
+        ]
+      },
+      {
+        "pattern": "R1’s (?P<v>\\d+) s recovery gate",
+        "accept": [
+          "180"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": " | Merged AVAIL-identity-r1 (R4): same fact, same values; 2 probes added, 2 redundant dropped.",
+    "note": " | Merged AVAIL-identity-r1 (R4): same fact, same values; 2 probes added, 2 redundant dropped. R3 A2-c5, A3-a4, A3-a9: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-2-availability.typ:38",
@@ -3059,7 +3362,7 @@
       "sections/03-4-limitations.typ:43",
       "sections/06-4-real-cloud.typ:31"
     ],
-    "source_agent": "R1",
+    "source_agent": "R1,R3-P1R",
     "merged_from": [
       "AVAIL-identity-r1 (R4)"
     ]
@@ -3167,6 +3470,36 @@
         "accept": [
           "15"
         ]
+      },
+      {
+        "pattern": "R11 run on (?P<v>\\d+ \\w+) returned",
+        "accept": [
+          "15 November"
+        ]
+      },
+      {
+        "pattern": "returned HTTP (?P<v>\\d+) for START while identity was down",
+        "accept": [
+          "500"
+        ]
+      },
+      {
+        "pattern": "while identity was down and (?P<v>\\d+) once it was back",
+        "accept": [
+          "200"
+        ]
+      },
+      {
+        "pattern": "the (?P<v>\\d+ \\w+) run R11",
+        "accept": [
+          "15 November"
+        ]
+      },
+      {
+        "pattern": "\\[(?P<v>\\d+ \\w+) focused R11",
+        "accept": [
+          "15 Nov"
+        ]
       }
     ],
     "variants": [],
@@ -3189,7 +3522,7 @@
         "pattern": "at 13:50:11 SGT a read-only query"
       }
     ],
-    "note": " | Merged AVAIL-identity-r11 (R4): same fact, same values; 1 probes added, 2 redundant dropped. | P1 reconciler: 06-6 tbl-demo echo (A4-W-09) and the 15 Nov date echoes (A1-W5).",
+    "note": " | Merged AVAIL-identity-r11 (R4): same fact, same values; 1 probes added, 2 redundant dropped. | P1 reconciler: 06-6 tbl-demo echo (A4-W-09) and the 15 Nov date echoes (A1-W5). R3 A2-c5, A4-W4: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-2-availability.typ:18",
@@ -3198,7 +3531,7 @@
       "sections/04-2-availability.typ:51",
       "sections/04-2-availability.typ:52"
     ],
-    "source_agent": "R1+P1R",
+    "source_agent": "R1+P1R,R3-P1R",
     "merged_from": [
       "AVAIL-identity-r11 (R4)"
     ]
@@ -3258,12 +3591,36 @@
         "accept": [
           "11.6"
         ]
+      },
+      {
+        "pattern": "billed to \\d+ \\w+, read on (?P<v>[\\d, and]+ [A-Z][a-z]+)\\)",
+        "accept": [
+          "11 and 12 November"
+        ]
+      },
+      {
+        "pattern": "Cost Explorer on (?P<v>[\\d, and]+ [A-Z][a-z]+) \\(#src",
+        "accept": [
+          "8, 11 and 12 November"
+        ]
+      },
+      {
+        "pattern": "Cost Explorer, read on (?P<v>[\\d, and]+ [A-Z][a-z]+)",
+        "accept": [
+          "8, 11, 12 and 15 November"
+        ]
+      },
+      {
+        "pattern": "\\(billed to (?P<v>\\d+ \\w+), read on",
+        "accept": [
+          "10 November"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: catches \"to\"/\"through\" drifts at 06-highlights:5 (A4-W-01).",
-    "source_agent": "R2+P1R"
+    "note": "P1 reconciler: catches \"to\"/\"through\" drifts at 06-highlights:5 (A4-W-01). R3 A4-W18: probes added. Round-3 P2: value literals in probe anchors generalised and sibling probes added, so a drifted literal no longer silences the register (out/p2/p2-mutate3.py anchor and in-group escapes).",
+    "source_agent": "R2+P1R,R3-P1R"
   },
   {
     "id": "cost-runtime-oct",
@@ -3668,12 +4025,24 @@
         "accept": [
           "0.27"
         ]
+      },
+      {
+        "pattern": "release sizing of (?P<v>\\d+ \\w+) \\(every task",
+        "accept": [
+          "11 November"
+        ]
+      },
+      {
+        "pattern": "\\(every task (?P<v>[\\d.]+ vCPU, \\d GiB)\\)",
+        "accept": [
+          "0.5 vCPU, 1 GiB"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: the 0.27 probe no longer requires two decimals (A4-W-03); table echo added (A4-W-05).",
-    "source_agent": "R2+P1R"
+    "note": "P1 reconciler: the 0.27 probe no longer requires two decimals (A4-W-03); table echo added (A4-W-05). R3 A4-W17: probes added.",
+    "source_agent": "R2+P1R,R3-P1R"
   },
   {
     "id": "cost-always-on",
@@ -3780,12 +4149,18 @@
         "accept": [
           "85"
         ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) we decided to keep the environment up",
+        "accept": [
+          "19 October"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R2"
+    "note": "R3 A4-W13: probes added.",
+    "source_agent": "R2,R3-P1R"
   },
   {
     "id": "cost-billing-days",
@@ -3810,16 +4185,28 @@
     ],
     "probes": [
       {
-        "pattern": "billed mainly on (?P<v>\\w+) days to 10 November",
+        "pattern": "billed mainly on (?P<v>\\w+) days to \\d+ \\w+",
         "accept": [
           "ten"
+        ]
+      },
+      {
+        "pattern": "days to \\d+ \\w+: (?P<v>[^(]+?) \\(Cost Explorer",
+        "accept": [
+          "6–7 October, 15–21 October and 9 November"
+        ]
+      },
+      {
+        "pattern": "billed mainly on \\w+ days to (?P<v>\\d+ \\w+):",
+        "accept": [
+          "10 November"
         ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R2"
+    "note": "R3 A4-W12: probes added. Round-3 P2: value literals in probe anchors generalised and sibling probes added, so a drifted literal no longer silences the register (out/p2/p2-mutate3.py anchor and in-group escapes).",
+    "source_agent": "R2,R3-P1R"
   },
   {
     "id": "cost-permanent-layer",
@@ -3919,12 +4306,24 @@
         "accept": [
           "0.0192 × 730 h"
         ]
+      },
+      {
+        "pattern": "at the list prices of (?P<v>\\d+ \\w+) for",
+        "accept": [
+          "25 September"
+        ]
+      },
+      {
+        "pattern": "with (?P<v>\\d+) GB that the study priced",
+        "accept": [
+          "20"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: formula (A4-W-07).",
-    "source_agent": "R2+P1R"
+    "note": "P1 reconciler: formula (A4-W-07). R3 A4-W14: probes added.",
+    "source_agent": "R2+P1R,R3-P1R"
   },
   {
     "id": "cost-fck-nat",
@@ -3959,12 +4358,30 @@
         "accept": [
           "46.72"
         ]
+      },
+      {
+        "pattern": "about US\\\\\\$(?P<v>\\d+) for the `t4g\\.nano`",
+        "accept": [
+          "4"
+        ]
+      },
+      {
+        "pattern": "IPv4 addresses at US\\\\\\$(?P<v>[\\d.]+) an hour",
+        "accept": [
+          "0.005"
+        ]
+      },
+      {
+        "pattern": "Elastic IP \\(US\\\\\\$(?P<v>[\\d.]+ \\+ US\\\\\\$[\\d.]+)\\)",
+        "accept": [
+          "43.07 + US\\$3.65"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R2"
+    "note": "R3 A2-c11: probes added.",
+    "source_agent": "R2,R3-P1R"
   },
   {
     "id": "ci-baseline",
@@ -4665,12 +5082,18 @@
         "accept": [
           "15 Nov"
         ]
+      },
+      {
+        "pattern": "destroyed after the final campaign on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "15 Nov"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R2"
+    "note": "R3 A1-A4: probes added.",
+    "source_agent": "R2,R3-P1R"
   },
   {
     "id": "td-ssm",
@@ -5471,6 +5894,12 @@
         "accept": [
           "twelve"
         ]
+      },
+      {
+        "pattern": "remark F6 \\((?P<v>\\d+ \\w+)\\)",
+        "accept": [
+          "21 October"
+        ]
       }
     ],
     "forbid": [
@@ -5482,8 +5911,8 @@
         "pattern": "\\[F13\\]"
       }
     ],
-    "note": "",
-    "source_agent": "R3"
+    "note": "R3 A2-c12: probes added.",
+    "source_agent": "R3,R3-P1R"
   },
   {
     "id": "R3-success-criteria-five",
@@ -8385,12 +8814,24 @@
         "accept": [
           "31 Mar 2027"
         ]
+      },
+      {
+        "pattern": "\\[R1: production readiness\\], \\[(?P<v>\\d+ \\w+ \\d{4})\\]",
+        "accept": [
+          "31 Mar 2027"
+        ]
+      },
+      {
+        "pattern": "\\[R2: scale-out\\], \\[(?P<v>\\d+ \\w+ \\d{4})",
+        "accept": [
+          "30 Jun 2027"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R3"
+    "note": "R3 A2-c1: probes added.",
+    "source_agent": "R3,R3-P1R"
   },
   {
     "id": "R3-ADR-numbers-dates",
@@ -8672,6 +9113,24 @@
         "accept": [
           "6 October to 11 November"
         ]
+      },
+      {
+        "pattern": "\\(AD-15\\); promotions of (?P<v>\\d+ and \\d+ \\w+)",
+        "accept": [
+          "10 and 11 November"
+        ]
+      },
+      {
+        "pattern": "UTC billing day: the promotions of (?P<v>\\d+ and \\d+ \\w+)",
+        "accept": [
+          "9 and 10 Nov"
+        ]
+      },
+      {
+        "pattern": "the failed (?P<v>\\d+ \\w+) promotion",
+        "accept": [
+          "9 November"
+        ]
       }
     ],
     "forbid": [],
@@ -8681,8 +9140,8 @@
         "pattern": "six passed \\(6, 17, 19 and 20 October, 10 and 11 November\\)"
       }
     ],
-    "note": "10 Nov promotion started 9 Nov 16:18 UTC = 10 Nov 00:18 SGT. | P1 reconciler: 02:52 span (A1-W12).",
-    "source_agent": "R4+P1R"
+    "note": "10 Nov promotion started 9 Nov 16:18 UTC = 10 Nov 00:18 SGT. | P1 reconciler: 02:52 span (A1-W12). R3 A1-A2: probes added.",
+    "source_agent": "R4+P1R,R3-P1R"
   },
   {
     "id": "DEVOPS-manual-prod-runs",
@@ -8708,12 +9167,18 @@
         "accept": [
           "twice"
         ]
+      },
+      {
+        "pattern": "Manual runs on `prod` were used \\w+, on (?P<v>\\d+ \\w+ and \\d+ \\w+)",
+        "accept": [
+          "6 October and 9 November"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R4"
+    "note": "R3 A3-a12: probes added.",
+    "source_agent": "R4,R3-P1R"
   },
   {
     "id": "DEVOPS-whole-run-durations",
@@ -8974,7 +9439,7 @@
         ]
       },
       {
-        "pattern": "initial apply (?P<v>\\d+) s, 115 resources",
+        "pattern": "initial apply (?P<v>\\d+) s, \\d+ resources",
         "accept": [
           "520"
         ]
@@ -8990,12 +9455,54 @@
         "accept": [
           "709"
         ]
+      },
+      {
+        "pattern": "\\((?P<v>\\d+ min \\d+ s on \\d+ \\w+), create",
+        "accept": [
+          "31 min 37 s on 17 Oct"
+        ]
+      },
+      {
+        "pattern": "took \\d+ min \\d+ s on (?P<v>\\d+ \\w+) and",
+        "accept": [
+          "17 October"
+        ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) on AWS, create, deploy and smoke took",
+        "accept": [
+          "17 Oct"
+        ]
+      },
+      {
+        "pattern": "initial apply \\d+ s, \\d+ resources; smoke (?P<v>\\d+) s\\)",
+        "accept": [
+          "5"
+        ]
+      },
+      {
+        "pattern": "\\[(?P<v>\\d+ \\w+)\\], \\[Promotion, run #run\\(\"39008208244\"\\)",
+        "accept": [
+          "17 Oct"
+        ]
+      },
+      {
+        "pattern": "\\[(?P<v>\\d+ \\w+)\\], \\[Clean session, run",
+        "accept": [
+          "17 Oct"
+        ]
+      },
+      {
+        "pattern": "initial apply \\d+ s, (?P<v>\\d+) resources",
+        "accept": [
+          "115"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R4"
+    "note": "R3 A1-c3, A2-c8, A3-a12: probes added. Round-3 P2: value literals in probe anchors generalised and sibling probes added, so a drifted literal no longer silences the register (out/p2/p2-mutate3.py anchor and in-group escapes).",
+    "source_agent": "R4,R3-P1R"
   },
   {
     "id": "DEVOPS-10nov-up",
@@ -9018,13 +9525,13 @@
     "variants": [],
     "probes": [
       {
-        "pattern": "(?P<v>\\d+ min \\d+ s) \\(10 Nov; apply",
+        "pattern": "(?P<v>\\d+ min \\d+ s) \\(\\d+ \\w+; apply",
         "accept": [
           "32 min 1 s"
         ]
       },
       {
-        "pattern": "10 Nov; apply (?P<v>\\d+) s",
+        "pattern": "\\(\\d+ \\w+; apply (?P<v>\\d+) s",
         "accept": [
           "517"
         ]
@@ -9040,12 +9547,30 @@
         "accept": [
           "58"
         ]
+      },
+      {
+        "pattern": "\\(\\d+ \\w+; apply \\d+ s, (?P<v>\\d+) resources",
+        "accept": [
+          "120"
+        ]
+      },
+      {
+        "pattern": "messaging gate \\d+ s; smoke (?P<v>\\d+) s",
+        "accept": [
+          "3"
+        ]
+      },
+      {
+        "pattern": "\\d+ min \\d+ s \\((?P<v>\\d+ \\w+); apply \\d+ s",
+        "accept": [
+          "10 Nov"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: database initialisation 58 s (A3-W4).",
-    "source_agent": "R4+P1R"
+    "note": "P1 reconciler: database initialisation 58 s (A3-W4). R3 A3-a12, A3-c3: probes added. Round-3 P2: value literals in probe anchors generalised and sibling probes added, so a drifted literal no longer silences the register (out/p2/p2-mutate3.py anchor and in-group escapes).",
+    "source_agent": "R4+P1R,R3-P1R"
   },
   {
     "id": "DEVOPS-required-checks",
@@ -9271,12 +9796,24 @@
         "accept": [
           "21"
         ]
+      },
+      {
+        "pattern": "\\[run 39525458726\\] \\((?P<v>\\d+ \\w+), ",
+        "accept": [
+          "21 Oct"
+        ]
+      },
+      {
+        "pattern": "dispatched at \\d\\d:\\d\\d SGT on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "22 Oct"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R4"
+    "note": "R3 A4-W5: probes added.",
+    "source_agent": "R4,R3-P1R"
   },
   {
     "id": "DATES-sprints",
@@ -9708,12 +10245,19 @@
         "accept": [
           "15"
         ]
+      },
+      {
+        "pattern": "(?P<v>\\d+ \\w+) readback(?: found|:)",
+        "accept": [
+          "15 November",
+          "15 Nov"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "FIX-13 applied: registers.md:67 now says \"added by PR #809\". Flag flipped by the P1 reconciler (A1-b3). AISS-13 \"added by PR #808\" (acceptance-followup) is correct.",
-    "source_agent": "R4+P1R"
+    "note": "FIX-13 applied: registers.md:67 now says \"added by PR #809\". Flag flipped by the P1 reconciler (A1-b3). AISS-13 \"added by PR #808\" (acceptance-followup) is correct. R3 A3-a10: probes added.",
+    "source_agent": "R4+P1R,R3-P1R"
   },
   {
     "id": "SEC-governance-dates",
@@ -9755,12 +10299,24 @@
         "accept": [
           "two"
         ]
+      },
+      {
+        "pattern": "(?P<v>\\w+) IAM users are accepted exceptions",
+        "accept": [
+          "Two"
+        ]
+      },
+      {
+        "pattern": "accepted exceptions; (?P<v>\\w+) has an active long-lived key",
+        "accept": [
+          "one"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R4"
+    "note": "R3 A1-A4: probes added.",
+    "source_agent": "R4,R3-P1R"
   },
   {
     "id": "SEC-no-waf-date",
@@ -10028,12 +10584,18 @@
         "accept": [
           "31"
         ]
+      },
+      {
+        "pattern": "two buyers paid and the team succeeded at (?P<v>\\d of \\d)",
+        "accept": [
+          "2 of 2"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "P1 reconciler: 1/2, S$22, 409, 2/2 (15 Nov R2) and 31 min now captured (A2-M15, A2-c6, A3-W7, A4-W-09); scoped away from Appendix A, which reuses \"1 of 2\" / \"2 of 2\" for the 24 Oct UI.",
-    "source_agent": "R4+P1R"
+    "note": "P1 reconciler: 1/2, S$22, 409, 2/2 (15 Nov R2) and 31 min now captured (A2-M15, A2-c6, A3-W7, A4-W-09); scoped away from Appendix A, which reuses \"1 of 2\" / \"2 of 2\" for the 24 Oct UI. R3 A2-c4: probes added.",
+    "source_agent": "R4+P1R,R3-P1R"
   },
   {
     "id": "AVAIL-16oct-session",
@@ -10066,14 +10628,20 @@
         "accept": [
           "14:35"
         ]
+      },
+      {
+        "pattern": "manual teardown on (?P<v>\\d+ \\w+): \\d+ resources",
+        "accept": [
+          "16 Oct"
+        ]
       }
     ],
     "forbid": [
       "smoke suite at 14:10 SGT only after"
     ],
     "must_appear": [],
-    "note": "Applied: the checker passes at 15a7c8a8 (forbid absent / probe accepted), so the flag is flipped by the P1 reconciler. Was: FIX-08 (APPLY): 04-2-availability.typ:8 put the manual scaling-target repair before the 14:10 smoke pass; 20261016-http-baseline-dashboard/README.md:48-56: smoke passed 06:10:28 UTC with start-up exit 0, then \"Startup returned success but both scaling targets remained suspended\", repaired afterwards. Forbid fails until fixed.",
-    "source_agent": "R4+P1R"
+    "note": "Applied: the checker passes at 15a7c8a8 (forbid absent / probe accepted), so the flag is flipped by the P1 reconciler. Was: FIX-08 (APPLY): 04-2-availability.typ:8 put the manual scaling-target repair before the 14:10 smoke pass; 20261016-http-baseline-dashboard/README.md:48-56: smoke passed 06:10:28 UTC with start-up exit 0, then \"Startup returned success but both scaling targets remained suspended\", repaired afterwards. Forbid fails until fixed. R3 A3-a12: probes added.",
+    "source_agent": "R4+P1R,R3-P1R"
   },
   {
     "id": "DATES-nov-sessions",
@@ -10158,12 +10726,60 @@
         "accept": [
           "23:21"
         ]
+      },
+      {
+        "pattern": "\\[(?P<v>\\d+–\\d+ \\w+)\\], \\[Sessions run by hand",
+        "accept": [
+          "13–15 Nov"
+        ]
+      },
+      {
+        "pattern": "for V5 \\((?P<v>\\d+ \\w+)\\), V4 R5 and V7 R4 \\(\\d+ \\w+\\)",
+        "accept": [
+          "13 Nov"
+        ]
+      },
+      {
+        "pattern": "V4 R5 and V7 R4 \\((?P<v>\\d+ \\w+)\\), with the services",
+        "accept": [
+          "14 Nov"
+        ]
+      },
+      {
+        "pattern": "\\[(?P<v>\\d+ \\w+), final clean-up\\]",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "runtime cleanup on (?P<v>\\d+ \\w+) after the nightly",
+        "accept": [
+          "12 Nov"
+        ]
+      },
+      {
+        "pattern": "on (?P<v>\\d+ \\w+) we removed that runtime and the generator",
+        "accept": [
+          "12 November"
+        ]
+      },
+      {
+        "pattern": "destroy it by hand on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "12 Nov"
+        ]
+      },
+      {
+        "pattern": "until its destroy on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "12 November"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": " | Reconciler: 1 probe(s) covered by count-monolith-77 dropped (values agree).",
-    "source_agent": "R4"
+    "note": " | Reconciler: 1 probe(s) covered by count-monolith-77 dropped (values agree). R3 A3-a12, A4-W16: probes added.",
+    "source_agent": "R4,R3-P1R"
   },
   {
     "id": "DATES-final-teardown-checks",
@@ -10372,12 +10988,18 @@
         "accept": [
           "115–120"
         ]
+      },
+      {
+        "pattern": "\\[Passed; (?P<v>\\d+) resources created and destroyed",
+        "accept": [
+          "120"
+        ]
       }
     ],
     "forbid": [],
     "must_appear": [],
-    "note": "",
-    "source_agent": "R4"
+    "note": "R3 A3-a12: probes added.",
+    "source_agent": "R4,R3-P1R"
   },
   {
     "id": "DEVOPS-10nov-preflight",
@@ -10639,12 +11261,18 @@
         "accept": [
           "50"
         ]
+      },
+      {
+        "pattern": "each of the (?P<v>\\w+) members",
+        "accept": [
+          "five"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "Merged A1-M1 and A2 (low-priority budget echo at 03-1:56).",
+    "note": "Merged A1-M1 and A2 (low-priority budget echo at 03-1:56). R3 A1-A6: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/02-project-conduct.typ:7",
@@ -10652,7 +11280,7 @@
       "sections/06-2-success-criteria.typ:35",
       "sections/03-1-logical.typ:56"
     ],
-    "source_agent": "P1-A1,P1-A2"
+    "source_agent": "P1-A1,P1-A2,R3-P1R"
   },
   {
     "id": "wbs-estimates",
@@ -10774,17 +11402,35 @@
         "accept": [
           "10:09"
         ]
+      },
+      {
+        "pattern": "the (?P<v>\\w+) `swe5001/\\*` ECR repositories",
+        "accept": [
+          "four"
+        ]
+      },
+      {
+        "pattern": "repositories were created at (?P<v>\\d\\d:\\d\\d on \\d+ \\w+)",
+        "accept": [
+          "22:35 on 5 October"
+        ]
+      },
+      {
+        "pattern": "the web bucket at (?P<v>\\d\\d:\\d\\d on \\d+ \\w+)",
+        "accept": [
+          "10:09 on 6 October"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "A1 (16 Nov): ECR and bucket times read back in ct-foundation-create-20261005.json; the earlier 10:11 was the PutBucketPolicy time, so the text now says 10:09. The role creation time is unreadable and was dropped from the text.",
+    "note": "A1 (16 Nov): ECR and bucket times read back in ct-foundation-create-20261005.json; the earlier 10:11 was the PutBucketPolicy time, so the text now says 10:09. The role creation time is unreadable and was dropped from the text. R3 A1-A3, A1-c1: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/02-project-conduct.typ:50"
     ],
-    "source_agent": "P1-A1"
+    "source_agent": "P1-A1,R3-P1R"
   },
   {
     "id": "stack-versions",
@@ -11602,19 +12248,25 @@
         "accept": [
           "60"
         ]
+      },
+      {
+        "pattern": "reappears after (?P<v>\\d+) s\\)",
+        "accept": [
+          "60"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A2-c10: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/03-2-physical.typ:454,468",
       "sections/03-4-limitations.typ:43",
       "registers.md:62"
     ],
-    "source_agent": "P1-A2"
+    "source_agent": "P1-A2,R3-P1R"
   },
   {
     "id": "design-relay-limits",
@@ -11731,9 +12383,9 @@
     "canonical_home": "sections/03-2-physical.typ",
     "probes": [
       {
-        "pattern": "a (?P<v>\\d+)-hour timeout \\(`timeout: 86400`\\)",
+        "pattern": "a (?P<v>\\d+-hour timeout \\(`timeout: \\d+`\\))",
         "accept": [
-          "24"
+          "24-hour timeout (`timeout: 86400`)"
         ]
       },
       {
@@ -11758,12 +12410,12 @@
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A2-c9.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/03-2-physical.typ:402,408,409,467"
     ],
-    "source_agent": "P1-A2"
+    "source_agent": "P1-A2,R3-P1R"
   },
   {
     "id": "design-refund-23h-24h",
@@ -12096,18 +12748,36 @@
         "accept": [
           "7"
         ]
+      },
+      {
+        "pattern": "returns (?P<v>\\d+) for `/internal/\\*`",
+        "accept": [
+          "404"
+        ]
+      },
+      {
+        "pattern": "on TCP (?P<v>\\d+ and \\d+), and the data subnets",
+        "accept": [
+          "5432 and 6379"
+        ]
+      },
+      {
+        "pattern": "Application Load Balancer, HTTP :(?P<v>\\d+)",
+        "accept": [
+          "80"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A2-c7: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/03-2-physical.typ:29,48,63,87,89,106,147,239,246,471",
       "sections/03-4-limitations.typ:38"
     ],
-    "source_agent": "P1-A2"
+    "source_agent": "P1-A2,R3-P1R"
   },
   {
     "id": "first-promotion-five-failures",
@@ -12339,11 +13009,11 @@
     "date": "2026-10-16",
     "evidence_kind": "AWS readback",
     "evidence": [
-      "docs/swe5001/evidence/20261115-aws-readback/ct-registerscalabletarget-20261016.json:6 (window 00:00-16:00 UTC)",
+      "docs/swe5001/evidence/20261115-aws-readback/ct-registerscalabletarget-20261016.json:2,6,9-28",
       "docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md:48,50,56,68",
       "sections/04-2-availability.typ:8"
     ],
-    "evidence_value": "eventTimesSgt list 21:28:25-22:14:46 \"+08:00\" is double-shifted; only 13:28-14:14 SGT fits the 00:00-16:00 UTC window and the 16 Oct timeline (smoke 06:10Z, destroy finished 06:34Z)",
+    "evidence_value": "eventTimesSgt: ten calls 13:28:25-14:14:46 +08:00 and ten later 18:50:13-20:40:39 +08:00, inside the 00:00-16:00 UTC window; readAt 2026-11-16; fits the 16 Oct timeline (smoke 06:10Z, destroy finished 06:34Z)",
     "canonical_home": "sections/03-4-limitations.typ",
     "probes": [
       {
@@ -12363,6 +13033,12 @@
         "accept": [
           "14:14"
         ]
+      },
+      {
+        "pattern": "calls between [\\d:]+ and [\\d:]+ SGT, read back on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "16 November"
+        ]
       }
     ],
     "variants": [],
@@ -12370,12 +13046,12 @@
       "between 21:28 and 22:14 SGT"
     ],
     "must_appear": [],
-    "note": "E-D2-1, confirmed by V1 (Major, regression from 6ef123bc). Text at 03-4:44 says 21:28 and 22:14; the readback JSON (:7-28) and README.md:104 must be corrected in the same change. Probes FAIL until fixed. Do not echo \"ten earlier calls\" (A2-d3).",
-    "report_matches_evidence": false,
+    "note": "E-D2-1 (Major) fixed in e6169323/4b7693dd: 03-4:44 says 13:28 and 14:14 SGT, read back on 16 Nov, and the readback JSON was regenerated. R3 D1-R1: evidence_value updated to the regenerated JSON. Do not echo \"ten earlier calls\" (A2-d3).",
+    "report_matches_evidence": true,
     "occurrences": [
       "sections/03-4-limitations.typ:44"
     ],
-    "source_agent": "P1-A2,P3-D2,P4-V1"
+    "source_agent": "P1-A2,P3-D2,P4-V1,R3-P1R"
   },
   {
     "id": "roadmap-r2-trigger",
@@ -12587,18 +13263,48 @@
         "accept": [
           "14 Oct"
         ]
+      },
+      {
+        "pattern": "Source: the repository on (?P<v>\\d+ \\w+) and #pr\\(487\\)",
+        "accept": [
+          "8 Nov"
+        ]
+      },
+      {
+        "pattern": "in the released source of (?P<v>\\d+ \\w+): `main\\.tf`",
+        "accept": [
+          "11 November"
+        ]
+      },
+      {
+        "pattern": "31 operations in 27 paths on (?P<v>\\d+ \\w+)\\)",
+        "accept": [
+          "8 November"
+        ]
+      },
+      {
+        "pattern": "counts the codebase on (?P<v>\\d+ \\w+):",
+        "accept": [
+          "8 November"
+        ]
+      },
+      {
+        "pattern": "\\[Measure \\((?P<v>\\d+ \\w+)\\)\\]",
+        "accept": [
+          "8 Nov"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A3-a11: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/04-4-extensibility.typ:14,15,19,37,41,51,69,75,81-84",
       "sections/02-project-conduct.typ:16,104"
     ],
-    "source_agent": "P1-A3"
+    "source_agent": "P1-A3,R3-P1R"
   },
   {
     "id": "revision-ids",
@@ -12614,7 +13320,8 @@
       "docs/swe5001/evidence/20261109-promotion-757/README.md:7",
       "docs/swe5001/evidence/20261019-v3-autoscaling/README.md:13",
       "docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md:12",
-      "docs/swe5001/evidence/20261115-acceptance-followup/README.md:8"
+      "docs/swe5001/evidence/20261115-acceptance-followup/README.md:8",
+      "docs/swe5001/evidence/20261109-source-control-delivery/README.md:38"
     ],
     "evidence_value": "commit prefixes",
     "canonical_home": "sections/05-devops.typ",
@@ -12672,7 +13379,7 @@
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "Prefix-anchored: a drift after the fourth character fails; a drift inside the prefix stops matching (accepted limitation). P2: a probe literal (month, hour, AZ digit, qualifier, word or unit) was widened into the captured group so that a drift there fails instead of going silent.",
+    "note": "Prefix-anchored: a drift after the fourth character fails; a drift inside the prefix stops matching (accepted limitation). P2: a probe literal (month, hour, AZ digit, qualifier, word or unit) was widened into the captured group so that a drift there fails instead of going silent. R3 A3-b.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/03-2-physical.typ:31,56,236",
@@ -12681,7 +13388,7 @@
       "sections/04-2-availability.typ:10,46",
       "sections/05-devops.typ:109,148,156,194,196,198,199,201,215"
     ],
-    "source_agent": "P1-A3"
+    "source_agent": "P1-A3,R3-P1R"
   },
   {
     "id": "delivery-run-windows",
@@ -12915,17 +13622,29 @@
         "accept": [
           "1.5"
         ]
+      },
+      {
+        "pattern": "was stopped on (?P<v>\\d+ \\w+) and restarted on",
+        "accept": [
+          "7 November"
+        ]
+      },
+      {
+        "pattern": "and restarted on (?P<v>\\d+ \\w+) \\(US",
+        "accept": [
+          "9 November"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A4-W11: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/06-3-cost.typ:26"
     ],
-    "source_agent": "P1-A4"
+    "source_agent": "P1-A4,R3-P1R"
   },
   {
     "id": "cost-ratios",
@@ -12958,17 +13677,23 @@
         "accept": [
           "twice"
         ]
+      },
+      {
+        "pattern": "session alone added about (?P<v>[\\w ]+?) the plan",
+        "accept": [
+          "as much again as"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A4-W15: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/06-3-cost.typ:6,53"
     ],
-    "source_agent": "P1-A4"
+    "source_agent": "P1-A4,R3-P1R"
   },
   {
     "id": "analytics-pipeline-cost",
@@ -13215,18 +13940,25 @@
         "accept": [
           "22.00"
         ]
+      },
+      {
+        "pattern": "(?:Start a bloc|Join this bloc)(?: ·)? S\\\\?\\$(?P<v>[\\d.]+)",
+        "accept": [
+          "22.00"
+        ],
+        "files": "sections/07-appendix-a-walkthrough.typ"
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A4-W7: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/07-appendix-a-walkthrough.typ:44-147",
       "sections/03-2-4-detailed-design.typ:147"
     ],
-    "source_agent": "P1-A4"
+    "source_agent": "P1-A4,R3-P1R"
   },
   {
     "id": "appx-times",
@@ -13281,17 +14013,31 @@
         "accept": [
           "7.17 pm"
         ]
+      },
+      {
+        "pattern": "Paid(?: ·)? (?P<v>\\d+ \\w+), [\\d.]+ pm",
+        "accept": [
+          "24 Oct"
+        ],
+        "files": "sections/07-appendix-a-walkthrough.typ"
+      },
+      {
+        "pattern": "Filled (?P<v>\\d+ \\w+), [\\d.]+ pm",
+        "accept": [
+          "24 Oct"
+        ],
+        "files": "sections/07-appendix-a-walkthrough.typ"
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A4-W6: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/07-appendix-a-walkthrough.typ:46,53,74,75,112,113,122,123,128,129"
     ],
-    "source_agent": "P1-A4"
+    "source_agent": "P1-A4,R3-P1R"
   },
   {
     "id": "appx-ids",
@@ -13382,17 +14128,45 @@
           "1"
         ],
         "files": "sections/07-appendix-a-walkthrough.typ"
+      },
+      {
+        "pattern": "open team with (?P<v>\\d of \\d) joined",
+        "accept": [
+          "1 of 2"
+        ],
+        "files": "sections/07-appendix-a-walkthrough.typ"
+      },
+      {
+        "pattern": "(?P<v>\\d of \\d) joined and Filled",
+        "accept": [
+          "2 of 2"
+        ],
+        "files": "sections/07-appendix-a-walkthrough.typ"
+      },
+      {
+        "pattern": "closed on 23 Oct with (?P<v>\\d of \\d) joined",
+        "accept": [
+          "1 of 2"
+        ],
+        "files": "sections/07-appendix-a-walkthrough.typ"
+      },
+      {
+        "pattern": "joined and (?P<v>\\d) seat left",
+        "accept": [
+          "1"
+        ],
+        "files": "sections/07-appendix-a-walkthrough.typ"
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A4-W8: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/07-appendix-a-walkthrough.typ:47,54,55,68,69,122,123,128,129,132,140,141"
     ],
-    "source_agent": "P1-A4"
+    "source_agent": "P1-A4,R3-P1R"
   },
   {
     "id": "appx-dates",
@@ -13434,19 +14208,25 @@
         "accept": [
           "24"
         ]
+      },
+      {
+        "pattern": "SWE5006 monolith, (?P<v>\\d+ \\w+);",
+        "accept": [
+          "24 Oct"
+        ]
       }
     ],
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "P2: a probe literal (month, hour, AZ digit, qualifier, word or unit) was widened into the captured group so that a drift there fails instead of going silent.",
+    "note": "P2: a probe literal (month, hour, AZ digit, qualifier, word or unit) was widened into the captured group so that a drift there fails instead of going silent. R3 A4-W10: probes added.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/07-appendix-a-walkthrough.typ:35,56,59,136,140,141",
       "sections/06-6-system-working.typ:6,12",
       "sections/03-2-4-detailed-design.typ:140,152"
     ],
-    "source_agent": "P1-A4"
+    "source_agent": "P1-A4,R3-P1R"
   },
   {
     "id": "appx-test-card",
@@ -13465,7 +14245,7 @@
     "canonical_home": "sections/07-appendix-a-walkthrough.typ",
     "probes": [
       {
-        "pattern": "test card (?P<v>[\\d ]{4,19}\\d)\\b",
+        "pattern": "test card (?:number )?(?P<v>\\d{4}(?: \\d{4}){0,3})\\b",
         "accept": [
           "4242",
           "4242 4242 4242 4242"
@@ -13475,12 +14255,12 @@
     "variants": [],
     "forbid": [],
     "must_appear": [],
-    "note": "",
+    "note": "R3 A4-b: the old pattern needed at least five characters, so the \"4242\" accept was dead and two echoes were unprobed.",
     "report_matches_evidence": true,
     "occurrences": [
       "sections/07-appendix-a-walkthrough.typ:52,106,107"
     ],
-    "source_agent": "P1-A4"
+    "source_agent": "P1-A4,R3-P1R"
   },
   {
     "id": "appx-anchor-rows",
@@ -13858,5 +14638,908 @@
       "sections/07-appendix-a-walkthrough.typ:35"
     ],
     "source_agent": "P2,P4-V1/V2/V3"
+  },
+  {
+    "id": "two-buyer-460-date",
+    "area": "availability",
+    "statement": "The distributed paid two-buyer journey (#460 R2) passed once on AWS on 15 Nov 2026 SGT (UTC observations on 14 Nov, 16:49-16:52Z); one unfilled test team expired and was refunded the same night.",
+    "value": "15 Nov",
+    "unit": "date (SGT)",
+    "date": "2026-11-15",
+    "evidence_kind": "AWS run record",
+    "evidence": [
+      "docs/swe5001/evidence/20261115-acceptance-followup/normal-team-success-r2.md:7,24,29-32"
+    ],
+    "evidence_value": "START 16:49:22Z, JOIN 16:52:01Z on 14 Nov UTC = 00:49-00:52 SGT on 15 Nov",
+    "canonical_home": "sections/04-2-availability.typ",
+    "probes": [
+      {
+        "pattern": "two-buyer paid journey passed on AWS, (?P<v>\\d+ \\w+) \\(",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "the (?P<v>\\d+ \\w+) distributed two-buyer result",
+        "accept": [
+          "15 November"
+        ]
+      },
+      {
+        "pattern": "two-buyer journey passed once on AWS on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "15 November"
+        ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) the distributed START and JOIN",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "\\[Two-buyer paid journey \\(#iss\\(460\\)\\)\\], \\[On AWS on (?P<v>\\d+ \\w+),",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "one expired test team refunded on AWS on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "\\[(?P<v>\\d+ \\w+): normal paid START and JOIN verified",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "partly verified on AWS \\((?P<v>\\d+ \\w+), normal path\\)",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) on AWS, two buyers paid",
+        "accept": [
+          "15 November"
+        ]
+      },
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) one unfilled test team expired",
+        "accept": [
+          "15 November"
+        ]
+      },
+      {
+        "pattern": "the (?P<v>\\d+ \\w+) distributed normal-path test",
+        "accept": [
+          "15 November"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 merge of A4-N1, A1-A1 (paid START/JOIN echoes) and A2-c4 (15 Nov echoes); risk is a drift to the UTC date 14 Nov.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A1, A2, A4)"
+  },
+  {
+    "id": "status-table-dates",
+    "area": "verification",
+    "statement": "Evidence dates in the capability table (02) and tbl-qa-status (04): CI 15 Nov; two-buyer 15 Nov; V2 11 Nov (baseline) and 16 Oct; V3 r4 11 Nov; failure handling local 15 Oct, AWS through 15 Nov; messaging and identity rows 14-15 Nov; subnet 10 Nov; cost billed to 10 Nov, 11 Nov estimated; both tables run through 15 November 2026.",
+    "value": "see probes",
+    "unit": "date",
+    "date": "2026-11-15",
+    "evidence_kind": "documented (summary of source facts)",
+    "evidence": [
+      "docs/swe5001/evidence/20261115-acceptance-followup/README.md:8",
+      "docs/swe5001/evidence/20261115-acceptance-followup/normal-team-success-r2.md:7,29-32",
+      "docs/swe5001/evidence/20261015-local-failure-rehearsal/README.md:1,13-16",
+      "source facts: TESTS-ci-448, V2-11nov-result, V2-16oct, V3r4-date-window, V4-R5-pass, V7-R4, identity-R11, subnet-verification-10nov, cost-runtime-to-10nov"
+    ],
+    "evidence_value": "as source facts",
+    "canonical_home": "sections/04-quality-attributes.typ",
+    "probes": [
+      {
+        "pattern": "tested in CI, (?P<v>\\d+ \\w+) \\(rollback and duplicate suites\\)",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "on AWS, (?P<v>\\d+ \\w+) \\(two-buyer journey",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "\\[(?:Passed )?[Oo]n AWS, (?P<v>\\d+ \\w+ \\(baseline\\) and \\d+ \\w+)",
+        "accept": [
+          "11 Nov (baseline) and 16 Oct"
+        ]
+      },
+      {
+        "pattern": "\\[On AWS, (?P<v>\\d+ \\w+) \\(V3 r4; earlier",
+        "accept": [
+          "11 Nov"
+        ]
+      },
+      {
+        "pattern": "\\[Local, (?P<v>\\d+ \\w+); AWS, through \\d+ \\w+\\]",
+        "accept": [
+          "15 Oct"
+        ]
+      },
+      {
+        "pattern": "AWS, through (?P<v>\\d+ \\w+)\\]",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "Partly verified on AWS \\((?P<v>\\d+–\\d+ \\w+)\\)",
+        "accept": [
+          "14–15 Nov"
+        ]
+      },
+      {
+        "pattern": "\\[On AWS, (?P<v>\\d+ \\w+) \\(subnet placement\\)",
+        "accept": [
+          "10 Nov"
+        ]
+      },
+      {
+        "pattern": "Cost Explorer, billed to (?P<v>\\d+ \\w+; \\d+ \\w+) estimated",
+        "accept": [
+          "10 Nov; 11 Nov"
+        ]
+      },
+      {
+        "pattern": "[Qq]uality-attribute evidence through (?P<v>\\d+ \\w+ \\d+)",
+        "accept": [
+          "15 November 2026"
+        ]
+      },
+      {
+        "pattern": "Capability verification through (?P<v>\\d+ \\w+ \\d{4})",
+        "accept": [
+          "15 November 2026"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 merge of A3-a3 (tbl-qa-status) and A1-A1/A1-A8 (02 capability table and caption).",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A1, A3)"
+  },
+  {
+    "id": "failure-table-dates",
+    "area": "availability",
+    "statement": "tbl availability failure modes, where-seen dates: V5 R3 13 Nov; Spot during V3 r3 11 Nov; two zones 16 Oct; V7 R4 14 Nov and CI 15 Nov; ElasticMQ local 15 Oct; identity local 15 Oct, AWS 13 Nov (failed), focused R11 15 Nov.",
+    "value": "see probes",
+    "unit": "date",
+    "date": "2026-11-15",
+    "evidence_kind": "documented (summary of source facts)",
+    "evidence": [
+      "source facts: V5-R3, V3-r3-spot, AVAIL-16oct-session, V7-R4, TESTS-ci-448, identity-R1, identity-R11",
+      "docs/swe5001/evidence/20261015-local-failure-rehearsal/README.md:1,13-16"
+    ],
+    "evidence_value": "as source facts",
+    "canonical_home": "sections/04-2-availability.typ",
+    "probes": [
+      {
+        "pattern": "\\[AWS, (?P<v>\\d+ \\w+) \\(V5 R3\\)",
+        "accept": [
+          "13 Nov"
+        ]
+      },
+      {
+        "pattern": "\\[AWS, (?P<v>\\d+ \\w+), during V3 r3\\]",
+        "accept": [
+          "11 Nov"
+        ]
+      },
+      {
+        "pattern": "\\[AWS, (?P<v>\\d+ \\w+): two zones seen",
+        "accept": [
+          "16 Oct"
+        ]
+      },
+      {
+        "pattern": "\\[AWS, (?P<v>\\d+ \\w+), V7 R4; CI, \\d+ \\w+",
+        "accept": [
+          "14 Nov"
+        ]
+      },
+      {
+        "pattern": "V7 R4; CI, (?P<v>\\d+ \\w+) \\(@tbl-followup",
+        "accept": [
+          "15 Nov"
+        ]
+      },
+      {
+        "pattern": "local, (?P<v>\\d+ \\w+) \\(ElasticMQ\\)",
+        "accept": [
+          "15 Oct"
+        ]
+      },
+      {
+        "pattern": "\\[Local, (?P<v>\\d+ \\w+; AWS, \\d+ \\w+) \\(failed\\) and focused R11, \\d+ \\w+\\]",
+        "accept": [
+          "15 Oct; AWS, 13 Nov"
+        ]
+      },
+      {
+        "pattern": "focused R11, (?P<v>\\d+ \\w+)\\]",
+        "accept": [
+          "15 Nov"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A3-a4. \"The 13 Nov attempt failed\" is on identity-R1.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A3)"
+  },
+  {
+    "id": "perf-runs-row-labels",
+    "area": "performance",
+    "statement": "tbl-performance-runs row labels, \"As ...\" cells and per-row sources; 19 Oct commerce 1 -> 3 tasks; 10 Nov capacity about 5 min after failures began; V2 plateau rows (60 s plateaus, 11 Nov, 57,600 browse requests).",
+    "value": "see probes",
+    "unit": "label",
+    "date": "2026-10-16..2026-11-11",
+    "evidence_kind": "AWS run",
+    "evidence": [
+      "docs/swe5001/evidence/20261019-v3-autoscaling/README.md:3,67",
+      "docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md:12",
+      "docs/swe5001/evidence/20261109-promotion-770/README.md:7",
+      "docs/swe5001/evidence/20261111-load-reruns/README.md:3",
+      "docs/swe5001/evidence/20261111-load-reruns/v2/calibration.json"
+    ],
+    "evidence_value": "1 to 3 tasks; 03:53 -> 03:57:43 (4 min 35 s); plateaus 10..200 req/s x 60 s, 0 errors",
+    "canonical_home": "sections/04-1-performance.typ",
+    "probes": [
+      {
+        "pattern": "\\[(?P<v>\\d+ \\w+: V\\d(?: r\\d|, \\w+ runs)?)\\], \\[",
+        "accept": [
+          "16 Oct: V2, two runs",
+          "19 Oct: V3",
+          "10 Nov: V3",
+          "11 Nov: V2",
+          "11 Nov: V3 r1",
+          "11 Nov: V3 r2",
+          "11 Nov: V3 r3",
+          "11 Nov: V3 r4"
+        ]
+      },
+      {
+        "pattern": "\\[As (?P<v>\\d+ \\w+)(?: \\(the same laptop\\), on local Wi-Fi)?\\], \\[[\\d,]+ and",
+        "accept": [
+          "10 Nov"
+        ]
+      },
+      {
+        "pattern": "\\[As (?P<v>\\d+ \\w+), with pools of five",
+        "accept": [
+          "19 Oct"
+        ]
+      },
+      {
+        "pattern": "\\[16 Oct: V2, two runs\\], \\[[^\\]]*?Source `(?P<v>[0-9a-f]{8})`",
+        "accept": [
+          "6c7a99ab"
+        ]
+      },
+      {
+        "pattern": "\\[10 Nov: V3\\], \\[[^\\]]*?Source `(?P<v>[0-9a-f]{8})`",
+        "accept": [
+          "93984f61"
+        ]
+      },
+      {
+        "pattern": "\\[11 Nov: V(?:2|3 r1|3 r4)\\], \\[[^\\]]*?Source `(?P<v>[0-9a-f]{8})`",
+        "accept": [
+          "3a893036"
+        ]
+      },
+      {
+        "pattern": "\\[Failed: drops\\. Commerce \\d → (?P<v>\\d) tasks; the client",
+        "accept": [
+          "3"
+        ]
+      },
+      {
+        "pattern": "Commerce \\d → (?P<v>\\d) tasks\\. The V3 result",
+        "accept": [
+          "6"
+        ]
+      },
+      {
+        "pattern": "capacity arrived about (?P<v>\\d+) min after failures began",
+        "accept": [
+          "5"
+        ]
+      },
+      {
+        "pattern": "\\[(?P<v>\\d+\\], \\[[\\d,]+\\], \\[[\\d.]+\\], \\[\\d+)\\]",
+        "accept": [
+          "10], [600], [112.05], [0",
+          "20], [1,200], [36.05], [0",
+          "40], [2,400], [27.05], [0",
+          "60], [3,600], [52], [0",
+          "80], [4,800], [18], [0",
+          "100], [6,000], [17], [0",
+          "125], [7,500], [17], [0",
+          "150], [9,000], [19], [0",
+          "175], [10,500], [47], [0",
+          "200], [12,000], [18], [0"
+        ],
+        "files": "sections/04-1-performance.typ"
+      },
+      {
+        "pattern": "[Pp]lateaus? \\(@tbl-performance-v2\\): (?P<v>[\\d,]+) browse requests",
+        "accept": [
+          "57,600"
+        ]
+      },
+      {
+        "pattern": "V2 baseline results per (?P<v>\\d+ s plateau, \\d+ \\w+)",
+        "accept": [
+          "60 s plateau, 11 November"
+        ]
+      },
+      {
+        "pattern": "on (?P<v>\\d+ \\w+) k6 dropped",
+        "accept": [
+          "19 October"
+        ]
+      },
+      {
+        "pattern": "Commerce (?P<v>\\d) → \\d tasks(?:; the client|\\. The V3 result)",
+        "accept": [
+          "1"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A3-a5/a6/a7, A3-c1/c2/c5: row labels were literal anchors, so a drifted row date silenced the row tuple probes. Round-3 P2: value literals in probe anchors generalised and sibling probes added, so a drifted literal no longer silences the register (out/p2/p2-mutate3.py anchor and in-group escapes).",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A3)"
+  },
+  {
+    "id": "run-ids",
+    "area": "devops",
+    "statement": "GitHub Actions runs cited in the report, their job-log ids and the PR/run/source tuples of tbl-delivery-runs; every #run link and registers run link shows the id it links to.",
+    "value": "11 run ids; 3 job ids",
+    "unit": "GitHub run id",
+    "date": "2026-10-06..2026-11-15",
+    "evidence_kind": "repository record",
+    "evidence": [
+      "docs/swe5001/evidence/20261114-v4-r4-preparation/v8-status.json:13-15,39",
+      "docs/swe5001/evidence/20261016-http-baseline-dashboard/README.md:14",
+      "docs/swe5001/evidence/20261109-promotion-757/README.md:3,7,69",
+      "docs/swe5001/evidence/20261109-promotion-770/README.md:3,7",
+      "docs/swe5001/evidence/20261111-load-reruns/README.md:3",
+      "docs/swe5001/evidence/20261115-acceptance-followup/README.md:8"
+    ],
+    "evidence_value": "upRunId 37470479078 (6 Oct); #757 42587537517 e177a3fb, retry 42642746273; #770 42653347818 93984f61; #785 42947289936 3a893036; clean session 39014054529; CI 43619694588",
+    "canonical_home": "sections/05-devops.typ",
+    "probes": [
+      {
+        "pattern": "#run\\(\"?(?P<v>\\d{8,})",
+        "accept": [
+          "37470479078",
+          "39008208244",
+          "39014054529",
+          "39198123242",
+          "39525458726",
+          "39658040903",
+          "42587537517",
+          "42642746273",
+          "42653347818",
+          "42947289936",
+          "43619694588"
+        ]
+      },
+      {
+        "pattern": "(?P<v>#pr\\(\\d+\\), run #run\\(\"\\d+\"\\)\\[\\d+\\], `[0-9a-f]{8}`)",
+        "accept": [
+          "#pr(757), run #run(\"42587537517\")[42587537517], `e177a3fb`",
+          "#pr(770), run #run(\"42653347818\")[42653347818], `93984f61`",
+          "#pr(785), run #run(\"42947289936\")[42947289936], `3a893036`"
+        ]
+      },
+      {
+        "pattern": "Manual retry, run #run\\(\"(?P<v>\\d+)\"\\)",
+        "accept": [
+          "42642746273"
+        ]
+      },
+      {
+        "pattern": "Clean session, run #run\\(\"(?P<v>\\d+)\"\\)",
+        "accept": [
+          "39014054529"
+        ]
+      },
+      {
+        "pattern": "actions/runs/(?P<v>\\d+/job/\\d+)",
+        "accept": [
+          "39008208244/job/117324930271",
+          "42238100131/job/127960937656",
+          "42238099796/job/127965258101"
+        ]
+      },
+      {
+        "pattern": "run #run\\(\"39008208244\"\\)\\[39008208244\\], source `(?P<v>[0-9a-f]{8})`",
+        "accept": [
+          "5e83d63e"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [
+      "#run\\(\"?(\\d+)\"?\\)\\[[^\\]\\d]*(?!\\1\\])\\d{6,}\\]",
+      "\\[[Rr]un (\\d+)\\]\\([^)]*/runs/(?!\\1\\))\\d+\\)"
+    ],
+    "must_appear": [],
+    "note": "R3 merge of A1-A9, A3-a1/c7 and A4-N4. The label/target guards are forbid patterns (numbered backreference) because an accept-[] probe with zero hits would fail test_every_probe_matches_at_least_one_echo.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A1, A3, A4)"
+  },
+  {
+    "id": "pr807-merged-14nov",
+    "area": "architecture",
+    "statement": "#807 (session sizing and R5 settings as opt-in) merged to dev on 14 Nov 2026.",
+    "value": "14 Nov",
+    "unit": "date",
+    "date": "2026-11-14",
+    "evidence_kind": "repository record",
+    "evidence": [
+      "dev commit 479d3409 (#807), committed 2026-11-14T18:31:45+08:00",
+      "gh pr view 807: mergedAt 2026-11-14T10:31:46Z"
+    ],
+    "evidence_value": "2026-11-14T18:31:45+08:00",
+    "canonical_home": "sections/04-1-performance.typ",
+    "probes": [
+      {
+        "pattern": "#pr\\(807\\)[^.;]{0,45}?(?:on|since) (?P<v>\\d+ \\w+)",
+        "accept": [
+          "14 Nov",
+          "14 November"
+        ]
+      },
+      {
+        "pattern": "#pr\\(807\\) \\((?P<v>\\d+ \\w+)\\)",
+        "accept": [
+          "14 Nov"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 merge of A2-c6 and A3-a2.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A2, A3)"
+  },
+  {
+    "id": "data-subnet-tests-740",
+    "area": "architecture",
+    "statement": "AD-15 data subnets tested offline on 4 Nov 2026: terraform test 19 passed, 0 failed (PR #740).",
+    "value": "19 of 19; 4 Nov",
+    "unit": "runs; date",
+    "date": "2026-11-04",
+    "evidence_kind": "documented",
+    "evidence": [
+      "gh pr view 740 (mergedAt 2026-11-04T06:06:26Z; body: 'test: 19 passed, 0 failed')"
+    ],
+    "evidence_value": "19 passed, 0 failed; merged 4 Nov",
+    "canonical_home": "sections/03-2-physical.typ",
+    "probes": [
+      {
+        "pattern": "\\((?P<v>\\d+ of \\d+) runtime runs passed",
+        "accept": [
+          "19 of 19"
+        ]
+      },
+      {
+        "pattern": "runtime runs passed, (?P<v>\\d+ \\w+), recorded in #pr\\(740\\)",
+        "accept": [
+          "4 November"
+        ]
+      },
+      {
+        "pattern": "Before the (?P<v>\\d+ \\w+) configuration change",
+        "accept": [
+          "4 November"
+        ]
+      },
+      {
+        "pattern": "Tested locally, not on AWS, on (?P<v>\\d+ \\w+); verified on AWS on",
+        "accept": [
+          "4 November"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A2-A1.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A2)"
+  },
+  {
+    "id": "poc-account-dates",
+    "area": "architecture",
+    "statement": "AD-14 option (a): the swe5001-poc member account ran the POC on 1 Oct 2026 and was closed on 16 Oct 2026.",
+    "value": "1 Oct / 16 Oct",
+    "unit": "date",
+    "date": "2026-10-16",
+    "evidence_kind": "documented",
+    "evidence": [
+      "docs/swe5001/architecture-options-study/poc.md:3,17,23"
+    ],
+    "evidence_value": "created 2026-09-30, POC up 1 Oct, closed 2026-10-16",
+    "canonical_home": "sections/03-2-physical.typ",
+    "probes": [
+      {
+        "pattern": "on (?P<v>\\d+ \\w+) on AWS, `swe5001-poc` ran",
+        "accept": [
+          "1 October"
+        ]
+      },
+      {
+        "pattern": "and we closed it on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "16 October"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A2-A2.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A2)"
+  },
+  {
+    "id": "oidc-trust-readback-8nov",
+    "area": "security",
+    "statement": "8 Nov 2026 readback: the three SWE5001 GitHub OIDC roles trust only two environment subjects (plan: swe5001-plan; apply, deploy: swe5001-demo).",
+    "value": "3 roles / 2 subjects",
+    "unit": "count",
+    "date": "2026-11-08",
+    "evidence_kind": "AWS readback",
+    "evidence": [
+      "docs/swe5001/evidence/20261108-cost-explorer/README.md:64"
+    ],
+    "evidence_value": "gh-plan -> swe5001-plan; gh-apply, gh-deploy -> swe5001-demo",
+    "canonical_home": "sections/03-3-other-decisions.typ",
+    "probes": [
+      {
+        "pattern": "On (?P<v>\\d+ \\w+) on AWS, the \\w+ roles trusted only",
+        "accept": [
+          "8 November"
+        ]
+      },
+      {
+        "pattern": "the (?P<v>\\w+) roles trusted only the",
+        "accept": [
+          "three"
+        ]
+      },
+      {
+        "pattern": "trusted only the (?P<v>\\w+) environment subjects",
+        "accept": [
+          "two"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A2-A3.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A2)"
+  },
+  {
+    "id": "audit-queue-created-14oct",
+    "area": "extensibility",
+    "statement": "The audit queue and its DLQ were created with the notification queue on 14 Oct 2026 (#487) by two Terraform lines: one consumers element and one filter line.",
+    "value": "14 Oct; 2 lines",
+    "unit": "date; lines",
+    "date": "2026-10-14",
+    "evidence_kind": "code",
+    "evidence": [
+      "commit 20cff28d (#487) 2026-10-14",
+      "infra/swe5001/modules/messaging/main.tf:19,22"
+    ],
+    "evidence_value": "consumers = [notification, audit]; audit filter prefix Team",
+    "canonical_home": "sections/03-1-logical.typ",
+    "probes": [
+      {
+        "pattern": "created with the notification queue on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "14 October"
+        ]
+      },
+      {
+        "pattern": "by (?P<v>\\w+) lines of Terraform",
+        "accept": [
+          "two"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A2-A4.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A2)"
+  },
+  {
+    "id": "eventstorming-study-date",
+    "area": "dates",
+    "statement": "The simulated EventStorming study (options study 06) is dated 25 Sep 2026.",
+    "value": "25 Sep 2026",
+    "unit": "date",
+    "date": "2026-09-25",
+    "evidence_kind": "documented",
+    "evidence": [
+      "docs/swe5001/architecture-options-study/06-eventstorming-ddd.md:3"
+    ],
+    "evidence_value": "on 2026-09-25",
+    "canonical_home": "sections/03-1-logical.typ",
+    "probes": [
+      {
+        "pattern": "dated the simulated study record (?P<v>\\d+ \\w+)",
+        "accept": [
+          "25 September"
+        ]
+      },
+      {
+        "pattern": "architecture options study 06 \\((?P<v>\\d+ \\w+ \\d{4})\\)",
+        "accept": [
+          "25 Sep 2026"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A2-A5.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A2)"
+  },
+  {
+    "id": "design-ttl-and-limits",
+    "area": "design",
+    "statement": "OAuth state TTL default 5 min; offer-cache absences 5-10 s; invite-ref cache 20-30 s; published outbox rows kept 7 days; 60 join intents a minute; 128-bit invite reference; notification title <= 128, content <= 1,024 characters.",
+    "value": "5 min; 5-10 s; 20-30 s; 7 d; 60/min; 128 bit; 128/1,024",
+    "unit": "mixed",
+    "date": "2026-11-11",
+    "evidence_kind": "code",
+    "evidence": [
+      "backend/blocbuy-infrastructure/src/main/java/com/blocbuy/identity/gateway/GoogleOAuthProperties.java:35-36",
+      "backend/blocbuy-infrastructure/src/main/java/com/blocbuy/groupbuy/gateway/RedisOpenDealOfferCache.java:29,153-154",
+      "backend/blocbuy-infrastructure/src/main/java/com/blocbuy/groupbuy/persistence/RedisCachedShareInviteRepository.java:32-33",
+      "backend/blocbuy-bootstrap/src/main/java/com/blocbuy/bootstrap/scheduling/OutboxRetentionJob.java:17",
+      "backend/blocbuy-application/src/main/java/com/blocbuy/payment/service/PaymentBrowserService.java:32",
+      "backend/blocbuy-domain/src/main/java/com/blocbuy/groupbuy/model/ShareInvite.java:10,26",
+      "backend/blocbuy-domain/src/main/java/com/blocbuy/notification/model/Notification.java:25-26"
+    ],
+    "evidence_value": "300 s; 5_000-10_001 ms; 20_000-30_001 ms; ofDays(7); 60/1 min; 16 bytes; 128/1024",
+    "canonical_home": "sections/03-2-physical.typ",
+    "probes": [
+      {
+        "pattern": "\\[Short \\(configured, default (?P<v>\\d+) min\\)",
+        "accept": [
+          "5"
+        ]
+      },
+      {
+        "pattern": "\\((?P<v>\\d+–\\d+) s for \"none\"\\)",
+        "accept": [
+          "5–10"
+        ]
+      },
+      {
+        "pattern": "\\[(?P<v>\\d+–\\d+) s with jitter, never past",
+        "accept": [
+          "20–30"
+        ]
+      },
+      {
+        "pattern": "Outbox rows (?P<v>\\d+) days after publishing",
+        "accept": [
+          "7"
+        ]
+      },
+      {
+        "pattern": "\\((?P<v>\\d+) join intents a minute",
+        "accept": [
+          "60"
+        ]
+      },
+      {
+        "pattern": "random (?P<v>\\d+)-bit invite",
+        "accept": [
+          "128"
+        ]
+      },
+      {
+        "pattern": "title ≤ (?P<v>\\d+) characters",
+        "accept": [
+          "128"
+        ]
+      },
+      {
+        "pattern": "content ≤ (?P<v>[\\d,]+) characters",
+        "accept": [
+          "1,024"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A2-A6 (round-2 low-priority list).",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A2)"
+  },
+  {
+    "id": "identity-local-rehearsal-15oct",
+    "area": "availability",
+    "statement": "Local identity-outage rehearsal (15 Oct 2026): START and a signed webhook returned HTTP 500 while identity was down; redelivery returned 200 once it was back.",
+    "value": "15 Oct",
+    "unit": "date",
+    "date": "2026-10-15",
+    "evidence_kind": "tested locally",
+    "evidence": [
+      "docs/swe5001/evidence/20261015-local-failure-rehearsal/README.md:1,14,16"
+    ],
+    "evidence_value": "START and a correctly signed webhook return 500; redelivery returns 200",
+    "canonical_home": "sections/03-1-logical.typ",
+    "probes": [
+      {
+        "pattern": "Tested locally, not on AWS, on (?P<v>\\d+ \\w+): in the #src\\(\"docs/swe5001/evidence/20261015",
+        "accept": [
+          "15 October"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A2-A8; record directory dated 20261015.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A2)"
+  },
+  {
+    "id": "cost-no-budget-12nov",
+    "area": "cost",
+    "statement": "On 12 Nov 2026 the account had no AWS Budget and no Cost Anomaly Detection monitor; the optional budget was never enabled.",
+    "value": "12 Nov",
+    "unit": "date",
+    "date": "2026-11-12",
+    "evidence_kind": "AWS readback",
+    "evidence": [
+      "docs/swe5001/evidence/20261111-cost-explorer/README.md:16-17,33",
+      "docs/swe5001/evidence/20261108-cost-explorer/README.md:56"
+    ],
+    "evidence_value": "On 12 November the account had no AWS Budget and no Cost Anomaly Detection monitor.",
+    "canonical_home": "sections/06-3-cost.typ",
+    "probes": [
+      {
+        "pattern": "on (?P<v>\\d+ \\w+) on AWS, the account still had no budget",
+        "accept": [
+          "12 November"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [
+      {
+        "file": "sections/06-3-cost.typ",
+        "pattern": "no budget and no Cost Anomaly Detection monitor"
+      }
+    ],
+    "note": "R3 A4-N2.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A4)"
+  },
+  {
+    "id": "findings-dates",
+    "area": "real-cloud",
+    "statement": "tbl-findings dates: first promotion failures 6 Oct; apply role could not tag scaling targets 16 Oct (#527); unconfirmed alarm emails stopped deployment 16 Oct (#529); SCP blocked CloudFront metrics 16 Oct; edge response headers policy denial 9 Nov; stale edge origin read 8 Nov.",
+    "value": "6 Oct; 16 Oct x3; 9 Nov; 8 Nov",
+    "unit": "date",
+    "date": "2026-10-06..2026-11-09",
+    "evidence_kind": "repository record",
+    "evidence": [
+      "gh run list --workflow swe5001-deploy.yml (read 16 Nov): 37406461236..37460184520 failed 6 Oct; 38888232111, 38898587249 failed 16 Oct",
+      "gh pr view 527/529 (read 16 Nov): merged 2026-10-16",
+      "docs/swe5001/evidence/20261016-scp-consolidation/README.md:3,22,50",
+      "docs/swe5001/evidence/20261109-promotion-757/README.md:1,7,65",
+      "docs/swe5001/evidence/20261108-cost-explorer/README.md:61"
+    ],
+    "evidence_value": "as statement",
+    "canonical_home": "sections/06-4-real-cloud.typ",
+    "probes": [
+      {
+        "pattern": "\\[The first promotion failed \\w+ times \\((?P<v>\\d+ \\w+)\\)\\]",
+        "accept": [
+          "6 Oct"
+        ]
+      },
+      {
+        "pattern": "could not tag scaling targets \\((?P<v>\\d+ \\w+)\\)",
+        "accept": [
+          "16 Oct"
+        ]
+      },
+      {
+        "pattern": "stopped deployment \\w+ \\((?P<v>\\d+ \\w+)\\)",
+        "accept": [
+          "16 Oct"
+        ]
+      },
+      {
+        "pattern": "blocked CloudFront metrics \\((?P<v>\\d+ \\w+)\\)",
+        "accept": [
+          "16 Oct"
+        ]
+      },
+      {
+        "pattern": "response headers policy \\((?P<v>\\d+ \\w+)\\)\\]",
+        "accept": [
+          "9 Nov"
+        ]
+      },
+      {
+        "pattern": "surfaced at the next release on (?P<v>\\d+ \\w+)",
+        "accept": [
+          "9 November"
+        ]
+      },
+      {
+        "pattern": "after teardown \\(read (?P<v>\\d+ \\w+)\\)",
+        "accept": [
+          "8 Nov"
+        ]
+      }
+    ],
+    "variants": [],
+    "forbid": [],
+    "must_appear": [],
+    "note": "R3 A4-N3.",
+    "report_matches_evidence": true,
+    "occurrences": [],
+    "source_agent": "R3-P1R (A4)"
   }
 ]
